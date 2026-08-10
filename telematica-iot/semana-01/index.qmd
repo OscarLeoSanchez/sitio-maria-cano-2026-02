@@ -1,5 +1,5 @@
 ---
-title: "Semana 1. Qué es la telemática y cómo viaja un dato"
+title: "Semana 1. Qué es la telemática"
 author: "Oscar Leonel Sánchez Conde"
 date: last-modified
 date-format: "D [de] MMMM [de] YYYY"
@@ -9,257 +9,139 @@ date-format: "D [de] MMMM [de] YYYY"
 |            |                                                        |
 |------------|--------------------------------------------------------|
 | Asignatura | Telemática para IoT (TPI01)                            |
-| Programa   | Ingeniería de Software, nivel 8                        |
+| Programa   | Ingeniería de Software                                 |
 | Unidad     | Unidad 1. Fundamentos de telecomunicaciones y telemática |
 :::
 
-## Lo que vas a lograr
+Esta primera sesión es de reconocimiento. No instalas nada, no entregas nada. Salimos de aquí con
+un mapa mental de lo que hace la asignatura y con el vocabulario mínimo para las siguientes
+semanas.
 
-Al terminar esta guía sabes qué estudia la telemática, cómo se convierte un dato en una señal que
-viaja por un medio físico, y qué red tienes debajo de tu propio computador. Ese último punto no es
-teoría: lo vas a medir con cuatro comandos que ya están instalados en tu equipo.
+## Telemática: dos mundos que se juntan
 
-Objetivos concretos:
+La palabra viene del francés *télématique*, que Simon Nora y Alain Minc acuñaron en 1978. Es la
+contracción de **telecomunicaciones** e **informática**.
 
-1. Explicar qué es la telemática y en qué se diferencia de las telecomunicaciones y de la
-   informática por separado.
-2. Distinguir dato de señal, y codificación de modulación.
-3. Comparar los medios de transmisión por alcance, capacidad y sensibilidad a la interferencia.
-4. Obtener la configuración de red de tu equipo y medir el camino hasta un servidor en internet.
-
-## Telemática: dos disciplinas que se juntan
-
-La palabra viene del francés *télématique*, que Simon Nora y Alain Minc acuñaron en 1978 en un
-informe al gobierno francés sobre la informatización de la sociedad. Es la contracción de
-**telecomunicaciones** e **informática**, y nombra lo que ocurre cuando las dos dejan de ser
-campos separados.
-
-Cada una por su lado resuelve un problema distinto:
-
-| Disciplina | Problema que resuelve |
-|---|---|
-| Telecomunicaciones | Llevar una señal de un punto a otro a distancia, con la menor distorsión posible |
-| Informática | Procesar y almacenar información |
-| Telemática | Procesar información que está en otro lugar, y actuar sobre dispositivos que están en otro lugar |
+```{mermaid}
+flowchart LR
+  A["Telecomunicaciones<br/>Llevar una señal de<br/>un punto a otro"] --> C(["TELEMÁTICA"])
+  B["Informática<br/>Procesar y almacenar<br/>información"] --> C
+  C --> D["Procesar información<br/>que está en otro lugar,<br/>y actuar sobre ella"]
+```
 
 Un termómetro que muestra la temperatura en su pantalla es informática. Una radio que transmite
-voz es telecomunicaciones. Un sensor que mide la temperatura del cuarto frío de una planta, la
-envía a un servidor y recibe la orden de encender el compresor es telemática. Y es exactamente el
-tipo de sistema que vas a construir en la Unidad 4.
+voz es telecomunicaciones. Un sensor que mide la temperatura de un cuarto frío, la envía a un
+servidor y recibe la orden de encender el compresor es telemática. Ese tercer caso es lo que vas a
+construir en la Unidad 4.
 
-### Cinco hitos que explican dónde estamos
+## Los elementos de toda comunicación
 
-| Año | Qué pasó | Por qué importa |
+Da igual si hablamos de un telégrafo de 1844 o de un sensor con Wi-Fi. Los elementos son los
+mismos.
+
+```{mermaid}
+flowchart LR
+  F["FUENTE<br/>el sensor"] --> T["TRANSMISOR<br/>convierte el<br/>dato en señal"]
+  T --> C["CANAL<br/>cable, fibra<br/>o aire"]
+  C --> R["RECEPTOR<br/>convierte la<br/>señal en dato"]
+  R --> D["DESTINO<br/>la aplicación"]
+  N(["RUIDO"]) -.-> C
+```
+
+Dos palabras que se confunden y conviene separar desde hoy:
+
+| Término | Qué es | Ejemplo |
 |---|---|---|
-| 1844 | Morse transmite el primer mensaje telegráfico entre Washington y Baltimore | Aparece la codificación: las letras se vuelven pulsos eléctricos |
-| 1948 | Claude Shannon publica *A Mathematical Theory of Communication* | La información se vuelve medible en bits, y el canal tiene un límite calculable |
-| 1969 | ARPANET conecta cuatro universidades de Estados Unidos | Nace la conmutación de paquetes a escala real |
-| 1983 | ARPANET migra a TCP/IP el 1 de enero | Se fija la arquitectura que sigue moviendo internet hoy |
-| 1999 | Kevin Ashton usa la expresión *Internet of Things* | Los nodos de la red dejan de ser solo computadores |
+| **Dato** | La información | El número 23.4 |
+| **Señal** | El fenómeno físico que la representa mientras viaja | Un voltaje en un cable, un pulso de luz en una fibra, una onda de radio |
 
-Entre el telégrafo y un sensor de humedad hay 180 años, pero el problema es el mismo: convertir
-información en una señal, mandarla por un medio imperfecto y recuperarla al otro lado.
+El dato no viaja. Viaja la señal que lo representa. Y el ruido del diagrama es la razón de que a
+veces llegue algo distinto de lo que se envió.
 
-### Convergencia
+## El recorrido de un dato, de punta a punta
 
-Hasta los años noventa, cada servicio tenía su propia red. La telefonía viajaba por una red de
-conmutación de circuitos, la televisión por una red de difusión, y los datos por una red aparte.
-Tres infraestructuras, tres operadores, tres facturas.
+Este es el ejemplo que vamos a desarmar durante todo el semestre: un sensor de temperatura que
+termina mostrando un número en tu celular.
 
-Hoy los tres servicios viajan por la misma red de paquetes IP. Eso es la **convergencia**, y es la
-razón de que tu operador te venda internet, televisión y telefonía en un solo cable.
+```{mermaid}
+flowchart LR
+  S["Sensor de<br/>temperatura"] --> G["Router o<br/>gateway"]
+  G --> I(("INTERNET"))
+  I --> V["Servidor en<br/>la nube"]
+  V --> M["Tu celular"]
+```
+
+Cada tramo de ese camino es una unidad del curso:
+
+| Tramo | Pregunta que resuelve | Unidad |
+|---|---|:---:|
+| Del sensor al cable o al aire | Cómo se convierte una medida en una señal que viaja | U1 |
+| Del cable al router | Con qué reglas se ponen de acuerdo dos equipos | U2 |
+| Del router a internet | Qué dirección tiene cada equipo y cómo se decide el camino | U3 |
+| Del servidor a tu celular | Cómo se arma la solución completa | U4 |
+
+## Lo que vamos a ver en el semestre
+
+```{mermaid}
+flowchart TB
+  U1["UNIDAD 1<br/>Fundamentos<br/>Cómo viaja una señal por un medio físico"]
+  U2["UNIDAD 2<br/>Modelo OSI y TCP/IP<br/>Cómo se organizan los protocolos en capas"]
+  U3["UNIDAD 3<br/>Diseño LAN<br/>Cómo se direcciona y se diseña una red"]
+  U4["UNIDAD 4<br/>Aplicaciones IoT<br/>Cómo se conecta un dispositivo a esa red"]
+  U1 --> U2 --> U3 --> U4
+```
+
+Cada unidad se apoya en la anterior. No hay atajos: el direccionamiento IP de la Unidad 3 no se
+entiende sin las capas de la Unidad 2, y las capas no se entienden sin saber qué es una señal.
+
+## Del telégrafo a los sensores
+
+Entre el primer mensaje telegráfico y un sensor de humedad hay 180 años, y el problema siempre fue
+el mismo: convertir información en señal, mandarla por un medio imperfecto y recuperarla al otro
+lado.
+
+```{mermaid}
+flowchart LR
+  A["<b>1844</b><br/>Telégrafo<br/>Aparece la<br/>codificación"] --> B["<b>1948</b><br/>Shannon<br/>La información<br/>se mide en bits"]
+  B --> C["<b>1969</b><br/>ARPANET<br/>Conmutación<br/>de paquetes"]
+  C --> D["<b>1983</b><br/>TCP/IP<br/>La arquitectura<br/>de internet"]
+  D --> E["<b>1999</b><br/>Internet of Things<br/>Los nodos ya no<br/>son solo computadores"]
+```
+
+## Convergencia: por qué todo cabe en un solo cable
+
+Hasta los años noventa cada servicio tenía su propia red. Hoy los tres viajan por la misma red de
+paquetes, y por eso tu operador te vende internet, televisión y telefonía en un solo contrato.
+
+```{mermaid}
+flowchart LR
+  A["Telefonía"] --> R["UNA SOLA RED<br/>de paquetes IP"]
+  B["Televisión"] --> R
+  C["Datos"] --> R
+  R --> D["Internet, televisión<br/>y teléfono por<br/>el mismo cable"]
+```
 
 | Servicio | Antes | Ahora |
 |---|---|---|
-| Telefonía | Red conmutada de circuitos, un circuito dedicado por llamada | VoIP: la voz se digitaliza y viaja en paquetes |
-| Televisión | Difusión analógica por aire o coaxial | IPTV y video bajo demanda sobre IP |
-| Datos | Red de datos separada | La misma red que las anteriores |
+| Telefonía | Red de circuitos, uno dedicado por llamada | La voz se digitaliza y viaja en paquetes |
+| Televisión | Difusión analógica por aire o coaxial | Video sobre IP y bajo demanda |
+| Datos | Red de datos aparte | La misma red que las dos anteriores |
 
-Para el IoT la consecuencia es directa: un dispositivo no necesita una red propia. Se conecta a la
-red que ya existe.
+Para el IoT la consecuencia es directa: un dispositivo nuevo no necesita una red propia. Se conecta
+a la que ya existe.
 
-## Del dato a la señal
+## Una prueba de treinta segundos
 
-Este es el núcleo conceptual de la unidad. Cuatro términos que se confunden todo el tiempo.
-
-### Dato y señal
-
-El **dato** es la información: un número, una letra, el valor que midió un sensor. La **señal** es
-el fenómeno físico que representa ese dato mientras viaja: un voltaje en un cable de cobre, un
-pulso de luz en una fibra, una onda electromagnética en el aire.
-
-El dato no viaja. Viaja la señal que lo representa. Todo el trabajo de un ingeniero de redes
-ocurre en esa traducción y en lo que le pasa a la señal por el camino.
-
-Ambos pueden ser analógicos o digitales:
-
-| Tipo | Cómo se comporta | Ejemplo |
-|---|---|---|
-| Analógico | Varía de forma continua, toma infinitos valores intermedios | La voz en el aire, la señal de un micrófono |
-| Digital | Toma un número finito de valores discretos | Los niveles de voltaje que representan 0 y 1 en un cable Ethernet |
-
-### Codificación y modulación
-
-Son dos operaciones distintas y el examen las va a preguntar por separado.
-
-**Codificación** convierte los bits en una señal digital, sin portadora. Se usa en banda base,
-que es lo que hace un cable Ethernet dentro de tu casa.
-
-| Esquema | Cómo representa los bits | Problema que tiene |
-|---|---|---|
-| NRZ | Un nivel de voltaje para el 1 y otro para el 0 | Una cadena larga de ceros deja al receptor sin referencia de reloj |
-| Manchester | Cada bit lleva una transición en la mitad del intervalo | Gasta el doble de ancho de banda, pero el reloj viaja incluido |
-
-**Modulación** monta la información sobre una señal portadora analógica, alterando alguno de sus
-tres parámetros. Se usa cuando el medio no admite banda base: el aire, la fibra, el cable coaxial
-de larga distancia.
-
-| Esquema | Qué parámetro de la portadora modifica |
-|---|---|
-| ASK | La amplitud |
-| FSK | La frecuencia |
-| PSK | La fase |
-| QAM | Amplitud y fase a la vez, que es como el Wi-Fi consigue sus velocidades altas |
-
-Regla para no confundirlas: si hay portadora, es modulación. Si la señal es la información misma,
-es codificación.
-
-### Ancho de banda y tasa de transmisión
-
-Dos magnitudes que en el lenguaje comercial se llaman igual y no lo son.
-
-- **Ancho de banda** es el rango de frecuencias que deja pasar el medio. Se mide en hercios (Hz).
-- **Tasa de transmisión** es cuántos bits por segundo consigues mover. Se mide en bits por
-  segundo (bps).
-
-El ancho de banda es la propiedad física del canal. La tasa es lo que logras con él, y depende de
-cuánta información metas en cada símbolo y de cuánto ruido haya. Dos fórmulas fijan el techo:
-
-- **Nyquist**, canal sin ruido: `C = 2 * B * log2(M)`, donde `M` es el número de niveles del
-  símbolo.
-- **Shannon**, canal con ruido: `C = B * log2(1 + S/N)`, donde `S/N` es la relación entre potencia
-  de señal y potencia de ruido.
-
-Lo que hay que llevarse de las dos: puedes ganar velocidad metiendo más niveles por símbolo, pero
-el ruido pone un límite que no se supera con ingeniería de la señal. Ahí es donde se cambia el
-medio.
-
-Además de la tasa, tres magnitudes describen la calidad de un enlace, y las vas a medir en la
-práctica de esta guía:
-
-| Magnitud | Qué es | Unidad |
-|---|---|---|
-| Latencia | Tiempo que tarda un paquete en llegar al destino | ms |
-| Jitter | Variación de esa latencia entre un paquete y el siguiente | ms |
-| Pérdida | Porcentaje de paquetes que no llegaron | % |
-
-Para una descarga de archivos importa la tasa. Para una videollamada o para el control remoto de
-un actuador IoT importan la latencia y el jitter.
-
-### Medios de transmisión
-
-| Medio | Alcance típico | Tasa típica | Punto débil |
-|---|---|---|---|
-| Par trenzado UTP Cat 6 | 100 m | 1 Gbps | Interferencia electromagnética y atenuación |
-| Coaxial | Cientos de metros | Cientos de Mbps | Voluminoso, difícil de instalar |
-| Fibra multimodo | 300 a 550 m | 10 a 100 Gbps | Costo del equipo terminal |
-| Fibra monomodo | Decenas de kilómetros | 100 Gbps y más | Costo, empalmes delicados |
-| Wi-Fi | 30 a 50 m en interiores | Cientos de Mbps | Medio compartido, obstáculos, interferencia |
-| Celular 4G y 5G | Kilómetros | Decenas a cientos de Mbps | Cobertura, costo por dato |
-| LPWAN como LoRa o NB-IoT | Varios kilómetros | Unos pocos kbps | Muy poca capacidad, y basta para un sensor |
-
-Los guiados (cobre y fibra) confinan la señal dentro del medio. Los no guiados la sueltan al
-espacio, así que cualquiera dentro del alcance la recibe, y eso convierte la seguridad en un
-problema de diseño desde el primer día.
-
-La última fila explica una decisión típica de IoT: un sensor que reporta la temperatura cada
-quince minutos no necesita megabits, necesita alcance y batería para dos años.
-
-## Práctica: reconoce la red que tienes debajo
-
-Ahora vas a ver estos conceptos en tu equipo. Los cuatro comandos ya están instalados. Abre una
-terminal: en Windows, `Win+R`, escribe `cmd` y presiona Enter. En macOS o Linux, abre la
-aplicación Terminal.
-
-### [1]{.paso} Tu dirección en la red local
-
-En Windows:
-
-```powershell
-ipconfig
-```
-
-En macOS o Linux:
-
-```bash
-ip a          # Linux
-ifconfig      # macOS
-```
-
-Salida real en el equipo donde preparé esta guía, recortada a la interfaz que está conectada:
-
-```text
-Configuración IP de Windows
-
-Adaptador de Ethernet Ethernet:
-
-   Sufijo DNS específico para la conexión. . :
-   Vínculo: dirección IPv6 local. . . : fe80::58fb:42af:f1b7:c6f5%19
-   Dirección IPv4. . . . . . . . . . . . . . : 192.168.128.3
-   Máscara de subred . . . . . . . . . . . . : 255.255.255.0
-   Puerta de enlace predeterminada . . . . . : 192.168.128.1
-```
-
-Tres datos importan y los vas a usar el resto del curso:
-
-- **Dirección IPv4** `192.168.128.3`. Es la identidad de esa máquina dentro de su red local.
-- **Máscara de subred** `255.255.255.0`. Define hasta dónde llega la red local. Con esta máscara,
-  todo lo que empiece por `192.168.128.` es vecino directo.
-- **Puerta de enlace** `192.168.128.1`. Es el router. Todo lo que no sea vecino sale por ahí.
-
-Si tu equipo tiene varias interfaces, `ipconfig` las lista todas. Las que dicen "medios
-desconectados" no están en uso. Las de VMware o VirtualBox son redes virtuales creadas por esos
-programas, no tu conexión real.
-
-::: {.callout-note}
-## Por qué tu dirección empieza por 192.168
-
-Los rangos `10.x.x.x`, `172.16.x.x` a `172.31.x.x` y `192.168.x.x` están reservados para redes
-privadas. No son enrutables en internet, así que millones de casas usan las mismas direcciones sin
-chocar. El router traduce entre tu dirección privada y la pública cuando sales a internet. Ese
-mecanismo se llama NAT y es tema de la Unidad 3.
-:::
-
-### [2]{.paso} Mide la latencia hasta el router y hasta internet
-
-`ping` envía un paquete ICMP y cronometra cuánto tarda la respuesta. Primero al router de tu casa:
-
-```powershell
-ping 192.168.128.1
-```
-
-Cambia esa dirección por la puerta de enlace que te mostró el paso 1.
-
-```text
-Haciendo ping a 192.168.128.1 con 32 bytes de datos:
-Respuesta desde 192.168.128.1: bytes=32 tiempo<1m TTL=64
-Respuesta desde 192.168.128.1: bytes=32 tiempo<1m TTL=64
-Respuesta desde 192.168.128.1: bytes=32 tiempo<1m TTL=64
-Respuesta desde 192.168.128.1: bytes=32 tiempo<1m TTL=64
-
-Estadísticas de ping para 192.168.128.1:
-    Paquetes: enviados = 4, recibidos = 4, perdidos = 0
-    (0% perdidos),
-Tiempos aproximados de ida y vuelta en milisegundos:
-    Mínimo = 0ms, Máximo = 0ms, Media = 0ms
-```
-
-Menos de un milisegundo, porque el router está a un cable de distancia. Ahora a un servidor de
-internet:
+Antes de cerrar, mide el camino que acabamos de dibujar. Abre una terminal: en Windows, `Win+R`,
+escribe `cmd` y presiona Enter. En macOS o Linux, abre la aplicación Terminal.
 
 ```powershell
 ping 8.8.8.8
 ```
+
+En macOS y Linux, `ping -c 4 8.8.8.8` para que se detenga solo.
+
+Salida real en el equipo donde preparé esta guía:
 
 ```text
 Haciendo ping a 8.8.8.8 con 32 bytes de datos:
@@ -275,230 +157,45 @@ Tiempos aproximados de ida y vuelta en milisegundos:
     Mínimo = 14ms, Máximo = 15ms, Media = 14ms
 ```
 
-Catorce milisegundos contra menos de uno. Esa diferencia es la latencia de la que habla la tabla
-de calidad del enlace, medida en tu propia máquina.
+Catorce milisegundos es lo que tardó un paquete en ir hasta un servidor de Google y volver. Ese
+número tiene nombre, **latencia**, y es una de las tres magnitudes con las que se mide la calidad
+de un enlace. Las otras dos son el **jitter**, que es cuánto varía esa latencia, y la **pérdida**,
+que es el porcentaje de paquetes que no llegaron.
 
-Dos detalles de la salida que sí tienen significado:
+Si tu equipo no responde nada, no te preocupes: muchas redes institucionales bloquean esos
+paquetes a propósito. Lo vemos en clase.
 
-- **La diferencia entre mínimo y máximo es el jitter.** Aquí es de 1 ms, que es un enlace estable.
-  En una conexión inalámbrica saturada verás variaciones de decenas de milisegundos.
-- **`TTL=118`** es el *time to live* que queda en el paquete. Empezó en 128 y cada router que lo
-  reenvió le restó uno. Diez saltos de ida, entonces. El TTL evita que un paquete mal enrutado dé
-  vueltas para siempre: cuando llega a cero, el router lo descarta.
-
-En macOS y Linux el comando corre indefinidamente. Limítalo con `ping -c 4 8.8.8.8` o deténlo con
-`Ctrl+C`.
-
-### [3]{.paso} Mira el camino completo
-
-`ping` te da el tiempo total. `tracert` te muestra cada router intermedio.
-
-```powershell
-tracert -d 8.8.8.8
-```
-
-En macOS y Linux el comando se llama `traceroute`. La opción `-d` evita que el comando busque el
-nombre de cada salto, lo que lo hace mucho más rápido.
-
-```text
-Traza a 8.8.8.8 sobre caminos de 12 saltos como máximo.
-
-  1    <1 ms    <1 ms    <1 ms  192.168.128.1
-  2     4 ms     4 ms     4 ms  10.223.128.1
-  3    17 ms    16 ms    16 ms  142.250.164.139
-  4    16 ms    15 ms    15 ms  142.250.164.138
-  5    17 ms    17 ms    16 ms  192.178.97.105
-  6    16 ms    15 ms    15 ms  142.250.62.189
-  7    15 ms    16 ms    15 ms  8.8.8.8
-
-Traza completa.
-```
-
-Lee la salida por tramos:
-
-- **Salto 1**, `192.168.128.1`: el router de la casa. Menos de un milisegundo.
-- **Salto 2**, `10.223.128.1`: sigue siendo una dirección privada. Es infraestructura del
-  operador, todavía dentro de su red.
-- **Salto 3 en adelante**: direcciones públicas. El salto de 4 ms a 17 ms marca el punto donde el
-  tráfico sale de la red del operador.
-- **Saltos 3 a 7**: el tiempo ya casi no sube. La distancia física está recorrida y lo que queda
-  es conmutación dentro del destino.
-
-Cada línea muestra tres tiempos porque `tracert` manda tres paquetes por salto. Las diferencias
-entre esos tres números son jitter, otra vez.
-
-### [4]{.paso} Traduce nombres a direcciones
-
-Ningún humano escribe `20.232.9.141`. El sistema de nombres de dominio hace esa traducción.
-
-```powershell
-nslookup www.fumc.edu.co
-```
-
-```text
-Servidor:  gateway.lan
-Address:  192.168.128.1
-
-Respuesta no autoritativa:
-Nombre:  www.fumc.edu.co
-Address:  20.232.9.141
-```
-
-Tres cosas para leer aquí:
-
-- **Servidor** es quién respondió la consulta. En este caso el router de la casa, que reenvía la
-  pregunta al servidor DNS del operador.
-- **"Respuesta no autoritativa"** significa que ese servidor no es el dueño del dominio: entregó
-  una copia que tenía en caché. La respuesta autoritativa solo la da el servidor de nombres del
-  dominio.
-- **Address** es la dirección IP del servidor que aloja el sitio.
-
-Puedes preguntarle a otro servidor DNS pasándolo como segundo argumento:
-
-```powershell
-nslookup www.fumc.edu.co 8.8.8.8
-```
-
-```text
-Servidor:  dns.google
-Address:  8.8.8.8
-
-Respuesta no autoritativa:
-Nombre:  www.fumc.edu.co
-Address:  20.232.9.141
-```
-
-Misma respuesta desde un servidor distinto. Esa técnica sirve para saber si un problema de acceso
-a un sitio es del sitio o del DNS que estás usando.
-
-## Errores frecuentes
-
-::: {.error-caso}
-[Error 1]{.etiqueta}
-
-### La solicitud de ping no pudo encontrar el host
-
-```text
-La solicitud de ping no pudo encontrar el host sitio-que-no-existe-12345.edu.co.
-Compruebe el nombre y vuelva a intentarlo.
-```
-
-**Causa.** El nombre no se pudo traducir a una dirección IP. O el dominio está mal escrito, o no
-existe, o tu servidor DNS no está respondiendo. Fíjate en que el error aparece antes de enviar un
-solo paquete: el problema es de resolución de nombres, no de conectividad.
-
-**Solución.** Verifica primero con `ping 8.8.8.8`. Si esa dirección responde, tienes conexión y el
-problema es el DNS. Confírmalo con `nslookup el-dominio 8.8.8.8`.
-:::
-
-::: {.error-caso}
-[Error 2]{.etiqueta}
-
-### nslookup responde "Server failed" o agota el tiempo
-
-```text
-Servidor:  gateway.lan
-Address:  192.168.128.1
-
-DNS request timed out.
-    timeout was 2 seconds.
-*** gateway.lan no encuentra el-dominio: Server failed
-```
-
-**Causa.** El servidor DNS que estás usando no supo o no quiso responder. Pasa con dominios que no
-existen, con servidores DNS caseros mal configurados y en redes que filtran consultas DNS.
-
-**Solución.** Repite la consulta contra un servidor público: `nslookup el-dominio 8.8.8.8`. Si por
-ahí sí responde, el problema es tu servidor DNS, no el dominio.
-:::
-
-::: {.error-caso}
-[Error 3]{.etiqueta}
-
-### tracert muestra asteriscos en algunos saltos
-
-```text
-  5     *        *        *     Tiempo de espera agotado para esta solicitud.
-```
-
-**Causa.** Ese router está configurado para no responder a los paquetes de diagnóstico. Es una
-decisión de seguridad común y no significa que la ruta esté rota.
-
-**Solución.** Ninguna, y no hace falta. Si los saltos siguientes vuelven a responder y la traza
-llega al destino, el camino funciona. Solo preocúpate si todos los saltos a partir de cierto punto
-son asteriscos y la traza nunca llega.
-:::
-
-::: {.error-caso}
-[Error 4]{.etiqueta}
-
-### ping al router responde, pero a 8.8.8.8 no
-
-**Causa.** Tu equipo llega hasta el router y ahí se detiene. El problema está fuera de tu máquina:
-el enlace del operador, o un firewall que bloquea ICMP saliente. En redes institucionales el
-bloqueo de ICMP es frecuente.
-
-**Solución.** Comprueba si tienes internet abriendo un sitio en el navegador. Si el navegador
-funciona y el `ping` no, es un filtro de ICMP y no un problema de conectividad. En ese caso usa
-`tracert` hacia un sitio web, o haz la práctica desde otra red.
-:::
-
-## Trabajo independiente
-
-Entregas un informe corto, en PDF, con esto:
-
-1. La salida de los cuatro comandos ejecutados en **tu** equipo, como texto copiado de la terminal.
-   No pegues capturas de pantalla del texto.
-2. Tu dirección IP, tu máscara y tu puerta de enlace, señaladas sobre la salida.
-3. La latencia media hasta tu router y hasta `8.8.8.8`, y cuántos saltos hay entre los dos.
-4. El TTL que traen las respuestas de `8.8.8.8` en tu red, y cuántos saltos deduces de ese número.
-5. Qué medio físico usa tu conexión hasta el router: par trenzado, Wi-Fi o celular. Justifícalo
-   con la fila que le corresponde en la tabla de medios.
-
-Media página de análisis basta. Lo que se evalúa es que leas correctamente las salidas, no la
-extensión.
-
-::: {.callout-important}
-## Si haces la práctica desde la sala de cómputo
-
-Las redes institucionales suelen filtrar ICMP y el `ping` a internet puede no responder. Haz la
-práctica en tu casa o con los datos del celular compartidos por Wi-Fi, y si no te queda otra,
-documenta el filtro: es un resultado válido y lo discutimos en clase.
-:::
-
-## Lista de chequeo de la semana
+## Lo que te llevas de hoy
 
 ::: {.checklist}
-**Antes de cerrar la semana, confirma que puedes hacer esto sin consultar la guía**
+**Al salir de esta sesión deberías poder explicar, sin mirar la guía**
 
-- [ ] Explicar en una frase qué es la telemática y dar un ejemplo propio
-- [ ] Distinguir dato de señal, y codificación de modulación
-- [ ] Decir cuál es tu dirección IP, tu máscara y tu puerta de enlace
-- [ ] Interpretar una salida de `ping`: latencia, jitter, pérdida y TTL
-- [ ] Explicar qué muestra cada línea de un `tracert`
-- [ ] Decir qué significa "respuesta no autoritativa" en un `nslookup`
-- [ ] Comparar dos medios de transmisión por alcance y capacidad
+- [ ] Qué es la telemática y en qué se diferencia de las telecomunicaciones y la informática
+- [ ] Los cinco elementos de una comunicación y qué hace cada uno
+- [ ] La diferencia entre un dato y una señal
+- [ ] Qué significa que las redes hayan convergido
+- [ ] Qué es la latencia
 :::
+
+## Para la próxima sesión
+
+Mira a tu alrededor y anota **tres dispositivos** de tu casa que estén conectados a la red. Para
+cada uno, responde dos preguntas: qué información envía, y por qué medio se conecta. Lo ponemos en
+común al empezar la Semana 2.
 
 ## Recursos
 
-- Tanenbaum, A. S. y Wetherall, D. J. *Redes de computadoras.* Capítulo 1 y capítulo 2, para
-  fundamentos y transmisión de datos.
-- Stallings, W. *Comunicaciones y redes de computadores.* Capítulos 3 y 5, para señales,
-  codificación y modulación.
-- Kurose, J. F. y Ross, K. W. *Redes de computadoras: un enfoque descendente.* Capítulo 1, para
-  latencia, pérdida y capacidad.
-- Forouzan, B. A. *Transmisión de datos y redes de comunicaciones.* Capítulos 3 y 4.
-- Shannon, C. E. (1948). *A Mathematical Theory of Communication.* Bell System Technical Journal.
+- Tanenbaum, A. S. y Wetherall, D. J. *Redes de computadoras.* Capítulo 1.
+- Stallings, W. *Comunicaciones y redes de computadores.* Capítulo 1.
+- Kurose, J. F. y Ross, K. W. *Redes de computadoras: un enfoque descendente.* Capítulo 1.
+- Shannon, C. E. (1948). *A Mathematical Theory of Communication.*
   [Copia en la Universidad de Harvard](https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf).
-- Direcciones IP reservadas para uso privado: [RFC 1918](https://www.rfc-editor.org/rfc/rfc1918).
-- Registro de direcciones IP de América Latina: [LACNIC](https://www.lacnic.net/).
 
 ::: {.pie-doc}
 Telemática para IoT (TPI01). Fundación Universitaria María Cano. Facultad de Ingeniería.
 Semestre 2026-02.
 
 **Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
-usando el modelo Claude Opus 5 de Anthropic. Todo el contenido fue revisado y validado. Las
-salidas de terminal son capturas reales tomadas durante la preparación del material.
+usando el modelo Claude Opus 5 de Anthropic. Todo el contenido fue revisado y validado. La salida
+de terminal es una captura real tomada durante la preparación del material.
 :::
