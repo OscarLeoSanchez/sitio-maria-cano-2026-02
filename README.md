@@ -62,12 +62,26 @@ GitHub Pages actualiza el sitio en menos de un minuto.
 
 ## Diagramas
 
-Las guías usan [Mermaid](https://mermaid.js.org/) escrito dentro del propio `.qmd`, en bloques
-```` ```{mermaid} ````. Quarto los renderiza sin configuración extra, así que un diagrama se edita
-como texto y no hay archivos de imagen que mantener.
+Los diagramas son **SVG escrito a mano dentro del propio `.qmd`**, envuelto en
+`::: {.diagrama}`. Se editan como texto, no hay archivos de imagen que mantener y el resultado
+imprime bien en el PDF.
 
-Evita `subgraph`: con este tema los subgrafos salen con relleno azul oscuro y el texto encima
-queda ilegible. Para comparar dos escenarios, usa un diagrama simple más una tabla.
+La paleta sale de `estilos/estilo.scss`: relleno `#eef4fa` con borde `#c7d6e6` para las cajas
+normales, `#e4f2f1` con borde `#8fc9c5` para la caja destacada de cada diagrama, texto `#12324f`
+y secundario `#5b6876`, conectores `#8fb3d1`.
+
+Reglas para que un diagrama nuevo encaje:
+
+- Fija el tipo con `font-family` en el elemento `<svg>` y hereda tamaño y color desde grupos `<g>`.
+  Nada de `<style>` dentro del SVG: en HTML esos estilos son globales y se filtran a toda la página.
+- Los `id` de los `marker` deben ser únicos en toda la página, porque todos los SVG comparten el
+  mismo DOM. La convención es `pf1`, `pf2` y así.
+- El `viewBox` va sobre 760 unidades de ancho como máximo, con textos entre 11 y 17 unidades.
+- `.diagrama` fija `min-width: 470px` y desplaza en horizontal en pantallas angostas, en vez de
+  encoger el texto hasta que no se lee.
+
+Mermaid se probó primero y se descartó: con este tema los `subgraph` salen con relleno azul oscuro
+y el texto encima queda ilegible, y el control tipográfico es mucho menor.
 
 ## Convenciones de escritura
 
