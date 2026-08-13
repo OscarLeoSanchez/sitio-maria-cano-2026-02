@@ -12,12 +12,16 @@ date-format: "D [de] MMMM [de] YYYY"
 | Tema   | Tema 3. Recursividad e implementación               |
 :::
 
-El Tema 1 cerró con una promesa: "en la próxima sesión entramos a recursividad y a las estrategias
-de solución, la otra mitad de la Unidad 1. Van a hacer falta las pilas de hoy, porque cada llamada
-recursiva se apila". Esta guía la cumple. El Tema 2 te dio la herramienta para representar un tipo
-de dato abstracto como una clase; hoy vas a descubrir que el propio intérprete de Python o la propia
-máquina virtual de Java usan esa misma disciplina, apilar y desapilar donde el último que entra sale
-primero, para ejecutar cada llamada a una función, la programes tú o no.
+El Tema 2 cerró con la clase `Pila` modelada sin implementación de memoria, lista para que la
+Unidad 2 la llene con un arreglo o con nodos enlazados. Antes de llegar ahí conviene ver que esa
+misma disciplina, apilar y desapilar donde el último que entra sale primero, ya está trabajando por
+debajo de cualquier programa que escribas, la uses tú explícitamente o no. Cada vez que una función
+llama a otra, el intérprete de Python o la máquina virtual de Java guardan ese llamado en una pila
+propia, y la recursividad es la técnica que hace visible esa maquinaria, porque una función que se
+llama a sí misma obliga a la pila a crecer y a deshacerse una y otra vez en el mismo lugar del
+código. Esta guía recorre esa maquinaria en cuatro formas distintas de recursión: la que avanza en
+una sola cadena, la que se reparte entre dos funciones que se llaman entre sí, la que se ramifica en
+árbol y la que recorre una lista en vez de un número.
 
 ## Las muñecas que se abren en cascada
 
@@ -25,14 +29,14 @@ Piensa en una matrioska. La abres y adentro hay una muñeca igual, más pequeña
 adentro hay otra. Repites la misma acción, abrir y mirar adentro, hasta que llegas a una muñeca
 sólida que no se abre porque no tiene nada dentro.
 
-Ese momento en el que ya no hay nada más que abrir es el **caso base**: la única razón por la que la
-cascada de aperturas se detiene. Cada apertura anterior es el **caso recursivo**: la misma acción,
-aplicada a una versión más pequeña del mismo problema. Y hay un detalle que se te va a olvidar si no
-lo anotas ahora: mientras abres, vas dejando las cáscaras vacías apiladas una encima de la otra, en
-el orden en que las abriste. Para volver a armar la matrioska completa, las cierras en el orden
-contrario: primero la más pequeña, al final la más grande. Eso es exactamente lo que hace una
-función recursiva con la memoria del programa: apila un marco por cada llamada, y los deshace en el
-orden inverso al que los creó.
+Ese momento en el que ya no hay nada más que abrir marca el *caso base*, la única razón por la que
+la cascada de aperturas se detiene. Cada apertura anterior es el *caso recursivo*, la misma acción
+aplicada a una versión más pequeña del mismo problema. Conviene anotar un detalle que se olvida
+fácil: mientras abres, vas dejando las cáscaras vacías apiladas una encima de la otra, en el orden
+en que las abriste, así que para volver a armar la matrioska completa las cierras en el orden
+contrario, primero la más pequeña y al final la más grande. Eso es exactamente lo que hace una
+función recursiva con la memoria del programa, porque apila un marco por cada llamada y los deshace
+en el orden inverso al que los creó.
 
 ## Caso base y caso recursivo
 
@@ -43,41 +47,68 @@ Toda función recursiva bien escrita tiene dos partes:
 - **Caso recursivo.** La función se llama a sí misma con una entrada más pequeña o más cercana al
   caso base, y combina ese resultado con el trabajo del paso actual.
 
-El Tema 1 definió la finitud como una de las cinco propiedades que Knuth le exige a un algoritmo:
-terminar después de un número finito de pasos. Una función recursiva sin caso base, o con un caso
-base al que nunca se llega, deja de ser un algoritmo en sentido estricto. Cumple las otras cuatro
-propiedades sin problema y aun así no es un algoritmo, porque no termina.
+El Tema 1 definió la finitud como la propiedad, entre las cinco que Knuth le exige a un algoritmo,
+que obliga a terminar después de un número finito de pasos. Una función recursiva sin caso base, o
+con un caso base al que nunca se llega, deja de ser un algoritmo en sentido estricto, porque cumple
+las otras cuatro propiedades sin problema y aun así no termina.
 
-## Cómo se apila cada llamada
+Vas a ver este mismo molde aplicado cuatro veces en esta guía: sobre un número con `factorial`,
+sobre una pareja de funciones que se llaman entre sí, sobre dos números que se combinan con
+`fibonacci`, y sobre una lista con `suma_lista`. Identificar el caso base y el caso recursivo es
+siempre el primer paso para escribir o para leer cualquier función recursiva, sin importar sobre qué
+dato trabaje.
 
-Cada vez que se invoca una función, el sistema reserva un espacio para esa invocación: un **marco de
-pila** (stack frame) que guarda sus parámetros, sus variables locales y el punto exacto al que debe
-volver cuando termine. Ese espacio no se comparte entre llamadas. Aunque el código escriba `n` en
-todas las invocaciones, cada marco tiene su propia copia.
+## Qué guarda un marco de pila
+
+Cada vez que se invoca una función, el sistema reserva un espacio para esa invocación, un *marco de
+pila* (stack frame en inglés, o activation record en la literatura de compiladores). Ese marco
+guarda tres cosas, no solo dos: los parámetros y las variables locales de esa llamada en particular,
+y además la dirección de retorno, que es el punto exacto del código al que la ejecución debe volver
+cuando la llamada termine. Sin ese tercer dato el programa no sabría qué hacer después de que una
+función devuelve un valor, porque la misma función puede haber sido llamada desde sitios distintos
+del código, y cada llamada necesita volver a su propio sitio, no a cualquiera.
+
+Las notas sobre pilas y compiladores de la Universidad de Iowa explican esta misma idea con
+precisión: el marco de una llamada guarda sus parámetros, que quedan listos apenas la función
+arranca porque quien llama los entrega, sus variables locales, que se inicializan durante la
+ejecución del propio cuerpo de la función, y además la dirección de retorno, el punto exacto del
+programa al que la ejecución debe volver cuando la función termina. Ese marco no se comparte entre
+llamadas, así que aunque el código escriba `n` en las cuatro llamadas de `factorial(4)`, cada una
+tiene su propia copia de `n` y su propia dirección de retorno.
+
+Python deja ver esta misma idea de forma muy concreta, en su propia documentación oficial. Cada
+objeto `frame`, que representa una llamada activa dentro del intérprete, tiene un atributo `f_back`
+que apunta al marco de quien lo llamó, o vale `None` cuando ya no hay nadie más abajo en la pila.
+Seguir esa cadena de atributos `f_back`, uno tras otro, es literalmente recorrer la pila de llamadas
+hacia atrás, la misma pila que dibuja el diagrama de abajo.
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos marcos de pila lado a lado, cada uno con su propia copia de la variable n, conectados por una flecha que representa la llamada de uno al otro" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos marcos de pila lado a lado, cada uno con sus propios parametros, variables locales y direccion de retorno, conectados por una flecha que representa la llamada de uno al otro" font-family="Segoe UI, Inter, system-ui, sans-serif">
   <defs><marker id="esd3b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
-  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cada marco guarda su propia copia de las variables</text>
-  <rect x="60" y="50" width="260" height="100" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
-  <rect x="440" y="50" width="260" height="100" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
-  <path d="M320,100 L436,100" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#esd3b)"/>
-  <text x="378" y="90" font-size="11" fill="#5b6876" text-anchor="middle">llama a</text>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cada marco guarda sus propios datos, aparte de los demas</text>
+  <rect x="60" y="42" width="260" height="120" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="440" y="42" width="260" height="120" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <path d="M320,102 L436,102" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#esd3b)"/>
+  <text x="378" y="92" font-size="11" fill="#5b6876" text-anchor="middle">llama a</text>
   <g text-anchor="middle">
-    <g font-size="14" font-weight="600" fill="#12324f"><text x="190" y="76">marco de factorial(3)</text><text x="570" y="76">marco de factorial(2)</text></g>
-    <g font-size="16" font-weight="700" fill="#0e6f6c"><text x="190" y="112">n = 3</text><text x="570" y="112">n = 2</text></g>
-    <g font-size="11" fill="#5b6876"><text x="190" y="134">su propio espacio</text><text x="570" y="134">otro espacio, aparte</text></g>
+    <g font-size="14" font-weight="600" fill="#12324f"><text x="190" y="64">marco de factorial(3)</text><text x="570" y="64">marco de factorial(2)</text></g>
+    <g font-size="16" font-weight="700" fill="#0e6f6c"><text x="190" y="92">n = 3</text><text x="570" y="92">n = 2</text></g>
+    <g font-size="11" fill="#5b6876"><text x="190" y="112">parametro, su propio espacio</text><text x="570" y="112">parametro, otro espacio aparte</text></g>
+    <g font-size="11.5" font-weight="600" fill="#0e6f6c"><text x="190" y="140">vuelve a: factorial(4)</text><text x="570" y="140">vuelve a: factorial(3)</text></g>
   </g>
-  <text x="14" y="178" font-size="11.5" fill="#5b6876">Cambiar el n de un marco no toca el n del otro, aunque el codigo escriba "n" las dos veces.</text>
+  <text x="14" y="196" font-size="11.5" fill="#5b6876">Cambiar el n de un marco no toca el n del otro, aunque el codigo escriba "n" las dos veces.</text>
+  <text x="14" y="212" font-size="11.5" fill="#5b6876">La direccion de retorno de cada marco tambien es propia: cada uno vuelve a un sitio distinto.</text>
 </svg>
 
 :::
 
+## La pila de llamadas para factorial(4)
+
 Sigamos ese apilamiento con un ejemplo concreto: `factorial(4)`. La función multiplica `n` por el
 resultado de `factorial(n - 1)`, hasta llegar al caso base `factorial(0) = 1`. Cada llamada entra
-antes de que la anterior sepa su resultado, así que la pila crece hasta cuatro niveles antes de que
-se resuelva la primera multiplicación.
+antes de que la anterior sepa su resultado, así que la pila crece hasta cinco marcos antes de que se
+resuelva la primera multiplicación.
 
 ::: {.diagrama}
 
@@ -103,15 +134,15 @@ se resuelva la primera multiplicación.
 :::
 
 Fíjate en el orden de la columna "Sale": el primer marco que devuelve un valor es el último que
-entró, `factorial(0)`. Es la misma regla de la clase `Pila` que el Tema 2 te preparó para modelar:
-el último que entra es el primero que sale. La pila de llamadas del sistema no es una metáfora, es
-una estructura de datos real que tu programa nunca declara pero siempre usa.
+entró, `factorial(0)`. Es la misma regla que el Tema 2 te preparó para modelar en la clase `Pila`,
+porque el último que entra es el primero que sale. La pila de llamadas del sistema no es una
+metáfora, es una estructura de datos real que tu programa nunca declara pero siempre usa.
 
 ## Trazado en Python y en Java
 
 La misma función, con una línea de rastro antes y después de la llamada recursiva, deja ver el
 crecimiento y el deshacer de la pila en la consola. Esta es la versión en Python, y la salida que
-produjo al ejecutarla en la máquina donde preparé este material:
+produjo al ejecutarla en el equipo donde preparé este material:
 
 ```python
 def factorial(n):
@@ -141,8 +172,11 @@ resultado final: 24
 ```
 
 Las cinco líneas "entra" son la pila creciendo, la línea del caso base es el fondo de la pila, y las
-cuatro líneas "sale" son la pila deshaciéndose en orden inverso: exactamente lo que dibuja el
-diagrama de arriba. La misma lógica en Java, letra por letra, produce la misma secuencia:
+cuatro líneas "sale" son la pila deshaciéndose en orden inverso, exactamente lo que dibuja el
+diagrama de arriba. Cada línea "sale" se imprime justo después de que la llamada recursiva regresa a
+la dirección de retorno guardada en su marco, que es la línea `resultado = n * factorial(n - 1)`, así
+que el orden de las líneas "sale" resulta el inverso exacto del orden de las líneas "entra". La misma
+lógica en Java, letra por letra, produce la misma secuencia:
 
 ```java
 public class Factorial {
@@ -165,6 +199,260 @@ public class Factorial {
 
 Compílalo y ejecútalo. Java no imprime nada distinto porque el mecanismo es el mismo: un marco por
 llamada, en una pila que administra la máquina virtual en vez del sistema operativo directamente.
+
+## Recursión directa e indirecta
+
+Todos los ejemplos de esta guía hasta ahora son de *recursión directa*: `factorial` se llama a sí
+misma dentro de su propio cuerpo, y lo mismo va a hacer `fibonacci` más adelante. Pero una función
+también puede volver a sí misma dando un rodeo por otra función, lo que se llama *recursión
+indirecta* o *recursión mutua*. Las notas del curso de estructuras de datos de la Universidad de
+Maryland, Condado de Baltimore (UMBC), explican la diferencia con el mismo criterio: una función es
+directamente recursiva cuando contiene una llamada explícita a sí misma, y es indirectamente
+recursiva cuando llama a otra función que, en algún punto de su propia ejecución, termina llamando de
+vuelta a la primera.
+
+Un ejemplo clásico son dos funciones que deciden si un número es par o impar sin usar el operador de
+módulo, apoyándose una en la otra:
+
+```python
+def es_par(n):
+    print(f"es_par({n})")
+    if n == 0:
+        return True
+    return es_impar(n - 1)
+
+def es_impar(n):
+    print(f"es_impar({n})")
+    if n == 0:
+        return False
+    return es_par(n - 1)
+
+print("es_par(4) =", es_par(4))
+```
+
+`es_par` nunca se llama a sí misma directamente. Para saber si 4 es par, llama a `es_impar(3)`, que
+llama a `es_par(2)`, que llama a `es_impar(1)`, que llama a `es_par(0)`, y ahí por fin aparece el caso
+base, que responde sin volver a llamar a nadie más. Esta es la salida real de ejecutar el código de
+arriba:
+
+```
+es_par(4)
+es_impar(3)
+es_par(2)
+es_impar(1)
+es_par(0)
+es_par(4) = True
+```
+
+La versión en Java necesita los dos métodos declarados en la misma clase, o al menos visibles el uno
+para el otro, pero el mecanismo de la pila no cambia:
+
+```java
+public class Paridad {
+    public static boolean esPar(int n) {
+        System.out.println("esPar(" + n + ")");
+        if (n == 0) {
+            return true;
+        }
+        return esImpar(n - 1);
+    }
+
+    public static boolean esImpar(int n) {
+        System.out.println("esImpar(" + n + ")");
+        if (n == 0) {
+            return false;
+        }
+        return esPar(n - 1);
+    }
+
+    public static void main(String[] args) {
+        System.out.println("esPar(4) = " + esPar(4));
+    }
+}
+```
+
+Cada llamada a `esPar` o a `esImpar`, sin importar cuál llamó a cuál, sigue reservando su propio
+marco, con sus propios parámetros y su propia dirección de retorno. Lo único distinto frente a la
+recursión directa es que la dirección de retorno de un marco de `esPar` apunta al cuerpo de
+`esImpar`, y no al cuerpo de la propia `esPar`.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda una funcion con una flecha en bucle que representa la recursion directa; a la derecha dos funciones conectadas por dos flechas en sentidos opuestos que representan la recursion indirecta o mutua" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd3e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="150" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Recursion directa</text>
+  <text x="560" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Recursion indirecta (o mutua)</text>
+  <rect x="65" y="78" width="170" height="64" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="485" y="43" width="150" height="50" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="485" y="143" width="150" height="50" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <path d="M235,128 C305,128 305,92 235,92" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#esd3e)"/>
+  <path d="M635,68 C700,68 700,168 635,168" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#esd3e)"/>
+  <path d="M485,168 C420,168 420,68 485,68" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#esd3e)"/>
+  <g text-anchor="middle">
+    <text x="150" y="104" font-size="14" font-weight="600" fill="#12324f">funcion()</text>
+    <text x="150" y="124" font-size="11" fill="#5b6876">se llama con una entrada mas pequena</text>
+    <text x="560" y="64" font-size="13" font-weight="600" fill="#12324f">funcion_a()</text>
+    <text x="560" y="164" font-size="13" font-weight="600" fill="#12324f">funcion_b()</text>
+  </g>
+  <text x="310" y="106" font-size="11" fill="#5b6876">se llama a si misma</text>
+  <text x="706" y="122" font-size="11" fill="#5b6876" text-anchor="start">llama a</text>
+  <text x="345" y="122" font-size="11" fill="#5b6876" text-anchor="end">llama a</text>
+  <text x="14" y="215" font-size="11.5" fill="#5b6876">En la indirecta ninguna funcion se llama literalmente a si misma, porque el ciclo siempre pasa por la otra.</text>
+</svg>
+
+:::
+
+La recursión indirecta aparece más de lo que parece, sobre todo en analizadores sintácticos de
+descenso recursivo, donde una función que reconoce expresiones suele llamar a una función que
+reconoce términos, que llama a una función que reconoce factores, que puede volver a llamar a la
+función de expresiones si encuentra un paréntesis abierto. El artículo de Wikipedia sobre recursión
+mutua lo confirma como uno de los dominios donde este patrón aparece con más frecuencia, junto con
+las estructuras de datos definidas unas en términos de otras, como un árbol definido a partir de un
+bosque de árboles más pequeños. El mecanismo de la pila no cambia entre los dos tipos de recursión:
+lo único que cambia es cuántas funciones distintas participan en el ciclo de llamadas antes de volver
+al punto de partida.
+
+## Cuando la recursión se ramifica: Fibonacci
+
+Toda la recursión de esta guía hasta aquí es *lineal*: cada llamada a `factorial`, a `es_par` o a
+`es_impar` genera como máximo una llamada recursiva nueva, así que la pila crece en una sola cadena,
+un marco encima de otro, como los eslabones de una cadena. Hay un patrón distinto y muy común en el
+que cada llamada genera dos o más llamadas recursivas, y la pila deja de crecer en cadena para
+ramificarse en árbol. El ejemplo clásico es la sucesión de Fibonacci, donde cada número es la suma de
+los dos anteriores, con `fibonacci(0) = 0` y `fibonacci(1) = 1` como casos base.
+
+```python
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+```
+
+```java
+public class Fibonacci {
+    public static int fibonacci(int n) {
+        if (n <= 1) {
+            return n;
+        }
+        return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+
+    public static void main(String[] args) {
+        System.out.println("fibonacci(10) = " + fibonacci(10));
+    }
+}
+```
+
+La línea `return fibonacci(n - 1) + fibonacci(n - 2)` es la diferencia completa con `factorial`. En
+vez de una sola llamada recursiva hay dos, y las dos tienen que terminar antes de que la suma se
+pueda calcular. Cada una de esas dos llamadas vuelve a hacer dos llamadas más, y así sucesivamente,
+hasta que todas las ramas llegan a un caso base.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 370" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol de llamadas de fibonacci(5), con quince casillas: las llamadas que se ramifican en azul y los casos base en verde, mostrando que fibonacci(1) se repite cinco veces y fibonacci(0) tres veces" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd3d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">El arbol de llamadas de fibonacci(5): 15 llamadas en total</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#esd3d)"><path d="M438,53 L264,87"/><path d="M438,53 L613,87"/><path d="M264,113 L163,147"/><path d="M264,113 L365,147"/><path d="M163,173 L95,207"/><path d="M163,173 L230,207"/><path d="M95,233 L50,267"/><path d="M95,233 L140,267"/><path d="M365,173 L320,207"/><path d="M365,173 L410,207"/><path d="M613,113 L545,147"/><path d="M613,113 L680,147"/><path d="M545,173 L500,207"/><path d="M545,173 L590,207"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="413" y="27" width="50" height="26" rx="6"/><rect x="239" y="87" width="50" height="26" rx="6"/><rect x="588" y="87" width="50" height="26" rx="6"/><rect x="138" y="147" width="50" height="26" rx="6"/><rect x="340" y="147" width="50" height="26" rx="6"/><rect x="520" y="147" width="50" height="26" rx="6"/><rect x="70" y="207" width="50" height="26" rx="6"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="25" y="267" width="50" height="26" rx="6"/><rect x="115" y="267" width="50" height="26" rx="6"/><rect x="205" y="207" width="50" height="26" rx="6"/><rect x="295" y="207" width="50" height="26" rx="6"/><rect x="385" y="207" width="50" height="26" rx="6"/><rect x="475" y="207" width="50" height="26" rx="6"/><rect x="565" y="207" width="50" height="26" rx="6"/><rect x="655" y="147" width="50" height="26" rx="6"/></g>
+  <g text-anchor="middle" font-size="14" font-weight="700" fill="#12324f"><text x="438" y="45">5</text><text x="264" y="105">4</text><text x="613" y="105">3</text><text x="163" y="165">3</text><text x="365" y="165">2</text><text x="545" y="165">2</text><text x="95" y="225">2</text></g>
+  <g text-anchor="middle" font-size="14" font-weight="700" fill="#0e6f6c"><text x="50" y="285">1</text><text x="140" y="285">0</text><text x="230" y="225">1</text><text x="320" y="225">1</text><text x="410" y="225">0</text><text x="500" y="225">1</text><text x="590" y="225">0</text><text x="680" y="165">1</text></g>
+  <text x="14" y="330" font-size="11.5" fill="#5b6876">Las casillas verdes son casos base (n = 0 o n = 1); las azules se ramifican en dos llamadas mas.</text>
+  <text x="14" y="348" font-size="11.5" fill="#5b6876">fibonacci(1) se calcula 5 veces y fibonacci(0) se calcula 3 veces, siempre el mismo subproblema.</text>
+</svg>
+
+:::
+
+El árbol completo de `fibonacci(5)` tiene quince llamadas, contadas una por una en la ejecución real:
+cinco llamadas a `fibonacci(1)`, tres a `fibonacci(0)`, tres a `fibonacci(2)`, dos a `fibonacci(3)`,
+una a `fibonacci(4)` y la llamada original a `fibonacci(5)`. Fíjate en `fibonacci(2)`: aparece tres
+veces en el árbol, y las tres veces hace exactamente el mismo trabajo, porque vuelve a llamar a
+`fibonacci(1)` y a `fibonacci(0)` para recalcular un resultado que ya se calculó antes en otra rama.
+Esa repetición es el problema central de la recursión ramificada sin memoria, porque el número de
+llamadas crece de forma exponencial con `n`, ya que cada nivel del árbol duplica aproximadamente el
+número de llamadas del nivel anterior. La Unidad 3, o un curso posterior de este programa, va a
+resolver exactamente este desperdicio con una técnica llamada *memorización*, que consiste en guardar
+el resultado de cada subproblema la primera vez que se calcula para no volver a calcularlo. Esta guía
+no la desarrolla, pero conviene que sepas que existe y que este es justo el problema que resuelve.
+
+Hay un detalle que sorprende incluso después de entender el árbol: la pila de llamadas nunca llega a
+tener quince marcos activos a la vez, aunque el árbol completo tenga quince nodos. La ejecución sigue
+una sola rama hasta el fondo antes de empezar la siguiente, así que en cualquier momento la pila solo
+contiene los marcos del camino que va desde `fibonacci(5)` hasta la llamada activa en ese instante,
+nunca el árbol entero. Esta es la profundidad máxima de la pila medida en la práctica para distintos
+valores de `n`, junto con el número total de llamadas:
+
+| n | Llamadas totales | Profundidad máxima de la pila |
+|---|---|---|
+| 5 | 15 | 4 |
+| 10 | 177 | 9 |
+| 20 | 21.891 | 19 |
+| 30 | 2.692.537 | 29 |
+
+La columna de llamadas totales crece de forma exponencial, casi duplicándose de una fila a la
+siguiente, mientras que la profundidad máxima crece de forma lineal, casi igual a `n`. Por eso
+`fibonacci(30)` calculado de esta forma tarda un buen rato en tu equipo sin llegar nunca a un
+`RecursionError`: el problema no es que la pila se desborde, es que el programa hace casi tres
+millones de llamadas para resolver un problema que la memorización resuelve con apenas treinta.
+
+## Recorrer una lista con recursión: sumar sus elementos
+
+El mismo molde de caso base y caso recursivo sirve para recorrer una estructura de datos, no solo
+para calcular con números. Sumar los elementos de una lista con un ciclo es la forma más común, pero
+la versión recursiva dice exactamente lo mismo con otras palabras: si la lista está vacía la suma es
+cero, y si no, la suma es el primer elemento más la suma del resto de la lista.
+
+```python
+def suma_lista(datos):
+    print(f"suma_lista({datos})")
+    if len(datos) == 0:
+        return 0
+    return datos[0] + suma_lista(datos[1:])
+
+print("suma_lista([6, 2, 9, 4]) =", suma_lista([6, 2, 9, 4]))
+```
+
+El caso base es la lista vacía, `len(datos) == 0`, igual que `factorial(0)` o `fibonacci(0)` eran los
+casos base sobre números. El caso recursivo separa el primer elemento, `datos[0]`, y se lo suma al
+resultado de aplicar la misma función al resto de la lista, `datos[1:]`, que es una lista más corta y
+por lo tanto más cerca del caso base. Esta es la salida real de ejecutar el código de arriba:
+
+```
+suma_lista([6, 2, 9, 4])
+suma_lista([2, 9, 4])
+suma_lista([9, 4])
+suma_lista([4])
+suma_lista([])
+suma_lista([6, 2, 9, 4]) = 21
+```
+
+La versión en Java necesita un parámetro extra, porque los arreglos de Java no tienen una operación
+equivalente a `datos[1:]` que devuelva todo menos el primer elemento sin copiar el arreglo entero
+cada vez. La solución más simple es pasar el índice desde el que hay que sumar, en vez de recortar el
+arreglo:
+
+```java
+public class SumaLista {
+    public static int sumaLista(int[] datos, int indice) {
+        if (indice == datos.length) {
+            return 0;
+        }
+        return datos[indice] + sumaLista(datos, indice + 1);
+    }
+
+    public static void main(String[] args) {
+        int[] datos = {6, 2, 9, 4};
+        System.out.println("sumaLista = " + sumaLista(datos, 0));
+    }
+}
+```
+
+El caso base cambia de forma, `indice == datos.length` en vez de una lista vacía, pero significa lo
+mismo: ya no queda nada por sumar. Tener que cambiar cómo se expresa el caso base según lo que el
+lenguaje permite hacer barato es exactamente el tipo de decisión que vas a tomar una y otra vez en la
+Unidad 3, cuando recorras listas enlazadas, árboles y grafos con funciones recursivas en vez de con
+ciclos.
 
 ## Cuando falta el caso base: desbordamiento de pila
 
@@ -192,19 +480,22 @@ alcanza, agota ese espacio y el programa termina en un error.
 
 :::
 
-Java lo documenta en el Javadoc de `StackOverflowError`, subclase de `Error` que la máquina virtual
-lanza cuando se agota la memoria del hilo: "Thrown when a stack overflow occurs because an
-application recurses too deeply". No hay un contador que avise antes: el programa corre hasta que la
-memoria real de la pila se acaba, y ese límite depende de cómo esté configurado el hilo.
+Java lo documenta en el Javadoc de `StackOverflowError`, una subclase de `Error` que la máquina
+virtual lanza cuando la memoria reservada para la pila de un hilo se agota porque una aplicación
+recurre demasiado profundo. No hay un contador que avise antes de tiempo, porque el programa corre
+hasta que la memoria real de la pila se acaba, y ese límite depende de cómo esté configurado el hilo
+en el que corre.
 
-Python resuelve el mismo riesgo distinto: en vez de esperar a que la pila de C que hay debajo se
-desborde y haga caer el intérprete entero, cuenta la profundidad de las llamadas y corta antes. La
-documentación de `sys.getrecursionlimit()` lo dice así: "Return the current value of the recursion
-limit, the maximum depth of the Python interpreter stack. This limit prevents infinite recursion
-from causing an overflow of the C stack and crashing Python." Cuando se llega a ese límite, se lanza
-`RecursionError`, que la documentación describe como derivado de `RuntimeError` y que se lanza
-"when the interpreter detects that the maximum recursion depth ... is exceeded". Esta es la salida
-real de intentar una función sin caso base en la máquina donde preparé este material:
+Python resuelve el mismo riesgo de otra forma: en vez de esperar a que la pila de C que hay debajo se
+desborde y haga caer el intérprete entero, cuenta la profundidad de las llamadas y corta antes de
+llegar ahí. La documentación de `sys.getrecursionlimit()` explica que esa función devuelve el valor
+actual del límite de recursión, es decir, la profundidad máxima que puede alcanzar la pila del
+intérprete, y aclara que ese límite existe justamente para evitar que una recursión infinita desborde
+la pila de C y haga caer Python entero en vez de mostrar un error controlado. Cuando la ejecución
+llega a ese límite se lanza `RecursionError`, que la documentación describe como una excepción
+derivada de `RuntimeError` que el intérprete lanza al detectar que se superó la profundidad máxima de
+recursión permitida. Esta es la salida real de intentar una función sin caso base en el equipo donde
+preparé este material:
 
 ```python
 def sin_caso_base(n):
@@ -217,18 +508,29 @@ sin_caso_base(5)
 RecursionError: maximum recursion depth exceeded
 ```
 
-En esa misma máquina, con Python 3.13.4, `sys.getrecursionlimit()` devolvió `1000`: por defecto el
-intérprete permite alrededor de mil llamadas apiladas antes de rendirse. Es un número de fábrica,
-ajustable con `sys.setrecursionlimit()`, y la propia documentación advierte que subirlo demasiado
-puede terminar igual, en una caída del intérprete en vez de un error controlado.
+En ese mismo equipo, con Python 3.13.4, `sys.getrecursionlimit()` devolvió `1000`: por defecto el
+intérprete permite alrededor de mil llamadas apiladas antes de rendirse. Ese número de fábrica no
+depende del procesador ni de la memoria disponible, pero sí puede variar entre instalaciones o
+versiones de Python, así que conviene verificarlo en tu propio equipo con `sys.getrecursionlimit()`
+antes de asumir 1000. El límite es ajustable con `sys.setrecursionlimit()`, y la propia documentación
+advierte que subirlo demasiado puede terminar igual, en una caída del intérprete en vez de un error
+controlado.
 
 La conexión con el Tema 1 es directa: una recursión sin caso base no cumple la finitud que Knuth le
 exige a un algoritmo. `RecursionError` y `StackOverflowError` no son fallas del lenguaje, son la
 forma en que Python y Java te avisan que escribiste algo que, en sentido estricto, no era un
 algoritmo.
 
+Vale la pena distinguir dos programas que se cuelgan por razones distintas. Uno con un caso base
+ausente, como `sin_caso_base`, agota la pila enseguida porque la profundidad crece sin límite. Otro
+con caso base correcto pero mucho trabajo repetido, como `fibonacci` sin memorizar para un `n`
+grande, no agota nunca la pila, porque la profundidad se mantiene acotada, pero puede tardar tanto
+tiempo en terminar que en la práctica se siente igual de colgado. El primero es un error de finitud;
+el segundo es un problema de eficiencia, y la Unidad 4 de este curso trae herramientas para medirlo
+con precisión.
+
 ::: {.callout-tip}
-## Reto. Dibuja la pila antes de correr el código
+## Reto 1. Dibuja la pila antes de correr el código
 
 Sin computador, en papel, dibuja los marcos de pila que se crean al llamar a esta función con
 `suma(5)`:
@@ -248,35 +550,118 @@ def suma(n):
    y compara el resultado final con lo que predijiste.
 :::
 
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+Seis marcos entran a la pila, de `suma(5)` a `suma(0)`, y el caso base es `suma(0) = 0`. Esta es la
+salida real de trazar la ejecución con una línea antes y después de cada llamada:
+
+```
+entra suma(5)
+entra suma(4)
+entra suma(3)
+entra suma(2)
+entra suma(1)
+entra suma(0)
+caso base: suma(0) = 0
+sale suma(1) = 1
+sale suma(2) = 3
+sale suma(3) = 6
+sale suma(4) = 10
+sale suma(5) = 15
+resultado final: 15
+```
+
+Cada valor de "sale" es la suma acumulada hasta ese punto: `suma(1) = 1`, `suma(2) = 1 + 2 = 3`,
+`suma(3) = 3 + 3 = 6`, y así hasta `suma(5) = 10 + 5 = 15`. Si tu dibujo dio un resultado distinto,
+revisa si escribiste el caso recursivo como `n + suma(n - 1)` y no como `suma(n - 1) + n - 1` o alguna
+variación parecida: el orden de las operaciones importa tanto como el caso base.
+:::
+
+::: {.callout-tip}
+## Reto 2. Cuenta las llamadas repetidas de fibonacci(4)
+
+Sin computador, en papel, dibuja el árbol completo de llamadas de `fibonacci(4)`, con la misma
+convención del diagrama de esta guía: una casilla por llamada, con el valor de `n` adentro, y una
+flecha desde cada casilla hacia las casillas que llama.
+
+1. Empieza en `fibonacci(4)` y dibuja sus dos llamadas, `fibonacci(3)` y `fibonacci(2)`.
+2. Repite para cada casilla nueva hasta que todas terminen en `fibonacci(1)` o `fibonacci(0)`.
+3. Cuenta cuántas veces aparece `fibonacci(1)` en tu árbol, y cuántas veces aparece `fibonacci(0)`.
+4. Cuenta el total de casillas del árbol completo.
+5. Copia la función `fibonacci` con una línea de rastro como la de `es_par`, ejecútala con
+   `fibonacci(4)` y compara la salida real con lo que dibujaste.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+El árbol completo de `fibonacci(4)` tiene nueve llamadas: una a `fibonacci(4)`, una a
+`fibonacci(3)`, dos a `fibonacci(2)`, tres a `fibonacci(1)` y dos a `fibonacci(0)`. Esta es la
+ejecución real, con la sangría marcando cada nivel del árbol:
+
+```
+fibonacci(4)
+  fibonacci(3)
+    fibonacci(2)
+      fibonacci(1)
+      fibonacci(0)
+    fibonacci(1)
+  fibonacci(2)
+    fibonacci(1)
+    fibonacci(0)
+```
+
+`fibonacci(1)` se calcula tres veces, y cada una hace exactamente el mismo trabajo, porque no hay
+forma de que una llamada sepa que otra rama del árbol ya resolvió el mismo subproblema. Con solo
+`n = 4` la repetición todavía parece poca cosa, pero la tabla de la sección de Fibonacci muestra que
+a partir de `n = 20` ya son miles de llamadas repetidas, y a partir de `n = 30`, millones.
+:::
+
 ::: {.checklist}
 **Al salir de esta sesión deberías poder explicar, sin mirar la guía**
 
 - [ ] La diferencia entre caso base y caso recursivo, con un ejemplo propio
-- [ ] Qué es un marco de pila y por qué cada llamada tiene el suyo, sin compartir variables
+- [ ] Qué guarda un marco de pila además de los parámetros y las variables locales, y para qué sirve
+      la dirección de retorno
 - [ ] Por qué una función sin caso base rompe la finitud que exige Knuth
-- [ ] Qué dice el Javadoc de `StackOverflowError` y qué dice la documentación de `RecursionError`
-- [ ] Cómo trazar a mano la pila de llamadas de una función recursiva simple, en orden de entrada y
-      de salida
+- [ ] Qué dice el Javadoc de `StackOverflowError` y qué dice la documentación de `RecursionError`, en
+      tus propias palabras
+- [ ] La diferencia entre recursión directa e indirecta, con un ejemplo de dos funciones que se
+      llaman entre sí
+- [ ] Por qué `fibonacci` genera un árbol de llamadas en vez de una cadena, y cuántas veces recalcula
+      el mismo subproblema
+- [ ] Por qué la profundidad de la pila y el número total de llamadas de `fibonacci` crecen a ritmos
+      distintos
+- [ ] Cómo aplicar el mismo molde de caso base y caso recursivo para recorrer una lista
+- [ ] Cómo trazar a mano la pila o el árbol de llamadas de una función recursiva simple
 :::
 
 ## Para la próxima sesión
 
 En el Tema 4 vas a conocer divide y vencerás, la primera de las estrategias de solución del curso:
 partir un problema en pedazos más pequeños del mismo problema, resolver cada pedazo y juntar las
-respuestas. Esa descripción ya te suena, porque es el mismo molde de caso base más caso recursivo
-que usaste hoy: casi toda implementación de divide y vencerás se escribe de forma recursiva.
+respuestas. Esa descripción ya te suena, porque es el mismo molde de caso base más caso recursivo que
+usaste hoy, y casi toda implementación de divide y vencerás se escribe de forma recursiva. La
+diferencia con lo que viste hoy es que ahí la recursión sí conviene que se ramifique, porque cada
+pedazo se resuelve por separado sin volver a tocar el trabajo de otro pedazo, algo que `factorial` no
+necesita y que `fibonacci` sin memorizar paga con llamadas repetidas de más.
 
 ## Recursos
 
 - Weiss, M. A. *Estructuras de datos en Java.* Capítulo sobre recursión.
 - Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
-  sobre recurrencias y divide y vencerás.
+  sobre recurrencias, árboles de recursión y divide y vencerás.
 - Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo sobre recursión.
 - Knuth, D. E. (1968). *The Art of Computer Programming, Vol. 1: Fundamental Algorithms.*
   Addison-Wesley.
 - [Documentación de Python: `RecursionError`](https://docs.python.org/3/library/exceptions.html#RecursionError)
 - [Documentación de Python: `sys.getrecursionlimit()`](https://docs.python.org/3/library/sys.html#sys.getrecursionlimit)
+- [Documentación de Python: objetos de tipo frame, atributo `f_back`](https://docs.python.org/3/reference/datamodel.html#frame-objects)
 - [Javadoc de `StackOverflowError` de Java 17](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/StackOverflowError.html)
+- [Notas sobre activation records y la pila de llamadas, Universidad de Iowa](https://homepage.divms.uiowa.edu/~jones/security/notes/03.shtml)
+- [Notas de recursión del curso CMSC 202, Universidad de Maryland, Condado de Baltimore (UMBC)](https://userpages.cs.umbc.edu/chang/cs202.f98/readings/recursion.html)
+- [Wikipedia: recursión mutua](https://en.wikipedia.org/wiki/Mutual_recursion)
 
 ::: {.pie-doc}
 Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
@@ -284,5 +669,6 @@ Semestre 2026-02.
 
 **Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
 usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
-Las salidas de consola de Python son capturas reales tomadas durante la preparación del material.
+Las salidas de consola de Python son capturas reales tomadas durante la preparación del material,
+igual que los conteos de llamadas y las profundidades de pila de la sección de Fibonacci.
 :::

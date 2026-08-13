@@ -12,23 +12,27 @@ date-format: "D [de] MMMM [de] YYYY"
 | Tema   | Tema 2. Paradigma de programación orientada a objetos |
 :::
 
-El Tema 1 mostró que un contrato admite varias implementaciones: pila y cola se pueden montar sobre
-un arreglo o sobre una lista enlazada, y quien usa la pila no necesita saberlo. Hoy construyes la
-herramienta con la que ese contrato se escribe en código: la clase.
+El Tema 1 mostró que un contrato admite varias implementaciones, ya que pila y cola se pueden montar
+sobre un arreglo o sobre una lista enlazada sin que quien usa la pila necesite saberlo. Hoy
+construyes la herramienta con la que ese contrato se escribe en código, la clase, y vas a profundizar
+en cuatro ideas que la sostienen: qué distingue a un objeto de otro aunque tengan los mismos valores,
+cómo nace un objeto paso a paso, por qué esconder los datos es una decisión y no una manía del
+lenguaje, y por qué este curso prefiere componer clases en vez de heredar entre ellas cuando se trata
+de construir estructuras de datos.
 
 ## El molde y las arepas
 
-Doña Marta también vende arepas hechas en la casa. Tiene un solo **molde** de metal: un círculo de
-cierto diámetro con un borde de cierta altura. Con ese molde hace veinte arepas al día, y cada una es
-un objeto distinto: esta pesa 90 gramos, esa otra 85, una lleva queso y otra no.
+Doña Marta también vende arepas hechas en la casa. Tiene un solo molde de metal, un círculo de cierto
+diámetro con un borde de cierta altura. Con ese molde hace veinte arepas al día, y cada una es un
+objeto distinto, ya que esta pesa 90 gramos, esa otra 85, una lleva queso y otra no.
 
-El molde no es ninguna arepa. Es la forma que define qué campos tiene una arepa (peso, relleno) y qué
-se puede hacer con ella (venderla, describirla). Cada arepa que sale del molde es una **instancia**:
-ocupa su propio espacio, tiene sus propios valores, y puede cambiar sin afectar a las demás ni al
-molde.
+El molde no es ninguna arepa. Es la forma que define qué campos tiene una arepa, como el peso y el
+relleno, y qué se puede hacer con ella, como venderla o describirla. Cada arepa que sale del molde es
+una *instancia*, ocupa su propio espacio, tiene sus propios valores, y puede cambiar sin afectar a las
+demás ni al molde.
 
-En programación, el molde es la **clase** y cada arepa es un **objeto**. La clase se escribe una sola
-vez; los objetos se crean tantas veces como haga falta, cada uno con su propio estado.
+En programación, el molde es la *clase* y cada arepa es un *objeto*. La clase se escribe una sola vez;
+los objetos se crean tantas veces como haga falta, cada uno con su propio estado.
 
 ::: {.diagrama}
 
@@ -48,8 +52,8 @@ vez; los objetos se crean tantas veces como haga falta, cada uno con su propio e
 
 :::
 
-La misma clase, en los dos lenguajes del curso. Fíjate en qué cambia (la sintaxis) y qué no cambia
-(la idea: un molde, muchos objetos):
+La misma clase, en los dos lenguajes del curso. Fíjate en qué cambia, la sintaxis, y qué no cambia, la
+idea de un molde con muchos objetos:
 
 ```java
 public class Producto {
@@ -90,26 +94,154 @@ print(arroz.describir())
 print(leche.describir())
 ```
 
-`arroz` y `leche` son dos objetos de la misma clase `Producto`. Comparten la forma, no el contenido:
-cambiar el precio de `arroz` no toca a `leche`. La Especificación del Lenguaje Java lo dice en el
-capítulo 8: una declaración de clase define un nuevo tipo por referencia y especifica cómo se
+`arroz` y `leche` son dos objetos de la misma clase `Producto`, y comparten la forma, no el contenido,
+así que cambiar el precio de `arroz` no toca a `leche`. La Especificación del Lenguaje Java lo dice en
+el capítulo 8, donde una declaración de clase define un nuevo tipo por referencia y especifica cómo se
 implementa, con sus campos, sus métodos y sus constructores.
+
+## El estado y la identidad de dos objetos
+
+Los valores que guarda un objeto en un momento dado son su *estado*, como el nombre y el precio de
+`arroz` ahora mismo. El estado puede cambiar durante la vida del objeto sin que el objeto deje de
+ser el mismo objeto, ya que si mañana `arroz` sube de precio, sigue siendo el mismo objeto `arroz` con
+un campo distinto, del mismo modo que Doña Marta sigue siendo la misma persona aunque cambie de ropa.
+
+Lo que no cambia nunca, ni se puede cambiar, es la *identidad* del objeto, y ahí está la trampa que
+más sorprende a quien recién llega a este paradigma, ya que dos objetos con exactamente el mismo
+estado no son el mismo objeto. Vuelve al molde de las arepas. Si el molde saca dos arepas de 90 gramos con
+queso, iguales en todo lo que se puede medir, siguen siendo dos arepas distintas, ya que comerte una
+no hace desaparecer la otra, y si dejas caer una al piso la otra sigue intacta sobre el mostrador.
+
+Antes de seguir, piensa: si creas dos objetos `Producto` con exactamente los mismos valores de nombre
+y precio, ¿qué debería devolver el operador `==` entre ellos?
+
+```java
+Producto arroz1 = new Producto("arroz", 4200.0);
+Producto arroz2 = new Producto("arroz", 4200.0);
+System.out.println(arroz1 == arroz2);       // false
+System.out.println(arroz1.equals(arroz2));  // false, tambien
+```
+
+El resultado sorprende a quien viene de comparar números o cadenas cortas, porque `==` entre objetos
+en Java no compara los valores de los campos, compara si las dos variables apuntan al mismo objeto en
+memoria, y `arroz1` y `arroz2` son dos objetos distintos aunque su contenido sea idéntico. El
+`equals` heredado de la clase `Object` se comporta igual mientras nadie lo sobrescriba, porque el
+Javadoc de Java 17 define el `equals` de `Object` como la relación de equivalencia más discriminante
+posible entre objetos, la que devuelve verdadero únicamente cuando las dos referencias apuntan al
+mismo objeto, que es exactamente lo que hace `==`. Escribir una clase que compare por contenido, con
+reglas de reflexividad, simetría y transitividad, es tema para más adelante en la carrera; por ahora
+basta con saber que, si no lo pides explícitamente, Java compara identidad, no contenido.
+
+Python cuenta la misma historia con otro vocabulario:
+
+```python
+arroz1 = Producto("arroz", 4200)
+arroz2 = Producto("arroz", 4200)
+print(arroz1 == arroz2)         # False
+print(arroz1 is arroz2)         # False
+print(id(arroz1), id(arroz2))   # dos numeros distintos
+```
+
+La documentación oficial del lenguaje explica que todo objeto tiene una identidad, un tipo y un valor,
+y que la identidad de un objeto nunca cambia una vez creado, así que puede pensarse como la dirección
+del objeto en memoria. El operador `is` compara exactamente esa identidad, y la función `id()`
+devuelve un entero que la representa; en la implementación de referencia del lenguaje, conocida como
+CPython, ese entero coincide con la dirección de memoria donde vive el objeto, aunque eso es un
+detalle de esa implementación concreta y no algo que el lenguaje garantice. El operador `==`, por su
+parte, llama al método `__eq__` del objeto, y como `Producto` no define uno propio, hereda el que trae
+`object` por defecto, que la misma documentación describe como una comparación por `is`, y que da
+verdadero únicamente cuando ambos nombres se refieren al mismo objeto. Por eso `arroz1 == arroz2` y
+`arroz1 is arroz2` dan el mismo resultado aquí, y solo dejarían de coincidir si la clase definiera su
+propio `__eq__` para comparar por contenido en vez de por identidad.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 246" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos objetos arroz1 y arroz2 con el mismo nombre y precio, pero con identidades distintas; arroz1 igual a arroz2 da falso, arroz1 igual a si mismo da verdadero" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Mismo estado, identidad distinta</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="70" y="36" width="270" height="96" rx="10"/><rect x="420" y="36" width="270" height="96" rx="10"/></g>
+  <g text-anchor="middle">
+    <g font-size="14" font-weight="600" fill="#12324f"><text x="205" y="60">objeto arroz1</text><text x="555" y="60">objeto arroz2</text></g>
+    <g font-size="12" fill="#3c7d7a"><text x="205" y="82">nombre = "arroz"</text><text x="205" y="100">precio = 4200</text><text x="555" y="82">nombre = "arroz"</text><text x="555" y="100">precio = 4200</text></g>
+    <g font-size="11" fill="#0e6f6c"><text x="205" y="120">identidad: id 1400</text><text x="555" y="120">identidad: id 1416</text></g>
+  </g>
+  <rect x="220" y="160" width="320" height="66" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f">
+    <text x="380" y="184">arroz1 == arroz2   -&gt;   false</text>
+    <text x="380" y="206">arroz1 == arroz1   -&gt;   true</text>
+  </g>
+  <text x="380" y="242" font-size="11.5" fill="#5b6876" text-anchor="middle">El contenido es igual; el objeto que hay detras no lo es.</text>
+</svg>
+
+:::
+
+## El constructor: cómo nace un objeto
+
+Cada vez que escribes `new Producto("arroz", 4200.0)` en Java o `Producto("arroz", 4200)` en Python,
+se ejecuta un *constructor*, un bloque de código que se dispara una sola vez, en el instante exacto en
+que el objeto nace, y cuya única responsabilidad es dejarlo listo para usarse. La especificación del
+lenguaje Java lo describe como algo parecido a un método, salvo que no se puede invocar con una
+llamada normal, sino que existe únicamente para inicializar instancias nuevas de la clase.
+
+Lo que ocurre, paso a paso, al ejecutar `new Producto("arroz", 4200.0)` en Java es esto:
+
+- **Se reserva memoria** para un objeto nuevo, del tamaño que necesitan todos los campos de la clase.
+- **Cada campo arranca en su valor por defecto**, cero para los números, `false` para los booleanos,
+  `null` para las referencias, antes de que el constructor haga nada.
+- **El cuerpo del constructor se ejecuta**, y ahí es donde `this.nombre = nombre` y
+  `this.precio = precio` reemplazan esos valores por defecto por los que de verdad pediste.
+- **El `new` devuelve una referencia** al objeto recién armado, y esa referencia es lo que queda
+  guardado en la variable `arroz`.
+
+`this`, en ese código, es la forma que tiene el objeto de referirse a sí mismo, y hace falta
+explícitamente en `this.nombre = nombre` porque el parámetro del constructor se llama igual que el
+campo, así que sin `this` el compilador no sabría distinguir uno del otro. Python resuelve la misma
+necesidad de otra forma, y ahí conviene deshacer una confusión común, ya que `self` no es una palabra
+reservada del lenguaje como `this` en Java, sino simplemente el primer parámetro de todo método de
+instancia, y Python lo llena en automático con el objeto sobre el que se llamó el método. Cuando
+escribes `arroz.describir()`, por dentro el intérprete ejecuta algo equivalente a
+`Producto.describir(arroz)`, pasando `arroz` como ese primer argumento. Podrías llamar a ese parámetro
+de otra forma, `este` o `yo`, y el código funcionaría igual, pero la comunidad entera de Python usa
+`self` sin excepción, así que cambiarle el nombre solo confundiría a quien lea tu código después.
+
+Esa diferencia produce un error que sorprende la primera vez que aparece. Si defines un método de
+instancia en Python y olvidas el parámetro `self`, el método sigue compilando sin quejarse, porque
+Python no revisa la forma del método hasta que lo llamas; el error aparece recién en tiempo de
+ejecución, cuando Python intenta pasar el objeto como primer argumento a un método que no tiene dónde
+recibirlo, y lanza un `TypeError` que se queja de que el método recibió un argumento posicional de
+más. La lección práctica es que un método de instancia en Python siempre lleva `self` como primer
+parámetro, aunque el cuerpo del método nunca lo use.
+
+¿Qué pasa si no defines ningún constructor? En Java, el compilador te resuelve el problema en
+silencio, ya que si una clase no declara ningún constructor, la especificación del lenguaje obliga a
+generar uno por defecto, sin argumentos, que simplemente invoca al constructor sin argumentos de la
+superclase. Esto trae una sorpresa clásica. En cuanto agregas tú mismo un constructor, aunque sea uno
+que reciba parámetros como el de `Producto`, Java deja de generar el constructor por defecto, así que
+`new Producto()` sin argumentos deja de compilar a menos que escribas ese constructor vacío tú mismo.
+Un error de compilación que dice que el constructor `Producto()` no existe casi siempre significa
+justo eso, que la clase ya tiene un constructor con parámetros, y que el que no recibe ninguno hay que
+pedirlo aparte si todavía hace falta.
 
 ## Encapsulamiento: por qué el TDA esconde sus datos
 
-En el ejemplo de arriba, `nombre` y `precio` son `private` en Java. Eso significa, según el tutorial
-oficial de Oracle, que **solo se pueden acceder desde dentro de la propia clase**. Nadie fuera de
+En el ejemplo de arriba, `nombre` y `precio` son `private` en Java, lo que significa, según el
+tutorial oficial de Oracle, que solo se pueden acceder desde dentro de la propia clase. Nadie fuera de
 `Producto` puede escribir `arroz.precio = -500` directamente, porque el campo no es visible desde
 afuera.
 
-Esto no es una manía del lenguaje. Es la misma idea que el Tema 1 llamó tipo de dato abstracto: el
-código que usa la pila no cambia si mañana cambia la implementación, porque solo conoce `apilar`,
-`desapilar`, `cima` y `estaVacia`, nunca lo que hay por dentro. Con una clase pasa igual: el código
-que usa `Producto` solo conoce `describir()` y los métodos que la clase decida exponer, nunca si por
-dentro hay un `double` o una cadena de texto con formato. Esconder los campos y exponer métodos es la
-forma concreta, en código, de cumplir ese contrato.
+Esto no es una manía del lenguaje. Es la misma idea que el Tema 1 llamó *tipo de dato abstracto*, ya
+que el código que usa la pila no cambia si mañana cambia la implementación, porque solo conoce `apilar`,
+`desapilar`, `cima` y `estaVacia`, nunca lo que hay por dentro. Con una clase pasa igual, ya que el
+código que usa `Producto` solo conoce `describir()` y los métodos que la clase decida exponer, nunca
+si por dentro hay un `double` o una cadena de texto con formato. Esconder los campos y exponer métodos
+es la forma concreta, en código, de cumplir ese contrato.
 
-Un método público puede además vigilar una regla que un campo público no vigila. Compara:
+Un campo público es una promesa que nadie hace cumplir, porque cualquier línea de cualquier archivo
+del programa puede escribirle cualquier valor sin pasar por ninguna regla, del mismo modo en que
+cualquier cliente podría meter la mano al estante de Doña Marta y reordenar los productos sin que ella
+se entere. Un método público, en cambio, es un único punto de entrada obligatorio para cambiar el
+estado, así que es el único lugar donde tiene sentido escribir la validación, y basta con escribirla
+una vez ahí para que se cumpla sin importar cuántos archivos del programa terminen usando la clase.
+Compara las dos versiones:
 
 ```java
 public class Producto {
@@ -155,12 +287,16 @@ arroz.fijar_precio(-10)      # lanza ValueError: el precio no puede ser negativo
 ```
 
 Con `precio` público, cualquiera podría dejarlo en negativo sin que nada lo impida. Con `precio`
-privado y `fijarPrecio` como único camino para cambiarlo, la regla se cumple siempre, sin importar
-cuántos archivos usen la clase. Python no impone la privacidad por el compilador como Java: la
-documentación oficial dice que las variables verdaderamente privadas no existen en Python, y que un
-nombre con un guion bajo al inicio (`_precio`) es solo una convención que avisa "esto es un detalle
-interno, no lo toques directo". La disciplina es la misma; quien la hace cumplir cambia de lenguaje a
-lenguaje.
+privado y `fijarPrecio` como único camino para cambiarlo, la regla se cumple siempre. Fíjate además en
+que el constructor de `Producto` no asigna `precio` directamente, sino que llama a `fijarPrecio`, así
+que la misma validación protege el valor inicial y cualquier cambio posterior, en vez de quedar
+duplicada en dos sitios que alguien podría olvidar mantener sincronizados.
+
+Python no impone la privacidad por el compilador como Java, ya que la documentación oficial dice que
+las variables verdaderamente privadas no existen en el lenguaje, y que un nombre con un guion bajo al
+inicio, como `_precio`, es solo una convención que avisa que se trata de un detalle interno que no se
+debe tocar directamente. La disciplina es la misma; quien la hace cumplir cambia de lenguaje a
+lenguaje, el compilador en Java y el acuerdo entre programadores en Python.
 
 ::: {.diagrama}
 
@@ -184,11 +320,82 @@ lenguaje.
 
 :::
 
+El mismo patrón se repite en cualquier clase que necesite proteger una regla, no solo en `Producto`.
+Piensa en una `CuentaBancaria` que arranca en cero. Antes de leer el código, pregúntate qué evitaría
+que cualquier parte del programa escribiera `cuenta.saldo = -500000` directamente si `saldo` fuera un
+campo público. La respuesta es que nada lo evitaría, porque un campo público no ejecuta ningún código
+cuando lo escribes, solo guarda el valor que le des, sea razonable o no.
+
+```java
+public class CuentaBancaria {
+    private double saldo;
+
+    public CuentaBancaria(double saldoInicial) {
+        if (saldoInicial < 0) {
+            throw new IllegalArgumentException("el saldo inicial no puede ser negativo");
+        }
+        this.saldo = saldoInicial;
+    }
+
+    public void depositar(double monto) {
+        if (monto <= 0) {
+            throw new IllegalArgumentException("el deposito debe ser positivo");
+        }
+        saldo += monto;
+    }
+
+    public void retirar(double monto) {
+        if (monto <= 0) {
+            throw new IllegalArgumentException("el retiro debe ser positivo");
+        }
+        if (monto > saldo) {
+            throw new IllegalStateException("saldo insuficiente");
+        }
+        saldo -= monto;
+    }
+
+    public double saldo() {
+        return saldo;
+    }
+}
+```
+
+```python
+class CuentaBancaria:
+    def __init__(self, saldo_inicial):
+        if saldo_inicial < 0:
+            raise ValueError("el saldo inicial no puede ser negativo")
+        self._saldo = saldo_inicial
+
+    def depositar(self, monto):
+        if monto <= 0:
+            raise ValueError("el deposito debe ser positivo")
+        self._saldo += monto
+
+    def retirar(self, monto):
+        if monto <= 0:
+            raise ValueError("el retiro debe ser positivo")
+        if monto > self._saldo:
+            raise ValueError("saldo insuficiente")
+        self._saldo -= monto
+
+    def saldo(self):
+        return self._saldo
+```
+
+`retirar` valida dos reglas antes de tocar el saldo, que el monto pedido sea positivo y que no supere
+lo que hay disponible. Con `saldo` público, cualquiera podría dejarlo en un número negativo sin pasar
+por ninguna de las dos validaciones, tan fácil como escribir `cuenta.saldo -= 1000000`. Con `saldo`
+privado y `retirar` como único camino para restarle, la cuenta nunca queda en negativo, sin importar
+desde cuántos lugares distintos del programa se llame a `retirar`. El patrón es exactamente el mismo
+que en `Producto`, ya que solo cambia el dominio, no la idea de un campo que se puede romper si es
+público frente a un método que protege la regla porque es el único punto de entrada.
+
 ## Herencia: reutilizar sin repetir
 
 Cuando dos clases comparten campos y métodos, y una de ellas además agrega algo propio, tiene sentido
-que la segunda **herede** de la primera en lugar de copiar el código. En Java se escribe con
-`extends`; en Python, poniendo la clase base entre paréntesis.
+que la segunda *herede* de la primera en lugar de copiar el código. En Java se escribe con `extends`;
+en Python, poniendo la clase base entre paréntesis.
 
 Un `ProductoPerecedero` es un `Producto` que además vence en una fecha. Hereda `nombre`, `precio` y
 `describir()`, y solo agrega lo que le falta:
@@ -215,11 +422,6 @@ class ProductoPerecedero(Producto):
         self.fecha_vencimiento = fecha_vencimiento
 ```
 
-`super(nombre, precio)` (Java) y `super().__init__(nombre, precio)` (Python) llaman al constructor de
-`Producto` para que arme la parte que ya sabe armar. El curso no entra en polimorfismo avanzado ni en
-patrones de diseño sobre herencia: la carta descriptiva de esta unidad no los pide, y con lo de aquí
-alcanza para lo que viene.
-
 ::: {.diagrama}
 
 <svg viewBox="0 0 600 218" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Clase ProductoPerecedero hereda de clase Producto: hereda nombre, precio y describir, y agrega fechaVencimiento" font-family="Segoe UI, Inter, system-ui, sans-serif">
@@ -240,11 +442,116 @@ alcanza para lo que viene.
 
 :::
 
+`super(nombre, precio)` en Java y `super().__init__(nombre, precio)` en Python llaman al constructor
+de `Producto` para que arme la parte que ya sabe armar, en vez de repetir esas dos líneas en la
+subclase. Un `ProductoPerecedero` es también un `Producto`, en el sentido literal de que dondequiera
+que el código pida un `Producto`, un `ProductoPerecedero` sirve igual de bien:
+
+```java
+Producto p = new ProductoPerecedero("yogur", 5200.0, "2026-09-01");
+System.out.println(p.describir());
+```
+
+Esa asignación compila sin quejas porque la relación entre las dos clases es de tipo "es un", ya que
+todo `ProductoPerecedero` cumple, además de lo suyo, con todo lo que un `Producto` promete cumplir. Esa
+misma relación es la que te deja *sobrescribir*, en inglés *override*, un método heredado cuando la
+subclase necesita un comportamiento distinto del que trae la superclase. Por ejemplo, describir un
+producto perecedero debería mencionar cuándo vence:
+
+```java
+public class ProductoPerecedero extends Producto {
+    private String fechaVencimiento;
+
+    public ProductoPerecedero(String nombre, double precio, String fechaVencimiento) {
+        super(nombre, precio);
+        this.fechaVencimiento = fechaVencimiento;
+    }
+
+    @Override
+    public String describir() {
+        return super.describir() + " (vence " + fechaVencimiento + ")";
+    }
+}
+```
+
+```python
+class ProductoPerecedero(Producto):
+    def __init__(self, nombre, precio, fecha_vencimiento):
+        super().__init__(nombre, precio)
+        self.fecha_vencimiento = fecha_vencimiento
+
+    def describir(self):
+        return f"{super().describir()} (vence {self.fecha_vencimiento})"
+```
+
+`@Override` en Java le pide al compilador que confirme que en verdad estás reemplazando un método que
+existe en la superclase, y avisa con un error si te equivocaste de nombre o de parámetros; Python no
+tiene un aviso equivalente, así que ahí la responsabilidad de que el nombre coincida es tuya. En los
+dos lenguajes, `super().describir()` dentro del método nuevo llama a la versión de la superclase antes
+de agregarle la fecha, en vez de reescribir esa parte desde cero. Llamar a `p.describir()` sobre un
+objeto `ProductoPerecedero` ejecuta ahora la versión sobrescrita, aunque `p` esté declarado como
+`Producto`, porque Java decide en tiempo de ejecución cuál versión del método corre según el objeto
+real que hay detrás de la referencia, no según el tipo con el que declaraste la variable. El curso no
+entra en polimorfismo avanzado ni en patrones de diseño sobre herencia, porque la carta descriptiva de
+esta unidad no los pide, pero vale la pena que sepas que lo que acabas de ver aquí es la semilla de esa
+idea, y la vas a formalizar más adelante en la carrera.
+
+### Herencia frente a composición
+
+Heredar no siempre es la mejor manera de reutilizar código, y el propio Java tiene un ejemplo real y
+documentado del problema. La clase `java.util.Stack` hereda de `Vector`, que es una lista general con
+métodos para insertar, leer o borrar en cualquier posición. Al heredar de `Vector`, `Stack` hereda
+también todos esos métodos, así que nada impide que alguien llame a `stack.add(0, elemento)` e
+inserte un elemento en la mitad de la pila, rompiendo la regla de que solo se entra y se sale por la
+cima. La propia documentación oficial de Java reconoce el problema, ya que explica que un conjunto más
+completo y consistente de operaciones de pila LIFO lo ofrece la interfaz `Deque` y sus
+implementaciones, que deberían usarse en su lugar. `Stack` sigue existiendo por compatibilidad con
+código antiguo, pero la propia Oracle desaconseja heredar de esa forma.
+
+El problema de fondo es que heredar expone al mundo exterior todo lo que la clase base sabe hacer,
+aunque solo quisieras reutilizar una parte pequeña de ese comportamiento. La alternativa se llama
+*composición*, y consiste en que una clase guarde un objeto de otra clase como uno de sus propios
+campos privados, y delegue en él únicamente las operaciones que decide exponer. Es la misma idea del
+encapsulamiento, aplicada ahora a la relación entre dos clases en vez de a los campos de una sola.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 246" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion: Stack hereda de Vector y expone todos sus metodos incluyendo insertar en cualquier posicion; la Pila del curso contiene un arreglo privado por dentro y solo expone cuatro metodos propios" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="190" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Herencia: java.util.Stack extends Vector</text>
+  <text x="570" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Composicion: la Pila de este curso</text>
+  <rect x="30" y="32" width="320" height="146" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="420" y="32" width="320" height="146" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle">
+    <text x="190" y="56" font-size="13" font-weight="600" fill="#12324f">Stack</text>
+    <text x="190" y="74" font-size="11" fill="#5b6876">hereda TODO de Vector</text>
+    <g font-size="11" fill="#5b7f9f"><text x="190" y="96">push(), pop(), peek()</text><text x="190" y="114">add(indice, elem)</text><text x="190" y="132">remove(indice)</text><text x="190" y="150">get(indice)</text></g>
+    <text x="190" y="170" font-size="11" fill="#0e6f6c">nada impide romper la cima</text>
+    <text x="570" y="56" font-size="13" font-weight="700" fill="#0e6f6c">clase Pila</text>
+    <rect x="500" y="66" width="140" height="60" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+    <text x="570" y="88" font-size="11" fill="#12324f">arreglo interno</text>
+    <text x="570" y="104" font-size="11" fill="#5b6876">privado, no expuesto</text>
+    <text x="570" y="150" font-size="11" fill="#12324f">apilar, desapilar,</text>
+    <text x="570" y="166" font-size="11" fill="#12324f">cima, estaVacia</text>
+  </g>
+  <text x="380" y="206" font-size="11.5" fill="#5b6876" text-anchor="middle">La documentacion oficial de Java recomienda Deque en vez de Stack por esta misma razon.</text>
+  <text x="380" y="228" font-size="11.5" fill="#5b6876" text-anchor="middle">Componer deja exponer solo lo que decides exponer; heredar expone todo lo que hereda.</text>
+</svg>
+
+:::
+
+Por esa razón, la clase `Pila` de este curso no va a heredar de ningún arreglo ni de ninguna lista, va
+a guardarlos como un campo privado por dentro, en la Unidad 2 sobre un arreglo y en la Unidad 3 sobre
+una lista enlazada, y va a exponer únicamente `apilar`, `desapilar`, `cima` y `estaVacia`. Bloch lo
+resume en el ítem 18 de *Effective Java* con una regla práctica, favorecer la composición sobre la
+herencia salvo que la subclase sea de verdad un caso particular de la superclase y no simplemente una
+forma cómoda de reutilizar su código, que es justo la distinción entre "es un" `ProductoPerecedero` es
+un `Producto`, y "tiene un" la `Pila` tiene un arreglo por dentro, sin ser uno.
+
 ## La clase Pila: el contrato de hoy, la memoria de mañana
 
-El Tema 1 definió el contrato de la pila por su comportamiento: apilar, desapilar, consultar la cima
-y preguntar si está vacía, sin decir si por dentro hay un arreglo o una lista enlazada. Esa decisión
-es justamente la que la Unidad 2 va a tomar. Hoy escribes la clase vacía por dentro: el contrato en
+El Tema 1 definió el contrato de la pila por su comportamiento, apilar, desapilar, consultar la cima y
+preguntar si está vacía, sin decir si por dentro hay un arreglo o una lista enlazada. Esa decisión es
+justamente la que la Unidad 2 va a tomar. Hoy escribes la clase vacía por dentro, el contrato en
 código, sin implementación de memoria todavía.
 
 ```java
@@ -282,10 +589,26 @@ class Pila:
         raise NotImplementedError("llega en la Unidad 2")
 ```
 
-Las dos clases compilan y corren tal cual: si las llamas, lanzan el error a propósito, porque todavía
-no hay dónde guardar nada. Lo que sí queda fijo desde hoy son los cuatro nombres y qué recibe y
-devuelve cada uno. Eso es exactamente lo que la Unidad 2 va a llenar con un arreglo, y la Unidad 3 con
-una lista enlazada, sin que ninguna de las dos toque esta firma.
+Las dos clases compilan y corren tal cual. Vale la pena detenerse en por qué se escogió justo esta
+forma de dejar un método sin terminar, porque había otras dos opciones más tentadoras y las dos son
+peores. La primera sería dejar el cuerpo del método vacío, sin hacer nada; el problema es que un
+método vacío no avisa de que falta algo, así que si alguien llama a `apilar` y después a `cima`
+esperando ver lo que apiló, el programa sigue corriendo sin quejarse y el error queda escondido varias
+líneas, o varios días, más adelante de donde en realidad ocurrió. La segunda sería devolver un valor
+cualquiera, como `null` o `0`; el problema ahí es que ese valor se ve como una respuesta válida, así
+que quien reciba un `null` de `cima()` no sabe si la pila está de verdad vacía o si el método
+simplemente no está implementado todavía, y ambos casos se confunden.
+
+Lanzar una excepción, en cambio, falla de inmediato y en voz alta, justo en la línea donde ocurre la
+llamada. El Javadoc de `UnsupportedOperationException` describe su propósito exactamente así, se lanza
+para indicar que la operación pedida no está soportada, y el mensaje `"llega en la Unidad 2"` le dice
+a quien la reciba, sin ambigüedad, qué falta y cuándo va a existir. Si alguien llama a `apilar` antes
+de la Unidad 2, sea por error o por curiosidad, el programa se detiene ahí mismo con una traza que
+señala exactamente esa línea, en vez de seguir corriendo con una pila que en realidad no guarda nada y
+producir minutos después un error mucho más difícil de rastrear. Lo que sí queda fijo desde hoy son
+los cuatro nombres, y qué recibe y devuelve cada uno. Eso es exactamente lo que la Unidad 2 va a
+llenar con un arreglo, y la Unidad 3 con una lista enlazada, sin que ninguna de las dos toque esta
+firma.
 
 ::: {.diagrama}
 
@@ -305,31 +628,141 @@ una lista enlazada, sin que ninguna de las dos toque esta firma.
 :::
 
 ::: {.callout-tip}
-## Reto. Diseña el TDA Cola
+## Reto 1. Diseña el TDA Cola
 
 Diseña la clase `Cola` con sus operaciones (`encolar`, `desencolar`, `frente`, `esta_vacia` o
-`estaVacia`), en Java o en Python, el que prefieras. Solo la interfaz: sin decidir todavía si por
-dentro hay un arreglo o una lista enlazada, igual que hicimos con `Pila`.
+`estaVacia`), en Java o en Python, el que prefieras. Solo la interfaz, sin decidir todavía si por
+dentro hay un arreglo o una lista enlazada, igual que hicimos con `Pila`, y usando el mismo patrón de
+lanzar una excepción "no implementado" en cada método en vez de dejarlo vacío.
 
-Cuando termines, responde en una frase: ¿por qué el encapsulamiento te deja cambiar de opinión más
+Cuando termines, responde en una frase, ¿por qué el encapsulamiento te deja cambiar de opinión más
 adelante sobre cómo se guarda la memoria de la cola, sin que se rompa el código que ya la usa?
 :::
 
-La próxima guía usa esta misma clase `Pila` para escribir funciones que se llaman a sí mismas: la
-recursividad de la Unidad 1 apila cada llamada, literalmente.
+::: {.callout-tip}
+## Reto 2. Encuentra los errores de encapsulamiento
+
+El siguiente fragmento en Java compila sin ningún error, pero tiene al menos tres problemas de
+encapsulamiento. Léelo con calma antes de seguir.
+
+```java
+public class Estudiante {
+    public String nombre;
+    public double promedio;
+
+    public Estudiante(String nombre, double promedio) {
+        this.nombre = nombre;
+        this.promedio = promedio;
+    }
+
+    public void ajustarPromedio(double nuevo) {
+        promedio = nuevo;
+    }
+}
+```
+
+En Colombia el promedio académico va de 0.0 a 5.0. Identifica al menos tres errores de encapsulamiento
+en esta clase, y para cada uno explica qué valor inválido dejaría pasar sin que nada lo impida. No
+hace falta que escribas la corrección todavía, primero encuentra los tres problemas.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+**Primer error, `promedio` es público.** Cualquier parte del programa puede escribir
+`estudiante.promedio = -20` o `estudiante.promedio = 999` directamente, sin pasar por ningún método,
+así que nada impide un promedio fuera del rango 0.0 a 5.0.
+
+**Segundo error, `ajustarPromedio` no valida nada.** Aunque el campo fuera privado, el método que lo
+cambia asigna el valor recibido sin comprobar que esté dentro del rango válido, así que
+`estudiante.ajustarPromedio(-20)` pasa por el único punto de entrada y de todas formas deja el campo
+en un valor imposible. Tener un método no basta si el método no valida.
+
+**Tercer error, el constructor tampoco valida.** `Estudiante` puede nacer ya con un promedio inválido,
+porque el constructor asigna `promedio` directamente en vez de pasar por un método que lo revise, del
+mismo modo en que el `Producto` sin corregir dejaba nacer un precio negativo si el constructor no
+llamaba a `fijarPrecio`.
+
+La versión corregida esconde el campo y hace pasar tanto el constructor como el método de ajuste por
+la misma validación:
+
+```java
+public class Estudiante {
+    private String nombre;
+    private double promedio;
+
+    public Estudiante(String nombre, double promedio) {
+        this.nombre = nombre;
+        ajustarPromedio(promedio);
+    }
+
+    public void ajustarPromedio(double nuevo) {
+        if (nuevo < 0.0 || nuevo > 5.0) {
+            throw new IllegalArgumentException("el promedio debe estar entre 0.0 y 5.0");
+        }
+        promedio = nuevo;
+    }
+
+    public double promedio() {
+        return promedio;
+    }
+}
+```
+
+Es el mismo patrón que ya viste dos veces en esta guía, con `Producto.fijarPrecio` y con
+`CuentaBancaria.retirar`, campo privado, un único método que valida antes de escribir, y el
+constructor llamando a ese mismo método en vez de duplicar la regla.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] La diferencia entre una clase y un objeto, y entre el estado de un objeto y su identidad
+- [ ] Por qué dos objetos con los mismos valores no son el mismo objeto, en Java y en Python
+- [ ] Qué hace un constructor paso a paso, y qué pasa si no defines ninguno
+- [ ] La diferencia entre `self` en Python y `this` en Java
+- [ ] Por qué un método puede validar una regla y un campo público no
+- [ ] La diferencia entre herencia, "es un", y composición, "tiene un", y por qué la `Pila` de este
+      curso usa composición
+- [ ] Por qué la clase `Pila` lanza una excepción de "no implementado" en vez de dejar el cuerpo vacío
+:::
+
+## Antes del Tema 3
+
+1. Ejecuta las dos versiones de `Producto`, la que valida el precio y la que no, en tu lenguaje
+   preferido, e intenta poner un precio negativo en cada una. Guarda lo que pasa en cada caso.
+2. Escribe tu propia clase `Cola` a partir del Reto 1, con sus cuatro operaciones lanzando la
+   excepción de "no implementado".
+3. Elige una clase que hayas usado antes en cualquier lenguaje, en cualquier proyecto propio o de
+   clase, e identifica un campo que debería haber sido privado. Explica en un párrafo qué valor
+   inválido habría dejado pasar si hubiera quedado público.
+
+La clase `Pila` que construiste hoy es la que vas a usar en el Tema 3 para escribir funciones que se
+llaman a sí mismas, ya que la recursividad apila cada llamada pendiente, literalmente, sobre esta
+misma estructura.
 
 ## Recursos
 
 - Weiss, M. A. *Estructuras de datos en Java.* Capítulo introductorio sobre objetos y clases.
 - Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo de programación
   orientada a objetos.
-- Gosling, J. et al. *The Java Language Specification, Java SE 17 Edition.* Capítulo 8, Clases.
+- Bloch, J. (2018). *Effective Java* (3.a ed.). Addison-Wesley. Ítem 18, "Favor composition over
+  inheritance".
+- Gosling, J. et al. *The Java Language Specification, Java SE 17 Edition.* Capítulo 8, Clases,
+  especialmente la sección 8.8 sobre constructores.
 - Dahl, O.-J. y Nygaard, K. (1967). *Simula 67*, presentado en la IFIP Working Conference sobre
   lenguajes de simulación, Oslo. Premio Turing de la ACM 2001 a Dahl y Nygaard por estas ideas.
 - [Oracle Java Tutorials: Classes](https://docs.oracle.com/javase/tutorial/java/javaOO/classes.html)
 - [Oracle Java Tutorials: Controlling Access to Members of a Class](https://docs.oracle.com/javase/tutorial/java/javaOO/accesscontrol.html)
+- [Oracle Java Tutorials: Providing Constructors for Your Classes](https://docs.oracle.com/javase/tutorial/java/javaOO/constructors.html)
 - [The Java Language Specification, SE 17, Capítulo 8: Classes](https://docs.oracle.com/javase/specs/jls/se17/html/jls-8.html)
+- [Javadoc de `Object.equals` de Java 17](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html)
+- [Javadoc de `java.util.Stack` de Java 17](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Stack.html)
+- [Javadoc de `UnsupportedOperationException` de Java 17](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/UnsupportedOperationException.html)
 - [Python docs: 9. Classes](https://docs.python.org/3/tutorial/classes.html)
+- [Python docs: 3. Data model, identidad y comparacion de objetos](https://docs.python.org/3/reference/datamodel.html)
 - [Wikipedia: Simula](https://en.wikipedia.org/wiki/Simula)
 - [Wikipedia: Smalltalk](https://en.wikipedia.org/wiki/Smalltalk)
 - [ACM: Ole-Johan Dahl, A.M. Turing Award](https://awards.acm.org/award-recipients/dahl_6917600)

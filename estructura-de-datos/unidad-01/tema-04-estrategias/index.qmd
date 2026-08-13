@@ -12,16 +12,19 @@ date-format: "D [de] MMMM [de] YYYY"
 | Tema   | Tema 4. Estrategias de programación                |
 :::
 
-Retomo el Tema 3 en una frase: la recursividad, caso base más caso recursivo, es la herramienta con
-la que hoy implemento la primera estrategia. Divide y vencerás no es una técnica aparte de la
-recursividad, es un uso concreto de ella: partir un problema en pedazos más chicos del mismo
-problema, resolver cada pedazo llamándose a sí mismo, y combinar lo que devuelve cada llamada.
+Retomo el Tema 3 en una frase, porque la recursividad, caso base más caso recursivo, es la
+herramienta con la que hoy implemento la primera estrategia. Divide y vencerás no es una técnica
+aparte de la recursividad, es un uso concreto de ella, ya que parte un problema en pedazos más
+chicos del mismo problema, resuelve cada pedazo llamándose a sí misma, y combina lo que devuelve
+cada llamada.
 
 Hoy cierro la Unidad 1 con dos estrategias para atacar un problema grande. La primera parte el
-problema y confía en la recursividad para resolver las partes. La segunda no parte nada: en cada
-paso toma la opción que se ve mejor en ese momento y nunca vuelve atrás a revisar si esa decisión
-fue la correcta. Las dos funcionan la mayoría de las veces, y la segunda tiene un caso real donde
-falla, que voy a mostrar con números verificados a mano.
+problema y confía en la recursividad para resolver las partes. La segunda no parte nada, ya que en
+cada paso toma la opción que se ve mejor en ese momento y nunca vuelve atrás a revisar si esa
+decisión fue la correcta. Muestro dos ejemplos de cada estrategia, uno donde funciona sin
+sobresaltos y otro que exige mirar con más cuidado, junto con la razón formal por la que cada una
+garantiza o no la respuesta óptima, y cierro con un vistazo a los cuatro temas que arma esta
+unidad.
 
 ## Divide y vencerás: partir, resolver, combinar
 
@@ -29,8 +32,8 @@ Un algoritmo de divide y vencerás sigue siempre los mismos tres pasos.
 
 - **Dividir.** Parte el problema en subproblemas más chicos, del mismo tipo que el original.
 - **Resolver.** Resuelve cada subproblema. Si todavía es grande, aplica el mismo método otra vez,
-  por eso la implementación es recursiva. Si ya es lo bastante chico, resuélvelo directo: ese es el
-  caso base del Tema 3.
+  por eso la implementación es recursiva. Si ya es lo bastante chico, resuélvelo directo, que es
+  el caso base del Tema 3.
 - **Combinar.** Une las soluciones de los subproblemas en la solución del problema original.
 
 ::: {.diagrama}
@@ -55,12 +58,35 @@ Un algoritmo de divide y vencerás sigue siempre los mismos tres pasos.
 
 :::
 
-El paso que suele confundir es "resolver". No es un paso distinto de dividir y combinar: es una
+El paso que suele confundir es "resolver". No es un paso distinto de dividir y combinar, es una
 llamada recursiva. La función se llama a sí misma con una entrada más chica, hasta llegar al caso
 base del Tema 3, y desde ahí la pila de llamadas empieza a devolver valores que el paso de combinar
 va uniendo.
 
-## Un ejemplo: potencia rápida
+## Por qué divide y vencerás garantiza el óptimo
+
+Divide y vencerás tiene una propiedad fuerte que conviene entender antes de ver más ejemplos: si el
+paso de combinar es correcto, el algoritmo completo llega siempre a la respuesta óptima, sin
+necesidad de revisar cada entrada por separado. La razón es la misma inducción que sostiene la
+recursividad del Tema 3. El caso base se resuelve directo y es correcto por definición, porque el
+problema ya es tan chico que no admite error. Cada subproblema más grande confía en que las
+llamadas recursivas sobre partes más chicas ya devuelven la respuesta correcta, exactamente la
+misma apuesta que hiciste al escribir un caso recursivo en el tema anterior. Lo único que falta
+demostrar, entonces, es que el paso de combinar construye una respuesta correcta del problema
+completo a partir de dos respuestas correctas de las partes. Si esa demostración se cumple una sola
+vez, para el tamaño general del problema, vale para cualquier entrada, sin importar cuán grande
+sea.
+
+Esta garantía no es automática, porque depende por completo de que el paso de combinar esté bien
+escrito. Un error ahí se cuela en cada nivel de la recursión y arruina la respuesta final, aunque
+las llamadas recursivas hayan hecho su trabajo sin fallas. Más adelante en esta guía escribo una
+función `maximo` que combina dos mitades con una sola comparación, y si esa comparación se
+cambiara por un error tan simple como devolver siempre la mitad izquierda sin comparar nada, el
+algoritmo seguiría bajando y subiendo por la recursión exactamente igual, pero la respuesta sería
+casi siempre incorrecta. La recursividad no protege contra ese tipo de error, porque hace
+exactamente lo que el código le pide, ni más ni menos.
+
+## Primer ejemplo de divide y vencerás: potencia rápida
 
 Calcular `base` elevado a `exp` de la forma directa exige multiplicar `exp` veces. Divide y
 vencerás lo resuelve con menos multiplicaciones apoyándose en dos observaciones sobre los
@@ -84,7 +110,7 @@ def potencia_rapida(base, exp):
 ```
 
 A diferencia de mergesort, que vas a ver en la Unidad 4, aquí cada llamada genera una sola llamada
-recursiva, no dos. La recursión no se ramifica en árbol: baja en cadena hasta el caso base y sube
+recursiva, no dos. La recursión no se ramifica en árbol, baja en cadena hasta el caso base y sube
 en cadena multiplicando. Para `potencia_rapida(3, 13)` la cadena de exponentes es 13, 12, 6, 3, 2,
 1, 0, y al subir se van calculando 1, 3, 9, 27, 729, 531441 y por último 1.594.323.
 
@@ -115,13 +141,135 @@ potencia_rapida(3, 13) = 1594323  con 6 multiplicaciones
 potencia_lenta(3, 13)  = 1594323  con 13 multiplicaciones
 ```
 
-Mismo resultado, menos de la mitad de multiplicaciones. La ganancia crece con el exponente: para
-duplicar `exp` la versión lenta duplica sus multiplicaciones, y la rápida solo suma una llamada más
-a la cadena, porque baja dividiendo entre dos. Es la misma diferencia entre `n` y `log n` que
-mediste en el Tema 1 con la búsqueda binaria, y no es casualidad: la búsqueda binaria también es
-divide y vencerás. Divide el arreglo por la mitad, descarta la mitad que no sirve y repite sobre la
-mitad restante. La diferencia con la potencia rápida es que ahí no hace falta combinar nada: la
-respuesta de la mitad correcta ya es la respuesta final.
+Mismo resultado, menos de la mitad de multiplicaciones. Es la misma diferencia entre `n` y
+`log n` que mediste en el Tema 1 con la búsqueda binaria, y no es casualidad, ya que la búsqueda
+binaria también es divide y vencerás. Divide el arreglo por la mitad, descarta la mitad que no
+sirve y repite sobre la mitad restante. La diferencia con la potencia rápida es que ahí no hace
+falta combinar nada, la respuesta de la mitad correcta ya es la respuesta final.
+
+## Cuántas llamadas hace cada versión
+
+La ganancia de la potencia rápida se puede medir con exactitud contando llamadas, en vez de
+quedarme en la intuición de que "hace menos cuentas". Modifiqué las dos funciones para que llevaran
+la cuenta de cuántas veces se invocan a sí mismas y las corrí con varios exponentes:
+
+```
+       exp |  llamadas rapida |  multiplicaciones lenta
+        10 |                6 |                      10
+        50 |                9 |                      50
+       100 |               10 |                     100
+      1000 |               16 |                    1000
+     10000 |               19 |                   10000
+    100000 |               23 |                  100000
+   1000000 |               27 |                 1000000
+```
+
+La columna de la izquierda cuenta cuántas veces se llama `potencia_rapida` a sí misma antes de
+llegar al caso base, y casi todas esas llamadas hacen además una multiplicación, salvo la última,
+la que encuentra `exp == 0` y no multiplica nada. Por eso para `potencia_rapida(3, 13)`, que
+aparece más arriba con siete llamadas en la cadena, el conteo de multiplicaciones queda en seis,
+una menos que las llamadas, y coincide con lo que ya mostré. La columna de la derecha es el número
+de multiplicaciones que hace la versión que multiplica en un ciclo, y que por construcción es
+siempre igual al exponente, porque cada vuelta del ciclo multiplica una vez.
+
+Multiplicar por cien el exponente en las filas de abajo casi no mueve la columna de la izquierda.
+Al pasar de 100.000 a 1.000.000, la versión lenta suma 900.000 multiplicaciones más, mientras que la
+rápida suma apenas cuatro llamadas más. Esa es la misma escalera del Tema 1: la versión lenta crece
+de forma lineal, proporcional a `n`, y la rápida crece de forma logarítmica, porque cada llamada
+recorta el exponente a la mitad y como mucho suma un paso extra cuando el exponente es impar.
+
+## Segundo ejemplo de divide y vencerás: el máximo de un arreglo por mitades
+
+La potencia rápida reduce el problema a una sola llamada recursiva por nivel, porque cada exponente
+par se resuelve con la mitad exacta de sí mismo. La mayoría de los algoritmos de divide y vencerás
+no tienen esa suerte y necesitan dos llamadas recursivas por nivel, una por cada mitad del
+problema, y el paso de combinar decide cuánto se gana con la partición. El ejemplo más simple de
+ese patrón es encontrar el elemento más grande de un arreglo.
+
+La forma directa recorre el arreglo una vez, comparando cada elemento contra el máximo visto hasta
+ahora, y hace `n - 1` comparaciones para `n` elementos. La versión de divide y vencerás parte el
+arreglo en dos mitades, encuentra el máximo de cada mitad por separado, y combina las dos
+respuestas con una sola comparación entre ellas. El caso base es un arreglo de un solo elemento,
+que es su propio máximo sin necesidad de comparar nada.
+
+```java
+public class MaximoDivideVenceras {
+
+    static int maximo(int[] datos, int inicio, int fin) {
+        if (inicio == fin) {
+            return datos[inicio];
+        }
+        int medio = (inicio + fin) / 2;
+        int maxIzquierda = maximo(datos, inicio, medio);
+        int maxDerecha = maximo(datos, medio + 1, fin);
+        return Math.max(maxIzquierda, maxDerecha);
+    }
+
+    public static void main(String[] args) {
+        int[] datos = {18, 4, 27, 9, 31, 12, 6, 40};
+        System.out.println("Maximo: " + maximo(datos, 0, datos.length - 1));
+    }
+}
+```
+
+Es el mismo arreglo de ocho números que usé en el Tema 1 para comparar el arreglo contra la lista
+enlazada. El árbol de llamadas parte ese arreglo por la mitad hasta llegar a los ocho elementos
+sueltos, y después sube combinando de dos en dos con una comparación por cada unión.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 336" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol de llamadas de la funcion maximo sobre un arreglo de ocho elementos, dividido en mitades hasta llegar a los elementos sueltos, y combinado de vuelta con una comparacion por nivel" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd4d" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="14" y="20" font-size="13.5" font-weight="700" fill="#12324f">Arbol de llamadas de maximo(0, 7) sobre {18, 4, 27, 9, 31, 12, 6, 40}</text>
+  <rect x="223" y="34" width="300" height="50" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="55" y="118" width="300" height="46" rx="10"/><rect x="391" y="118" width="300" height="46" rx="10"/><rect x="44" y="270" width="70" height="40" rx="6"/><rect x="128" y="270" width="70" height="40" rx="6"/><rect x="212" y="270" width="70" height="40" rx="6"/><rect x="296" y="270" width="70" height="40" rx="6"/><rect x="380" y="270" width="70" height="40" rx="6"/><rect x="464" y="270" width="70" height="40" rx="6"/><rect x="548" y="270" width="70" height="40" rx="6"/><rect x="632" y="270" width="70" height="40" rx="6"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="56" y="196" width="130" height="40" rx="8"/><rect x="224" y="196" width="130" height="40" rx="8"/><rect x="392" y="196" width="130" height="40" rx="8"/><rect x="560" y="196" width="130" height="40" rx="8"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd4d)"><path d="M373,84 L205,116"/><path d="M373,84 L541,116"/><path d="M205,164 L121,194"/><path d="M205,164 L289,194"/><path d="M541,164 L457,194"/><path d="M541,164 L625,194"/><path d="M121,236 L79,268"/><path d="M121,236 L163,268"/><path d="M289,236 L247,268"/><path d="M289,236 L331,268"/><path d="M457,236 L415,268"/><path d="M457,236 L499,268"/><path d="M625,236 L583,268"/><path d="M625,236 L667,268"/></g>
+  <g text-anchor="middle">
+    <text x="373" y="54" font-size="14" font-weight="700" fill="#0e6f6c">maximo(0, 7)</text>
+    <text x="373" y="72" font-size="12.5" fill="#3c7d7a">resultado: 40</text>
+    <g font-size="13" font-weight="600" fill="#12324f"><text x="205" y="138">maximo(0, 3)</text><text x="541" y="138">maximo(4, 7)</text></g>
+    <g font-size="11.5" fill="#5b6876"><text x="205" y="155">resultado: 27</text><text x="541" y="155">resultado: 40</text></g>
+    <g font-size="11" font-weight="600" fill="#12324f"><text x="121" y="213">maximo(0, 1)</text><text x="289" y="213">maximo(2, 3)</text><text x="457" y="213">maximo(4, 5)</text><text x="625" y="213">maximo(6, 7)</text></g>
+    <g font-size="11" fill="#5b6876"><text x="121" y="228">resultado: 18</text><text x="289" y="228">resultado: 27</text><text x="457" y="228">resultado: 31</text><text x="625" y="228">resultado: 40</text></g>
+    <g font-size="12.5" font-weight="600" fill="#12324f"><text x="79" y="295">18</text><text x="163" y="295">4</text><text x="247" y="295">27</text><text x="331" y="295">9</text><text x="415" y="295">31</text><text x="499" y="295">12</text><text x="583" y="295">6</text><text x="667" y="295">40</text></g>
+  </g>
+  <text x="380" y="322" font-size="11.5" fill="#5b6876" text-anchor="middle">Caso base: inicio igual a fin, el elemento es su propio maximo sin comparar nada</text>
+</svg>
+
+:::
+
+Para un arreglo de 8 elementos, el árbol tiene 15 llamadas en total: 8 hojas, una por cada
+elemento, y 7 nodos internos, uno por cada comparación que combina dos mitades. Lo comprobé
+contando ambas cosas por separado, para arreglos de distintos tamaños:
+
+```
+n=    8  llamadas=    15 (2n-1=    15)  comparaciones=     7 (n-1=     7)
+n=   16  llamadas=    31 (2n-1=    31)  comparaciones=    15 (n-1=    15)
+n=  100  llamadas=   199 (2n-1=   199)  comparaciones=    99 (n-1=    99)
+n= 1000  llamadas=  1999 (2n-1=  1999)  comparaciones=   999 (n-1=   999)
+```
+
+Las llamadas totales son siempre `2n - 1`, porque un árbol donde cada nodo interno tiene
+exactamente dos hijos y hay `n` hojas termina con `n - 1` nodos internos, y `n` hojas más `n - 1`
+internos suman `2n - 1`. Pero las comparaciones reales, las que de verdad cuestan trabajo, solo
+ocurren en los nodos internos, porque las hojas se limitan a devolver el elemento que les tocó sin
+comparar nada. Esas comparaciones son exactamente `n - 1`, el mismo número que hace la versión
+directa con el ciclo simple.
+
+Esto es lo que sorprende de este ejemplo. Partir el arreglo en dos mitades y resolver cada mitad
+por separado no ahorra ni una sola comparación frente al ciclo directo. A diferencia de la
+búsqueda binaria, que descarta la mitad que no sirve y así reduce el trabajo total en cada paso,
+encontrar el máximo necesita revisar los dos lados completos, porque el elemento más grande puede
+estar en cualquiera de las dos mitades y no hay forma de saberlo sin mirar ambas. Divide y
+vencerás no es rápido por definición, es rápido solo cuando el paso de combinar permite descartar
+trabajo, como pasa en la búsqueda binaria o en la potencia rápida al recortar el exponente a la
+mitad. Cuando el combinar solo compara dos respuestas sin descartar nada, como aquí, el costo total
+no cambia frente a la solución directa, y lo único que cambia es la forma en que se organiza el
+mismo trabajo. Cormen, Leiserson, Rivest y Stein confirman la misma cota en el capítulo de
+estadísticos de orden, sección 9.1, dedicada al problema de encontrar el mínimo y el máximo:
+encontrar el máximo de `n` elementos exige `n - 1` comparaciones en el peor caso, sin importar si
+se hace con un ciclo simple o con esta partición recursiva.
 
 ## Algoritmos voraces: apostar por lo mejor de ahora
 
@@ -145,7 +293,7 @@ guardar el historial de decisiones ni volver atrás si algo no cuadra más adela
 
 :::
 
-Un caso donde esto funciona de verdad: dar cambio con las monedas de uso corriente en Colombia,
+Un caso donde esto funciona de verdad es dar cambio con las monedas de uso corriente en Colombia,
 $500, $200, $100 y $50. Esta implementación en Java toma siempre la moneda más grande que quepa en
 lo que falta por pagar:
 
@@ -178,29 +326,186 @@ public class CambioVoraz {
 }
 ```
 
-Con estas monedas, `cambioVoraz` devuelve `[500, 200]` para pagar 700: dos monedas, y no existe
-forma de pagar 700 con menos de dos. Con denominaciones como estas, el 25, 10, 5 y 1 centavo de
-dólar que analiza Cormen, Leiserson, Rivest y Stein en el capítulo de algoritmos voraces de
-*Introduction to Algorithms*, la estrategia voraz sí es óptima y se puede demostrar. También lo es
-cuando las denominaciones son potencias de un mismo número. El problema es que esas dos condiciones
-no las cumple cualquier conjunto de monedas, y un algoritmo voraz no tiene forma de darse cuenta.
+Con estas monedas, `cambioVoraz` devuelve `[500, 200]` para pagar 700, es decir dos monedas, y no
+existe forma de pagar 700 con menos de dos. Con denominaciones como estas, el 25, 10, 5 y 1
+centavo de dólar que analiza Cormen, Leiserson, Rivest y Stein en el capítulo de algoritmos voraces
+de *Introduction to Algorithms*, la estrategia voraz sí es óptima y se puede demostrar. También lo
+es cuando las denominaciones son potencias de un mismo número. El problema es que esas dos
+condiciones no las cumple cualquier conjunto de monedas, y un algoritmo voraz no tiene forma de
+darse cuenta.
 
-Un caso donde lo voraz sí está garantizado en todos los grafos, no solo en algunos, es el algoritmo
-de Kruskal para el árbol de expansión mínima: en cada paso toma la arista más barata que no forme
-un ciclo, nunca la cambia por otra, y aun así llega siempre al óptimo. Joseph Kruskal lo publicó en
-1956 en un artículo de dos páginas y medio en los *Proceedings of the American Mathematical
-Society*. Vas a volver a este algoritmo en la Unidad 4, cuando el curso trabaje grafos.
+Un caso donde lo voraz sí está garantizado en todos los grafos, no solo en algunos, es el
+algoritmo de Kruskal para el árbol de expansión mínima, que en cada paso toma la arista más
+barata que no forme un ciclo, nunca la cambia por otra, y aun así llega siempre al óptimo. Joseph
+Kruskal lo publicó en 1956 en un artículo de dos páginas y medio en los *Proceedings of the
+American Mathematical Society*. Vas a volver a este algoritmo en la Unidad 4, cuando el curso
+trabaje grafos.
+
+## Por qué un algoritmo voraz necesita una demostración propia
+
+Divide y vencerás garantiza el óptimo con una sola demostración general, la del paso de combinar,
+que después vale para cualquier entrada por inducción. Un algoritmo voraz no tiene ese atajo,
+porque cada problema necesita su propia demostración de que la elección local de verdad lleva a la
+respuesta global correcta. Cormen, Leiserson, Rivest y Stein dedican la sección del capítulo de
+algoritmos voraces que llaman los elementos de la estrategia voraz justo a nombrar las dos piezas
+que hacen falta para esa demostración.
+
+La primera pieza es la *propiedad de elección voraz*, que exige mostrar que existe al menos una
+respuesta óptima que empieza justo con la opción que el algoritmo voraz elegiría en el primer paso.
+No basta con que la elección voraz se vea razonable, hay que probar que ninguna respuesta mejor la
+descarta desde el principio. La segunda pieza es la *subestructura óptima*, que exige mostrar que,
+una vez fijada la primera elección, lo que queda por resolver es una versión más chica del mismo
+problema, y que resolverla de forma óptima junto con la elección ya hecha da la respuesta óptima
+del problema completo.
+
+Kruskal y el problema de las monedas ilustran lo distinta que puede ser esa demostración de un
+problema a otro. Kruskal se apoya en una propiedad de los árboles de expansión, la que garantiza
+que la arista más barata que cruza cualquier separación del grafo en dos partes siempre pertenece
+a algún árbol de expansión mínima, sin importar cómo se haya trazado esa separación. El cambio de
+moneda no tiene una propiedad parecida escondida en su estructura, así que la elección voraz de
+tomar la moneda más grande que quepa puede o no coincidir con el inicio de la respuesta óptima,
+dependiendo por completo de qué denominaciones haya disponibles. Sigue un problema donde la
+demostración sí se sostiene, con una prueba corta que puedes seguir paso a paso, y más adelante el
+problema de las monedas donde la elección voraz sí falla, para que compares las dos situaciones con
+los mismos ojos.
+
+## Segundo ejemplo voraz: elegir actividades que no se solapen
+
+El problema de *selección de actividades* pide, dado un conjunto de actividades que compiten por
+el mismo recurso (una sala, una máquina, un turno), elegir el subconjunto más grande de actividades
+que no se solapen en el tiempo. Cormen, Leiserson, Rivest y Stein lo usan para abrir el capítulo de
+algoritmos voraces precisamente porque admite una demostración completa de la propiedad de
+elección voraz y la subestructura óptima.
+
+La estrategia voraz que funciona es contraintuitiva la primera vez que se ve, porque no hay que
+elegir la actividad que empieza más temprano, hay que elegir la que termina más temprano. Ordena
+todas las actividades por su hora de fin, toma la primera, y de ahí en adelante toma la siguiente
+actividad que sea compatible con la última que ya elegiste, es decir la que empieza después de que
+termina la anterior.
+
+Seis actividades para un mismo salón, cada una con su hora de inicio y de fin:
+
+| Actividad | Inicio | Fin |
+|---|---|---|
+| A | 1 | 3 |
+| B | 2 | 5 |
+| C | 4 | 7 |
+| D | 1 | 8 |
+| E | 6 | 9 |
+| F | 8 | 10 |
+
+```python
+def seleccion_actividades(actividades):
+    ordenadas = sorted(actividades, key=lambda a: a[2])
+    seleccionadas = [ordenadas[0]]
+    fin_ultima = ordenadas[0][2]
+    for actividad in ordenadas[1:]:
+        inicio, fin = actividad[1], actividad[2]
+        if inicio >= fin_ultima:
+            seleccionadas.append(actividad)
+            fin_ultima = fin
+    return seleccionadas
+
+actividades = [
+    ("A", 1, 3), ("B", 2, 5), ("C", 4, 7),
+    ("D", 1, 8), ("E", 6, 9), ("F", 8, 10),
+]
+print(seleccion_actividades(actividades))
+```
+
+Al ejecutarlo:
+
+```
+[('A', 1, 3), ('C', 4, 7), ('F', 8, 10)]
+```
+
+Tres actividades, y comprobé por fuerza bruta, revisando todos los subconjuntos posibles de las
+seis, que no existe ningún subconjunto compatible de cuatro actividades: tres es lo máximo que cabe
+con estos horarios.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 232" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Linea de tiempo con seis actividades entre el instante 0 y el 10, con las actividades A, C y F resaltadas como la seleccion optima sin solapes y B, D y E descartadas" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="14" y="16" font-size="13" font-weight="700" fill="#12324f">Seis actividades para un mismo salon, del instante 0 al 10</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="188" y="58" width="192" height="16" rx="4"/><rect x="124" y="106" width="448" height="16" rx="4"/><rect x="444" y="130" width="192" height="16" rx="4"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="124" y="34" width="128" height="16" rx="4"/><rect x="316" y="82" width="192" height="16" rx="4"/><rect x="572" y="154" width="128" height="16" rx="4"/></g>
+  <g text-anchor="end" font-size="12" font-weight="700"><text x="112" y="46" fill="#0e6f6c">A</text><text x="112" y="70" fill="#5b6876">B</text><text x="112" y="94" fill="#0e6f6c">C</text><text x="112" y="118" fill="#5b6876">D</text><text x="112" y="142" fill="#5b6876">E</text><text x="112" y="166" fill="#0e6f6c">F</text></g>
+  <g text-anchor="middle" font-size="11"><text x="188" y="46" fill="#0e6f6c">1 a 3</text><text x="284" y="70" fill="#5b6876">2 a 5</text><text x="412" y="94" fill="#0e6f6c">4 a 7</text><text x="348" y="118" fill="#5b6876">1 a 8</text><text x="540" y="142" fill="#5b6876">6 a 9</text><text x="636" y="166" fill="#0e6f6c">8 a 10</text></g>
+  <path d="M60,182 L700,182" stroke="#cfd8e3" stroke-width="1.6" fill="none"/>
+  <g stroke="#cfd8e3" stroke-width="1.2"><path d="M60,176 L60,188"/><path d="M188,176 L188,188"/><path d="M316,176 L316,188"/><path d="M444,176 L444,188"/><path d="M572,176 L572,188"/><path d="M700,176 L700,188"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="60" y="202">0</text><text x="188" y="202">2</text><text x="316" y="202">4</text><text x="444" y="202">6</text><text x="572" y="202">8</text><text x="700" y="202">10</text></g>
+  <text x="380" y="222" font-size="11.5" fill="#5b6876" text-anchor="middle">A, C y F no se solapan entre si: es la mejor combinacion posible, tres actividades</text>
+</svg>
+
+:::
+
+La actividad D, de 1 a 8, es la trampa del ejemplo. Empieza tan temprano como A, así que una
+estrategia voraz que ordenara por hora de inicio la elegiría entre las primeras, y una vez elegida
+D ya no queda espacio para casi ninguna otra actividad del salón, porque D ocupa casi toda la
+franja. La estrategia correcta la descarta enseguida, no por su hora de inicio sino porque termina
+tarde, a las 8, y una actividad que termina tarde deja menos espacio libre detrás para acomodar las
+que siguen. Ordenar por fin en vez de por inicio es exactamente la propiedad de elección voraz que
+exige la demostración: siempre existe una respuesta óptima que empieza con la actividad de fin más
+temprano, porque si una respuesta óptima empezara con otra actividad, esa actividad se puede
+cambiar por la de fin más temprano sin perder compatibilidad con el resto y sin reducir la cantidad
+de actividades elegidas. Cormen, Leiserson, Rivest y Stein prueban ese intercambio con detalle en
+la sección 16.1 de *Introduction to Algorithms*, la que abre el capítulo de algoritmos voraces.
+
+::: {.callout-tip}
+## Reto 1. La actividad que bloquea el salón
+
+Seis actividades nuevas para el mismo tipo de salón, con inicio y fin:
+
+| Actividad | Inicio | Fin |
+|---|---|---|
+| M | 0 | 9 |
+| N | 1 | 3 |
+| O | 3 | 5 |
+| P | 5 | 7 |
+| Q | 7 | 10 |
+| R | 10 | 12 |
+
+1. Sin ejecutar nada, ordena las actividades por hora de fin y aplica a mano la estrategia voraz
+   correcta. Escribe cuántas actividades quedan seleccionadas y cuáles son.
+2. La actividad M empieza en el instante 0, antes que todas las demás. Si la estrategia voraz
+   eligiera por hora de inicio en vez de por hora de fin, ¿cuántas actividades terminaría
+   seleccionando en total? Razónalo sin ejecutar código.
+3. Ejecuta `seleccion_actividades` con esta lista y compara el resultado con tu predicción del
+   punto 1.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+Ordenadas por hora de fin: N (1 a 3), O (3 a 5), P (5 a 7), M (0 a 9), Q (7 a 10), R (10 a 12).
+
+La estrategia voraz correcta toma N (termina en 3). La siguiente compatible es O, que empieza en 3
+y termina en 5. Luego P, que empieza en 5 y termina en 7. M queda descartada porque empieza en 0,
+antes de que termine P. Sigue Q, que empieza en 7 y termina en 10, compatible con P. Por último R,
+que empieza en 10 y termina en 12, compatible con Q. La selección final es N, O, P, Q y R, cinco
+actividades.
+
+Si la estrategia eligiera por hora de inicio, tomaría primero M, porque empieza en el instante 0,
+antes que cualquier otra. Pero M termina en 9, así que descarta a N, O, P y Q, que empiezan todas
+antes de las 9. La única actividad que sigue siendo compatible es R, que empieza en 10. El
+resultado sería M y R, apenas dos actividades, frente a las cinco que consigue la estrategia
+correcta. `seleccion_actividades` con esta lista devuelve exactamente `[('N', 1, 3), ('O', 3, 5),
+('P', 5, 7), ('Q', 7, 10), ('R', 10, 12)]`, y confirma la predicción del punto 1: la actividad M,
+aunque empieza primero, es la que menos conviene elegir de entrada, porque bloquea casi todo el
+horario disponible.
+:::
 
 ## Cuando lo voraz no alcanza: el contraejemplo de las monedas
 
-Cambio las monedas por otras tres: 1, 3 y 4. Pagar un valor de 6.
+Cambio las monedas por otro conjunto, 1, 3 y 4, y pago un valor de 6.
 
-`cambioVoraz` toma la más grande que quepa: 4, y quedan 2 por pagar. La más grande que cabe en 2 es
-1, y quedan 1. Vuelve a tomar 1, y llega a 0. Total: **4 + 1 + 1, tres monedas**.
+`cambioVoraz` toma la moneda más grande que quepa, que es 4, y quedan 2 por pagar. La más grande
+que cabe en esos 2 es 1, y quedan 1. Vuelve a tomar 1 y llega a 0, así que en total usa las monedas
+4, 1 y 1, tres monedas.
 
-Pero 3 + 3 también suma 6, y son **dos monedas**. La estrategia voraz no lo ve, porque nunca
-reconsidera la primera elección: una vez que tomó la moneda de 4, ya gastó una posibilidad que la
-combinación óptima necesitaba completa.
+Pero 3 más 3 también suma 6 y usa apenas dos monedas. La estrategia voraz no lo ve, ya que nunca
+reconsidera la primera elección, porque una vez que tomó la moneda de 4 gastó una posibilidad que
+la combinación óptima necesitaba completa.
 
 ::: {.diagrama}
 
@@ -262,9 +567,45 @@ Al ejecutarlo:
 [3, 3]
 ```
 
-`cambio_optimo` no es voraz: prueba cada moneda posible para cada valor desde 1 hasta el objetivo y
-se queda con la combinación que usa menos monedas, sin descartar ninguna posibilidad de entrada.
-Por eso siempre encuentra la mejor respuesta, y por eso hace más trabajo que la voraz.
+`cambio_optimo` no es voraz, porque prueba cada moneda posible para cada valor desde 1 hasta el
+objetivo y se queda con la combinación que usa menos monedas, sin descartar ninguna posibilidad de
+entrada. Por eso siempre encuentra la mejor respuesta, y por eso hace más trabajo que la voraz.
+
+Este conjunto de monedas, 1, 3 y 4, es exactamente el tipo de contraejemplo que exige la propiedad
+de elección voraz: no existe ninguna respuesta óptima para pagar 6 que empiece tomando la moneda de
+4, porque la única forma de completar esa elección con dos monedas más no existe entre las
+denominaciones disponibles. La propiedad falla desde el primer paso, y por eso toda la cadena de
+decisiones posteriores queda comprometida, aunque cada paso individual parezca razonable en el
+momento en que se toma.
+
+::: {.callout-tip}
+## Reto 2. Predice antes de ejecutar
+
+Otro conjunto de monedas: 1, 5 y 6. El valor a pagar es 10.
+
+1. Sin correr ningún código, escribe cuántas monedas usa la estrategia voraz y cuáles son.
+2. Escribe cuál crees que es la combinación óptima y cuántas monedas usa.
+3. Ejecuta `cambio_voraz([1, 5, 6], 10)` y `cambio_optimo([1, 5, 6], 10)` del código de esta guía
+   y compara con lo que predijiste.
+4. En una frase: ¿por qué la moneda de 6 es la que engaña a la estrategia voraz?
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La estrategia voraz toma primero la moneda más grande que quepa en 10, que es 6, y quedan 4 por
+pagar. La más grande que cabe en esos 4 no es 6 ni 5, así que toma cuatro monedas de 1. En total
+usa las monedas 6, 1, 1, 1 y 1, cinco monedas.
+
+La combinación óptima es 5 más 5, dos monedas, y sí suma 10. `cambio_voraz([1, 5, 6], 10)` devuelve
+`[6, 1, 1, 1, 1]` y `cambio_optimo([1, 5, 6], 10)` devuelve `[5, 5]`, exactamente lo que predice el
+razonamiento anterior.
+
+La moneda de 6 engaña a la estrategia voraz porque, aunque es la más grande que cabe al principio,
+deja un resto de 4 que ninguna otra moneda del conjunto paga de forma barata, mientras que la de 5
+deja un resto de 5, que se paga con exactamente otra moneda de 5. La estrategia voraz nunca compara
+esas dos consecuencias antes de decidir, solo mira cuál moneda es más grande en ese instante.
+:::
 
 ## Cuándo conviene cada estrategia
 
@@ -274,27 +615,20 @@ Por eso siempre encuentra la mejor respuesta, y por eso hace más trabajo que la
 | Idea central | Partir en subproblemas, resolver cada uno por recursividad y combinar | Tomar en cada paso la opción que se ve mejor ahora mismo |
 | Vuelve atrás a reconsiderar | No hace falta: cada subproblema se resuelve completo antes de combinar | Nunca. Una decisión tomada queda tomada |
 | Qué exige del problema | Que se pueda partir en piezas del mismo problema y combinar sin perder información | Que la mejor opción local lleve a la mejor opción global, algo que hay que demostrar caso por caso |
-| Da siempre la respuesta óptima | Sí, si el paso de combinar es correcto | Solo en problemas donde se demuestra esa propiedad, como Kruskal. No por defecto |
-| Ejemplo de hoy | Potencia rápida, exponenciación binaria | Cambio de moneda: óptimo con {50, 100, 200, 500}, falla con {1, 3, 4} |
+| Da siempre la respuesta óptima | Sí, si el paso de combinar es correcto | Solo en problemas donde se demuestra la propiedad de elección voraz y la subestructura óptima |
+| Primer ejemplo | Potencia rápida, una sola llamada recursiva por nivel | Cambio de moneda con {50, 100, 200, 500}, óptimo por construcción |
+| Segundo ejemplo | Máximo de un arreglo por mitades, dos llamadas recursivas por nivel | Selección de actividades por fin más temprano, óptimo demostrado con intercambio |
+| Caso donde falla o sorprende | El máximo por mitades no ahorra comparaciones frente al ciclo simple | Cambio de moneda con {1, 3, 4} o {1, 5, 6}: la elección local no lleva al óptimo |
 :::
 
-Ninguna de las dos es "la buena". Divide y vencerás siempre llega al óptimo si el paso de combinar
-está bien hecho, pero puede exigir más memoria por la pila de llamadas recursivas. Un algoritmo
-voraz es simple y barato de ejecutar, pero antes de usarlo hay que demostrar que el problema tiene
-la propiedad que lo hace correcto. Si no la tiene, hace falta programación dinámica, como
-`cambio_optimo`, que sí revisa todas las combinaciones relevantes.
-
-::: {.callout-tip}
-## Reto. Predice antes de ejecutar
-
-Otro conjunto de monedas: 1, 5 y 6. El valor a pagar es 10.
-
-1. Sin correr ningún código, escribe cuántas monedas usa la estrategia voraz y cuáles son.
-2. Escribe cuál crees que es la combinación óptima y cuántas monedas usa.
-3. Ejecuta `cambio_voraz([1, 5, 6], 10)` y `cambio_optimo([1, 5, 6], 10)` del código de esta guía y
-   compara con lo que predijiste.
-4. En una frase: ¿por qué la moneda de 6 es la que engaña a la estrategia voraz?
-:::
+Ninguna de las dos es la mejor en abstracto. Divide y vencerás llega siempre al óptimo si el paso
+de combinar está bien hecho, pero el costo real depende de cuánto trabajo permite descartar ese
+combinar, como viste al comparar la potencia rápida con el máximo por mitades. Un algoritmo voraz
+es simple y barato de ejecutar, y cuando el problema tiene la propiedad de elección voraz, como
+Kruskal o la selección de actividades, la demostración lo respalda sin necesidad de revisar cada
+entrada. Cuando no la tiene, como el cambio de moneda con denominaciones arbitrarias, hace falta
+una estrategia distinta, como la programación dinámica de `cambio_optimo`, que sí revisa todas las
+combinaciones relevantes en vez de apostar por una sola elección en cada paso.
 
 ## Cierre de la Unidad 1
 
@@ -306,10 +640,14 @@ va a escribir como una clase, con sus atributos encapsulados y sus operaciones c
 Tema 3 dio la técnica que hoy terminé de usar: recursividad, caso base más caso recursivo, la forma
 en que una función resuelve un problema llamándose a sí misma sobre una entrada más chica.
 
-Hoy junté las tres piezas. Divide y vencerás es recursividad aplicada con una estrategia concreta:
-partir, resolver, combinar. Los algoritmos voraces son la alternativa cuando partir el problema no
-es la mejor forma de atacarlo, y demostré con las monedas 1, 3 y 4 que esa alternativa exige
-verificar, no asumir, que la mejor opción de cada paso lleva a la mejor respuesta final.
+Hoy junté las tres piezas y las llevé más lejos que un solo ejemplo por estrategia. Divide y
+vencerás es recursividad aplicada con tres pasos concretos: partir, resolver, combinar, y lo mostré
+con dos ejemplos de forma distinta, uno que reduce el trabajo real, la potencia rápida, y otro que
+solo reorganiza el mismo trabajo, el máximo por mitades. Los algoritmos voraces son la alternativa
+cuando partir el problema no es la mejor forma de atacarlo, y los mostré también con dos caras:
+Kruskal y la selección de actividades, donde la elección local sí lleva a la óptima porque el
+problema tiene la propiedad que lo permite, y el cambio de moneda con denominaciones como 1, 3 y 4
+o 1, 5 y 6, donde esa propiedad no existe y la estrategia falla de forma medible.
 
 La Unidad 2 deja de hablar de algoritmos en abstracto y empieza a construir. Vas a modelar vectores
 y matrices, y vas a montar pilas y colas sobre esos vectores, usando exactamente la clase que
@@ -321,17 +659,27 @@ a medir y construir todo lo que sigue.
 **Al salir de este tema deberías poder explicar, sin mirar la guía**
 
 - [ ] Los tres pasos de divide y vencerás, y por qué "resolver" es una llamada recursiva
-- [ ] Por qué la potencia rápida hace menos multiplicaciones que multiplicar en un ciclo
+- [ ] Por qué divide y vencerás garantiza el óptimo si el paso de combinar es correcto, y qué pasa
+      si ese paso tiene un error
+- [ ] Por qué la potencia rápida hace menos llamadas que multiplicar en un ciclo, y cuántas
+      llamadas hace para exponentes grandes
+- [ ] Por qué encontrar el máximo por mitades no ahorra comparaciones frente al ciclo simple,
+      aunque también sea divide y vencerás
 - [ ] Qué significa que un algoritmo voraz nunca reconsidere una decisión
+- [ ] La propiedad de elección voraz y la subestructura óptima, con un ejemplo donde sí se cumplen
+      y otro donde no
+- [ ] Por qué la selección de actividades ordena por hora de fin y no por hora de inicio
 - [ ] Un conjunto de monedas donde la estrategia voraz falla, y la cuenta que lo demuestra
-- [ ] Un caso real donde lo voraz sí es óptimo, y por qué ahí sí se puede demostrar
 - [ ] Qué construye la Unidad 2 con la clase que modelaste en el Tema 2
 :::
 
 ## Recursos
 
 - Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
-  de Divide y vencerás y capítulo de Algoritmos voraces, problema 16-1 sobre el cambio de moneda.
+  de estadísticos de orden, sección 9.1, sobre el problema de encontrar el mínimo y el máximo.
+- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
+  de algoritmos voraces, secciones 16.1 sobre selección de actividades y 16.2 sobre los elementos
+  de la estrategia voraz, y problema 16-1 sobre el cambio de moneda.
 - Weiss, M. A. *Estructuras de datos en Java.* Capítulos de recursividad y de análisis de
   algoritmos.
 - Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulos de recursividad y
@@ -347,6 +695,6 @@ Semestre 2026-02.
 
 **Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
 usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
-Las mediciones de multiplicaciones y las salidas de código son capturas reales tomadas durante
-la preparación del material.
+Las mediciones de multiplicaciones, llamadas recursivas y las salidas de código son capturas
+reales tomadas durante la preparación del material.
 :::
