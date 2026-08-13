@@ -1,0 +1,398 @@
+---
+title: "Semana 1. Por qué importa cómo guardas los datos"
+subtitle: "Estructura de datos (ESD01). Unidad 1"
+author: "Oscar Leonel Sánchez Conde"
+format:
+  revealjs:
+    theme: [default, ../../estilos/presentacion.scss]
+    slide-number: true
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Agenda de hoy
+
+1. Diagnóstico de entrada, sin nota
+2. La tienda de Doña Marta
+3. Qué es un algoritmo
+4. Arreglo contra lista enlazada
+5. Un millón de comparaciones contra veinte
+6. Contrato y implementación
+7. El mapa del semestre
+
+::: {.neutro}
+Hoy no se instala nada, no se escribe código y no se entrega nada con nota.
+:::
+
+## Antes de empezar: el diagnóstico
+
+- 39 preguntas, unos 35 minutos
+- **No tiene nota** y no afecta la calificación
+- Responder "no lo sé" es una respuesta válida y útil
+- Se responde ahora, en clase, individual
+- Necesitas una cuenta de Google. Sirve un Gmail personal
+
+<https://forms.gle/udNWtiQDKFZKJsQG6>
+
+Escribe tu nombre completo como aparece en el sistema académico.
+
+## La pregunta de hoy
+
+::: {.destacado}
+Por qué dos programas que resuelven exactamente el mismo problema pueden costar cincuenta mil veces
+más el uno que el otro.
+:::
+
+No por el lenguaje. No por el computador.
+
+Por cómo guardaron los datos y por el algoritmo con el que los recorren.
+
+## La tienda de la esquina
+
+Doña Marta vende cuarenta productos y tiene dos sitios donde guardarlos.
+
+- **El estante numerado.** Cuarenta casillas seguidas, cada producto en la suya. El arroz está en la
+  12: camina hasta la 12 y estira el brazo.
+- **La bodega del fondo.** Cajas apiladas donde quepan, cada una con una nota pegada que dice cuál
+  es la siguiente.
+
+Vamos a volver a la tienda tres veces.
+
+## Estante o bodega
+
+::: {.columns}
+::: {.column width="50%"}
+**Traer algo que sabes dónde está**
+
+Estante: inmediato.
+
+Bodega: abrir caja, leer nota, abrir la siguiente.
+:::
+::: {.column width="50%"}
+**Meter algo nuevo al principio**
+
+Estante: correr los cuarenta productos una casilla.
+
+Bodega: poner la caja al frente y cambiar una nota.
+:::
+:::
+
+Cada sitio es rápido en lo que el otro es lento.
+
+## Reto 1. Organiza la bodega
+
+Doña Marta te contrata por un día:
+
+- Atiende unos 200 clientes y cada uno pide entre uno y tres productos que ella ya sabe dónde están.
+- Recibe un pedido del proveedor cada quince días, con dos o tres productos nuevos.
+
+**Estante o bodega.** Una frase, y di en qué te apoyaste.
+
+## Qué es un algoritmo
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un algoritmo recibe una entrada, ejecuta pasos y produce una salida, con las exigencias de finitud, definicion precisa y efectividad debajo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="pesd1" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="8" y="30" width="150" height="62" rx="10"/><rect x="602" y="30" width="150" height="62" rx="10"/><rect x="8" y="148" width="236" height="78" rx="10"/><rect x="262" y="148" width="236" height="78" rx="10"/><rect x="516" y="148" width="236" height="78" rx="10"/></g>
+  <rect x="222" y="8" width="316" height="106" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#pesd1)"><path d="M162,61 L216,61"/><path d="M542,61 L596,61"/></g>
+  <g text-anchor="middle">
+    <g font-size="15" font-weight="600" fill="#12324f"><text x="83" y="58">Entrada</text><text x="677" y="58">Salida</text></g>
+    <g font-size="11.5" fill="#5b6876"><text x="83" y="78">los datos que recibe</text><text x="677" y="78">el resultado que produce</text></g>
+    <text x="380" y="34" font-size="16" font-weight="700" fill="#0e6f6c">Algoritmo</text>
+    <g font-size="12" fill="#3c7d7a"><text x="380" y="60">una secuencia de pasos que</text><text x="380" y="80">transforma la entrada</text><text x="380" y="100">en la salida</text></g>
+    <g font-size="14" font-weight="600" fill="#12324f"><text x="126" y="174">Finitud</text><text x="380" y="174">Definición precisa</text><text x="634" y="174">Efectividad</text></g>
+    <g font-size="11.5" fill="#5b6876"><text x="126" y="194">termina después de un</text><text x="126" y="211">número finito de pasos</text><text x="380" y="194">cada paso no admite</text><text x="380" y="211">dos interpretaciones</text><text x="634" y="194">cada paso se puede</text><text x="634" y="211">hacer a mano en papel</text></g>
+  </g>
+</svg>
+
+:::
+
+Knuth, *The Art of Computer Programming*, volumen 1, 1968.
+
+## Las tres exigencias que se olvidan
+
+- **Definición precisa.** Una receta que dice "sal al gusto" no es un algoritmo: dos personas
+  ejecutan el mismo paso de forma distinta.
+- **Finitud.** Un ciclo que espera una condición que nunca se cumple no termina.
+- **Efectividad.** Cada paso debe poder hacerse a mano, con papel y lápiz. "Encuentra el camino más
+  corto" no cumple: ese paso es un algoritmo entero por dentro.
+
+Cuando un programa se cuelga, la pregunta útil es cuál de las cinco se rompió.
+
+## El estante y la bodega tienen nombre
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arriba un arreglo como ocho casillas contiguas numeradas; abajo una lista de cuatro nodos dispersos unidos por punteros" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="pesd2" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="14" y="20" font-size="13.5" font-weight="700" fill="#12324f">Arreglo: un solo bloque de memoria contiguo</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="32" width="66" height="44"/><rect x="126" y="32" width="66" height="44"/><rect x="192" y="32" width="66" height="44"/><rect x="258" y="32" width="66" height="44"/><rect x="324" y="32" width="66" height="44"/><rect x="456" y="32" width="66" height="44"/><rect x="522" y="32" width="66" height="44"/></g>
+  <rect x="390" y="32" width="66" height="44" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="13" fill="#12324f"><text x="93" y="60">18</text><text x="159" y="60">4</text><text x="225" y="60">27</text><text x="291" y="60">9</text><text x="357" y="60">31</text><text x="423" y="60">12</text><text x="489" y="60">6</text><text x="555" y="60">40</text></g>
+  <g text-anchor="middle" font-size="11.5" fill="#5b6876"><text x="93" y="94">0</text><text x="159" y="94">1</text><text x="225" y="94">2</text><text x="291" y="94">3</text><text x="357" y="94">4</text><text x="423" y="94">5</text><text x="489" y="94">6</text><text x="555" y="94">7</text></g>
+  <g font-size="11.5" fill="#0e6f6c"><text x="606" y="52">Leer la posición 5</text><text x="606" y="69">es una cuenta</text></g>
+  <text x="60" y="118" font-size="12" fill="#5b6876">Insertar en la posición 0 corre los ocho elementos a la derecha</text>
+  <path d="M14,136 L746,136" stroke="#cfd8e3" stroke-width="1.5" stroke-dasharray="6 5" fill="none"/>
+  <text x="14" y="160" font-size="13.5" font-weight="700" fill="#12324f">Lista enlazada: nodos dispersos, unidos por punteros</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="40" y="214" width="112" height="42" rx="6"/><rect x="214" y="180" width="112" height="42" rx="6"/><rect x="388" y="224" width="112" height="42" rx="6"/><rect x="562" y="184" width="112" height="42" rx="6"/></g>
+  <g stroke="#c7d6e6" fill="none"><path d="M114,214 L114,256"/><path d="M288,180 L288,222"/><path d="M462,224 L462,266"/><path d="M636,184 L636,226"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#pesd2)"><path d="M152,235 C182,235 186,203 210,201"/><path d="M326,201 C356,201 360,243 384,245"/><path d="M500,245 C530,245 534,207 558,205"/></g>
+  <g text-anchor="middle">
+    <g font-size="13" fill="#12324f"><text x="77" y="240">18</text><text x="251" y="206">4</text><text x="425" y="250">27</text><text x="599" y="210">9</text></g>
+    <g font-size="11" fill="#5b6876"><text x="133" y="239">sig</text><text x="307" y="205">sig</text><text x="481" y="249">sig</text><text x="655" y="209">fin</text></g>
+    <text x="96" y="208" font-size="11.5" fill="#0e6f6c">cabeza</text>
+  </g>
+  <text x="14" y="288" font-size="12" fill="#5b6876">Insertar en la cabeza solo reasigna punteros. Llegar al nodo 500.000 obliga a recorrer 500.000 nodos.</text>
+</svg>
+
+:::
+
+## Leer contra insertar
+
+::: {.columns}
+::: {.column width="50%"}
+**Arreglo**
+
+Un bloque contiguo, pedido de una vez.
+
+La dirección del elemento `i` se calcula: base más `i` por el tamaño.
+
+Da igual si `i` es 3 o 999.999.
+:::
+::: {.column width="50%"}
+**Lista enlazada**
+
+Memoria pedida nodo por nodo, cuando hace falta.
+
+Cada nodo guarda la dirección del siguiente.
+
+Para llegar al nodo 500.000 hay que caminar 500.000 nodos.
+:::
+:::
+
+## Reto 2. Predice el costo
+
+Un arreglo de un millón de elementos y una lista enlazada de un millón, con los mismos datos.
+Escriban **barato** o **caro**:
+
+| Operación | Arreglo | Lista |
+|---|---|---|
+| Leer el elemento de la posición 500.000 | | |
+| Agregar un elemento al final | | |
+| Insertar un elemento en la posición 0 | | |
+| Borrar el primer elemento | | |
+| Recorrer todos los elementos una vez | | |
+| Buscar un valor cualquiera | | |
+
+## La respuesta
+
+| Operación | Arreglo | Lista |
+|---|---|---|
+| Leer la posición 500.000 | Barato. Una cuenta | Caro. Medio millón de nodos |
+| Agregar al final | Barato, casi siempre | Barato. Un puntero |
+| Insertar en la posición 0 | Caro. Corre un millón | Barato. Dos punteros |
+| Borrar el primero | Caro. Corre un millón | Barato. Un puntero |
+| Recorrer todo | Caro | Igual de caro |
+| Buscar un valor cualquiera | Caro | Igual de caro |
+
+Cuando la operación toca todos los elementos, la estructura deja de importar.
+
+## Lo que dice la documentación
+
+Javadoc de `ArrayList` de Java 17:
+
+::: {.neutro}
+"The size, isEmpty, get, set, iterator, and listIterator operations run in constant time. The add
+operation runs in amortized constant time, that is, adding n elements requires O(n) time."
+:::
+
+Javadoc de `LinkedList`: es una lista doblemente enlazada y las operaciones que indexan recorren la
+lista desde el extremo más cercano al índice pedido.
+
+## La trampa del list de Python
+
+::: {.destacado}
+El `list` de Python es un arreglo dinámico, no una lista enlazada, aunque el nombre diga otra cosa.
+:::
+
+Del wiki de complejidad temporal de Python:
+
+- `append` cuesta tiempo constante amortizado
+- el acceso por índice es constante
+- `insert` al inicio y `pop(0)` cuestan tiempo **lineal**, porque desplazan todos los elementos
+
+`datos.pop(0)` dentro de un ciclo es un programa cuadrático sin que se note.
+
+## Un millón contra veinte
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Barra completa de un millon de comparaciones para la busqueda secuencial contra una barra minima de veinte comparaciones para la binaria" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="14" y="20" font-size="13.5" font-weight="700" fill="#12324f">Buscar un valor en 1.000.000 de elementos ordenados</text>
+  <text x="14" y="56" font-size="14" font-weight="600" fill="#12324f">Secuencial</text>
+  <text x="14" y="74" font-size="11.5" fill="#5b6876">34.4 ms</text>
+  <rect x="140" y="44" width="560" height="30" rx="4" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="420" y="64" font-size="12.5" text-anchor="middle" fill="#12324f">1.000.000 de comparaciones</text>
+  <text x="14" y="120" font-size="14" font-weight="600" fill="#12324f">Binaria</text>
+  <text x="14" y="138" font-size="11.5" fill="#5b6876">0.0171 ms</text>
+  <rect x="140" y="108" width="560" height="30" rx="4" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="140" y="108" width="12" height="30" rx="2" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="162" y="128" font-size="12.5" fill="#0e6f6c">20 comparaciones</text>
+  <text x="140" y="172" font-size="12" fill="#5b6876">Cada comparación de la binaria descarta la mitad de lo que queda: 1.000.000, 500.000, 250.000.</text>
+  <text x="140" y="194" font-size="12" fill="#0e6f6c">El peor caso es la parte entera de log2 de n, más 1. Log2 de 1.000.000 vale 19,93.</text>
+</svg>
+
+:::
+
+La binaria exige datos ordenados. La secuencial no exige nada.
+
+## La medición real
+
+```
+Elementos:            1000000
+Busqueda secuencial:  1000000 comparaciones   34.4 ms
+Busqueda binaria:     20 comparaciones   0.0171 ms
+Version de Python:    3.13.4
+```
+
+Máquina: AMD Ryzen 5 4600H, 16 GB de RAM, Windows 11, Python 3.13.4.
+
+::: {.destacado}
+Los milisegundos cambian de máquina a máquina. El número de comparaciones no cambia en ninguna.
+:::
+
+## El corazón del script
+
+```python
+def binaria(datos, objetivo):
+    pasos = 0
+    izq, der = 0, len(datos) - 1
+    while izq <= der:
+        pasos += 1
+        medio = (izq + der) // 2
+        if datos[medio] == objetivo:
+            return pasos
+        if datos[medio] < objetivo:
+            izq = medio + 1
+        else:
+            der = medio - 1
+    return pasos
+```
+
+El script completo, con la secuencial y los cronómetros, está en la guía de la semana.
+
+## Contrato contra implementación
+
+Liskov y Zilles, 1974: describir un tipo de dato por su **comportamiento**, es decir por su dominio,
+sus operaciones y sus restricciones, sin decir cómo se guarda en memoria.
+
+- **Tipo de dato abstracto:** el contrato
+- **Estructura de datos:** la organización en memoria que lo cumple
+
+Un contrato admite varias implementaciones, y el código que lo usa no se entera de cuál eligieron.
+
+## Pila y cola
+
+::: {.columns}
+::: {.column width="50%"}
+**Pila**
+
+apilar, desapilar, cima, está vacía
+
+El último que entra sale primero.
+
+Deshacer en un editor. Llamadas recursivas pendientes.
+:::
+::: {.column width="50%"}
+**Cola**
+
+encolar, desencolar, frente, está vacía
+
+El primero que entra sale primero.
+
+Trabajos de una impresora. Mensajes de un servidor.
+:::
+:::
+
+Las dos se montan sobre un arreglo (Unidad 2) o sobre una lista (Unidad 3).
+
+## La escalera de crecimiento
+
+| n | log2 n | n | n por log2 n | n al cuadrado |
+|---|---|---|---|---|
+| 1.000 | unos 9,97 | 1.000 | unos 9.966 | 1.000.000 |
+| 1.000.000 | unos 19,93 | 1.000.000 | unos 19.930.000 | 1.000.000.000.000 |
+
+Con mil elementos, el cuadrático hace cerca de **100 veces** más trabajo que el de `n log n`. Con un
+millón, cerca de **50.000 veces** más.
+
+Por eso un programa que anda bien con la base de prueba se muere con la de producción.
+
+## 2011: el peor caso a propósito
+
+Klink y Walde, Chaos Communication Congress, diciembre de 2011.
+
+- Una tabla hash promedia tiempo constante para buscar
+- Su peor caso, cuando todas las llaves caen en el mismo sitio, es lineal
+- Un atacante envía parámetros que colisionan a propósito y agota la CPU del servidor
+- Aviso oCERT-2011-003, registrado como CVE-2011-4885
+- Impacto confirmado en PHP, ASP.NET y Java, entre otras plataformas
+
+La estructura que eliges es también una decisión de seguridad.
+
+## Reto 3. Escoge la implementación
+
+Arreglo o lista enlazada, y una frase con la operación que más se repite:
+
+1. El historial de deshacer de un editor. Se agrega y se quita por el mismo extremo, y no se sabe
+   cuántas acciones va a hacer el usuario.
+2. Un catálogo de 300 productos que se carga al abrir, no cambia nunca y se consulta miles de veces
+   por número de referencia.
+3. Una cola de atención donde entran clientes por el final y salen por el frente todo el día.
+
+## El mapa del semestre
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 178" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las cuatro unidades del curso como etapas: los cimientos, las estructuras fijas, las estructuras dinamicas y el costo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="pesd3" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="35" y="8" width="110" height="25" rx="12.5"/><rect x="227" y="8" width="110" height="25" rx="12.5"/><rect x="419" y="8" width="110" height="25" rx="12.5"/><rect x="611" y="8" width="110" height="25" rx="12.5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="8" y="46" width="164" height="102" rx="10"/><rect x="200" y="46" width="164" height="102" rx="10"/><rect x="392" y="46" width="164" height="102" rx="10"/><rect x="584" y="46" width="164" height="102" rx="10"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#pesd3)"><path d="M176,97 L194,97"/><path d="M368,97 L386,97"/><path d="M560,97 L578,97"/></g>
+  <g text-anchor="middle">
+    <g font-size="12" font-weight="700" fill="#0e6f6c"><text x="90" y="26">Unidad 1</text><text x="282" y="26">Unidad 2</text><text x="474" y="26">Unidad 3</text><text x="666" y="26">Unidad 4</text></g>
+    <g font-size="14.5" font-weight="600" fill="#12324f"><text x="90" y="76">Los cimientos</text><text x="282" y="76">Estructuras fijas</text><text x="474" y="76">Estructuras</text><text x="474" y="94">dinámicas</text><text x="666" y="76">Costo y búsqueda</text></g>
+    <g font-size="11.5" fill="#5b6876"><text x="90" y="100">algoritmos, objetos,</text><text x="90" y="116">recursividad y</text><text x="90" y="132">estrategias</text><text x="282" y="100">vectores, matrices,</text><text x="282" y="116">pilas y colas sobre</text><text x="282" y="132">vectores</text><text x="474" y="118">listas, árboles</text><text x="474" y="134">y grafos</text><text x="666" y="100">ordenamiento,</text><text x="666" y="116">caminos mínimos</text><text x="666" y="132">y eficiencia</text></g>
+  </g>
+</svg>
+
+:::
+
+Cada unidad reutiliza la anterior. La Unidad 4 mide todo lo que construiste antes.
+
+## Cuatro publicaciones en quince años
+
+- **1961.** Hoare publica "Algorithm 64: Quicksort" en *Communications of the ACM*, 4(7), 321
+- **1968.** Knuth fija las cinco propiedades de un algoritmo
+- **1974.** Liskov y Zilles definen el tipo de dato abstracto
+- **1976.** Wirth titula su libro *Algorithms + Data Structures = Programs*
+
+El título de Wirth es el argumento: las dos decisiones no se toman por separado.
+
+## Para la próxima sesión
+
+1. Ejecuta el script de la guía en tu equipo y trae la salida tal como te salga, con el procesador,
+   la memoria y la versión de Python.
+2. Corre el script con `n = 10_000_000`. Escribe tu predicción antes de ejecutarlo.
+3. Media página: una operación de un programa que uses que sospeches que recorre todos los datos.
+
+Entramos a recursividad y estrategias de solución. Van a hacer falta las pilas de hoy.
+
+::: {.pie-diapositiva}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Semestre 2026-02.
+:::
