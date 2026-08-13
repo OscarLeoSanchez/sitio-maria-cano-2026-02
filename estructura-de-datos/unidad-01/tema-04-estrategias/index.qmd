@@ -1,0 +1,352 @@
+---
+title: "Tema 4. Divide y vencerás contra la codicia"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                     |
+|--------|-----------------------------------------------------|
+| Unidad | Unidad 1. Introducción a las estructuras de datos   |
+| Tema   | Tema 4. Estrategias de programación                |
+:::
+
+Retomo el Tema 3 en una frase: la recursividad, caso base más caso recursivo, es la herramienta con
+la que hoy implemento la primera estrategia. Divide y vencerás no es una técnica aparte de la
+recursividad, es un uso concreto de ella: partir un problema en pedazos más chicos del mismo
+problema, resolver cada pedazo llamándose a sí mismo, y combinar lo que devuelve cada llamada.
+
+Hoy cierro la Unidad 1 con dos estrategias para atacar un problema grande. La primera parte el
+problema y confía en la recursividad para resolver las partes. La segunda no parte nada: en cada
+paso toma la opción que se ve mejor en ese momento y nunca vuelve atrás a revisar si esa decisión
+fue la correcta. Las dos funcionan la mayoría de las veces, y la segunda tiene un caso real donde
+falla, que voy a mostrar con números verificados a mano.
+
+## Divide y vencerás: partir, resolver, combinar
+
+Un algoritmo de divide y vencerás sigue siempre los mismos tres pasos.
+
+- **Dividir.** Parte el problema en subproblemas más chicos, del mismo tipo que el original.
+- **Resolver.** Resuelve cada subproblema. Si todavía es grande, aplica el mismo método otra vez,
+  por eso la implementación es recursiva. Si ya es lo bastante chico, resuélvelo directo: ese es el
+  caso base del Tema 3.
+- **Combinar.** Une las soluciones de los subproblemas en la solución del problema original.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un problema de tamano n se divide en dos subproblemas mas chicos, cada uno se resuelve con el mismo metodo por recursividad, y las dos soluciones se combinan en la solucion original" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd4a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <rect x="270" y="10" width="220" height="54" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle"><text x="380" y="32" font-size="14.5" font-weight="700" fill="#0e6f6c">Problema de tamaño n</text><text x="380" y="50" font-size="11.5" fill="#3c7d7a">difícil de resolver de una vez</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#esd4a)"><path d="M330,64 C280,80 190,86 150,98"/><path d="M430,64 C480,80 570,86 610,98"/></g>
+  <rect x="40" y="100" width="220" height="58" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="500" y="100" width="220" height="58" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="150" y="126">Subproblema A</text><text x="610" y="126">Subproblema B</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="150" y="144">más chico, mismo problema</text><text x="610" y="144">más chico, mismo problema</text></g>
+  <text x="380" y="184" font-size="11.5" fill="#0e6f6c" text-anchor="middle">Cada subproblema se resuelve con el mismo método, por recursividad</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#esd4a)"><path d="M150,158 C150,190 280,196 320,212"/><path d="M610,158 C610,190 480,196 440,212"/></g>
+  <rect x="280" y="214" width="200" height="54" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <g text-anchor="middle"><text x="380" y="236" font-size="13" font-weight="600" fill="#12324f">Combinar</text><text x="380" y="253" font-size="11" fill="#5b6876">unir las dos soluciones</text></g>
+  <path d="M380,268 L380,282" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#esd4a)"/>
+  <rect x="270" y="284" width="220" height="30" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="303" font-size="12.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">Solución del problema original</text>
+</svg>
+
+:::
+
+El paso que suele confundir es "resolver". No es un paso distinto de dividir y combinar: es una
+llamada recursiva. La función se llama a sí misma con una entrada más chica, hasta llegar al caso
+base del Tema 3, y desde ahí la pila de llamadas empieza a devolver valores que el paso de combinar
+va uniendo.
+
+## Un ejemplo: potencia rápida
+
+Calcular `base` elevado a `exp` de la forma directa exige multiplicar `exp` veces. Divide y
+vencerás lo resuelve con menos multiplicaciones apoyándose en dos observaciones sobre los
+exponentes:
+
+- Si `exp` es par, `base^exp` es igual a `(base^(exp/2))` al cuadrado.
+- Si `exp` es impar, `base^exp` es igual a `base` por `base^(exp - 1)`, y `exp - 1` ya es par.
+
+Cada llamada recibe un exponente más chico que el anterior, así que el caso base, `exp = 0`, llega
+rápido. Esta es la implementación en Python:
+
+```python
+def potencia_rapida(base, exp):
+    if exp == 0:
+        return 1
+    if exp % 2 == 0:
+        mitad = potencia_rapida(base, exp // 2)
+        return mitad * mitad
+    else:
+        return base * potencia_rapida(base, exp - 1)
+```
+
+A diferencia de mergesort, que vas a ver en la Unidad 4, aquí cada llamada genera una sola llamada
+recursiva, no dos. La recursión no se ramifica en árbol: baja en cadena hasta el caso base y sube
+en cadena multiplicando. Para `potencia_rapida(3, 13)` la cadena de exponentes es 13, 12, 6, 3, 2,
+1, 0, y al subir se van calculando 1, 3, 9, 27, 729, 531441 y por último 1.594.323.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cadena de siete llamadas recursivas de potencia rapida de 3 elevado a 13, bajando el exponente de 13 a 0 y subiendo con los valores calculados de 1 hasta 1594323" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd4b" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="14" y="20" font-size="13" font-weight="700" fill="#12324f">Bajada: el exponente se reduce en cada llamada</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="34" width="80" height="36" rx="6"/><rect x="120" y="34" width="80" height="36" rx="6"/><rect x="220" y="34" width="80" height="36" rx="6"/><rect x="320" y="34" width="80" height="36" rx="6"/><rect x="420" y="34" width="80" height="36" rx="6"/><rect x="520" y="34" width="80" height="36" rx="6"/><rect x="620" y="34" width="80" height="36" rx="6"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="60" y="57">exp 13</text><text x="160" y="57">exp 12</text><text x="260" y="57">exp 6</text><text x="360" y="57">exp 3</text><text x="460" y="57">exp 2</text><text x="560" y="57">exp 1</text><text x="660" y="57">exp 0</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd4b)"><path d="M100,52 L118,52"/><path d="M200,52 L218,52"/><path d="M300,52 L318,52"/><path d="M400,52 L418,52"/><path d="M500,52 L518,52"/><path d="M600,52 L618,52"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="109" y="82">impar</text><text x="209" y="82">par</text><text x="309" y="82">par</text><text x="409" y="82">impar</text><text x="509" y="82">par</text><text x="609" y="82">impar</text></g>
+  <path d="M14,104 L746,104" stroke="#cfd8e3" stroke-width="1.5" stroke-dasharray="6 5" fill="none"/>
+  <text x="14" y="128" font-size="13" font-weight="700" fill="#12324f">Subida: cada nivel devuelve un valor y el anterior lo usa</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="20" y="142" width="80" height="36" rx="6"/><rect x="120" y="142" width="80" height="36" rx="6"/><rect x="220" y="142" width="80" height="36" rx="6"/><rect x="320" y="142" width="80" height="36" rx="6"/><rect x="420" y="142" width="80" height="36" rx="6"/><rect x="520" y="142" width="80" height="36" rx="6"/><rect x="620" y="142" width="80" height="36" rx="6"/></g>
+  <g text-anchor="middle" font-size="11" font-weight="600" fill="#0e6f6c"><text x="60" y="164">1.594.323</text><text x="160" y="164">531.441</text><text x="260" y="164">729</text><text x="360" y="164">27</text><text x="460" y="164">9</text><text x="560" y="164">3</text><text x="660" y="164">1</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd4b)"><path d="M118,160 L100,160"/><path d="M218,160 L200,160"/><path d="M318,160 L300,160"/><path d="M418,160 L400,160"/><path d="M518,160 L500,160"/><path d="M618,160 L600,160"/></g>
+  <text x="380" y="206" font-size="11.5" fill="#5b6876" text-anchor="middle">Seis multiplicaciones en total: la mitad al cuadrado, o la base por el resultado anterior</text>
+</svg>
+
+:::
+
+Medí las dos versiones, la recursiva y la que multiplica en un ciclo, contando cuántas
+multiplicaciones hace cada una para `3^13`:
+
+```
+potencia_rapida(3, 13) = 1594323  con 6 multiplicaciones
+potencia_lenta(3, 13)  = 1594323  con 13 multiplicaciones
+```
+
+Mismo resultado, menos de la mitad de multiplicaciones. La ganancia crece con el exponente: para
+duplicar `exp` la versión lenta duplica sus multiplicaciones, y la rápida solo suma una llamada más
+a la cadena, porque baja dividiendo entre dos. Es la misma diferencia entre `n` y `log n` que
+mediste en el Tema 1 con la búsqueda binaria, y no es casualidad: la búsqueda binaria también es
+divide y vencerás. Divide el arreglo por la mitad, descarta la mitad que no sirve y repite sobre la
+mitad restante. La diferencia con la potencia rápida es que ahí no hace falta combinar nada: la
+respuesta de la mitad correcta ya es la respuesta final.
+
+## Algoritmos voraces: apostar por lo mejor de ahora
+
+Un algoritmo voraz no divide el problema. En cada paso mira las opciones disponibles, elige la que
+se ve mejor en ese momento, y sigue. Nunca reconsidera una elección anterior, así que no hay que
+guardar el historial de decisiones ni volver atrás si algo no cuadra más adelante.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro pasos conectados en linea recta, cada uno con una opcion descartada arriba en gris, y una flecha punteada abajo marcando que un algoritmo voraz nunca vuelve a revisar un paso anterior" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd4c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="12" fill="#5b6876" text-anchor="middle">Arriba, en gris: otras opciones que existían y quedan descartadas apenas se elige un camino</text>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1.4" stroke-dasharray="5 4"><path d="M110,86 C110,50 170,40 200,36"/><path d="M310,86 C310,50 370,40 400,36"/></g>
+  <g fill="#cfd8e3"><circle cx="200" cy="36" r="4"/><circle cx="400" cy="36" r="4"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="40" y="90" width="140" height="50" rx="8"/><rect x="240" y="90" width="140" height="50" rx="8"/><rect x="440" y="90" width="140" height="50" rx="8"/><rect x="640" y="90" width="140" height="50" rx="8"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#0e6f6c"><text x="110" y="119">Paso 1</text><text x="310" y="119">Paso 2</text><text x="510" y="119">Paso 3</text><text x="710" y="119">Paso 4</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#esd4c)"><path d="M180,115 L238,115"/><path d="M380,115 L438,115"/><path d="M580,115 L638,115"/></g>
+  <path d="M510,178 C400,196 220,196 112,178" stroke="#cfd8e3" stroke-width="1.6" stroke-dasharray="5 4" fill="none" marker-end="url(#esd4c)"/>
+  <text x="380" y="210" font-size="11.5" fill="#5b6876" text-anchor="middle">Un algoritmo voraz nunca vuelve atrás a reconsiderar una decisión ya tomada</text>
+</svg>
+
+:::
+
+Un caso donde esto funciona de verdad: dar cambio con las monedas de uso corriente en Colombia,
+$500, $200, $100 y $50. Esta implementación en Java toma siempre la moneda más grande que quepa en
+lo que falta por pagar:
+
+```java
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class CambioVoraz {
+
+    static List<Integer> cambioVoraz(int[] monedas, int valor) {
+        int[] ordenadas = monedas.clone();
+        Arrays.sort(ordenadas);
+        List<Integer> usadas = new ArrayList<>();
+        int restante = valor;
+        for (int i = ordenadas.length - 1; i >= 0; i--) {
+            int m = ordenadas[i];
+            while (restante >= m) {
+                usadas.add(m);
+                restante -= m;
+            }
+        }
+        return usadas;
+    }
+
+    public static void main(String[] args) {
+        int[] monedasColombia = {50, 100, 200, 500};
+        System.out.println("Cambio voraz para 700: " + cambioVoraz(monedasColombia, 700));
+    }
+}
+```
+
+Con estas monedas, `cambioVoraz` devuelve `[500, 200]` para pagar 700: dos monedas, y no existe
+forma de pagar 700 con menos de dos. Con denominaciones como estas, el 25, 10, 5 y 1 centavo de
+dólar que analiza Cormen, Leiserson, Rivest y Stein en el capítulo de algoritmos voraces de
+*Introduction to Algorithms*, la estrategia voraz sí es óptima y se puede demostrar. También lo es
+cuando las denominaciones son potencias de un mismo número. El problema es que esas dos condiciones
+no las cumple cualquier conjunto de monedas, y un algoritmo voraz no tiene forma de darse cuenta.
+
+Un caso donde lo voraz sí está garantizado en todos los grafos, no solo en algunos, es el algoritmo
+de Kruskal para el árbol de expansión mínima: en cada paso toma la arista más barata que no forme
+un ciclo, nunca la cambia por otra, y aun así llega siempre al óptimo. Joseph Kruskal lo publicó en
+1956 en un artículo de dos páginas y medio en los *Proceedings of the American Mathematical
+Society*. Vas a volver a este algoritmo en la Unidad 4, cuando el curso trabaje grafos.
+
+## Cuando lo voraz no alcanza: el contraejemplo de las monedas
+
+Cambio las monedas por otras tres: 1, 3 y 4. Pagar un valor de 6.
+
+`cambioVoraz` toma la más grande que quepa: 4, y quedan 2 por pagar. La más grande que cabe en 2 es
+1, y quedan 1. Vuelve a tomar 1, y llega a 0. Total: **4 + 1 + 1, tres monedas**.
+
+Pero 3 + 3 también suma 6, y son **dos monedas**. La estrategia voraz no lo ve, porque nunca
+reconsidera la primera elección: una vez que tomó la moneda de 4, ya gastó una posibilidad que la
+combinación óptima necesitaba completa.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 196" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de dos caminos para pagar 6 con monedas 1, 3 y 4: el camino voraz usa 4, 1 y 1 con tres monedas, y el camino optimo usa 3 y 3 con dos monedas" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="14" y="20" font-size="13" font-weight="700" fill="#12324f">Pagar 6 con monedas de 1, 3 y 4</text>
+  <text x="14" y="62" font-size="13" font-weight="600" fill="#12324f">Voraz</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="140" y="48" width="372" height="28" rx="4"/><rect x="512" y="48" width="93" height="28" rx="4"/><rect x="605" y="48" width="93" height="28" rx="4"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f"><text x="326" y="67">4</text><text x="558" y="67">1</text><text x="651" y="67">1</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="140" y="90">0</text><text x="512" y="90">4</text><text x="605" y="90">5</text><text x="698" y="90">6</text></g>
+  <text x="706" y="67" font-size="12" fill="#5b6876">3 monedas</text>
+  <text x="14" y="132" font-size="13" font-weight="600" fill="#12324f">Óptimo</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="140" y="118" width="279" height="28" rx="4"/><rect x="419" y="118" width="279" height="28" rx="4"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#0e6f6c"><text x="279" y="137">3</text><text x="558" y="137">3</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="140" y="160">0</text><text x="419" y="160">3</text><text x="698" y="160">6</text></g>
+  <text x="706" y="137" font-size="12" fill="#0e6f6c" font-weight="600">2 monedas</text>
+  <text x="380" y="184" font-size="11.5" fill="#5b6876" text-anchor="middle">Con las mismas monedas y el mismo valor, el camino voraz gasta una moneda de más</text>
+</svg>
+
+:::
+
+El ejemplo es del problema 16-1 del capítulo de algoritmos voraces de Cormen, Leiserson, Rivest y
+Stein, que pide precisamente un conjunto de denominaciones donde la voracidad falle. Lo comprobé
+con código, comparando la solución voraz contra la solución óptima que calcula todas las
+combinaciones posibles:
+
+```python
+def cambio_voraz(monedas, valor):
+    monedas = sorted(monedas, reverse=True)
+    usadas = []
+    restante = valor
+    for m in monedas:
+        while restante >= m:
+            usadas.append(m)
+            restante -= m
+    return usadas
+
+def cambio_optimo(monedas, valor):
+    mejor = [0] + [float("inf")] * valor
+    origen = [0] * (valor + 1)
+    for v in range(1, valor + 1):
+        for m in monedas:
+            if m <= v and mejor[v - m] + 1 < mejor[v]:
+                mejor[v] = mejor[v - m] + 1
+                origen[v] = m
+    usadas, v = [], valor
+    while v > 0:
+        usadas.append(origen[v])
+        v -= origen[v]
+    return usadas
+
+print(cambio_voraz([1, 3, 4], 6))
+print(cambio_optimo([1, 3, 4], 6))
+```
+
+Al ejecutarlo:
+
+```
+[4, 1, 1]
+[3, 3]
+```
+
+`cambio_optimo` no es voraz: prueba cada moneda posible para cada valor desde 1 hasta el objetivo y
+se queda con la combinación que usa menos monedas, sin descartar ninguna posibilidad de entrada.
+Por eso siempre encuentra la mejor respuesta, y por eso hace más trabajo que la voraz.
+
+## Cuándo conviene cada estrategia
+
+::: {.tabla-ancha}
+| Aspecto | Divide y vencerás | Algoritmos voraces |
+|---|---|---|
+| Idea central | Partir en subproblemas, resolver cada uno por recursividad y combinar | Tomar en cada paso la opción que se ve mejor ahora mismo |
+| Vuelve atrás a reconsiderar | No hace falta: cada subproblema se resuelve completo antes de combinar | Nunca. Una decisión tomada queda tomada |
+| Qué exige del problema | Que se pueda partir en piezas del mismo problema y combinar sin perder información | Que la mejor opción local lleve a la mejor opción global, algo que hay que demostrar caso por caso |
+| Da siempre la respuesta óptima | Sí, si el paso de combinar es correcto | Solo en problemas donde se demuestra esa propiedad, como Kruskal. No por defecto |
+| Ejemplo de hoy | Potencia rápida, exponenciación binaria | Cambio de moneda: óptimo con {50, 100, 200, 500}, falla con {1, 3, 4} |
+:::
+
+Ninguna de las dos es "la buena". Divide y vencerás siempre llega al óptimo si el paso de combinar
+está bien hecho, pero puede exigir más memoria por la pila de llamadas recursivas. Un algoritmo
+voraz es simple y barato de ejecutar, pero antes de usarlo hay que demostrar que el problema tiene
+la propiedad que lo hace correcto. Si no la tiene, hace falta programación dinámica, como
+`cambio_optimo`, que sí revisa todas las combinaciones relevantes.
+
+::: {.callout-tip}
+## Reto. Predice antes de ejecutar
+
+Otro conjunto de monedas: 1, 5 y 6. El valor a pagar es 10.
+
+1. Sin correr ningún código, escribe cuántas monedas usa la estrategia voraz y cuáles son.
+2. Escribe cuál crees que es la combinación óptima y cuántas monedas usa.
+3. Ejecuta `cambio_voraz([1, 5, 6], 10)` y `cambio_optimo([1, 5, 6], 10)` del código de esta guía y
+   compara con lo que predijiste.
+4. En una frase: ¿por qué la moneda de 6 es la que engaña a la estrategia voraz?
+:::
+
+## Cierre de la Unidad 1
+
+Cuatro temas para dejar el terreno listo antes de construir la primera estructura de datos de
+verdad. El Tema 1 dio el vocabulario: qué es un algoritmo, cómo se mide su costo sin depender de la
+máquina, y la diferencia entre un tipo de dato abstracto y su implementación. El Tema 2 dio la
+herramienta: programación orientada a objetos, con la que cada tipo de dato abstracto del curso se
+va a escribir como una clase, con sus atributos encapsulados y sus operaciones como métodos. El
+Tema 3 dio la técnica que hoy terminé de usar: recursividad, caso base más caso recursivo, la forma
+en que una función resuelve un problema llamándose a sí misma sobre una entrada más chica.
+
+Hoy junté las tres piezas. Divide y vencerás es recursividad aplicada con una estrategia concreta:
+partir, resolver, combinar. Los algoritmos voraces son la alternativa cuando partir el problema no
+es la mejor forma de atacarlo, y demostré con las monedas 1, 3 y 4 que esa alternativa exige
+verificar, no asumir, que la mejor opción de cada paso lleva a la mejor respuesta final.
+
+La Unidad 2 deja de hablar de algoritmos en abstracto y empieza a construir. Vas a modelar vectores
+y matrices, y vas a montar pilas y colas sobre esos vectores, usando exactamente la clase que
+diseñaste en el Tema 2 para representarlas. El vocabulario de costos del Tema 1, la clase del
+Tema 2 y la recursividad de los Temas 3 y 4 no se quedan aquí: son las herramientas con las que vas
+a medir y construir todo lo que sigue.
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Los tres pasos de divide y vencerás, y por qué "resolver" es una llamada recursiva
+- [ ] Por qué la potencia rápida hace menos multiplicaciones que multiplicar en un ciclo
+- [ ] Qué significa que un algoritmo voraz nunca reconsidere una decisión
+- [ ] Un conjunto de monedas donde la estrategia voraz falla, y la cuenta que lo demuestra
+- [ ] Un caso real donde lo voraz sí es óptimo, y por qué ahí sí se puede demostrar
+- [ ] Qué construye la Unidad 2 con la clase que modelaste en el Tema 2
+:::
+
+## Recursos
+
+- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
+  de Divide y vencerás y capítulo de Algoritmos voraces, problema 16-1 sobre el cambio de moneda.
+- Weiss, M. A. *Estructuras de datos en Java.* Capítulos de recursividad y de análisis de
+  algoritmos.
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulos de recursividad y
+  de técnicas de diseño de algoritmos.
+- Kruskal, J. B. (1956). *On the shortest spanning subtree of a graph and the traveling salesman
+  problem.* Proceedings of the American Mathematical Society, 7(1), 48-50.
+- [Exponentiation by squaring, Wikipedia](https://en.wikipedia.org/wiki/Exponentiation_by_squaring)
+- [Kruskal's algorithm, Wikipedia](https://en.wikipedia.org/wiki/Kruskal%27s_algorithm)
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+Las mediciones de multiplicaciones y las salidas de código son capturas reales tomadas durante
+la preparación del material.
+:::

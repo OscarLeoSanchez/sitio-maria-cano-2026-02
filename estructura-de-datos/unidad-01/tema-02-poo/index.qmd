@@ -1,0 +1,343 @@
+---
+title: "Tema 2. El molde que fabrica objetos"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                       |
+|--------|-------------------------------------------------------|
+| Unidad | Unidad 1. Introducción a las estructuras de datos     |
+| Tema   | Tema 2. Paradigma de programación orientada a objetos |
+:::
+
+El Tema 1 mostró que un contrato admite varias implementaciones: pila y cola se pueden montar sobre
+un arreglo o sobre una lista enlazada, y quien usa la pila no necesita saberlo. Hoy construyes la
+herramienta con la que ese contrato se escribe en código: la clase.
+
+## El molde y las arepas
+
+Doña Marta también vende arepas hechas en la casa. Tiene un solo **molde** de metal: un círculo de
+cierto diámetro con un borde de cierta altura. Con ese molde hace veinte arepas al día, y cada una es
+un objeto distinto: esta pesa 90 gramos, esa otra 85, una lleva queso y otra no.
+
+El molde no es ninguna arepa. Es la forma que define qué campos tiene una arepa (peso, relleno) y qué
+se puede hacer con ella (venderla, describirla). Cada arepa que sale del molde es una **instancia**:
+ocupa su propio espacio, tiene sus propios valores, y puede cambiar sin afectar a las demás ni al
+molde.
+
+En programación, el molde es la **clase** y cada arepa es un **objeto**. La clase se escribe una sola
+vez; los objetos se crean tantas veces como haga falta, cada uno con su propio estado.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 258" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La clase Producto como molde arriba, y tres objetos con sus propios valores de nombre y precio abajo, cada uno conectado a la clase por una flecha de instancia de" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd2a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Una clase define la forma; cada objeto guarda sus propios valores</text>
+  <rect x="280" y="28" width="200" height="78" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="170" width="220" height="76" rx="10"/><rect x="270" y="170" width="220" height="76" rx="10"/><rect x="520" y="170" width="220" height="76" rx="10"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#esd2a)"><path d="M330,106 C280,132 200,148 140,168"/><path d="M380,106 L380,168"/><path d="M430,106 C480,132 560,148 620,168"/></g>
+  <g text-anchor="middle">
+    <text x="380" y="54" font-size="15.5" font-weight="700" fill="#0e6f6c">clase Producto</text>
+    <g font-size="12" fill="#3c7d7a"><text x="380" y="74">campos: nombre, precio</text><text x="380" y="92">metodo: describir()</text></g>
+    <g font-size="13" font-weight="600" fill="#12324f"><text x="130" y="192">objeto arroz</text><text x="380" y="192">objeto leche</text><text x="630" y="192">objeto pan</text></g>
+    <g font-size="11.5" fill="#5b6876"><text x="130" y="212">nombre = "arroz"</text><text x="130" y="228">precio = 4200</text><text x="380" y="212">nombre = "leche"</text><text x="380" y="228">precio = 3900</text><text x="630" y="212">nombre = "pan"</text><text x="630" y="228">precio = 2100</text></g>
+  </g>
+</svg>
+
+:::
+
+La misma clase, en los dos lenguajes del curso. Fíjate en qué cambia (la sintaxis) y qué no cambia
+(la idea: un molde, muchos objetos):
+
+```java
+public class Producto {
+    private String nombre;
+    private double precio;
+
+    public Producto(String nombre, double precio) {
+        this.nombre = nombre;
+        this.precio = precio;
+    }
+
+    public String describir() {
+        return nombre + ": $" + precio;
+    }
+
+    public static void main(String[] args) {
+        Producto arroz = new Producto("arroz", 4200.0);
+        Producto leche = new Producto("leche", 3900.0);
+        System.out.println(arroz.describir());
+        System.out.println(leche.describir());
+    }
+}
+```
+
+```python
+class Producto:
+    def __init__(self, nombre, precio):
+        self.nombre = nombre
+        self.precio = precio
+
+    def describir(self):
+        return f"{self.nombre}: ${self.precio}"
+
+
+arroz = Producto("arroz", 4200)
+leche = Producto("leche", 3900)
+print(arroz.describir())
+print(leche.describir())
+```
+
+`arroz` y `leche` son dos objetos de la misma clase `Producto`. Comparten la forma, no el contenido:
+cambiar el precio de `arroz` no toca a `leche`. La Especificación del Lenguaje Java lo dice en el
+capítulo 8: una declaración de clase define un nuevo tipo por referencia y especifica cómo se
+implementa, con sus campos, sus métodos y sus constructores.
+
+## Encapsulamiento: por qué el TDA esconde sus datos
+
+En el ejemplo de arriba, `nombre` y `precio` son `private` en Java. Eso significa, según el tutorial
+oficial de Oracle, que **solo se pueden acceder desde dentro de la propia clase**. Nadie fuera de
+`Producto` puede escribir `arroz.precio = -500` directamente, porque el campo no es visible desde
+afuera.
+
+Esto no es una manía del lenguaje. Es la misma idea que el Tema 1 llamó tipo de dato abstracto: el
+código que usa la pila no cambia si mañana cambia la implementación, porque solo conoce `apilar`,
+`desapilar`, `cima` y `estaVacia`, nunca lo que hay por dentro. Con una clase pasa igual: el código
+que usa `Producto` solo conoce `describir()` y los métodos que la clase decida exponer, nunca si por
+dentro hay un `double` o una cadena de texto con formato. Esconder los campos y exponer métodos es la
+forma concreta, en código, de cumplir ese contrato.
+
+Un método público puede además vigilar una regla que un campo público no vigila. Compara:
+
+```java
+public class Producto {
+    private String nombre;
+    private double precio;
+
+    public Producto(String nombre, double precio) {
+        this.nombre = nombre;
+        fijarPrecio(precio);
+    }
+
+    public void fijarPrecio(double precio) {
+        if (precio < 0) {
+            throw new IllegalArgumentException("el precio no puede ser negativo");
+        }
+        this.precio = precio;
+    }
+
+    public double precio() {
+        return precio;
+    }
+}
+```
+
+```python
+class Producto:
+    def __init__(self, nombre, precio):
+        self.nombre = nombre
+        self.fijar_precio(precio)
+
+    def fijar_precio(self, precio):
+        if precio < 0:
+            raise ValueError("el precio no puede ser negativo")
+        self._precio = precio
+
+    def precio(self):
+        return self._precio
+
+
+arroz = Producto("arroz", 4200)
+print(arroz.precio())        # 4200
+arroz.fijar_precio(-10)      # lanza ValueError: el precio no puede ser negativo
+```
+
+Con `precio` público, cualquiera podría dejarlo en negativo sin que nada lo impida. Con `precio`
+privado y `fijarPrecio` como único camino para cambiarlo, la regla se cumple siempre, sin importar
+cuántos archivos usen la clase. Python no impone la privacidad por el compilador como Java: la
+documentación oficial dice que las variables verdaderamente privadas no existen en Python, y que un
+nombre con un guion bajo al inicio (`_precio`) es solo una convención que avisa "esto es un detalle
+interno, no lo toques directo". La disciplina es la misma; quien la hace cumplir cambia de lenguaje a
+lenguaje.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Codigo cliente que solo puede entrar a la clase Producto por sus metodos publicos; el camino directo al campo privado esta bloqueado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd2b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <rect x="190" y="40" width="420" height="176" rx="14" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="400" y="60" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">clase Producto</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="210" y="76" width="120" height="40" rx="8"/><rect x="344" y="76" width="110" height="40" rx="8"/><rect x="468" y="76" width="120" height="40" rx="8"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#0e6f6c"><text x="270" y="100">fijarPrecio(valor)</text><text x="399" y="100">precio()</text><text x="528" y="100">describir()</text></g>
+  <rect x="300" y="152" width="200" height="48" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="400" y="172" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">privado</text>
+  <text x="400" y="188" font-size="11.5" fill="#5b6876" text-anchor="middle">nombre, precio</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd2b)"><path d="M270,116 L360,150"/><path d="M399,116 L399,150"/><path d="M528,116 L440,150"/></g>
+  <rect x="20" y="88" width="140" height="44" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="90" y="114" font-size="12" fill="#12324f" text-anchor="middle">codigo cliente</text>
+  <path d="M160,104 L206,96" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#esd2b)"/>
+  <text x="150" y="80" font-size="11" fill="#0e6f6c">unico camino permitido</text>
+  <path d="M75,132 C60,175 180,205 296,178" fill="none" stroke="#cfd8e3" stroke-width="1.6" stroke-dasharray="5 5"/>
+  <text x="60" y="236" font-size="11" fill="#5b6876">linea punteada: acceso directo al campo privado, bloqueado por el compilador</text>
+</svg>
+
+:::
+
+## Herencia: reutilizar sin repetir
+
+Cuando dos clases comparten campos y métodos, y una de ellas además agrega algo propio, tiene sentido
+que la segunda **herede** de la primera en lugar de copiar el código. En Java se escribe con
+`extends`; en Python, poniendo la clase base entre paréntesis.
+
+Un `ProductoPerecedero` es un `Producto` que además vence en una fecha. Hereda `nombre`, `precio` y
+`describir()`, y solo agrega lo que le falta:
+
+```java
+public class ProductoPerecedero extends Producto {
+    private String fechaVencimiento;
+
+    public ProductoPerecedero(String nombre, double precio, String fechaVencimiento) {
+        super(nombre, precio);
+        this.fechaVencimiento = fechaVencimiento;
+    }
+
+    public String fechaVencimiento() {
+        return fechaVencimiento;
+    }
+}
+```
+
+```python
+class ProductoPerecedero(Producto):
+    def __init__(self, nombre, precio, fecha_vencimiento):
+        super().__init__(nombre, precio)
+        self.fecha_vencimiento = fecha_vencimiento
+```
+
+`super(nombre, precio)` (Java) y `super().__init__(nombre, precio)` (Python) llaman al constructor de
+`Producto` para que arme la parte que ya sabe armar. El curso no entra en polimorfismo avanzado ni en
+patrones de diseño sobre herencia: la carta descriptiva de esta unidad no los pide, y con lo de aquí
+alcanza para lo que viene.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 600 218" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Clase ProductoPerecedero hereda de clase Producto: hereda nombre, precio y describir, y agrega fechaVencimiento" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd2c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <rect x="190" y="20" width="220" height="80" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="190" y="150" width="220" height="80" rx="12" fill="#eef4fa" stroke="#c7d6e6"/>
+  <path d="M300,150 L300,104" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#esd2c)"/>
+  <text x="340" y="130" font-size="11.5" fill="#0e6f6c">hereda de</text>
+  <g text-anchor="middle">
+    <text x="300" y="46" font-size="14.5" font-weight="700" fill="#12324f">clase Producto</text>
+    <text x="300" y="66" font-size="11.5" fill="#5b6876">nombre, precio</text>
+    <text x="300" y="84" font-size="11.5" fill="#5b6876">describir()</text>
+    <text x="300" y="176" font-size="14" font-weight="700" fill="#12324f">clase ProductoPerecedero</text>
+    <text x="300" y="196" font-size="11.5" fill="#5b6876">hereda nombre, precio, describir()</text>
+    <text x="300" y="214" font-size="11.5" fill="#5b6876">agrega fechaVencimiento</text>
+  </g>
+</svg>
+
+:::
+
+## La clase Pila: el contrato de hoy, la memoria de mañana
+
+El Tema 1 definió el contrato de la pila por su comportamiento: apilar, desapilar, consultar la cima
+y preguntar si está vacía, sin decir si por dentro hay un arreglo o una lista enlazada. Esa decisión
+es justamente la que la Unidad 2 va a tomar. Hoy escribes la clase vacía por dentro: el contrato en
+código, sin implementación de memoria todavía.
+
+```java
+public class Pila {
+    public void apilar(Object elemento) {
+        throw new UnsupportedOperationException("llega en la Unidad 2");
+    }
+
+    public Object desapilar() {
+        throw new UnsupportedOperationException("llega en la Unidad 2");
+    }
+
+    public Object cima() {
+        throw new UnsupportedOperationException("llega en la Unidad 2");
+    }
+
+    public boolean estaVacia() {
+        throw new UnsupportedOperationException("llega en la Unidad 2");
+    }
+}
+```
+
+```python
+class Pila:
+    def apilar(self, elemento):
+        raise NotImplementedError("llega en la Unidad 2")
+
+    def desapilar(self):
+        raise NotImplementedError("llega en la Unidad 2")
+
+    def cima(self):
+        raise NotImplementedError("llega en la Unidad 2")
+
+    def esta_vacia(self):
+        raise NotImplementedError("llega en la Unidad 2")
+```
+
+Las dos clases compilan y corren tal cual: si las llamas, lanzan el error a propósito, porque todavía
+no hay dónde guardar nada. Lo que sí queda fijo desde hoy son los cuatro nombres y qué recibe y
+devuelve cada uno. Eso es exactamente lo que la Unidad 2 va a llenar con un arreglo, y la Unidad 3 con
+una lista enlazada, sin que ninguna de las dos toque esta firma.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 226" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La clase Pila expone cuatro metodos publicos; la memoria por dentro todavia no esta decidida y llega en la Unidad 2" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd2d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <rect x="60" y="30" width="580" height="170" rx="14" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="350" y="50" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">clase Pila</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="80" y="64" width="120" height="40" rx="8"/><rect x="220" y="64" width="120" height="40" rx="8"/><rect x="360" y="64" width="120" height="40" rx="8"/><rect x="500" y="64" width="120" height="40" rx="8"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#0e6f6c"><text x="140" y="88">apilar(x)</text><text x="280" y="88">desapilar()</text><text x="420" y="88">cima()</text><text x="560" y="88">estaVacia()</text></g>
+  <rect x="250" y="130" width="200" height="52" rx="8" fill="#eef4fa" stroke="#c7d6e6" stroke-dasharray="5 5"/>
+  <text x="350" y="152" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">memoria: por decidir</text>
+  <text x="350" y="170" font-size="11" fill="#5b6876" text-anchor="middle">arreglo o lista, en la Unidad 2</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#esd2d)"><path d="M140,104 L280,128"/><path d="M280,104 L320,128"/><path d="M420,104 L380,128"/><path d="M560,104 L420,128"/></g>
+  <text x="350" y="216" font-size="11.5" fill="#5b6876" text-anchor="middle">el contrato ya esta completo; la implementacion llega despues</text>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Reto. Diseña el TDA Cola
+
+Diseña la clase `Cola` con sus operaciones (`encolar`, `desencolar`, `frente`, `esta_vacia` o
+`estaVacia`), en Java o en Python, el que prefieras. Solo la interfaz: sin decidir todavía si por
+dentro hay un arreglo o una lista enlazada, igual que hicimos con `Pila`.
+
+Cuando termines, responde en una frase: ¿por qué el encapsulamiento te deja cambiar de opinión más
+adelante sobre cómo se guarda la memoria de la cola, sin que se rompa el código que ya la usa?
+:::
+
+La próxima guía usa esta misma clase `Pila` para escribir funciones que se llaman a sí mismas: la
+recursividad de la Unidad 1 apila cada llamada, literalmente.
+
+## Recursos
+
+- Weiss, M. A. *Estructuras de datos en Java.* Capítulo introductorio sobre objetos y clases.
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo de programación
+  orientada a objetos.
+- Gosling, J. et al. *The Java Language Specification, Java SE 17 Edition.* Capítulo 8, Clases.
+- Dahl, O.-J. y Nygaard, K. (1967). *Simula 67*, presentado en la IFIP Working Conference sobre
+  lenguajes de simulación, Oslo. Premio Turing de la ACM 2001 a Dahl y Nygaard por estas ideas.
+- [Oracle Java Tutorials: Classes](https://docs.oracle.com/javase/tutorial/java/javaOO/classes.html)
+- [Oracle Java Tutorials: Controlling Access to Members of a Class](https://docs.oracle.com/javase/tutorial/java/javaOO/accesscontrol.html)
+- [The Java Language Specification, SE 17, Capítulo 8: Classes](https://docs.oracle.com/javase/specs/jls/se17/html/jls-8.html)
+- [Python docs: 9. Classes](https://docs.python.org/3/tutorial/classes.html)
+- [Wikipedia: Simula](https://en.wikipedia.org/wiki/Simula)
+- [Wikipedia: Smalltalk](https://en.wikipedia.org/wiki/Smalltalk)
+- [ACM: Ole-Johan Dahl, A.M. Turing Award](https://awards.acm.org/award-recipients/dahl_6917600)
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

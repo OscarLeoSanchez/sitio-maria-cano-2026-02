@@ -1,0 +1,288 @@
+---
+title: "Tema 3. Cada llamada se apila"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                     |
+|--------|-----------------------------------------------------|
+| Unidad | Unidad 1. Introducción a las estructuras de datos   |
+| Tema   | Tema 3. Recursividad e implementación               |
+:::
+
+El Tema 1 cerró con una promesa: "en la próxima sesión entramos a recursividad y a las estrategias
+de solución, la otra mitad de la Unidad 1. Van a hacer falta las pilas de hoy, porque cada llamada
+recursiva se apila". Esta guía la cumple. El Tema 2 te dio la herramienta para representar un tipo
+de dato abstracto como una clase; hoy vas a descubrir que el propio intérprete de Python o la propia
+máquina virtual de Java usan esa misma disciplina, apilar y desapilar donde el último que entra sale
+primero, para ejecutar cada llamada a una función, la programes tú o no.
+
+## Las muñecas que se abren en cascada
+
+Piensa en una matrioska. La abres y adentro hay una muñeca igual, más pequeña. La abres también, y
+adentro hay otra. Repites la misma acción, abrir y mirar adentro, hasta que llegas a una muñeca
+sólida que no se abre porque no tiene nada dentro.
+
+Ese momento en el que ya no hay nada más que abrir es el **caso base**: la única razón por la que la
+cascada de aperturas se detiene. Cada apertura anterior es el **caso recursivo**: la misma acción,
+aplicada a una versión más pequeña del mismo problema. Y hay un detalle que se te va a olvidar si no
+lo anotas ahora: mientras abres, vas dejando las cáscaras vacías apiladas una encima de la otra, en
+el orden en que las abriste. Para volver a armar la matrioska completa, las cierras en el orden
+contrario: primero la más pequeña, al final la más grande. Eso es exactamente lo que hace una
+función recursiva con la memoria del programa: apila un marco por cada llamada, y los deshace en el
+orden inverso al que los creó.
+
+## Caso base y caso recursivo
+
+Toda función recursiva bien escrita tiene dos partes:
+
+- **Caso base.** La condición más simple del problema, la que se resuelve sin volver a llamar a la
+  función. Es la muñeca sólida.
+- **Caso recursivo.** La función se llama a sí misma con una entrada más pequeña o más cercana al
+  caso base, y combina ese resultado con el trabajo del paso actual.
+
+El Tema 1 definió la finitud como una de las cinco propiedades que Knuth le exige a un algoritmo:
+terminar después de un número finito de pasos. Una función recursiva sin caso base, o con un caso
+base al que nunca se llega, deja de ser un algoritmo en sentido estricto. Cumple las otras cuatro
+propiedades sin problema y aun así no es un algoritmo, porque no termina.
+
+## Cómo se apila cada llamada
+
+Cada vez que se invoca una función, el sistema reserva un espacio para esa invocación: un **marco de
+pila** (stack frame) que guarda sus parámetros, sus variables locales y el punto exacto al que debe
+volver cuando termine. Ese espacio no se comparte entre llamadas. Aunque el código escriba `n` en
+todas las invocaciones, cada marco tiene su propia copia.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos marcos de pila lado a lado, cada uno con su propia copia de la variable n, conectados por una flecha que representa la llamada de uno al otro" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd3b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cada marco guarda su propia copia de las variables</text>
+  <rect x="60" y="50" width="260" height="100" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="440" y="50" width="260" height="100" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <path d="M320,100 L436,100" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#esd3b)"/>
+  <text x="378" y="90" font-size="11" fill="#5b6876" text-anchor="middle">llama a</text>
+  <g text-anchor="middle">
+    <g font-size="14" font-weight="600" fill="#12324f"><text x="190" y="76">marco de factorial(3)</text><text x="570" y="76">marco de factorial(2)</text></g>
+    <g font-size="16" font-weight="700" fill="#0e6f6c"><text x="190" y="112">n = 3</text><text x="570" y="112">n = 2</text></g>
+    <g font-size="11" fill="#5b6876"><text x="190" y="134">su propio espacio</text><text x="570" y="134">otro espacio, aparte</text></g>
+  </g>
+  <text x="14" y="178" font-size="11.5" fill="#5b6876">Cambiar el n de un marco no toca el n del otro, aunque el codigo escriba "n" las dos veces.</text>
+</svg>
+
+:::
+
+Sigamos ese apilamiento con un ejemplo concreto: `factorial(4)`. La función multiplica `n` por el
+resultado de `factorial(n - 1)`, hasta llegar al caso base `factorial(0) = 1`. Cada llamada entra
+antes de que la anterior sepa su resultado, así que la pila crece hasta cuatro niveles antes de que
+se resuelva la primera multiplicación.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 410" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pila de llamadas de factorial(4): crece de abajo hacia arriba con cada llamada y se deshace de arriba hacia abajo con cada retorno" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd3a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">La pila de llamadas para factorial(4)</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="290" y="110" width="180" height="58" rx="8"/><rect x="290" y="174" width="180" height="58" rx="8"/><rect x="290" y="238" width="180" height="58" rx="8"/><rect x="290" y="302" width="180" height="58" rx="8"/></g>
+  <rect x="290" y="46" width="180" height="58" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle">
+    <g font-size="13" font-weight="600" fill="#12324f"><text x="380" y="68">factorial(0)</text><text x="380" y="132">factorial(1)</text><text x="380" y="196">factorial(2)</text><text x="380" y="260">factorial(3)</text><text x="380" y="324">factorial(4)</text></g>
+    <text x="380" y="86" font-size="11" fill="#3c7d7a">caso base = 1</text>
+    <g font-size="11" fill="#5b6876"><text x="380" y="150">1 * factorial(0)</text><text x="380" y="214">2 * factorial(1)</text><text x="380" y="278">3 * factorial(2)</text><text x="380" y="342">4 * factorial(3)</text></g>
+  </g>
+  <text x="110" y="30" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Entra</text>
+  <path d="M110,345 L110,58" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#esd3a)"/>
+  <g text-anchor="middle" font-size="15" font-weight="700" fill="#0e6f6c"><text x="110" y="79">5</text><text x="110" y="143">4</text><text x="110" y="207">3</text><text x="110" y="271">2</text><text x="110" y="335">1</text></g>
+  <text x="660" y="30" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Sale</text>
+  <path d="M660,58 L660,345" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#esd3a)"/>
+  <g text-anchor="middle"><g font-size="15" font-weight="700" fill="#0e6f6c"><text x="660" y="71">1</text><text x="660" y="135">2</text><text x="660" y="199">3</text><text x="660" y="263">4</text><text x="660" y="327">5</text></g><g font-size="11" fill="#5b6876"><text x="660" y="89">valor 1</text><text x="660" y="153">valor 1</text><text x="660" y="217">valor 2</text><text x="660" y="281">valor 6</text><text x="660" y="345">valor 24, final</text></g></g>
+  <text x="380" y="398" font-size="11.5" fill="#5b6876" text-anchor="middle">Entra de abajo hacia arriba; sale de arriba hacia abajo, en el orden inverso.</text>
+</svg>
+
+:::
+
+Fíjate en el orden de la columna "Sale": el primer marco que devuelve un valor es el último que
+entró, `factorial(0)`. Es la misma regla de la clase `Pila` que el Tema 2 te preparó para modelar:
+el último que entra es el primero que sale. La pila de llamadas del sistema no es una metáfora, es
+una estructura de datos real que tu programa nunca declara pero siempre usa.
+
+## Trazado en Python y en Java
+
+La misma función, con una línea de rastro antes y después de la llamada recursiva, deja ver el
+crecimiento y el deshacer de la pila en la consola. Esta es la versión en Python, y la salida que
+produjo al ejecutarla en la máquina donde preparé este material:
+
+```python
+def factorial(n):
+    print(f"entra factorial({n})")
+    if n == 0:
+        print("caso base: factorial(0) = 1")
+        return 1
+    resultado = n * factorial(n - 1)
+    print(f"sale factorial({n}) = {resultado}")
+    return resultado
+
+print("resultado final:", factorial(4))
+```
+
+```
+entra factorial(4)
+entra factorial(3)
+entra factorial(2)
+entra factorial(1)
+entra factorial(0)
+caso base: factorial(0) = 1
+sale factorial(1) = 1
+sale factorial(2) = 2
+sale factorial(3) = 6
+sale factorial(4) = 24
+resultado final: 24
+```
+
+Las cinco líneas "entra" son la pila creciendo, la línea del caso base es el fondo de la pila, y las
+cuatro líneas "sale" son la pila deshaciéndose en orden inverso: exactamente lo que dibuja el
+diagrama de arriba. La misma lógica en Java, letra por letra, produce la misma secuencia:
+
+```java
+public class Factorial {
+    public static int factorial(int n) {
+        System.out.println("entra factorial(" + n + ")");
+        if (n == 0) {
+            System.out.println("caso base: factorial(0) = 1");
+            return 1;
+        }
+        int resultado = n * factorial(n - 1);
+        System.out.println("sale factorial(" + n + ") = " + resultado);
+        return resultado;
+    }
+
+    public static void main(String[] args) {
+        System.out.println("resultado final: " + factorial(4));
+    }
+}
+```
+
+Compílalo y ejecútalo. Java no imprime nada distinto porque el mecanismo es el mismo: un marco por
+llamada, en una pila que administra la máquina virtual en vez del sistema operativo directamente.
+
+## Cuando falta el caso base: desbordamiento de pila
+
+La pila de llamadas no crece para siempre. El espacio que el sistema le reserva a cada hilo de
+ejecución es finito, así que una función recursiva sin caso base, o con un caso base que nunca se
+alcanza, agota ese espacio y el programa termina en un error.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion entre una recursion con caso base, donde la pila crece y luego se vacia por completo, y una recursion sin caso base, donde la pila solo crece hasta chocar con el limite de memoria y lanzar un error" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd3c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="185" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Con caso base</text>
+  <text x="575" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Sin caso base</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="115" y="180" width="140" height="26"/><rect x="115" y="150" width="140" height="26"/><rect x="115" y="120" width="140" height="26"/></g>
+  <rect x="115" y="90" width="140" height="26" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <path d="M185,216 L185,254" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#esd3c)"/>
+  <text x="185" y="272" font-size="11.5" fill="#5b6876" text-anchor="middle">la pila se vacia: 0 marcos, resultado listo</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="505" y="200" width="140" height="22"/><rect x="505" y="174" width="140" height="22"/><rect x="505" y="148" width="140" height="22"/><rect x="505" y="122" width="140" height="22"/><rect x="505" y="96" width="140" height="22"/></g>
+  <rect x="505" y="70" width="140" height="22" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"/>
+  <text x="575" y="60" font-size="11.5" fill="#5b6876" text-anchor="middle">sigue llamando...</text>
+  <path d="M480,70 L670,70" stroke="#8fb3d1" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/>
+  <text x="575" y="246" font-size="11.5" fill="#0e6f6c" text-anchor="middle" font-weight="600">choca con el limite de la pila</text>
+  <text x="575" y="264" font-size="11" fill="#5b6876" text-anchor="middle">StackOverflowError (Java) o RecursionError (Python)</text>
+</svg>
+
+:::
+
+Java lo documenta en el Javadoc de `StackOverflowError`, subclase de `Error` que la máquina virtual
+lanza cuando se agota la memoria del hilo: "Thrown when a stack overflow occurs because an
+application recurses too deeply". No hay un contador que avise antes: el programa corre hasta que la
+memoria real de la pila se acaba, y ese límite depende de cómo esté configurado el hilo.
+
+Python resuelve el mismo riesgo distinto: en vez de esperar a que la pila de C que hay debajo se
+desborde y haga caer el intérprete entero, cuenta la profundidad de las llamadas y corta antes. La
+documentación de `sys.getrecursionlimit()` lo dice así: "Return the current value of the recursion
+limit, the maximum depth of the Python interpreter stack. This limit prevents infinite recursion
+from causing an overflow of the C stack and crashing Python." Cuando se llega a ese límite, se lanza
+`RecursionError`, que la documentación describe como derivado de `RuntimeError` y que se lanza
+"when the interpreter detects that the maximum recursion depth ... is exceeded". Esta es la salida
+real de intentar una función sin caso base en la máquina donde preparé este material:
+
+```python
+def sin_caso_base(n):
+    return n * sin_caso_base(n - 1)
+
+sin_caso_base(5)
+```
+
+```
+RecursionError: maximum recursion depth exceeded
+```
+
+En esa misma máquina, con Python 3.13.4, `sys.getrecursionlimit()` devolvió `1000`: por defecto el
+intérprete permite alrededor de mil llamadas apiladas antes de rendirse. Es un número de fábrica,
+ajustable con `sys.setrecursionlimit()`, y la propia documentación advierte que subirlo demasiado
+puede terminar igual, en una caída del intérprete en vez de un error controlado.
+
+La conexión con el Tema 1 es directa: una recursión sin caso base no cumple la finitud que Knuth le
+exige a un algoritmo. `RecursionError` y `StackOverflowError` no son fallas del lenguaje, son la
+forma en que Python y Java te avisan que escribiste algo que, en sentido estricto, no era un
+algoritmo.
+
+::: {.callout-tip}
+## Reto. Dibuja la pila antes de correr el código
+
+Sin computador, en papel, dibuja los marcos de pila que se crean al llamar a esta función con
+`suma(5)`:
+
+```python
+def suma(n):
+    if n == 0:
+        return 0
+    return n + suma(n - 1)
+```
+
+1. Dibuja un rectángulo por cada llamada, de abajo hacia arriba, con el valor de `n` que le toca.
+2. Marca cuál es el caso base.
+3. Junto a cada rectángulo escribe el valor que ese marco va a devolver, empezando por el caso base
+   y subiendo hasta la llamada original.
+4. Solo después de terminar el dibujo, copia la función en Python o en Java, ejecútala con `suma(5)`
+   y compara el resultado final con lo que predijiste.
+:::
+
+::: {.checklist}
+**Al salir de esta sesión deberías poder explicar, sin mirar la guía**
+
+- [ ] La diferencia entre caso base y caso recursivo, con un ejemplo propio
+- [ ] Qué es un marco de pila y por qué cada llamada tiene el suyo, sin compartir variables
+- [ ] Por qué una función sin caso base rompe la finitud que exige Knuth
+- [ ] Qué dice el Javadoc de `StackOverflowError` y qué dice la documentación de `RecursionError`
+- [ ] Cómo trazar a mano la pila de llamadas de una función recursiva simple, en orden de entrada y
+      de salida
+:::
+
+## Para la próxima sesión
+
+En el Tema 4 vas a conocer divide y vencerás, la primera de las estrategias de solución del curso:
+partir un problema en pedazos más pequeños del mismo problema, resolver cada pedazo y juntar las
+respuestas. Esa descripción ya te suena, porque es el mismo molde de caso base más caso recursivo
+que usaste hoy: casi toda implementación de divide y vencerás se escribe de forma recursiva.
+
+## Recursos
+
+- Weiss, M. A. *Estructuras de datos en Java.* Capítulo sobre recursión.
+- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
+  sobre recurrencias y divide y vencerás.
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo sobre recursión.
+- Knuth, D. E. (1968). *The Art of Computer Programming, Vol. 1: Fundamental Algorithms.*
+  Addison-Wesley.
+- [Documentación de Python: `RecursionError`](https://docs.python.org/3/library/exceptions.html#RecursionError)
+- [Documentación de Python: `sys.getrecursionlimit()`](https://docs.python.org/3/library/sys.html#sys.getrecursionlimit)
+- [Javadoc de `StackOverflowError` de Java 17](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/StackOverflowError.html)
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+Las salidas de consola de Python son capturas reales tomadas durante la preparación del material.
+:::

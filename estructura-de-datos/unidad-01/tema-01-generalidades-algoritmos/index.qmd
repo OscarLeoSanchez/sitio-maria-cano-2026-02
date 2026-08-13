@@ -1,49 +1,47 @@
 ---
-title: "Semana 1. Por qué importa cómo guardas los datos"
+title: "Tema 1. Por qué importa cómo guardas los datos"
 author: "Oscar Leonel Sánchez Conde"
 date: last-modified
 date-format: "D [de] MMMM [de] YYYY"
 ---
 
 ::: {.ficha}
-|            |                                                     |
-|------------|-----------------------------------------------------|
-| Asignatura | Estructura de datos (ESD01)                         |
-| Programa   | Ingeniería de Software                              |
-| Unidad     | Unidad 1. Introducción a las estructuras de datos   |
+|        |                                                     |
+|--------|-----------------------------------------------------|
+| Unidad | Unidad 1. Introducción a las estructuras de datos   |
+| Tema   | Tema 1. Generalidades de algoritmos                 |
 :::
 
 [Diapositivas de la sesión](presentacion.qmd)
 
-Esta primera sesión es de contextualización. No instalas ningún programa, no escribes una línea de
-código y no entregas nada con nota. Salimos de aquí con una sola pregunta resuelta.
+Este tema es de entrada al curso, sin instalar programas ni escribir código todavía, porque antes
+conviene resolver una sola pregunta: por qué dos programas que resuelven exactamente el mismo
+problema pueden costar cincuenta mil veces más el uno que el otro. La diferencia no depende del
+lenguaje ni del computador, sino de cómo se guardaron los datos y del algoritmo con el que se
+recorren, y eso es justo lo que vas a poder explicar al terminar este tema.
 
-La pregunta es esta: **por qué dos programas que resuelven exactamente el mismo problema pueden
-costar cincuenta mil veces más el uno que el otro.** No por el lenguaje ni por el computador. Por
-cómo guardaron los datos y por el algoritmo con el que los recorren.
+## Caso de estudio: la tienda de Doña Marta
 
-## La tienda de la esquina
+Doña Marta atiende una tienda de barrio y vende cuarenta productos, para los que cuenta con dos
+sitios de almacenamiento distintos. El primero es un estante numerado que ocupa toda la pared, con
+cuarenta casillas seguidas donde cada producto tiene un lugar fijo; como ya se aprendió el orden, si
+necesita el arroz camina directo hasta la casilla 12 y lo toma, sin revisar las once anteriores. El
+segundo es una bodega en el fondo del local, con cajas apiladas donde va quedando espacio libre, y
+cada caja lleva pegada una nota con el nombre de la siguiente; para llegar al arroz hay que abrir la
+primera caja, leer la nota, buscar la segunda, leer otra vez, y seguir así hasta encontrarlo.
 
-Doña Marta atiende una tienda de barrio. Vende cuarenta productos y tiene dos sitios donde
-guardarlos.
+Antes de seguir leyendo, analiza el caso por tu cuenta: ¿qué ventaja tiene cada sitio sobre el otro,
+y de qué depende que uno convenga más que el otro?
 
-El primero es un **estante numerado** que ocupa la pared. Cuarenta casillas seguidas, cada producto
-en la suya. Doña Marta se aprendió el orden: el arroz está en la 12, así que camina hasta la 12 y
-estira el brazo. No revisa las once anteriores.
+La respuesta aparece en dos operaciones que se repiten durante todo el semestre.
 
-El segundo es la **bodega del fondo**, con las cajas apiladas donde quepan. Cada caja tiene pegada
-una nota con el nombre de la siguiente. Para llegar al arroz hay que abrir la primera, leer la nota,
-buscar la segunda, leer la nota, y seguir hasta encontrarlo.
+- **Traer un producto que ya se sabe dónde está.** En el estante es inmediato, porque basta la
+  casilla exacta. En la bodega exige seguir la cadena de notas una por una.
+- **Meter un producto nuevo al principio.** En el estante obliga a correr los cuarenta productos una
+  casilla hacia la derecha. En la bodega solo hace falta poner la caja al frente y cambiar una nota.
 
-Con eso ya están las dos operaciones que van a aparecer todo el semestre:
-
-- **Traer un producto que sabes dónde está.** En el estante es inmediato. En la bodega hay que
-  seguir la cadena de notas.
-- **Meter un producto nuevo al principio.** En el estante hay que correr los cuarenta productos una
-  casilla a la derecha. En la bodega se pone la caja al frente y se cambia una nota.
-
-Cada sitio es rápido en lo que el otro es lento, y la decisión depende de qué hace Doña Marta más
-veces al día. Vamos a volver a la tienda tres veces en esta guía.
+Cada sitio resulta rápido justo donde el otro es lento, y cuál conviene depende de qué operación
+repite más Doña Marta a lo largo del día. El caso se retoma tres veces más adelante en esta guía.
 
 ::: {.callout-tip}
 ## Reto 1. Organiza la bodega
@@ -53,15 +51,28 @@ Doña Marta te contrata por un día y te cuenta cómo es una jornada normal:
 - Atiende unos 200 clientes y cada uno pide entre uno y tres productos que ella ya sabe dónde están.
 - Recibe un pedido del proveedor cada quince días, con dos o tres productos nuevos.
 
-**Estante o bodega.** Escribe tu respuesta en una frase y di en qué te apoyaste.
+Decide entre estante o bodega, escribe tu respuesta en una frase y explica en qué te apoyaste.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+El estante conviene más. Doña Marta hace unas 200 a 600 lecturas al día (entre uno y tres productos
+por cliente), y cada una es barata en el estante porque basta caminar a la casilla exacta. Las
+inserciones, en cambio, son baratas en la bodega, pero solo ocurren cada quince días con dos o tres
+productos: son tan escasas que su costo casi no pesa frente al de las lecturas.
+
+La regla general que queda de este caso es esta: cuando una operación se repite muchas más veces que
+otra, el costo de la que casi no ocurre importa poco frente al costo de la que ocurre todo el
+tiempo. Vas a usar este mismo razonamiento para elegir estructuras durante el resto del semestre.
 :::
 
 ## Qué es un algoritmo
 
-Cormen, Leiserson, Rivest y Stein lo definen en el primer capítulo de *Introduction to Algorithms*:
-una secuencia de pasos computacionales que transforma la entrada en la salida. La definición es
-corta y deja fuera muy poco, así que sirve más la que Knuth escribió en 1968 en el primer volumen
-de *The Art of Computer Programming*, que exige cinco propiedades.
+Cormen, Leiserson, Rivest y Stein la definen en el primer capítulo de *Introduction to Algorithms*
+como una secuencia de pasos computacionales que transforma la entrada en la salida. La definición es
+corta y deja fuera muy poco, así que conviene más la que Knuth escribió en 1968 en el primer volumen
+de *The Art of Computer Programming*, porque exige cinco propiedades en vez de una sola frase.
 
 ::: {.diagrama}
 
@@ -84,27 +95,33 @@ de *The Art of Computer Programming*, que exige cinco propiedades.
 :::
 
 Entrada y salida son dos de las cinco. Las otras tres descartan cosas que parecen algoritmos y no lo
-son. Una receta que dice "sal al gusto" falla en la definición precisa: dos personas ejecutan el
-mismo paso de forma distinta. Un ciclo que espera una condición que nunca se cumple falla en la
-finitud.
+son. Una receta que dice "sal al gusto" falla en la definición precisa, porque dos personas ejecutan
+el mismo paso de forma distinta y llegan a un resultado diferente. Un ciclo que espera una condición
+que nunca se cumple falla en la finitud, porque nunca termina.
 
 La efectividad es la que más se olvida. Knuth pide que cada paso sea lo bastante simple para
 ejecutarlo a mano, con papel y lápiz, en un tiempo razonable. Un paso que diga "encuentra el camino
-más corto" no cumple, porque ese paso es un algoritmo entero por dentro. Cuando un programa tuyo se
-cuelgue, la pregunta útil casi siempre es cuál de las cinco se rompió.
+más corto" no cumple, porque ese paso es en realidad un algoritmo entero por dentro, con sus propios
+pasos más pequeños. Cuando un programa tuyo se cuelgue o nunca termine, la pregunta útil casi siempre
+es cuál de las cinco propiedades se rompió.
 
 ## La misma operación, dos precios
 
-El estante y la bodega tienen nombre. El estante es un **arreglo** y la bodega es una **lista
-enlazada**, y la diferencia está en cómo se piden a la memoria.
+El estante y la bodega tienen nombre técnico. El estante es un *arreglo* y la bodega es una *lista
+enlazada*, y la diferencia entre los dos está en cómo se le piden a la memoria.
 
-Un arreglo pide un bloque contiguo, todo de una vez. Como las posiciones son seguidas y todos los
-elementos ocupan lo mismo, la dirección del elemento `i` se calcula: dirección del primero, más `i`
-por el tamaño de cada elemento. Una multiplicación y una suma. Da igual si `i` es 3 o 999.999.
+Un arreglo pide a la memoria un bloque contiguo completo, de una sola vez, antes de guardar el
+primer dato. Como todas las posiciones quedan seguidas y cada elemento ocupa exactamente el mismo
+espacio, calcular la dirección de memoria del elemento en la posición `i` no exige buscar nada,
+porque basta sumar la dirección donde empieza el bloque más `i` veces el tamaño de cada elemento,
+una multiplicación y una suma. Ese cálculo cuesta lo mismo sin importar si `i` vale 3 o 999.999,
+porque no depende de recorrer nada, depende solo de una fórmula fija.
 
-Una lista enlazada pide memoria nodo por nodo, cuando hace falta. Los nodos quedan donde haya
-espacio libre, dispersos, y cada uno guarda la dirección del siguiente. No hay cuenta que lleve a la
-posición 500.000: hay que caminar 500.000 nodos.
+Una lista enlazada, en cambio, pide memoria nodo por nodo, cada vez que hace falta un elemento
+nuevo. Los nodos quedan donde haya espacio libre en ese momento, dispersos por la memoria, y cada
+uno guarda además la dirección del siguiente para no perder el hilo. No existe una fórmula que lleve
+directo a la posición 500.000, así que la única forma de llegar es caminar nodo por nodo desde el
+principio, siguiendo esa cadena de direcciones.
 
 ::: {.diagrama}
 
@@ -134,70 +151,76 @@ posición 500.000: hay que caminar 500.000 nodos.
 
 :::
 
-Las dos estructuras del diagrama guardan los mismos ocho números. La diferencia no está en los
-datos: está en la forma.
+Las dos estructuras del diagrama guardan los mismos ocho números, así que la diferencia no está en
+los datos que contienen sino en la forma en que quedan organizados en memoria.
 
 ## Reto 2. Predice el costo
 
-Antes de leer la sección siguiente, llena la tabla. Imagina un arreglo de un millón de elementos y
-una lista enlazada de un millón de elementos, con los mismos datos.
+Antes de leer la sección siguiente, marca en la tabla lo que crees que corresponde a cada casilla.
+Imagina un arreglo de un millón de elementos y una lista enlazada de un millón de elementos, con los
+mismos datos.
 
 ::: {.callout-tip}
-## Escribe barato o caro en cada casilla
+## Marca barato o caro en cada casilla
 
 | Operación | Arreglo | Lista enlazada |
 |---|---|---|
-| Leer el elemento de la posición 500.000 | | |
-| Agregar un elemento al final | | |
-| Insertar un elemento en la posición 0 | | |
-| Borrar el primer elemento | | |
-| Recorrer todos los elementos una vez | | |
-| Buscar un valor cualquiera, sin saber dónde está | | |
+| Leer el elemento de la posición 500.000 | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> |
+| Agregar un elemento al final | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> |
+| Insertar un elemento en la posición 0 | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> |
+| Borrar el primer elemento | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> |
+| Recorrer todos los elementos una vez | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> |
+| Buscar un valor cualquiera, sin saber dónde está | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> | <label><input type="checkbox"> Barato</label><br><label><input type="checkbox"> Caro</label> |
 
-Dos reglas. Respondan sin buscar en internet, porque la tienda de Doña Marta alcanza para razonarlo.
-Y marquen las casillas en las que el equipo no se puso de acuerdo: esas son las interesantes.
+Responde sin buscar en internet, porque el caso de Doña Marta alcanza para razonarlo, y marca aparte
+las casillas en las que tu equipo no se puso de acuerdo, porque esas son las interesantes.
 :::
 
 ## La respuesta, y de dónde sale
 
 | Operación | Arreglo | Lista enlazada |
 |---|---|---|
-| Leer el elemento de la posición 500.000 | Barato. Una cuenta | Caro. Recorrer medio millón de nodos |
-| Agregar un elemento al final | Barato, casi siempre | Barato. Un puntero nuevo |
-| Insertar un elemento en la posición 0 | Caro. Corre el millón de elementos | Barato. Dos punteros |
-| Borrar el primer elemento | Caro. Corre el millón de elementos | Barato. Un puntero |
-| Recorrer todos los elementos una vez | Caro: hay que pasar por el millón | Igual de caro |
-| Buscar un valor cualquiera | Caro: hasta un millón de comparaciones | Igual de caro |
+| Leer el elemento de la posición 500.000 | Barato, es una cuenta | Caro, hay que recorrer medio millón de nodos |
+| Agregar un elemento al final | Barato, casi siempre | Barato, es un puntero nuevo |
+| Insertar un elemento en la posición 0 | Caro, corre el millón de elementos | Barato, son dos punteros |
+| Borrar el primer elemento | Caro, corre el millón de elementos | Barato, es un puntero |
+| Recorrer todos los elementos una vez | Caro, hay que pasar por el millón | Igual de caro |
+| Buscar un valor cualquiera | Caro, hasta un millón de comparaciones | Igual de caro |
 
-Las dos últimas filas son las que sorprenden. Cuando la operación toca todos los elementos, la
-estructura deja de importar: el costo lo pone la cantidad de datos.
+Las dos últimas filas son las que sorprenden a la mayoría. Cuando la operación toca todos los
+elementos sin excepción, la estructura deja de importar, porque el costo lo pone la cantidad de
+datos y no la forma en que están organizados.
 
-No hay que creerme, está en la documentación de los dos lenguajes del curso. El Javadoc de
-`ArrayList` de Java 17 dice, literalmente: "The size, isEmpty, get, set, iterator, and listIterator
-operations run in constant time. The add operation runs in amortized constant time, that is, adding
-n elements requires O(n) time". Esa es la primera columna. El de `LinkedList` aclara que es una
-lista doblemente enlazada y que las operaciones que indexan recorren la lista desde el extremo más
-cercano al índice pedido, que es la segunda.
+No hay que creerme: la documentación oficial de los dos lenguajes del curso lo confirma. El Javadoc
+de `ArrayList` de Java 17 explica que las operaciones de tamaño, de consulta de vacío, de lectura y
+escritura por índice, y de recorrido con iterador se ejecutan en tiempo constante, y que agregar
+elementos toma un tiempo constante en promedio, aunque agregar `n` elementos seguidos cuesta en
+total un tiempo proporcional a `n`. Eso es justo lo que dice la primera columna de la tabla de
+arriba. El Javadoc de `LinkedList`, por su parte, aclara que es una lista doblemente enlazada y que
+las operaciones que acceden por índice recorren la lista desde el extremo más cercano a la posición
+pedida, lo que confirma la segunda columna: acceder al elemento de en medio siempre cuesta, sin
+importar desde qué extremo empiece a caminar.
 
-Con Python hay una trampa que conviene aprender hoy y no en el parcial. **El `list` de Python es un
-arreglo dinámico, no una lista enlazada**, aunque el nombre diga otra cosa. La página de complejidad
-temporal del wiki de Python lo detalla: `append` cuesta tiempo constante amortizado y el acceso por
-índice es constante, pero `insert` al inicio y `pop(0)` cuestan tiempo lineal porque desplazan todos
-los elementos. Si escribes `datos.pop(0)` dentro de un ciclo sobre un millón de elementos, acabas de
-construir un programa cuadrático sin darte cuenta.
+Con Python hay una trampa que conviene aprender ahora y no en el parcial, porque el `list` de Python
+es en realidad un arreglo dinámico y no una lista enlazada, aunque el nombre sugiera lo contrario. La
+página de complejidad temporal del wiki de Python explica que `append` cuesta tiempo constante
+amortizado y que el acceso por índice también es constante, pero que `insert` al inicio y `pop(0)`
+cuestan tiempo lineal porque desplazan todos los elementos que quedan detrás. Si escribes
+`datos.pop(0)` dentro de un ciclo sobre un millón de elementos, acabas de construir un programa
+cuadrático sin darte cuenta de que lo hiciste.
 
 ## Una carrera con un millón de elementos
 
-Doña Marta consigue un cuaderno con un millón de renglones, uno por producto, **ordenados
-alfabéticamente**. Busca de dos formas.
+Doña Marta consigue un cuaderno con un millón de renglones, uno por producto, ordenados
+alfabéticamente. Busca de dos formas distintas.
 
-La primera es empezar en el renglón 1 y bajar hasta encontrarlo. Es la **búsqueda secuencial** y no
-exige nada: funciona ordenado o desordenado. En el peor caso, cuando el producto está al final o no
-está, hace un millón de comparaciones.
+La primera es empezar en el renglón 1 y bajar hasta encontrarlo. Es la *búsqueda secuencial* y no
+exige nada del cuaderno, porque funciona igual de bien ordenado o desordenado. En el peor caso,
+cuando el producto está al final o directamente no está, hace un millón de comparaciones.
 
-La segunda es abrir el cuaderno por la mitad, mirar si el producto va antes o después, y descartar
-la mitad que no sirve. Repetir. Es la **búsqueda binaria** y exige datos ordenados. Cada
-comparación elimina la mitad de lo que queda.
+La segunda es abrir el cuaderno por la mitad, mirar si el producto va antes o después de esa mitad, y
+descartar la parte que ya no sirve. Repetir la operación sobre lo que queda. Es la *búsqueda binaria*
+y sí exige datos ordenados, porque cada comparación elimina la mitad de lo que quedaba por revisar.
 
 ::: {.diagrama}
 
@@ -221,9 +244,9 @@ comparación elimina la mitad de lo que queda.
 
 :::
 
-El peor caso de la binaria es la parte entera del logaritmo en base 2 de `n`, más 1. Como el
-logaritmo en base 2 de 1.000.000 vale aproximadamente 19,93, son **20 comparaciones**. Un millón
-contra veinte, sobre los mismos datos.
+El peor caso de la búsqueda binaria es la parte entera del logaritmo en base 2 de `n`, más 1. Como el
+logaritmo en base 2 de 1.000.000 vale aproximadamente 19,93, el resultado son 20 comparaciones, y no
+un millón, sobre exactamente los mismos datos.
 
 Esta es la medición que ejecuté al preparar el material, sin adornos:
 
@@ -234,10 +257,11 @@ Busqueda binaria:     20 comparaciones   0.0171 ms
 Version de Python:    3.13.4
 ```
 
-Salió de un **AMD Ryzen 5 4600H con 16 GB de RAM, sobre Windows 11 y Python 3.13.4**. Lo digo porque
-los milisegundos dependen de la máquina y en la tuya van a salir distintos. **El número de
-comparaciones no depende de la máquina**: ese millón y ese veinte son los mismos en cualquier
-computador, y por eso el curso mide costos contando operaciones y no cronometrando.
+Los milisegundos que ves ahí van a salir distintos en tu equipo, porque el tiempo real que tarda cada
+comparación depende del procesador, de la memoria disponible y de qué más esté corriendo en la
+máquina en ese momento. Lo que no cambia de un computador a otro es el número de comparaciones, ese
+millón y ese veinte son los mismos sin importar en qué máquina se ejecuten, y por eso el curso mide
+el costo de un algoritmo contando operaciones en vez de cronometrando el tiempo real que tarda.
 
 El curso se trabaja en Java y en Python. Aquí uso Python porque la medición cabe en veinte líneas:
 
@@ -279,20 +303,22 @@ print(f"Busqueda binaria:     {p2} comparaciones   {(t3-t2)*1000:.4f} ms")
 print(f"Version de Python:    {sys.version.split()[0]}")
 ```
 
-Cópialo y ejecútalo: es el mismo archivo que produjo el bloque de arriba. Y ten presente que la
-binaria solo funciona porque el cuaderno está ordenado. Mantener ordenado un millón de renglones
-cuesta, y ese costo también cuenta. La decisión nunca es el algoritmo rápido contra el lento, sino
-qué operaciones vas a hacer más veces.
+Cópialo y ejecútalo, porque es el mismo archivo que produjo el bloque de arriba y así puedes
+comparar tu propio resultado. Ten presente además que la búsqueda binaria solo funciona porque el
+cuaderno está ordenado de antemano. Mantener ordenado un millón de renglones también cuesta, y ese
+costo hay que contarlo aparte. La decisión nunca es elegir el algoritmo rápido sobre el lento sin más,
+sino identificar qué operaciones vas a repetir más veces a lo largo del programa.
 
 ## El contrato y la implementación
 
 En 1974, Barbara Liskov y Stephen Zilles presentaron "Programming with abstract data types" en el
-simposio de la ACM sobre lenguajes de muy alto nivel. La idea: describir un tipo de dato por su
-**comportamiento**, es decir por su dominio, sus operaciones y sus restricciones, y dejar fuera de
-esa descripción cómo se guarda en memoria.
+simposio de la ACM sobre lenguajes de muy alto nivel. La idea central era describir un tipo de dato
+por su comportamiento, es decir, por su dominio, sus operaciones y sus restricciones, dejando fuera
+de esa descripción cómo se guarda en memoria.
 
-Eso es un **tipo de dato abstracto**, y funciona como un contrato. La **estructura de datos** es la
-organización concreta en memoria que lo cumple. Un contrato admite varias implementaciones.
+Eso es un *tipo de dato abstracto*, y funciona como un contrato, mientras que la *estructura de
+datos* es la organización concreta en memoria que cumple ese contrato. Un mismo contrato admite
+varias implementaciones distintas.
 
 ::: {.diagrama}
 
@@ -315,32 +341,53 @@ organización concreta en memoria que lo cumple. Un contrato admite varias imple
 :::
 
 Pila y cola son los dos contratos con los que se empieza siempre. La pila atiende por el último que
-entró: el historial de deshacer de un editor, o las llamadas pendientes de una función recursiva. La
-cola atiende por el primero: los trabajos de una impresora, los mensajes de un servidor.
+entró, como el historial de deshacer de un editor o las llamadas pendientes de una función
+recursiva. La cola atiende por el primero que entró, como los trabajos de una impresora o los
+mensajes en espera de un servidor.
 
-Las flechas van en cruz a propósito. Una pila se puede montar sobre un arreglo o sobre una lista, y
-una cola también. La carta descriptiva del curso lo pide así: pilas y colas sobre vectores en la
-Unidad 2, y las mismas pilas y colas sobre listas en la Unidad 3. No es repetición, es la misma
-especificación con dos implementaciones para poder compararlas. Wirth tituló su libro de 1976
-*Algorithms + Data Structures = Programs* justamente porque las dos decisiones no se toman por
-separado: cambiar la estructura cambia qué algoritmos son razonables, y al revés.
+Las flechas del diagrama van en cruz a propósito. Una pila se puede montar sobre un arreglo o sobre
+una lista, y una cola también. La carta descriptiva del curso lo pide justo así: pilas y colas sobre
+vectores en la Unidad 2, y las mismas pilas y colas sobre listas en la Unidad 3. No es una
+repetición del mismo contenido, es la misma especificación con dos implementaciones distintas, para
+poder compararlas entre sí. Wirth tituló su libro de 1976 *Algorithms + Data Structures = Programs*
+justamente porque esas dos decisiones no se toman por separado, ya que cambiar la estructura cambia
+qué algoritmos resultan razonables, y cambiar el algoritmo también condiciona qué estructura conviene.
 
 ::: {.callout-tip}
 ## Reto 3. Escoge la implementación
 
-Tres casos. Para cada uno di **arreglo o lista enlazada**, y justifica en una frase con la operación
-que más se repite.
+Tres casos. Para cada uno responde con arreglo o lista enlazada, y justifica en una frase con la
+operación que más se repite.
 
 1. El historial de deshacer de un editor de texto. Se agrega y se quita siempre por el mismo
-   extremo, y no se sabe cuántas acciones va a hacer el usuario.
-2. Un catálogo de 300 productos que se carga al abrir el programa, no cambia nunca y se consulta
-   miles de veces por número de referencia.
-3. Una cola de atención donde entran clientes por el final y salen por el frente todo el día.
+   extremo, y no se sabe de antemano cuántas acciones va a hacer el usuario.
+2. Un catálogo de 300 productos que se carga al abrir el programa, no cambia nunca durante la
+   ejecución y se consulta miles de veces por número de referencia.
+3. Una cola de atención donde entran clientes por el final y salen por el frente durante todo el día.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+**Caso 1, lista enlazada.** Insertar y quitar siempre por el mismo extremo es exactamente lo barato
+que ofrece una lista enlazada, y como no se sabe cuántas acciones va a hacer el usuario, tampoco
+conviene reservar de antemano un bloque de tamaño fijo como el que exige un arreglo.
+
+**Caso 2, arreglo.** El catálogo no cambia después de cargado, así que nunca vas a pagar el costo de
+insertar en la mitad. Consultar miles de veces por número de referencia es una lectura por índice, y
+esa es la operación más barata que existe en un arreglo.
+
+**Caso 3, lista enlazada.** Un arreglo simple obligaría a correr todos los elementos cada vez que
+alguien sale por el frente, exactamente el mismo problema que tenía la bodega de Doña Marta al
+insertar en la posición 0. Una lista enlazada saca por el frente y agrega por el final sin mover
+nada de sitio. Existe un truco con arreglos, el arreglo circular, que resuelve este mismo problema
+sin usar punteros, y lo vas a ver en la Unidad 2.
 :::
 
 ## La escalera de crecimiento
 
-Los cuatro comportamientos que vas a ver una y otra vez, de barato a caro.
+Los cuatro comportamientos que vas a ver una y otra vez durante el semestre, ordenados de barato a
+caro.
 
 ::: {.diagrama}
 
@@ -355,7 +402,7 @@ Los cuatro comportamientos que vas a ver una y otra vez, de barato a caro.
 
 :::
 
-Las curvas se ven bonitas y no dicen nada hasta que se les ponen números:
+Las curvas se ven bonitas y no dicen mucho hasta que se les ponen números encima:
 
 ::: {.tabla-ancha}
 | n | log2 n | n | n por log2 n | n al cuadrado |
@@ -365,27 +412,28 @@ Las curvas se ven bonitas y no dicen nada hasta que se les ponen números:
 :::
 
 Lee la última columna contra la penúltima. Con mil elementos, el algoritmo cuadrático hace cerca de
-**100 veces** más trabajo que el de `n log n`. Con un millón, cerca de **50.000 veces** más. La
-distancia crece con los datos, y por eso un programa que anda bien con la base de prueba se muere
-con la de producción. Vuelve a la tabla del Reto 2 con esto en la cabeza: cada casilla que marcaste
-como caro es una operación lineal escondida, y una operación lineal dentro de un ciclo es una
-cuadrática.
+100 veces más trabajo que el de `n log n`, y con un millón, cerca de 50.000 veces más. Esa distancia
+crece con la cantidad de datos, y por eso un programa que anda bien con una base de prueba pequeña se
+muere con la base de producción, que suele ser mucho más grande. Vuelve a la tabla del Reto 2 con
+esto en la cabeza: cada casilla que marcaste como cara es una operación lineal escondida, y una
+operación lineal dentro de un ciclo termina siendo cuadrática.
 
 ## Cuando el peor caso llega a propósito
 
 En diciembre de 2011, Alexander Klink y Julian Walde presentaron en el Chaos Communication Congress
-un ataque contra la estructura de datos más usada de la web: la tabla hash. Promedia tiempo
-constante para buscar, y su peor caso, cuando todas las llaves caen en el mismo sitio, es tiempo
-lineal. Klink y Walde mostraron que un atacante puede enviar parámetros elaborados para colisionar
-a propósito contra la función de hash por defecto del lenguaje, empujar la tabla a su peor caso y
-agotar la CPU del servidor.
+un ataque contra la tabla hash, la estructura de datos más usada de la web. La tabla hash promedia
+tiempo constante para buscar, pero su peor caso, cuando todas las llaves caen en el mismo sitio, es
+tiempo lineal. Klink y Walde mostraron que un atacante puede enviar parámetros elaborados a propósito
+para que colisionen contra la función de hash por defecto del lenguaje, lo que empuja la tabla a su
+peor caso y agota la CPU del servidor que la procesa.
 
 El aviso oficial es oCERT-2011-003, registrado como CVE-2011-4885, con impacto confirmado en PHP,
-ASP.NET y Java entre otras plataformas. No hay cifras públicas de cuánto costó y no me las voy a
-inventar. Lo que hay que quedarse es que la estructura de datos que eliges es también una decisión
-de seguridad: el peor caso deja de ser un caso raro cuando alguien lo puede provocar.
+ASP.NET y Java entre otras plataformas. No hay cifras públicas de cuánto costó ese ataque y no las voy
+a inventar. Lo que conviene recordar es que la estructura de datos que eliges es también una decisión
+de seguridad, porque el peor caso deja de ser un caso raro cuando alguien lo puede provocar a
+propósito.
 
-## El mapa del semestre
+## El mapa de la unidad
 
 ::: {.diagrama}
 
@@ -405,7 +453,7 @@ de seguridad: el peor caso deja de ser un caso raro cuando alguien lo puede prov
 
 El curso no avanza por temas sueltos. Cada unidad reutiliza la anterior: las pilas y colas que
 montes sobre vectores en la Unidad 2 se vuelven a montar sobre listas en la Unidad 3, y la Unidad 4
-mide todo lo que construiste antes.
+mide todo lo que construiste antes con las dos.
 
 ## De dónde salió la disciplina
 
@@ -423,20 +471,20 @@ mide todo lo que construiste antes.
 
 :::
 
-Cuatro publicaciones en quince años dejaron armado lo que vas a estudiar este semestre.
+Cuatro publicaciones repartidas en quince años dejaron armado lo que vas a estudiar este semestre.
 
 En 1961, C. A. R. Hoare publicó "Algorithm 64: Quicksort" en *Communications of the ACM*, volumen 4,
-número 7, página 321. Ocupa menos de una página y sigue vivo en las bibliotecas estándar: lo vas a
-implementar en la Unidad 4. En 1968, Knuth publicó el primer volumen de *The Art of Computer
-Programming* y fijó las cinco propiedades con las que abrimos esta guía. En 1974, Liskov y Zilles
-separaron el contrato de la implementación, que es el permiso conceptual para escribir una clase
-`Pila` sin que quien la use sepa si por dentro hay un arreglo o nodos. En 1976, Wirth puso la
-ecuación en la portada de su libro y cerró el argumento.
+número 7, página 321. Ocupa menos de una página y sigue vivo en las bibliotecas estándar de hoy, y lo
+vas a implementar tú mismo en la Unidad 4. En 1968, Knuth publicó el primer volumen de *The Art of
+Computer Programming* y fijó las cinco propiedades con las que abrimos este tema. En 1974, Liskov y
+Zilles separaron el contrato de la implementación, que es el permiso conceptual que te deja escribir
+una clase `Pila` sin que quien la use sepa si por dentro hay un arreglo o nodos enlazados. En 1976,
+Wirth puso esa idea en la portada de su libro y cerró el argumento.
 
 ## Lo que te llevas de hoy
 
 ::: {.checklist}
-**Al salir de esta sesión deberías poder explicar, sin mirar la guía**
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
 
 - [ ] Las cinco propiedades que Knuth le exige a un algoritmo, y un ejemplo que falle en una
 - [ ] Por qué leer la posición 500.000 es barato en un arreglo y caro en una lista enlazada
@@ -446,26 +494,23 @@ ecuación en la portada de su libro y cerró el argumento.
 - [ ] Por qué la distancia entre `n log n` y `n al cuadrado` crece con los datos
 :::
 
-## Para la próxima sesión
+## Antes del Tema 2
 
-Nada de esto lleva nota. Es el insumo con el que abrimos la sesión siguiente.
+1. Ejecuta el script de esta guía en tu equipo y guarda la salida completa, tal como te salió, sin
+   editarla.
+2. Corre el mismo script cambiando a `n = 10_000_000`. Antes de ejecutarlo, escribe cuántas
+   comparaciones esperas de cada búsqueda, y después compara tu predicción con la salida real.
+3. Escoge un programa que uses habitualmente y describe, en media página, una operación que
+   sospeches que recorre todos los datos cada vez que se ejecuta. Explica en qué te apoyas para
+   sospecharlo.
 
-1. **Repite la medición.** Ejecuta el script de esta guía en tu equipo y guarda la salida. Anota qué
-   procesador, cuánta memoria y qué versión de Python usaste. Trae los cuatro renglones tal como te
-   salieron, sin editarlos.
-2. **Cambia una cosa y mide otra vez.** Corre el script con `n = 10_000_000`. Antes de ejecutarlo,
-   escribe cuántas comparaciones esperas de cada búsqueda y después compara con la salida.
-3. **Media página tuya.** Escoge un programa que uses y describe una operación que sospeches que
-   recorre todos los datos cada vez. Di en qué te apoyas.
-
-En la próxima sesión entramos a recursividad y a las estrategias de solución, la otra mitad de la
-Unidad 1. Van a hacer falta las pilas de hoy, porque cada llamada recursiva se apila.
+En el Tema 2 vas a construir la herramienta con la que se representa cada tipo de dato como código:
+el paradigma de programación orientada a objetos, con el que vas a escribir tu primera clase `Pila`.
 
 ## Recursos
 
 - Weiss, M. A. *Estructuras de datos en Java.* Capítulos de algoritmos y análisis.
-- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
-  1.
+- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo 1.
 - Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo de tipos de datos
   abstractos.
 - Knuth, D. E. (1968). *The Art of Computer Programming, Vol. 1: Fundamental Algorithms.*
@@ -484,6 +529,6 @@ Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de I
 Semestre 2026-02.
 
 **Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
-usando el modelo Claude Opus 5 de Anthropic. Todo el contenido fue revisado y validado.
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
 La medición de búsqueda es una captura real tomada durante la preparación del material.
 :::
