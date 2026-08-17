@@ -1,0 +1,652 @@
+---
+title: "Tema 1. Datos, información y el archivo que se queda corto"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                                |
+|--------|--------------------------------------------------------------------------------|
+| Unidad | Unidad 1. Introducción a los sistemas de bases de datos                        |
+| Tema   | Tema 1. Datos, información, conocimiento y bases de datos frente a sistemas de archivos |
+:::
+
+Esta unidad abre el curso desde la pregunta más básica de todas, que es por qué existe algo llamado
+base de datos si toda organización ya tenía archivos antes de que ese nombre se pusiera de moda.
+Hoy vas a separar tres palabras que se usan como si fueran sinónimos, dato, información y
+conocimiento, y después vas a ver, con el mismo nivel de detalle con el que un libro de texto lo
+explica, que problemas concretos tenía el procesamiento por archivos y que características
+concretas trajo el sistema gestor de base de datos, el SGBD, para resolverlos. Cierra el tema con
+dos casos reales, uno que muestra por qué una organización entera decidió dejar los archivos
+sueltos, y otro que muestra que ni siquiera tener un SGBD garantiza que el problema desaparezca del
+todo si el diseño o la gobernanza de los datos fallan.
+
+## La escalera de dato a sabiduría
+
+El modelo académico de referencia para separar estas palabras se llama DIKW, sigla en inglés de
+*Data, Information, Knowledge, Wisdom*, y su versión más citada la formalizó Russell L. Ackoff en el
+artículo *From Data to Wisdom* (1989), que originalmente fue un discurso presidencial ante la
+International Society for General Systems Research en 1988. Ackoff abre el texto con una frase que
+resume la idea completa: "An ounce of information is worth a pound of data. An ounce of knowledge
+is worth a pound of information. An ounce of understanding is worth a pound of knowledge." Traducida,
+dice que una onza de información vale una libra de datos, que una onza de conocimiento vale una
+libra de información y que una onza de entendimiento vale una libra de conocimiento. Lo que Ackoff
+está diciendo con esa comparación de pesos es que cantidad y valor no son lo mismo, ya que subir un
+peldaño en la escalera compacta muchísima cantidad del peldaño anterior en algo mucho más útil,
+aunque pese menos y ocupe menos espacio.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Escalera de cuatro peldaños ascendentes de dato a información, de información a conocimiento y de conocimiento a sabiduría, con un ejemplo de clima y ventas en cada peldaño" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="base1a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cada peldaño compacta y da más valor que una gran cantidad del anterior</text>
+  <rect x="10" y="212" width="170" height="68" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="205" y="152" width="170" height="68" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="400" y="92" width="170" height="68" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="595" y="32" width="155" height="68" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#base1a)">
+    <path d="M182,238 C196,238 194,196 203,190"/>
+    <path d="M377,178 C391,178 389,136 398,130"/>
+    <path d="M572,118 C586,118 584,76 593,70"/>
+  </g>
+  <g text-anchor="middle">
+    <g font-size="14.5" font-weight="700" fill="#12324f">
+      <text x="95" y="238">Dato</text>
+      <text x="290" y="178">Información</text>
+      <text x="485" y="118">Conocimiento</text>
+    </g>
+    <text x="672" y="58" font-size="14.5" font-weight="700" fill="#0e6f6c">Sabiduría</text>
+    <g font-size="11" fill="#5b6876">
+      <text x="95" y="258">23 grados, un</text>
+      <text x="95" y="272">número suelto</text>
+      <text x="290" y="198">En Medellín son 23</text>
+      <text x="290" y="212">grados a las 3 pm</text>
+      <text x="485" y="138">Los martes se vende menos</text>
+      <text x="485" y="152">bebida caliente que los viernes</text>
+    </g>
+    <g font-size="11" fill="#3c7d7a">
+      <text x="672" y="78">Reducir el turno de</text>
+      <text x="672" y="90">café caliente los martes</text>
+    </g>
+  </g>
+</svg>
+
+:::
+
+Cada peldaño se puede definir con precisión. El *dato* es un símbolo o un hecho bruto que no trae
+contexto propio, como la cifra veintitrés sola. La *información* es ese mismo dato organizado y
+puesto en contexto, la que responde preguntas de qué, quién, dónde o cuándo, como en la temperatura
+en Medellín a las tres de la tarde son veintitrés grados. El *conocimiento* es información
+comprendida y aplicable gracias a la experiencia y el análisis, el saber-cómo que aparece cuando
+alguien compara muchos casos de información y encuentra un patrón, como que los martes bajan las
+ventas de bebida caliente frente a los viernes. La *sabiduría* es el peldaño más alto y también el
+más discutido en la literatura, ya que implica aplicar ese conocimiento con juicio, con criterio y
+con visión de las consecuencias, como decidir reducir el turno de café caliente un día y ampliarlo
+otro.
+
+Conviene fijar aquí una definición normativa que complementa la de Ackoff con precisión de
+ingeniería, porque no viene de la literatura de gestión sino de un estándar técnico. El vocabulario
+conjunto ISO/IEC 2382 define el dato como una representación reinterpretable de información, hecha
+de manera formalizada para que se pueda comunicar, interpretar o procesar. Esa definición separa con
+claridad lo que es el dato, la representación formal, de lo que es la información, el significado
+que alguien le atribuye a esa representación, y es la que vas a usar durante todo el curso cuando
+hables del contenido que guarda una base de datos.
+
+Vale la pena cerrar esta sección con dos precisiones que la literatura discute y que conviene
+conocer antes de repetir el modelo sin pensarlo. La primera es que la idea de que dato, información
+y conocimiento se construyen unos sobre otros no nació con Ackoff, sino que Nicholas L. Henry la
+planteó antes, en 1974, y que la forma de pirámide con la que casi siempre se dibuja este modelo es
+una convención posterior de la literatura de gestión del conocimiento, ya que ni Ackoff ni Milan
+Zeleny, a quienes se les suele acreditar la forma piramidal, la usaron literalmente en sus textos
+originales. La segunda es una crítica seria al modelo completo, la que hace el escritor David
+Weinberger, quien argumenta que hay una discontinuidad real entre el dato y la información, que
+viven cómodos dentro de una computadora, y el conocimiento y la sabiduría, que dependen de una
+persona y de su experiencia, así que tratar los cuatro niveles como si subieran por la misma
+escalera automática simplifica demasiado cómo se construye el conocimiento en la práctica. Esa
+crítica es justamente la razón por la que, más adelante en este tema, vas a ver que un sistema
+gestor de base de datos puede resolver los problemas del dato y de la información sin que eso
+garantice, por sí solo, que la organización tome mejores decisiones.
+
+::: {.callout-tip}
+## Reto 1. Ubica el peldaño
+
+Para cada frase, marca en cuál peldaño de la escalera encaja mejor antes de seguir leyendo.
+
+<label><input type="checkbox"> "4500" aparece en una columna llamada valor</label><br>
+<label><input type="checkbox"> "El pedido 1002 costó 23400 pesos el martes 12 de agosto"</label><br>
+<label><input type="checkbox"> "Los pedidos de café bajan un 30 por ciento los martes frente a los viernes, según los últimos tres meses"</label><br>
+<label><input type="checkbox"> "Vamos a mover al barista de turno del martes al viernes, porque ahí es donde de verdad se necesita"</label>
+
+Escribe junto a cada frase si es dato, información, conocimiento o sabiduría, y explica en una línea
+que le falta a cada una para subir al siguiente peldaño.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La primera frase es un dato, porque es un número suelto sin contexto que le diga a qué corresponde
+ni cuándo ocurrió. Le falta contexto para subir a información.
+
+La segunda frase ya es información, porque el mismo número aparece con contexto completo, que
+pedido, que valor y que día, y responde preguntas concretas de qué, cuándo y cuánto. Le falta
+comparación con otros casos para subir a conocimiento.
+
+La tercera frase es conocimiento, porque compara muchos casos de información a lo largo de tres
+meses y encuentra un patrón que se repite. Le falta que alguien decida actuar sobre ese patrón para
+subir a sabiduría.
+
+La cuarta frase es sabiduría, porque alguien aplica el patrón encontrado con un criterio de
+consecuencias, mover un turno de trabajo, y esa decisión ya no la toma ningún motor de base de
+datos, la toma una persona.
+:::
+
+## El procesamiento por archivos antes del SGBD
+
+Antes de que existieran los sistemas gestores de bases de datos, entre las décadas de 1960 y 1970,
+cada aplicación de una organización mantenía su propio archivo maestro independiente, la nómina en
+un archivo, las matrículas en otro, el inventario en un tercero, cada uno procesado por programas
+hechos a la medida para ese archivo específico. Piensa en una cafetería del campus que empieza a
+organizarse así, con tres personas que llevan tres cosas distintas, quien vende anota los pedidos en
+su propia hoja, quien cobra lleva las cuentas pendientes en la suya y quien atiende reclamos guarda
+los datos de contacto en una tercera.
+
+Antes de ver que pasa en la práctica, conviene plantearse una pregunta de análisis. Si el mismo
+cliente, con el mismo teléfono, tiene que quedar registrado en las tres hojas porque cada área
+necesita saber quién es, que tendría que existir en ese sistema de hojas sueltas para que las tres
+queden de acuerdo el día que ese cliente cambie de número.
+
+La respuesta es que no existe nada que las mantenga de acuerdo, porque ninguna de las tres personas
+sabe que las otras dos ya escribieron ese mismo dato antes. El mismo cliente termina escrito por
+separado en las tres hojas, y cuando Ana cambia de teléfono, como muestra el diagrama siguiente,
+alguna de las tres queda desactualizada sin que nada en el sistema avise del desacuerdo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres áreas de la cafetería, ventas, cartera y servicio, cada una con su propio archivo; ventas y cartera muestran el teléfono antiguo del cliente y servicio muestra el teléfono ya actualizado, sin que las otras dos se enteren" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un mismo dato repetido en tres archivos independientes</text>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="20" y="60" width="215" height="100" rx="10"/>
+    <rect x="272" y="60" width="215" height="100" rx="10"/>
+  </g>
+  <rect x="524" y="60" width="215" height="100" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="13.5" font-weight="600" fill="#12324f">
+    <text x="127" y="84">Archivo de Ventas</text>
+    <text x="379" y="84">Archivo de Cartera</text>
+  </g>
+  <text x="631" y="84" font-size="13.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Archivo de Servicio</text>
+  <g text-anchor="middle" font-size="12" fill="#5b6876">
+    <text x="127" y="112">cliente: Ana Ruiz</text>
+    <text x="127" y="130">teléfono: 300 111 2233</text>
+    <text x="379" y="112">cliente: Ana Ruiz</text>
+    <text x="379" y="130">teléfono: 300 111 2233</text>
+  </g>
+  <g text-anchor="middle" font-size="12" fill="#3c7d7a">
+    <text x="631" y="112">cliente: Ana Ruiz</text>
+    <text x="631" y="130">teléfono: 300 111 9999</text>
+  </g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876">
+    <text x="127" y="148">sin actualizar</text>
+    <text x="379" y="148">sin actualizar</text>
+  </g>
+  <text x="631" y="148" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">recién actualizado</text>
+  <text x="380" y="196" font-size="12.5" fill="#12324f" text-anchor="middle">Ana cambió de teléfono y solo Servicio lo corrigió.</text>
+  <text x="380" y="216" font-size="12.5" fill="#12324f" text-anchor="middle">Ventas y Cartera siguen mostrando el número viejo, y nada en el sistema avisa del desacuerdo.</text>
+</svg>
+
+:::
+
+Ese desacuerdo entre tres copias del mismo dato no es un accidente raro, es el primero de una lista
+de problemas bien documentada en la bibliografía del curso. Silberschatz, Korth y Sudarshan, en el
+capítulo introductorio de *Fundamentos de bases de datos*, describen siete problemas del
+procesamiento por archivos que conviene conocer con el mismo nombre que usan los libros de texto,
+porque son el vocabulario que vas a encontrar en cualquier discusión técnica sobre el tema.
+
+- **Redundancia e inconsistencia de datos.** Los mismos datos se repiten en varios archivos con
+  formatos distintos, y cuando se actualiza una copia sin actualizar las demás, los datos quedan
+  inconsistentes entre sí, exactamente lo que le pasó al teléfono de Ana en el diagrama de arriba.
+- **Dificultad para acceder a los datos.** Cada necesidad de consulta nueva obliga a escribir un
+  programa nuevo, porque no existe una forma flexible de preguntarle algo al sistema que nadie
+  anticipó de antemano.
+- **Aislamiento de datos.** Los datos quedan dispersos en archivos de formatos distintos, escritos
+  por programas distintos, lo que dificulta escribir un programa que necesite combinar información
+  de más de un archivo a la vez.
+- **Problemas de integridad.** Las restricciones sobre los datos, como que el saldo de una cuenta no
+  puede ser negativo, quedan enterradas dentro del código de cada programa de aplicación en vez de
+  declararse una sola vez en un lugar visible, lo que hace difícil añadirlas o cambiarlas después.
+- **Problemas de atomicidad.** Si el sistema falla a mitad de una operación compuesta, como una
+  transferencia entre dos cuentas bancarias que debe restar de una y sumar a la otra, puede quedar en
+  un estado a medias, con la resta aplicada y la suma no.
+- **Anomalías de acceso concurrente.** En archivos tradicionales, varios programas solo pueden acceder
+  al mismo archivo al tiempo si todos leen sin escribir, porque el acceso concurrente de escritura sin
+  control produce condiciones de carrera donde una escritura pisa a la otra.
+- **Problemas de seguridad.** No todos los usuarios de un sistema deberían poder ver todos los datos,
+  pero en archivos sueltos es difícil aplicar controles de acceso finos, ya que suelen quedar atados
+  al sistema operativo de archivos entero y no al contenido específico de cada dato.
+
+Connolly y Begg, en *Database Systems: A Practical Approach*, resumen el mismo diagnóstico con otro
+énfasis, centrado en cómo cada departamento de una organización termina trabajando aislado de los
+demás. Ellos hablan de separación y aislamiento de los datos, porque cada programa mantiene su propio
+conjunto de datos sin que los usuarios de un programa sepan que datos útiles guarda otro programa
+distinto de la misma organización. Hablan también de duplicación de datos, porque el enfoque
+descentralizado hace que el mismo dato se mantenga por separado en varios programas, lo que
+desperdicia espacio de almacenamiento y abre la puerta a que ese dato termine con valores distintos
+en cada copia. Y hablan de dependencia de los datos, porque la estructura de cada archivo queda
+escrita dentro del código del programa que lo usa, así que cambiar esa estructura más adelante obliga
+a modificar cada programa que la toca, uno por uno.
+
+### Las tres anomalías, con nombre propio
+
+De esos problemas nacen tres formas concretas en que una tabla mal diseñada falla en la práctica, y
+aunque el nombre técnico completo se formaliza más adelante en la Unidad 3 sobre normalización, la
+raíz conceptual está aquí, en la comparación entre archivo y base de datos.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un dato duplicado en varias filas de una tabla provoca tres anomalías distintas: de inserción, de actualización y de borrado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="base1b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <rect x="290" y="16" width="180" height="52" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="38" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Dato duplicado en</text>
+  <text x="380" y="56" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">varias filas de una tabla</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#base1b)">
+    <path d="M330,68 C230,110 140,130 120,158"/>
+    <path d="M380,68 L380,158"/>
+    <path d="M430,68 C530,110 620,130 640,158"/>
+  </g>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="20" y="160" width="200" height="86" rx="10"/>
+    <rect x="280" y="160" width="200" height="86" rx="10"/>
+    <rect x="540" y="160" width="200" height="86" rx="10"/>
+  </g>
+  <g text-anchor="middle" font-size="13" font-weight="700" fill="#0e6f6c">
+    <text x="120" y="184">Inserción</text>
+    <text x="380" y="184">Actualización</text>
+    <text x="640" y="184">Borrado</text>
+  </g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876">
+    <text x="120" y="206">Un cliente nuevo no</text>
+    <text x="120" y="220">existe hasta que hace</text>
+    <text x="120" y="234">su primer pedido</text>
+    <text x="380" y="206">Cambiar un teléfono</text>
+    <text x="380" y="220">obliga a corregir</text>
+    <text x="380" y="234">varias filas a la vez</text>
+    <text x="640" y="206">Borrar un pedido borra</text>
+    <text x="640" y="220">también datos de un</text>
+    <text x="640" y="234">cliente que sigue activo</text>
+  </g>
+</svg>
+
+:::
+
+La *anomalía de inserción* aparece cuando no se puede registrar un dato nuevo sin que dependa
+artificialmente de la existencia de otro, como no poder guardar los datos de un cliente hasta que
+haya hecho al menos un pedido, si ambos datos viven forzados dentro de la misma fila. La *anomalía de
+actualización* es justo lo que le pasó al teléfono de Ana, aparece cuando un dato duplicado en varias
+filas se corrige en unas y se olvida en otras, dejando el sistema en un estado inconsistente sin que
+nadie lo haya querido así. La *anomalía de borrado* aparece cuando eliminar una fila hace desaparecer,
+de paso, un dato que en realidad era independiente de esa fila, como perder el único registro del
+teléfono de un cliente porque se borró su único pedido.
+
+::: {.callout-tip}
+## Reto 2. La tabla de la cafetería
+
+La cafetería decidió juntar todo en una sola tabla, sin separar clientes, pedidos y productos. Esta
+es la tabla:
+
+::: {.tabla-ancha}
+| Pedido | Cliente | Teléfono | Producto | Valor |
+|---|---|---|---|---|
+| 1001 | Ana Ruiz | 300 111 2233 | Café | 4500 |
+| 1002 | Ana Ruiz | 300 111 2233 | Torta | 23400 |
+| 1003 | Luis Pena | 301 444 5566 | Café | 4500 |
+| 1004 | Ana Ruiz | 300 111 2233 | Jugo | 6800 |
+:::
+
+Responde las tres preguntas mirando solo la tabla, sin saber nada más de bases de datos todavía.
+
+1. Ana cambia de teléfono. Cuántas filas hay que corregir, y qué pasa si alguien corrige dos y se le
+   olvida la tercera.
+2. Llega un cliente nuevo que todavía no ha pedido nada. Dónde lo guardan.
+3. Se anula el pedido 1003 y se borra la fila. Qué información se pierde además del pedido mismo.
+
+Para cada respuesta, nombra cuál de las tres anomalías está ocurriendo, inserción, actualización o
+borrado.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+Pregunta 1, anomalía de actualización. El teléfono de Ana aparece en tres filas, la 1001, la 1002
+y la 1004, así que corregirlo obliga a tocar las tres. Si alguien corrige dos y olvida la tercera, la
+tabla queda con dos teléfonos distintos para la misma persona, y nada en la estructura de la tabla
+avisa de esa contradicción.
+
+Pregunta 2, anomalía de inserción. No hay ninguna fila donde poner solo los datos de un cliente
+nuevo, porque cada fila exige también un pedido, un producto y un valor. El cliente nuevo se queda
+sin registrar hasta que compre algo, aunque ya sea un cliente real.
+
+Pregunta 3, anomalía de borrado. Luis Pena solo aparece en la fila del pedido 1003. Al borrar esa
+fila desaparece también el único registro de que Luis Pena existe como cliente, aunque el pedido y el
+cliente sean conceptualmente dos cosas distintas.
+:::
+
+## Lo que resuelve el SGBD
+
+Elmasri y Navathe, en *Fundamentals of Database Systems*, presentan la contraparte positiva de la
+misma lista de problemas, y ese contraste es la mejor forma de entender por qué existe el sistema
+gestor de base de datos, el SGBD. La siguiente tabla empareja cada problema del archivo con la
+característica concreta del enfoque de bases de datos que lo resuelve.
+
+| Problema del procesamiento por archivos | Cómo lo resuelve el enfoque de bases de datos |
+|---|---|
+| Redundancia e inconsistencia de datos | Naturaleza autodescriptiva: el catálogo del SGBD guarda la estructura una sola vez, sin repetirla en cada programa |
+| Dificultad para acceder a los datos | Un lenguaje de consulta declarativo permite pedir datos sin escribir un programa nuevo cada vez |
+| Aislamiento de datos | Arquitectura de tres esquemas, que reúne toda la información bajo una sola estructura conceptual |
+| Problemas de integridad | Las restricciones se declaran una sola vez en el esquema conceptual, no dentro de cada programa |
+| Problemas de atomicidad | El SGBD agrupa varias operaciones en una transacción que se aplica entera o no se aplica |
+| Anomalías de acceso concurrente | El SGBD controla el orden de los accesos simultáneos para que unos no pisen a otros |
+| Problemas de seguridad | El control de acceso se define sobre el contenido de los datos, no sobre el sistema operativo |
+
+Dos de esas características merecen más detalle porque son las que de verdad distinguen a un SGBD de
+cualquier otro programa que guarde archivos. La primera es la *naturaleza autodescriptiva*, que
+significa que el catálogo del SGBD almacena la descripción completa de la base de datos, sus
+estructuras, sus tipos y sus restricciones, lo que permite que el mismo software de SGBD trabaje con
+bases de datos distintas y con aplicaciones distintas, algo que un sistema de archivos no ofrece,
+porque ahí la descripción de los datos queda implícita, escrita a mano dentro del código de cada
+aplicación.
+
+La segunda es la *independencia entre programas y datos*, que es posible gracias a la arquitectura de
+tres esquemas que también describen Elmasri y Navathe. El nivel interno define las estructuras
+físicas de almacenamiento, cómo está organizado el dato en disco. El nivel conceptual define la
+estructura y las restricciones de toda la base de datos para la comunidad completa de usuarios, sin
+importar cómo se guarde físicamente ni quien la use después. El nivel externo define vistas
+particulares para distintos grupos de usuarios, cada uno viendo solo lo que le corresponde.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arquitectura de tres esquemas: nivel externo con varias vistas de usuario arriba, nivel conceptual en medio con toda la estructura y las reglas, nivel interno abajo con el almacenamiento físico; la independencia lógica protege las vistas de cambios en el conceptual y la independencia física protege el conceptual de cambios en el interno" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="base1c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <text x="350" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">La arquitectura de tres esquemas de Elmasri y Navathe</text>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="20" y="32" width="150" height="56" rx="9"/>
+    <rect x="275" y="32" width="150" height="56" rx="9"/>
+    <rect x="530" y="32" width="150" height="56" rx="9"/>
+  </g>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f">
+    <text x="95" y="56">Vista contabilidad</text>
+    <text x="350" y="56">Vista ventas</text>
+    <text x="605" y="56">Vista soporte</text>
+  </g>
+  <text x="350" y="106" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Nivel externo</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#base1c)">
+    <path d="M95,88 L95,148"/>
+    <path d="M350,88 L350,148"/>
+    <path d="M605,88 L605,148"/>
+  </g>
+  <rect x="140" y="150" width="420" height="66" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="176" font-size="14" font-weight="700" fill="#0e6f6c" text-anchor="middle">Nivel conceptual</text>
+  <text x="350" y="196" font-size="11.5" fill="#3c7d7a" text-anchor="middle">toda la estructura y las reglas de negocio, para toda la comunidad de usuarios</text>
+  <text x="30" y="192" font-size="11" fill="#5b6876" text-anchor="middle">independencia lógica: cambiar aquí no rompe las vistas de arriba</text>
+  <path d="M350,216 L350,254" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#base1c)"/>
+  <rect x="220" y="256" width="260" height="52" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="350" y="278" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Nivel interno</text>
+  <text x="350" y="296" font-size="11.5" fill="#5b6876" text-anchor="middle">estructuras físicas de almacenamiento en disco</text>
+  <text x="670" y="290" font-size="11" fill="#5b6876" text-anchor="middle">independencia física: cambiar aquí no rompe el conceptual</text>
+</svg>
+
+:::
+
+Esa separación en capas produce dos tipos de independencia que la bibliografía distingue con cuidado.
+La *independencia lógica de los datos* es la capacidad de cambiar el esquema conceptual sin tener que
+cambiar los esquemas externos ni los programas de aplicación que ya funcionan, por ejemplo añadir un
+campo nuevo a la estructura conceptual sin romper las vistas que ya existían. La *independencia física
+de los datos* es la capacidad de cambiar el esquema interno, por ejemplo mover los archivos a un disco
+distinto o cambiar la forma de indexarlos, sin tener que tocar el esquema conceptual ni los programas
+que dependen de el. Ninguna de las dos existe en un sistema de archivos tradicional, porque ahí la
+estructura del archivo está escrita directamente dentro del código del programa que lo usa, que es
+justo la dependencia de los datos que describían Connolly y Begg.
+
+## Caso de estudio. Por qué American Airlines dejó de usar tableros manuales
+
+Antes de 1961, la disponibilidad de asientos en American Airlines se gestionaba con tableros manuales
+y con un dispositivo electromecánico llamado Magnetronic Reservisor, que desde 1952 reemplazaba
+fichas de cartón por luces que indicaban si un vuelo tenía cupo. El problema de fondo era que cada
+oficina de reservas en cada ciudad trabajaba con su propia información, sin una forma rápida de saber
+en tiempo real que hacían las demás oficinas con los mismos asientos.
+
+Antes de leer la solución, conviene plantearse una pregunta de análisis. Si dos agentes de reservas,
+en dos ciudades distintas, venden el mismo asiento del mismo vuelo casi al mismo tiempo, que tendría
+que pasar para que el sistema completo se diera cuenta antes de que el avión despegue con un pasajero
+de más.
+
+American Airlines e IBM anunciaron en 1961 el sistema SABRE, que entró en operación en 1964
+conectando las terminales de reserva de todo el país a un centro de procesamiento central montado
+sobre dos mainframes IBM 7090. La sigla se expande de forma distinta según la fuente consultada, IBM
+la documenta como Semi-Automated Business Research Environment mientras que el Engineering and
+Technology History Wiki del IEEE la documenta como Semi-Automated Business Reservations Environment,
+así que conviene saber que las dos fuentes primarias citadas en este tema coinciden en el sistema y
+en el año pero no en el nombre completo de la sigla. La solución al problema de arriba fue exactamente
+eliminar la duplicación, en vez de que cada oficina llevara su propio inventario de asientos, todas
+las oficinas leían y escribían sobre el mismo inventario centralizado, así que si un agente vendía un
+asiento en Nueva York, ese asiento dejaba de estar disponible para el agente de Los Angeles casi al
+instante.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Línea de tiempo desde SABRE en 1964 hasta hoy, pasando por el modelo relacional que Codd publicó en 1970" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <path d="M40,150 L720,150" stroke="#c7d6e6" stroke-width="2.5" fill="none"/>
+  <g fill="#0e6f6c">
+    <circle cx="110" cy="150" r="7"/>
+    <circle cx="380" cy="150" r="7"/>
+    <circle cx="650" cy="150" r="7"/>
+  </g>
+  <g text-anchor="middle">
+    <g font-size="13.5" font-weight="700" fill="#12324f">
+      <text x="110" y="55">1964</text>
+      <text x="380" y="55">1970</text>
+      <text x="650" y="55">Hoy</text>
+    </g>
+    <g font-size="11" fill="#5b6876">
+      <text x="110" y="76">SABRE conecta las</text>
+      <text x="110" y="90">oficinas de American</text>
+      <text x="110" y="104">Airlines a un solo</text>
+      <text x="110" y="118">centro de cómputo</text>
+      <text x="380" y="76">Codd publica el</text>
+      <text x="380" y="90">modelo relacional en</text>
+      <text x="380" y="104">un artículo de la ACM</text>
+      <text x="650" y="76">SQL sigue siendo el</text>
+      <text x="650" y="90">lenguaje de consulta</text>
+      <text x="650" y="104">más usado en bases</text>
+      <text x="650" y="118">de datos relacionales</text>
+    </g>
+  </g>
+</svg>
+
+:::
+
+Conviene precisar algo con cuidado, porque es un error común repetir SABRE como si fuera la primera
+base de datos relacional, y no lo es. SABRE es anterior al modelo relacional, que Edgar F. Codd
+publicó en 1970 en la revista de la ACM con el artículo *A Relational Model of Data for Large Shared
+Data Banks*, y es anterior también a los primeros motores de bases de datos relacionales comerciales,
+que llegaron a finales de esa década. Lo correcto es presentar SABRE como el antecedente que empujó a
+la industria hacia el procesamiento centralizado de datos compartidos, el mismo problema que después
+el modelo relacional y el SGBD resolverían de forma más general y con una base matemática sólida
+detrás, no como una base de datos en el sentido técnico que vas a estudiar en este curso.
+
+## Cuando el SGBD tampoco basta por sí solo
+
+El caso de SABRE muestra por qué una organización adopta el procesamiento centralizado de datos. Pero
+tener un SGBD detrás de cada sistema no garantiza automáticamente que el problema de inconsistencia
+desaparezca, y hay un caso real y documentado que lo demuestra en un sector donde el costo de un dato
+duplicado o mal enlazado es especialmente alto, el de la salud.
+
+Antes de seguir, conviene plantearse una pregunta de análisis. Si un hospital, una clínica y un
+laboratorio, cada uno con su propio sistema de historia clínica electrónica, es decir cada uno con su
+propio SGBD detrás, comparten datos de pacientes a través de una red de intercambio de información de
+salud, que tendría que fallar para que el mismo paciente termine registrado como si fueran varias
+personas distintas.
+
+Zech, Husk, Moore y Shapiro publicaron en 2016, en la revista *Applied Clinical Informatics*, un
+estudio que responde justo esa pregunta con datos reales. Los autores compararon los datos
+demográficos del Social Security Death Master File, una base de referencia de 85.8 millones de
+registros, contra los de Healthix, una red de intercambio de información de salud de la ciudad de
+Nueva York con 11.6 millones de identificadores de pacientes repartidos en más de cien organizaciones
+distintas. El hallazgo fue que la tasa de identificadores duplicados dentro de Healthix era mayor que
+en la base de referencia, es decir que el mismo paciente aparecía con perfiles separados y
+fragmentados, lo que los autores llaman perfiles divididos, en registros distintos dentro de la
+propia red.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda una persona real conectada a un solo registro base de referencia; a la derecha la misma persona real conectada a tres perfiles distintos y con identificadores distintos dentro de una red de intercambio de datos de salud con más de cien organizaciones" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="base1d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Una misma persona, un solo registro base contra varios perfiles fragmentados</text>
+  <circle cx="130" cy="60" r="24" fill="#eef4fa" stroke="#c7d6e6"/>
+  <circle cx="600" cy="60" r="24" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="130" y="65" font-size="11" fill="#12324f" text-anchor="middle">Ana</text>
+  <text x="600" y="65" font-size="11" fill="#12324f" text-anchor="middle">Ana</text>
+  <path d="M130,84 L130,140" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#base1d)"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#base1d)">
+    <path d="M600,84 C560,110 500,120 470,140"/>
+    <path d="M600,84 L600,140"/>
+    <path d="M600,84 C640,110 700,120 730,140"/>
+  </g>
+  <rect x="40" y="142" width="180" height="68" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="130" y="166" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">Registro base</text>
+  <text x="130" y="184" font-size="11" fill="#3c7d7a" text-anchor="middle">Social Security</text>
+  <text x="130" y="198" font-size="11" fill="#3c7d7a" text-anchor="middle">Death Master File</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3">
+    <rect x="390" y="142" width="160" height="68" rx="10"/>
+    <rect x="520" y="142" width="160" height="68" rx="10"/>
+    <rect x="650" y="142" width="90" height="68" rx="10"/>
+  </g>
+  <g text-anchor="middle" font-size="11" fill="#12324f">
+    <text x="470" y="164">Hospital A</text>
+    <text x="470" y="180">id 10432</text>
+    <text x="600" y="164">Clínica B</text>
+    <text x="600" y="180">id A-7781</text>
+    <text x="695" y="164">Lab C</text>
+    <text x="695" y="180">id 55290</text>
+  </g>
+  <rect x="380" y="230" width="360" height="38" rx="8" fill="none" stroke="#cfd8e3" stroke-dasharray="4 4"/>
+  <text x="560" y="253" font-size="11" fill="#5b6876" text-anchor="middle">Healthix: red de intercambio con más de 100 organizaciones</text>
+</svg>
+
+:::
+
+Este caso es pedagógicamente valioso porque muestra dónde falla la idea que acabas de estudiar en
+esta misma sección, ya que la anomalía de duplicación que motivó el paso de archivos a bases de datos
+puede reaparecer, incluso dentro de una arquitectura de SGBD bien construida, si falla el diseño de
+las claves o de los identificadores únicos al integrar datos entre organizaciones distintas. Cada
+hospital, cada clínica y cada laboratorio de este caso ya tenía su propio SGBD funcionando
+correctamente puertas adentro. Lo que falló no fue la tecnología de cada sistema por separado, sino
+la gobernanza del dato compartido entre sistemas, es decir que no existía un identificador consistente
+que todas las organizaciones usaran igual para referirse a la misma persona. El SGBD resuelve el
+problema técnico de un archivo aislado dentro de una organización, pero no resuelve por sí solo un
+problema organizacional de coordinación entre varias organizaciones distintas.
+
+::: {.callout-tip}
+## Reto 3. Diagnostica el caso de Healthix
+
+Con lo que acabas de leer sobre el caso de Zech y colegas, responde en un párrafo corto. Si tuvieras
+que proponer una solución de diseño para reducir los perfiles fragmentados dentro de una red como
+Healthix, sin cambiar ningún sistema interno de los hospitales, en qué parte del problema
+concentrarías el esfuerzo, en la tecnología de cada SGBD por separado o en el acuerdo entre
+organizaciones sobre cómo identificar a la misma persona. Justifica tu respuesta con lo que leíste
+sobre la diferencia entre problema técnico y problema organizacional.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+El esfuerzo hay que concentrarlo en el acuerdo entre organizaciones sobre cómo identificar a la misma
+persona, no en la tecnología interna de cada SGBD. El estudio de Zech y colegas encontró fragmentación
+de perfiles a pesar de que cada organización dentro de Healthix ya operaba su propio sistema de
+historia clínica electrónica con su propio SGBD detrás, funcionando correctamente puertas adentro. El
+problema no era que a algún hospital le faltara tecnología de base de datos, era que no existía un
+identificador único consistente que todas las organizaciones usaran de la misma forma para referirse
+a Ana, así que cada una le asignaba su propio número interno y el sistema de intercambio no tenía como
+saber con certeza que esos tres números correspondían a la misma persona. Cambiar la tecnología
+interna de cada hospital no habría resuelto nada, porque el desacuerdo estaba en la capa de
+integración entre organizaciones, no dentro de ninguna de ellas por separado.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía, los siguientes puntos:
+
+- [ ] La diferencia entre dato, información, conocimiento y sabiduría, con un ejemplo propio de cada
+      peldaño
+- [ ] Por qué la definición de dato de la norma ISO/IEC 2382 complementa, en vez de reemplazar, la
+      escalera de Ackoff
+- [ ] Los siete problemas del procesamiento por archivos según Silberschatz, Korth y Sudarshan, y las
+      tres limitaciones que resaltan Connolly y Begg
+- [ ] Las tres anomalías, inserción, actualización y borrado, con un ejemplo propio de cada una
+- [ ] Las características del enfoque de bases de datos de Elmasri y Navathe que resuelven cada
+      problema del archivo, incluida la arquitectura de tres esquemas
+- [ ] La diferencia entre independencia lógica e independencia física de los datos
+- [ ] Por qué SABRE es un antecedente histórico y no una base de datos relacional
+- [ ] Por qué un SGBD bien construido puede seguir teniendo datos inconsistentes si falla la
+      gobernanza entre organizaciones, con el caso de Healthix como ejemplo
+:::
+
+## Lo que sigue
+
+Hoy quedó claro qué problema resuelve un SGBD frente a un archivo suelto, con el vocabulario técnico
+que vas a usar el resto del semestre. El Tema 2 de esta misma unidad da un paso más práctico, se aleja
+de la teoría de por qué existe un SGBD y entra en dónde aparece uno de verdad dentro de una
+organización, que aplicaciones típicas lo usan, que beneficios concretos trae en integridad,
+concurrencia, seguridad e independencia de los datos, y también que limitaciones reales tiene, en
+costo, en complejidad y en el riesgo de que un solo sistema centralizado se vuelva un punto único de
+falla.
+
+## Recursos
+
+- Ackoff, R. L. (1989). *From Data to Wisdom.* Journal of Applied Systems Analysis, 16, 3 a 9.
+  [Copia consultable](https://faculty.ung.edu/kmelton/documents/datawisdom.pdf).
+- International Organization for Standardization e International Electrotechnical Commission.
+  *ISO/IEC 2382:2015. Information technology, Vocabulary.*
+  [Ficha del estándar](https://www.iso.org/standard/63598.html).
+- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Fundamentos de bases de datos.* Capítulo 1,
+  desventajas del procesamiento por archivos. Material de apoyo oficial de los autores en
+  [db-book.com](https://www.db-book.com).
+- Elmasri, R. y Navathe, S. B. *Fundamentals of Database Systems.* Capítulo 1, secciones sobre
+  procesamiento tradicional por archivos y características del enfoque de bases de datos.
+- Connolly, T. M. y Begg, C. E. *Database Systems: A Practical Approach to Design, Implementation,
+  and Management.* Capítulo introductorio, limitaciones del enfoque basado en archivos.
+- Codd, E. F. (1970). *A Relational Model of Data for Large Shared Data Banks.* Communications of the
+  ACM, 13(6).
+  [Copia en la Universidad de Pensilvania](https://www.engineering.upenn.edu/~zives/03f/cis550/codd.pdf).
+- Zech, J., Husk, G., Moore, T. y Shapiro, J. S. (2016). *Measuring the Degree of Unmatched Patient
+  Records in a Health Information Exchange Using Exact Matching.* Applied Clinical Informatics.
+  [Disponible en PubMed Central](https://pmc.ncbi.nlm.nih.gov/articles/PMC4941843/).
+- Engineering and Technology History Wiki, IEEE. *SABRE Airline Reservation System.*
+  [ethw.org/SABRE_Airline_Reservation_System](https://ethw.org/SABRE_Airline_Reservation_System).
+- IBM Corporate History. *Sabre.* [ibm.com/history/sabre](https://www.ibm.com/history/sabre).
+- Computer History Museum. *SABRE, American Airlines' computerized reservation system.*
+  [computerhistory.org](https://www.computerhistory.org/revolution/mainframe-computers/7/176/702).
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

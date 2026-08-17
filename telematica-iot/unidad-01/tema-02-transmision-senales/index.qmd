@@ -1,0 +1,393 @@
+---
+title: "Tema 2. Cómo un bit se convierte en señal"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                          |
+|--------|--------------------------------------------------------------------------|
+| Unidad | Unidad 1. Fundamentos de telecomunicaciones y telemática                 |
+| Tema   | Tema 2. Transmisión de señales: dato y señal, codificación y modulación  |
+:::
+
+El Tema 1 recorrió la historia de las telecomunicaciones, los principios básicos de la comunicación y
+cómo la telefonía, la televisión y los datos terminaron convergiendo en una sola red de paquetes IP.
+Esa sesión cerró con una cadena de cinco eslabones, fuente, transmisor, canal, receptor y destino, pero
+dejó el eslabón del transmisor sin abrir. Hoy lo abres, porque antes de que un bit generado por un
+sensor de temperatura, un teclado o un micrófono llegue a otro extremo de la red, alguien tiene que
+decidir cómo convertir ese bit en algo que un cable de cobre, una fibra óptica o el aire libre puedan
+transportar de verdad. Esa conversión, y las reglas que la gobiernan, es el tema completo de esta guía.
+
+## Dato y señal no son lo mismo, aunque se confundan todo el tiempo
+
+En el lenguaje cotidiano, dato y señal se usan como sinónimos. En telemática no lo son, y confundirlos
+lleva a errores de diseño reales. Un *dato* es la entidad que transmite significado, la temperatura de
+un cuarto, un texto, un número. Una *señal* es la representación eléctrica o electromagnética de ese
+dato, la variación de voltaje en un cable, la variación de intensidad de luz en una fibra, la variación
+de amplitud de una onda de radio, que es lo que en verdad viaja por el medio. Stallings lo plantea así
+en el capítulo de transmisión de datos de *Data and Computer Communications*, y la distinción importa
+porque un dato puede ser *analógico*, con valores continuos en un rango, como el sonido o la
+temperatura, o *digital*, con valores discretos, como un texto o un entero.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Matriz de cuatro combinaciones entre dato analogico o digital y senal analogica o digital, con un ejemplo real en cada celda" font-family="Segoe UI, Inter, system-ui, sans-serif"><text x="350" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">El dato y la señal no tienen que ser del mismo tipo</text><text x="310" y="40" font-size="12.5" font-weight="600" fill="#5b6876" text-anchor="middle">señal analógica</text><text x="550" y="40" font-size="12.5" font-weight="600" fill="#5b6876" text-anchor="middle">señal digital</text><text x="95" y="100" font-size="12.5" font-weight="600" fill="#5b6876" text-anchor="middle">dato</text><text x="95" y="116" font-size="12.5" font-weight="600" fill="#5b6876" text-anchor="middle">analógico</text><text x="95" y="200" font-size="12.5" font-weight="600" fill="#5b6876" text-anchor="middle">dato</text><text x="95" y="216" font-size="12.5" font-weight="600" fill="#5b6876" text-anchor="middle">digital</text><g fill="#eef4fa" stroke="#c7d6e6"><rect x="200" y="58" width="220" height="80" rx="10"/><rect x="200" y="158" width="220" height="80" rx="10"/></g><g fill="#e4f2f1" stroke="#8fc9c5"><rect x="440" y="58" width="220" height="80" rx="10"/><rect x="440" y="158" width="220" height="80" rx="10"/></g><g text-anchor="middle"><text x="310" y="88" font-size="13" font-weight="700" fill="#12324f">radio AM/FM</text><text x="310" y="106" font-size="11.5" fill="#5b6876">voz transmitida tal cual,</text><text x="310" y="122" font-size="11.5" fill="#5b6876">sin convertir a bits</text><text x="550" y="88" font-size="13" font-weight="700" fill="#0e6f6c">PCM telefónico</text><text x="550" y="106" font-size="11.5" fill="#5b6876">voz analógica muestreada</text><text x="550" y="122" font-size="11.5" fill="#5b6876">y transmitida en bits</text><text x="310" y="188" font-size="13" font-weight="700" fill="#12324f">módem</text><text x="310" y="206" font-size="11.5" fill="#5b6876">bits que viajan sobre una</text><text x="310" y="222" font-size="11.5" fill="#5b6876">línea telefónica analógica</text><text x="550" y="188" font-size="13" font-weight="700" fill="#0e6f6c">Ethernet</text><text x="550" y="206" font-size="11.5" fill="#5b6876">bits que viajan como</text><text x="550" y="222" font-size="11.5" fill="#5b6876">pulsos eléctricos discretos</text></g><text x="350" y="256" font-size="11.5" fill="#5b6876" text-anchor="middle">La relación entre dato y señal se elige en el diseño del sistema; no es fija.</text></svg>
+
+:::
+
+Lo que sorprende a quien recién llega al tema es que la relación entre dato y señal no es fija. Un dato
+digital no está obligado a viajar sobre una señal digital, y un dato analógico no está obligado a viajar
+sobre una señal analógica. Un módem, cuyo nombre viene justamente de MOdulador y DEModulador, toma bits
+(dato digital) y los monta sobre una señal analógica para que crucen una línea telefónica diseñada para
+voz. La telefonía digital moderna hace lo contrario, toma la voz (dato analógico) y la convierte en bits
+mediante un codec, para transmitirla después como señal digital. Ninguna de las dos combinaciones es un
+error ni una excepción rara, son dos diseños válidos que se eligen según el medio disponible y el
+resultado que se busca.
+
+Hay además una diferencia práctica entre transmitir de forma analógica y de forma digital que explica
+por qué casi toda red nueva se diseña en digital. Una señal analógica se atenúa con la distancia, y el
+único remedio es un amplificador, que sube el nivel de la señal completa, ruido incluido, así que el
+ruido se va acumulando amplificación tras amplificación. Una señal digital, en cambio, se puede pasar
+por un repetidor que no amplifica sin más, sino que reconoce el patrón de unos y ceros, lo reconstruye
+limpio y lo retransmite, borrando en el proceso buena parte del ruido acumulado en el tramo anterior.
+Esa capacidad de regenerar la señal, y no solo amplificarla, es una de las razones centrales por las que
+las redes de datos, incluida la mayoría de las redes IoT, prefieren transmisión digital siempre que el
+medio lo permite.
+
+## Señales analógicas, señales digitales y el ancho de banda que las limita
+
+Una señal analógica toma infinitos valores posibles dentro de un rango, y cuando es periódica se
+describe con tres parámetros, amplitud (qué tan intensa es), frecuencia (cuántas veces se repite por
+segundo) y fase (en qué punto del ciclo empieza). Una señal digital, en cambio, solo toma un número
+limitado de niveles discretos de voltaje, dos niveles en el caso más simple, más niveles si el esquema
+de transmisión lo permite.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de una senal analogica, una curva continua con infinitos valores posibles, y una senal digital, una escalera con un numero limitado de niveles discretos" font-family="Segoe UI, Inter, system-ui, sans-serif"><text x="350" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Señal analógica frente a señal digital</text><line x1="40" y1="140" x2="300" y2="140" stroke="#cfd8e3" stroke-width="1" stroke-dasharray="3 3"/><path d="M40,140 q21.65,-25 43.3,0 q21.65,25 43.3,0 q21.65,-25 43.3,0 q21.65,25 43.3,0 q21.65,-25 43.3,0 q21.65,25 43.3,0" fill="none" stroke="#0e6f6c" stroke-width="2.2"/><text x="170" y="188" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">señal analógica</text><text x="170" y="204" font-size="11" fill="#5b6876" text-anchor="middle">infinitos valores posibles en el rango</text><g stroke="#cfd8e3" stroke-width="1" stroke-dasharray="3 3"><line x1="380" y1="80" x2="660" y2="80"/><line x1="380" y1="110" x2="660" y2="110"/><line x1="380" y1="140" x2="660" y2="140"/><line x1="380" y1="170" x2="660" y2="170"/></g><path d="M380,140 L436,140 L436,80 L492,80 L492,170 L548,170 L548,110 L604,110 L604,140 L660,140" fill="none" stroke="#0e6f6c" stroke-width="2.4"/><text x="520" y="188" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">señal digital</text><text x="520" y="204" font-size="11" fill="#5b6876" text-anchor="middle">número limitado de niveles discretos</text></svg>
+
+:::
+
+El *ancho de banda*, en inglés *bandwidth*, es el rango de frecuencias que contiene la mayor parte de
+la energía de una señal, o visto desde el canal, el rango de frecuencias que ese canal es capaz de
+transportar sin distorsionar demasiado lo que lleva dentro. Es el recurso más escaso de cualquier medio
+de transmisión, ya que a mayor ancho de banda disponible, mayor es la tasa de datos que el canal puede
+soportar, una relación directa que va a aparecer de nuevo, con números concretos, en la sección sobre
+los teoremas de Nyquist y Shannon más adelante en esta guía. Por ahora basta con fijar la idea de que un
+canal telefónico de voz, que deja pasar aproximadamente el rango de 300 a 3400 Hz, tiene mucho menos
+ancho de banda que un cable de par trenzado Ethernet o que una fibra óptica, y esa diferencia es la que
+explica por qué uno soporta unos pocos kilobits por segundo y el otro soporta gigabits, tema que retoma
+el Tema 3 al hablar de medios de transmisión.
+
+## Cómo la codificación de línea convierte bits en pulsos eléctricos
+
+Cuando el dato ya es digital y el medio también va a llevar una señal digital, como pasa dentro de una
+red local de cobre, hace falta una regla que diga qué patrón de voltaje representa un uno y cuál
+representa un cero. Esa regla se llama *codificación de línea*, y Forouzan la desarrolla en el capítulo
+de transmisión digital de *Data Communications and Networking*, la bibliografía asignada a este curso
+para el tema. Cuatro esquemas clásicos ilustran las decisiones de diseño que hay detrás, y antes de
+entrar en el detalle de cada uno conviene verlos comparados sobre la misma cadena de bits.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de NRZ-L, NRZ-I y Manchester para la secuencia de bits uno uno uno cero cero uno, mostrando cuando cada esquema pierde transiciones y cuando Manchester las garantiza" font-family="Segoe UI, Inter, system-ui, sans-serif"><text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Tres formas de poner los mismos bits en el cable</text><g stroke="#cfd8e3" stroke-width="1" stroke-dasharray="3 3"><line x1="110" y1="30" x2="110" y2="290"/><line x1="190" y1="30" x2="190" y2="290"/><line x1="270" y1="30" x2="270" y2="290"/><line x1="350" y1="30" x2="350" y2="290"/><line x1="430" y1="30" x2="430" y2="290"/><line x1="510" y1="30" x2="510" y2="290"/><line x1="590" y1="30" x2="590" y2="290"/></g><text x="30" y="34" font-size="11.5" font-weight="600" fill="#5b6876">bits</text><g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="150" y="34">1</text><text x="230" y="34">1</text><text x="310" y="34">1</text><text x="390" y="34">0</text><text x="470" y="34">0</text><text x="550" y="34">1</text></g><text x="26" y="118" font-size="11.5" font-weight="600" fill="#5b6876">NRZ-L</text><path d="M110,100 L350,100 L350,130 L510,130 L510,100 L590,100" fill="none" stroke="#0e6f6c" stroke-width="2.2"/><text x="230" y="152" font-size="11.5" fill="#5b6876" text-anchor="middle">tres unos seguidos: ningún cambio de nivel</text><text x="26" y="188" font-size="11.5" font-weight="600" fill="#5b6876">NRZ-I</text><path d="M110,200 L110,170 L190,170 L190,200 L270,200 L270,170 L510,170 L510,200 L590,200" fill="none" stroke="#0e6f6c" stroke-width="2.2"/><text x="470" y="222" font-size="11.5" fill="#5b6876" text-anchor="middle">dos ceros seguidos: tampoco hay cambio</text><text x="18" y="258" font-size="11.5" font-weight="600" fill="#5b6876">Manchester</text><path d="M110,270 L150,270 L150,240 L190,240 L190,270 L230,270 L230,240 L270,240 L270,270 L310,270 L310,240 L350,240 L390,240 L390,270 L430,270 L430,240 L470,240 L470,270 L510,270 L550,270 L550,240 L590,240" fill="none" stroke="#0e6f6c" stroke-width="2.2"/><text x="380" y="294" font-size="11.5" fill="#5b6876" text-anchor="middle">transición garantizada a la mitad de cada bit: el reloj nunca se pierde</text></svg>
+
+:::
+
+NRZ-L, siglas de *Non-Return-to-Zero-Level*, asigna un nivel de voltaje fijo a cada valor, alto para
+uno, bajo para cero, y ese nivel se mantiene durante todo el intervalo del bit. Es el esquema más
+simple de entender, pero tiene un problema serio, si la cadena de bits trae una racha larga del mismo
+valor, la señal se queda plana durante todo ese tramo, sin ninguna transición. Eso importa porque el
+receptor suele sincronizar su reloj interno con las transiciones de la señal, así que una racha larga
+sin transiciones es una racha larga sin forma de confirmar que el reloj del receptor sigue alineado con
+el del emisor.
+
+NRZ-I, *Non-Return-to-Zero-Invert*, cambia la regla, ya no importa el nivel sino la transición, un uno
+se representa con un cambio de nivel al inicio del bit, y un cero se representa con ausencia de cambio.
+Esto resuelve el problema de las rachas de unos, porque cada uno fuerza una transición, pero traslada
+exactamente el mismo problema a las rachas de ceros, que siguen sin producir ninguna transición.
+
+Manchester ataca el problema desde otro ángulo, garantiza una transición a la mitad de cada bit sin
+importar su valor, y esa transición sirve al mismo tiempo de reloj y de dato, alto a bajo para un valor
+y bajo a alto para el otro según la convención que se use. El costo es que Manchester necesita el doble
+de cambios de señal por segundo que NRZ para transmitir la misma cantidad de bits, así que ocupa más
+ancho de banda a cambio de una sincronización que nunca falla. Históricamente fue el esquema usado en
+las primeras versiones de Ethernet sobre cable de cobre, 10BASE-T y 10BASE5, según documenta Forouzan
+en el mismo capítulo.
+
+Manchester diferencial completa el cuadro, combinando la idea de NRZ-I con la de Manchester, la
+transición de mitad de bit sigue existiendo siempre y sirve solo de reloj, mientras que el dato se
+codifica por la presencia o ausencia de una transición adicional al inicio del intervalo. Su ventaja
+concreta es que no depende de saber cuál conductor es positivo y cuál es negativo, así que invertir por
+accidente los dos cables del enlace no rompe la comunicación, algo que sí rompe a NRZ-L.
+
+::: {.callout-tip}
+## Reto 1. Predice qué pasa con ocho ceros seguidos en NRZ-I
+
+Vas a transmitir la cadena de bits 00000000, ocho ceros seguidos, sobre un enlace que usa codificación
+NRZ-I. Antes de seguir leyendo, predice qué le pasa a la señal durante esos ocho bits.
+
+<label><input type="checkbox"> La señal se queda en un solo nivel de voltaje durante los ocho bits, sin ninguna transición</label>
+
+<label><input type="checkbox"> La señal alterna entre nivel alto y nivel bajo en cada bit, igual que si fueran ocho unos</label>
+
+<label><input type="checkbox"> NRZ-I detecta automáticamente el reloj sin importar la secuencia, porque para eso se diseñó</label>
+
+<label><input type="checkbox"> El enlace se corta porque ocho ceros seguidos no son una secuencia válida</label>
+
+Ahora responde en una frase, cuál de los cuatro esquemas de esta sección resolvería ese mismo problema
+garantizando una transición en cada bit, sin importar cuántos ceros o unos seguidos traiga la cadena.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La primera opción es la correcta. En NRZ-I, la transición representa un uno y la ausencia de
+transición representa un cero, así que ocho ceros seguidos producen ocho intervalos de bit sin ningún
+cambio de nivel, la señal queda plana durante todo ese tramo. Es exactamente el mismo problema que
+tenía NRZ-L con las rachas de unos, solo que trasladado a las rachas de ceros.
+
+El esquema que lo resuelve es Manchester, porque su transición de mitad de bit no depende del valor del
+bit, ocurre siempre, en cada intervalo, sin importar si el bit es cero o uno ni cuántos iguales vengan
+seguidos. El precio de esa garantía es que Manchester necesita el doble de cambios de señal por segundo
+que NRZ para la misma tasa de bits, así que ocupa más ancho de banda a cambio de nunca perder el reloj.
+:::
+
+## Cómo la modulación digital sube los bits a una portadora analógica
+
+Codificar línea funciona cuando el medio puede llevar una señal digital de un extremo al otro sin
+pasar por nada que solo acepte señales analógicas. Pero muchos medios, sobre todo el espectro de radio
+y las líneas telefónicas antiguas, solo transportan señales analógicas, y ahí los bits no se codifican
+directamente, se *modulan* sobre una onda portadora senoidal, cambiando alguna de sus tres propiedades,
+amplitud, frecuencia o fase, según el valor del bit. Para el nivel introductorio de este curso basta
+con entender la idea conceptual de tres técnicas clásicas, sin entrar en el detalle matemático completo
+de sus constelaciones de fase.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 420 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de ASK, FSK y PSK modulando los bits uno cero uno: ASK cambia la amplitud y apaga la portadora en el cero, FSK cambia la frecuencia, PSK cambia la fase" font-family="Segoe UI, Inter, system-ui, sans-serif"><text x="210" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Tres formas de modular los bits 1, 0, 1</text><g stroke="#cfd8e3" stroke-width="1" stroke-dasharray="3 3"><line x1="110" y1="26" x2="110" y2="280"/><line x1="190" y1="26" x2="190" y2="280"/><line x1="270" y1="26" x2="270" y2="280"/><line x1="350" y1="26" x2="350" y2="280"/></g><g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="150" y="26">1</text><text x="230" y="26">0</text><text x="310" y="26">1</text></g><text x="20" y="94" font-size="11.5" font-weight="600" fill="#5b6876">ASK</text><path d="M110,90 q5,-14 10,0 q5,14 10,0 q5,-14 10,0 q5,14 10,0 q5,-14 10,0 q5,14 10,0 q5,-14 10,0 q5,14 10,0" fill="none" stroke="#0e6f6c" stroke-width="2"/><line x1="190" y1="90" x2="270" y2="90" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="4 3"/><path d="M270,90 q5,-14 10,0 q5,14 10,0 q5,-14 10,0 q5,14 10,0 q5,-14 10,0 q5,14 10,0 q5,-14 10,0 q5,14 10,0" fill="none" stroke="#0e6f6c" stroke-width="2"/><text x="230" y="132" font-size="11" fill="#5b6876" text-anchor="middle">cambia la amplitud (0 = sin portadora, OOK)</text><text x="20" y="174" font-size="11.5" font-weight="600" fill="#5b6876">FSK</text><path d="M110,170 q3.34,-10 6.67,0 q3.34,10 6.67,0 q3.34,-10 6.67,0 q3.34,10 6.67,0 q3.34,-10 6.67,0 q3.34,10 6.67,0 q3.34,-10 6.67,0 q3.34,10 6.67,0 q3.34,-10 6.67,0 q3.34,10 6.67,0 q3.34,-10 6.67,0 q3.34,10 6.67,0" fill="none" stroke="#0e6f6c" stroke-width="2"/><path d="M190,170 q6.67,-10 13.34,0 q6.67,10 13.34,0 q6.67,-10 13.34,0 q6.67,10 13.34,0 q6.67,-10 13.34,0 q6.67,10 13.34,0" fill="none" stroke="#0e6f6c" stroke-width="2"/><path d="M270,170 q3.34,-10 6.67,0 q3.34,10 6.67,0 q3.34,-10 6.67,0 q3.34,10 6.67,0 q3.34,-10 6.67,0 q3.34,10 6.67,0 q3.34,-10 6.67,0 q3.34,10 6.67,0 q3.34,-10 6.67,0 q3.34,10 6.67,0 q3.34,-10 6.67,0 q3.34,10 6.67,0" fill="none" stroke="#0e6f6c" stroke-width="2"/><text x="230" y="212" font-size="11" fill="#5b6876" text-anchor="middle">cambia la frecuencia (más o menos ciclos por bit)</text><text x="20" y="254" font-size="11.5" font-weight="600" fill="#5b6876">PSK</text><path d="M110,250 q5,-12 10,0 q5,12 10,0 q5,-12 10,0 q5,12 10,0 q5,-12 10,0 q5,12 10,0 q5,-12 10,0 q5,12 10,0" fill="none" stroke="#0e6f6c" stroke-width="2"/><path d="M190,250 q5,12 10,0 q5,-12 10,0 q5,12 10,0 q5,-12 10,0 q5,12 10,0 q5,-12 10,0 q5,12 10,0 q5,-12 10,0" fill="none" stroke="#0e6f6c" stroke-width="2"/><path d="M270,250 q5,-12 10,0 q5,12 10,0 q5,-12 10,0 q5,12 10,0 q5,-12 10,0 q5,12 10,0 q5,-12 10,0 q5,12 10,0" fill="none" stroke="#0e6f6c" stroke-width="2"/><text x="230" y="292" font-size="11" fill="#5b6876" text-anchor="middle">cambia la fase (0 y 180 grados en BPSK)</text></svg>
+
+:::
+
+ASK, *Amplitude Shift Keying*, cambia la amplitud de la portadora. Su caso particular más usado es OOK,
+*On-Off Keying*, donde un uno se representa con la portadora presente y un cero con la portadora
+ausente. Es la técnica más simple de implementar, porque el receptor solo necesita detectar si hay
+energía o no la hay, pero es también la más sensible al ruido, porque cualquier interferencia que
+altere la amplitud puede hacer que un cero se lea como un uno o al revés.
+
+FSK, *Frequency Shift Keying*, cambia la frecuencia de la portadora, una frecuencia para representar
+uno y otra frecuencia distinta para representar cero. Es más robusta que ASK frente al ruido de
+amplitud, porque el receptor distingue los bits por cuál frecuencia detecta, no por cuánta energía hay,
+pero a cambio necesita más ancho de banda, porque las dos frecuencias usadas tienen que estar lo
+suficientemente separadas para que el receptor las distinga sin ambigüedad.
+
+PSK, *Phase Shift Keying*, cambia la fase de la portadora en vez de su amplitud o su frecuencia. La
+variante más simple es BPSK, con solo dos fases posibles, 0 y 180 grados, una para cada valor de bit.
+Con más fases disponibles, como en QPSK con cuatro fases, cada símbolo transmitido puede representar
+más de un bit, lo que aumenta la eficiencia sin necesidad de una tasa de símbolo más alta. PSK es más
+resistente al ruido que ASK y más eficiente en ancho de banda que ASK y FSK, pero su receptor es más
+complejo, porque necesita una referencia de fase precisa contra la cual comparar la señal recibida.
+
+Estas tres técnicas no son solo teoría de libro, conviven todos los días en sistemas que probablemente
+ya usaste. Piensa en el caso del GPS de cualquier teléfono. La señal civil L1 C/A del sistema GPS, la
+que usan los teléfonos y los navegadores comerciales, recorre más de veinte mil kilómetros desde el
+satélite hasta la antena del teléfono, y llega a la Tierra extremadamente débil después de ese
+trayecto. La pregunta de análisis es por qué el diseño de esa señal eligió BPSK, la modulación más
+simple de las tres presentadas en esta guía, en vez de una técnica que aproveche más fases o más
+niveles para transmitir más bits por símbolo. La respuesta está en la robustez frente al ruido y no en
+la eficiencia, porque BPSK es la técnica de esta guía más resistente al ruido cuando la señal recibida
+es tan débil, así que sacrificar velocidad a cambio de resistencia es la decisión correcta para una
+señal que ha perdido casi toda su energía en el camino. La señal L1 C/A se modula con BPSK sobre una
+portadora de 1575.42 MHz, según la especificación oficial de la señal publicada por GPS.gov.
+
+Del otro extremo está el caso de estudio de los módulos de radiofrecuencia de 433 MHz que se usan en
+sensores IoT domésticos baratos, mandos de garaje y llaveros de auto. Estos módulos casi siempre usan
+ASK en su variante OOK, porque el transmisor solo necesita poder encender o apagar la portadora, lo que
+lo hace extremadamente barato de fabricar. La pregunta de análisis es por qué, entonces, protocolos IoT
+más exigentes como Zigbee o Thread no usan esta misma técnica tan barata. La respuesta está en la
+debilidad que ya se mencionó arriba, al depender solo de la amplitud, estos enlaces de 433 MHz son muy
+susceptibles a interferencia y ruido ambiental, lo que en la práctica produce recepciones erráticas.
+Documentación de fabricantes de gama baja suele mencionar alcances del orden de 30 a 100 metros en
+espacio abierto para estos módulos, una cifra que varía mucho según el equipo concreto y el entorno, y
+que aquí se cita solo como orden de magnitud, no como un dato certificado de una hoja técnica
+específica. El estándar IEEE 802.15.4, que es la base de Zigbee y de Thread, resuelve el mismo problema
+usando O-QPSK, una variante de PSK con espectro ensanchado, en la banda de 2.4 GHz, precisamente para
+lograr mayor robustez frente a la interferencia que ASK/OOK no puede ofrecer, aunque el mismo estándar
+también admite BPSK o GFSK en las bandas sub-GHz según la región, según documenta la propia norma IEEE
+802.15.4-2020.
+
+## El techo teórico que imponen los teoremas de Nyquist y Shannon
+
+Toda la sección anterior gira alrededor de una pregunta que todavía no se ha respondido con números,
+cuántos bits por segundo puede en verdad llevar un canal dado. Dos teoremas, formulados con veinte años
+de diferencia, la responden desde dos ángulos distintos, y antes de entrar en el detalle de cada uno
+conviene verlos comparados uno junto al otro.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Formula de Nyquist para canal sin ruido, formula de Shannon Hartley para canal con ruido como techo absoluto, y comparacion de como crece la capacidad al aumentar el ancho de banda de forma lineal frente a aumentar la relacion senal ruido de forma logaritmica" font-family="Segoe UI, Inter, system-ui, sans-serif"><text x="350" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">El límite de un canal: Nyquist ignora el ruido, Shannon no</text><rect x="40" y="34" width="290" height="80" rx="10" fill="#eef4fa" stroke="#c7d6e6"/><rect x="370" y="34" width="290" height="80" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/><g text-anchor="middle"><text x="185" y="56" font-size="12.5" font-weight="700" fill="#12324f">Nyquist (canal ideal, sin ruido)</text><text x="185" y="82" font-size="14" fill="#12324f" font-weight="600">C = 2 x B x log2(L)</text><text x="185" y="102" font-size="11.5" fill="#5b6876">L = niveles de señal usados</text><text x="515" y="56" font-size="12.5" font-weight="700" fill="#0e6f6c">Shannon-Hartley (canal real, con ruido)</text><text x="515" y="82" font-size="14" fill="#0e6f6c" font-weight="600">C = B x log2(1 + S/N)</text><text x="515" y="102" font-size="11.5" fill="#5b6876">S/N = relación señal a ruido</text></g><text x="350" y="134" font-size="11.5" fill="#5b6876" text-anchor="middle">Shannon es el techo absoluto: ninguna codificación ni modulación lo supera para un canal dado</text><text x="185" y="160" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">más ancho de banda B</text><g fill="#0e6f6c"><rect x="80" y="230" width="30" height="20"/><rect x="120" y="210" width="30" height="40"/><rect x="160" y="190" width="30" height="60"/><rect x="200" y="170" width="30" height="80"/></g><text x="185" y="264" font-size="11" fill="#5b6876" text-anchor="middle">crece de forma lineal: doblar B casi dobla la capacidad</text><text x="515" y="160" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">más relación S/N</text><g fill="#8fc9c5"><rect x="420" y="230" width="30" height="20"/><rect x="460" y="216" width="30" height="34"/><rect x="500" y="206" width="30" height="44"/><rect x="540" y="198" width="30" height="52"/></g><text x="515" y="264" font-size="11" fill="#5b6876" text-anchor="middle">crece de forma logarítmica: rendimientos decrecientes</text></svg>
+
+:::
+
+Harry Nyquist publicó en 1928 la respuesta para un canal ideal, uno que no tiene ruido. Para un canal
+de ese tipo, con ancho de banda B, la tasa máxima de datos que se puede transmitir sin error es
+
+C = 2 x B x log2(L)
+
+donde L es el número de niveles discretos de señal que se usan para representar los datos. La fórmula
+deja ver algo importante para la sección anterior sobre codificación de línea, si se usan más niveles
+de señal por símbolo, se pueden transmitir más bits sin necesidad de más ancho de banda, aunque eso
+tiene un costo práctico que Nyquist no modela, más niveles significa que el receptor tiene que
+distinguir diferencias de voltaje cada vez más pequeñas, y ahí es donde el ruido real del canal empieza
+a importar.
+
+Claude Shannon resolvió justo esa parte en 1948, con la fórmula que hoy se conoce como el teorema de
+Shannon-Hartley, para un canal real, afectado por ruido, con ancho de banda B y una relación señal a
+ruido S/N (la potencia de la señal dividida entre la potencia del ruido), la capacidad máxima teórica
+es
+
+C = B x log2(1 + S/N)
+
+Shannon no ignora el ruido como hacía Nyquist, lo incorpora, y por eso su fórmula es el techo absoluto,
+ninguna técnica de codificación de línea ni de modulación, por sofisticada que sea, puede superar la
+capacidad que predice esta fórmula para un canal dado. Hay además una asimetría útil para el diseño de
+redes, aumentar el ancho de banda B produce una mejora lineal en la capacidad, mientras que aumentar la
+relación señal a ruido produce una mejora logarítmica, de rendimientos decrecientes. Esa asimetría
+explica por qué las redes modernas, incluida la mayoría de la infraestructura de fibra óptica y de
+espectro celular, invierten primero en más ancho de banda antes que en más potencia de transmisión.
+
+Un caso real documentado deja ver que este límite no es una curiosidad académica, sino una restricción
+que millones de personas sintieron en carne propia al conectarse a internet por teléfono en los años
+noventa. Los módems telefónicos conocidos como "56K", bajo el estándar V.90, prometían en su nombre
+comercial una velocidad de bajada de 56 kbps, pero en la práctica quedaron limitados por regulación a
+un máximo cercano a 53 kbps en Estados Unidos, mientras que de subida el límite teórico rondaba los
+33.6 kbps, una cifra que aquí se cita como aproximación ilustrativa y no como un número de norma
+técnica exacto. La pregunta de análisis es por qué un canal de voz con apenas unos 3400 Hz de ancho de
+banda, que según la fórmula de Nyquist debería soportar una tasa mucho más alta si se usan suficientes
+niveles de señal, nunca llegó a los 56 kbps prometidos. La respuesta no está en el ancho de banda sino
+en el ruido, porque la conversión analógico-digital adicional que ocurría dentro de la central
+telefónica, cuando la señal del usuario se convertía a formato digital PCM, introducía ruido de
+cuantización que reducía la relación señal a ruido efectiva del enlace, y por la fórmula de Shannon,
+esa reducción en la relación señal a ruido bajaba con ella la capacidad alcanzable. Es un ejemplo
+citado en charlas técnicas del IEEE precisamente porque conecta una fórmula de 1948 con una limitación
+comercial muy real.
+
+::: {.callout-tip}
+## Reto 2. Calcula el techo de Nyquist
+
+Un canal telefónico clásico, el mismo tipo de canal que usaban los módems antiguos, tiene un ancho de
+banda aproximado de 3000 Hz, dentro del rango de voz de 300 a 3400 Hz que deja pasar la red telefónica.
+Si un enlace usa un esquema de línea con L = 8 niveles distintos de señal, la fórmula de Nyquist para
+un canal ideal sin ruido predice una capacidad máxima de:
+
+<label><input type="checkbox"> 9000 bps</label>
+
+<label><input type="checkbox"> 18000 bps</label>
+
+<label><input type="checkbox"> 24000 bps</label>
+
+<label><input type="checkbox"> 48000 bps</label>
+
+Antes de revisar la solución, escribe en una hoja el cálculo completo, con la fórmula y cada número
+sustituido, no solo el resultado final.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La fórmula de Nyquist es C = 2 x B x log2(L). Con B = 3000 Hz y L = 8, primero se calcula log2(8), que
+es 3, porque 2 elevado a 3 es 8. Sustituyendo,
+
+C = 2 x 3000 x 3 = 18000 bps
+
+La segunda opción, 18000 bps, es la correcta. La primera opción, 9000 bps, es el error típico de
+olvidar el factor 2 de la fórmula y calcular solo B x log2(L). Las otras dos opciones corresponden a
+errores de cálculo de log2(8).
+
+Vale la pena notar lo que este resultado no dice, es el techo de un canal ideal sin ruido. Un canal
+telefónico real siempre tiene ruido, así que la capacidad de Shannon para ese mismo canal, calculada
+con la relación señal a ruido real del enlace, va a ser más baja que estos 18000 bps. Ese es justo el
+fenómeno que explica por qué los módems 56K nunca alcanzaron su nombre comercial en la práctica.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] La diferencia entre dato y señal, y por qué la relación entre uno y otra no es fija
+- [ ] Por qué la transmisión digital regenera la señal con repetidores mientras que la analógica solo
+      la amplifica, ruido incluido
+- [ ] Qué es el ancho de banda y por qué limita la tasa de datos de cualquier canal
+- [ ] Cómo funcionan NRZ-L, NRZ-I, Manchester y Manchester diferencial, y por qué unos pierden el reloj
+      con ciertas secuencias de bits y otros no
+- [ ] La diferencia conceptual entre ASK, FSK y PSK, qué propiedad de la portadora cambia cada una, y
+      por qué unas son más simples y otras más robustas frente al ruido
+- [ ] La diferencia entre el teorema de Nyquist, para un canal ideal, y el de Shannon, para un canal
+      real con ruido, y por qué Shannon es siempre el límite más bajo de los dos
+- [ ] Cómo calcular la capacidad de un canal con la fórmula de Nyquist a partir de su ancho de banda y
+      su número de niveles de señal
+:::
+
+## Antes del Tema 3
+
+1. Con la fórmula de Nyquist, calcula la capacidad de un canal con B = 4000 Hz y L = 4 niveles.
+   Después calcula qué pasaría si L subiera a 16, sin cambiar el ancho de banda, y explica en una
+   frase por qué ese resultado tiene un límite práctico aunque la fórmula siga dando números más
+   grandes.
+2. Elige un dispositivo IoT que conozcas o que hayas visto mencionado en clase, e identifica qué
+   técnica de modulación o codificación probablemente usa, apoyándote en los casos de esta guía, GPS
+   con BPSK, módulos de 433 MHz con ASK/OOK, o Zigbee y Thread con O-QPSK.
+3. Dibuja a mano, sobre papel, la señal NRZ-I y la señal Manchester para la cadena de bits 10110001, y
+   verifica tu dibujo contra la lógica explicada en la sección de codificación de línea.
+
+Hoy abriste la caja del transmisor y viste cómo un bit se convierte en un pulso eléctrico o en una onda
+de radio. Lo que todavía falta es el otro lado de esa conversión, el medio físico por el que esa señal
+realmente viaja. El Tema 3 cierra la Unidad 1 con los medios de transmisión, guiados como el par
+trenzado, el cable coaxial y la fibra óptica, y no guiados como la radio, las microondas y el
+infrarrojo, sus características, su atenuación, y cuál de ellos se usa típicamente en redes IoT.
+
+## Recursos
+
+- Stallings, W. *Data and Computer Communications.* Capítulo 3, "Data Transmission". Material de
+  curso derivado del libro:
+  [UTSA CS 3413, Data Transmission](https://www.cs.utsa.edu/~korkmaz/teaching/cs3413/ppt/03-DataTransmission.ppt)
+- Forouzan, B. A. *Data Communications and Networking* (trad. *Transmisión de datos y redes de
+  comunicaciones*). Capítulos "Data and Signals" y "Digital Transmission". Bibliografía asignada por
+  la carta descriptiva de este curso; consultar la edición física o el PDF institucional del libro
+  para citar una página exacta.
+- Nyquist, H. (1928). "Certain Topics in Telegraph Transmission Theory". *Transactions of the American
+  Institute of Electrical Engineers*, 47(2), 617-644.
+  [Nyquist (1928), Certain Topics in Telegraph Transmission Theory, PDF](https://bayes.wustl.edu/Manual/CertainTopicsInTelegraphTransmissionTheory.pdf)
+- Shannon, C. E. (1948). "A Mathematical Theory of Communication". *Bell System Technical Journal*,
+  27, 379-423 y 623-656.
+  [Shannon (1948), A Mathematical Theory of Communication, PDF](https://ia803209.us.archive.org/27/items/bstj27-3-379/bstj27-3-379_text.pdf)
+- Tanenbaum, A. S. *Computer Networks*. Sección sobre la tasa máxima de datos de un canal, resumida en
+  material de curso de Carnegie Mellon:
+  [Carnegie Mellon CS 15-441, Physical Layer, PDF](http://www.cs.cmu.edu/afs/cs/academic/class/15441-s06/lectures/L04_Physical.pdf)
+- IEEE Standards Association. *IEEE 802.15.4-2020*, estándar de capa física para redes inalámbricas de
+  área personal de baja tasa, base de Zigbee y Thread, que define las modulaciones O-QPSK, BPSK y
+  GFSK: [IEEE 802.15.4-2020, pagina oficial del estandar](https://standards.ieee.org/ieee/802.15.4/7029/)
+- GPS.gov (Oficina oficial del Gobierno de Estados Unidos para GPS). "Global Positioning System
+  Standard Positioning Service Signal Specification":
+  [GPS.gov, Standard Positioning Service Signal Specification, PDF](https://www.gps.gov/sites/default/files/2025-07/1995-SPS-signal-specification.pdf)
+- IEEE Utah Section. "Beating the Shannon Limit in Voiceband Modems: The Case of the 56K Modem", charla
+  técnica sobre el caso aplicado del límite de Shannon en módems telefónicos:
+  [IEEE Utah Section, Beating the Shannon Limit, el caso del modem 56K](https://r6.ieee.org/utah/event/beating-the-shannon-limit-the-case-of-the-56k-modem/)
+- Purdue University, CS 422. Material de curso sobre transmisión de datos, codificación de línea y
+  modulación digital:
+  [Purdue University CS 422, transmision de datos, PDF](https://www.cs.purdue.edu/homes/park/cs422-datatrans-11s-pt5.pdf)
+- Kurose, J. F. y Ross, K. W. *Computer Networking: A Top-Down Approach.* Capítulo de capa física
+  (bibliografía general del curso; su enfoque "top-down" trata este tema de forma más breve que
+  Stallings o Forouzan, así que conviene revisar la edición física antes de citar una fórmula o un
+  número de página específico de este tema).
+
+::: {.pie-doc}
+Telemática para IoT (TPI01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

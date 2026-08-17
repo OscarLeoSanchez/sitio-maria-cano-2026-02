@@ -1,0 +1,580 @@
+---
+title: "Tema 2. Componentes lógicos, categorización y modos de operación"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                    |
+|--------|--------------------------------------------------------------------|
+| Unidad | Unidad 1. Tecnologías en desarrollo de aplicaciones para dispositivos móviles |
+| Tema   | Tema 2. Componentes lógicos, categorización y modos de operación    |
+:::
+
+El Tema 1 abrió el teléfono por fuera, con el SoC que empaqueta procesador, memoria y radios en un solo
+circuito, los sensores que miden inclinación y luz, y los transmisores que lo conectan a una red
+celular, a un WiFi o a otro dispositivo por Bluetooth. Todo eso es hardware, y el hardware por sí
+solo no ejecuta ninguna aplicación. Hoy cambias de capa. El tema de hoy explica el software que
+convierte ese hardware en una plataforma donde corren aplicaciones, cómo se organiza ese software en
+niveles, cómo se agrupan los dispositivos que lo usan, y qué hace el sistema con tu aplicación
+cuando el teléfono cambia de estado, por ejemplo cuando se queda quieto sobre la mesa o cuando el
+usuario activa el modo avión antes de un vuelo.
+
+## El sistema operativo como capa de software
+
+Un sistema operativo móvil es el software que administra el hardware del dispositivo (el procesador,
+la memoria, los sensores, las radios) y expone esas capacidades a las aplicaciones mediante interfaces
+de programación estandarizadas, conocidas como API. Sin esa capa intermedia, cada aplicación tendría
+que hablar directamente con el chip de la cámara o con el controlador del GPS de cada fabricante, lo
+que haría que una misma aplicación necesitara una versión distinta por cada modelo de teléfono.
+
+Android e iOS resuelven ese problema con la misma estrategia general, aunque con nombres distintos,
+ya que organizan su software en una pila de capas, cada una construida sobre la anterior, de modo que
+la capa de más abajo es la única que toca el hardware de verdad y todo lo que está encima son
+abstracciones sucesivas sobre esa capa base. Vale la pena fijar esa idea, la capa inferior toca el
+metal y las capas superiores solo hablan con la capa inmediatamente debajo, antes de ver los nombres
+propios de cada plataforma.
+
+## Las capas de Android, del kernel a las apps
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pila de capas de Android de arriba a abajo: apps del sistema y de terceros, framework de API de Java, bibliotecas nativas en C y C++ junto con Android Runtime en el mismo nivel, capa de abstraccion de hardware HAL, y kernel de Linux en la base como unica capa con acceso directo al hardware" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Android organiza su software en capas, cada una construida sobre la anterior</text>
+  <rect x="40" y="28" width="620" height="42" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="40" y="80" width="620" height="42" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="40" y="132" width="300" height="46" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="360" y="132" width="300" height="46" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="40" y="188" width="620" height="42" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="40" y="240" width="620" height="46" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle">
+    <text x="350" y="53" font-size="14" font-weight="700" fill="#12324f">Apps del sistema y de terceros</text>
+    <text x="350" y="105" font-size="13.5" font-weight="600" fill="#12324f">Framework de API de Java</text>
+    <text x="190" y="152" font-size="12.5" font-weight="600" fill="#12324f">Bibliotecas nativas C/C++</text>
+    <text x="190" y="169" font-size="11" fill="#5b6876">por ejemplo OpenGL ES</text>
+    <text x="510" y="152" font-size="12.5" font-weight="600" fill="#12324f">Android Runtime (ART)</text>
+    <text x="510" y="169" font-size="11" fill="#5b6876">ejecuta bytecode DEX, un proceso por app</text>
+    <text x="350" y="213" font-size="13.5" font-weight="600" fill="#12324f">HAL, capa de abstracción de hardware</text>
+    <text x="350" y="267" font-size="14.5" font-weight="700" fill="#0e6f6c">Kernel de Linux</text>
+  </g>
+  <text x="350" y="304" font-size="11.5" fill="#5b6876" text-anchor="middle">Única capa con acceso directo al hardware; todo lo de arriba son abstracciones sucesivas</text>
+</svg>
+
+:::
+
+La documentación oficial de Android describe cada capa con una responsabilidad concreta. El kernel de
+Linux es la base, provee gestión de memoria de bajo nivel, manejo de hilos y el modelo de seguridad
+de procesos, y además define la interfaz de drivers de hardware que usan los fabricantes para escribir
+sus controladores sin tocar las capas de arriba. Justo encima está la HAL (Hardware Abstraction
+Layer), un conjunto de módulos de biblioteca donde cada módulo implementa la interfaz de un tipo de
+componente, la cámara, el Bluetooth, un sensor, de modo que Android puede hablar con cualquier
+fabricante sin conocer los detalles internos de su chip.
+
+El Android Runtime, ART, es la máquina que ejecuta cada aplicación. Desde Android 5.0 (API 21) cada
+app corre en su propio proceso con su propia instancia de ART, que ejecuta archivos en formato DEX
+(Dalvik Executable), un bytecode pensado para ocupar poca memoria, combinando compilación anticipada
+(AOT) con compilación justo a tiempo (JIT) y un recolector de basura propio. Al lado de ART, en el
+mismo nivel, viven las bibliotecas nativas en C y C++, que son las piezas centrales del sistema, el
+propio ART y la HAL están construidas ahí, y a las que un desarrollador puede llegar mediante el
+Android NDK, por ejemplo para gráficos con OpenGL ES.
+
+Encima de todo eso está el framework de API de Java, la capa que un desarrollador de Android toca con
+más frecuencia, porque expone el sistema de vistas, el gestor de recursos, el gestor de
+notificaciones, el gestor de actividades que controla el ciclo de vida de cada pantalla, y los
+proveedores de contenido que dejan a una app compartir datos con otra. Arriba del todo están las apps
+del sistema, correo, SMS, calendario, navegador, que no tienen ningún estatus especial salvo Ajustes,
+la única que el sistema no permite reemplazar, ya que cualquier app de terceros puede reemplazar la
+implementación por defecto de las demás, por ejemplo instalando otro navegador como predeterminado.
+
+## Las capas de iOS, el mismo patrón con otro nombre
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pila de capas de iOS de arriba a abajo: Cocoa Touch con las APIs de interfaz, Media con graficos audio y video, Core Services con los servicios fundamentales, y Core OS en la base interactuando directamente con el hardware" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">iOS organiza su software en capas, con la misma logica de Android</text>
+  <rect x="40" y="28" width="620" height="48" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="40" y="84" width="620" height="48" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="40" y="140" width="620" height="48" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="40" y="196" width="620" height="52" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle">
+    <text x="350" y="56" font-size="14" font-weight="700" fill="#12324f">Cocoa Touch</text>
+    <text x="350" y="72" font-size="11" fill="#5b6876">interfaz, gestos, procesamiento en segundo plano; incluye UIKit</text>
+    <text x="350" y="112" font-size="13.5" font-weight="600" fill="#12324f">Media</text>
+    <text x="350" y="128" font-size="11" fill="#5b6876">gráficos, audio y video: Core Graphics, Metal, AV Foundation</text>
+    <text x="350" y="168" font-size="13.5" font-weight="600" fill="#12324f">Core Services</text>
+    <text x="350" y="184" font-size="11" fill="#5b6876">servicios fundamentales que usan las apps nativas</text>
+    <text x="350" y="226" font-size="14.5" font-weight="700" fill="#0e6f6c">Core OS</text>
+    <text x="350" y="242" font-size="11" fill="#eaf5f4">memoria, archivos, red; interactúa directo con el hardware</text>
+  </g>
+  <text x="350" y="284" font-size="11.5" fill="#5b6876" text-anchor="middle">Cocoa Touch es la capa que más toca un desarrollador; Core OS es la única que toca el hardware</text>
+</svg>
+
+:::
+
+La documentación técnica de Apple describe la misma lógica de capas con otros cuatro nombres. Core OS
+es la base, gestiona memoria, sistema de archivos, redes y otras tareas del sistema operativo, e
+interactúa directamente con el hardware. Encima está Core Services, que administra los servicios
+fundamentales que usan las aplicaciones nativas y ofrece una abstracción sobre lo que provee Core OS.
+La capa de Media agrupa gráficos, audio y video, con frameworks como Core Graphics, Metal (y antes
+OpenGL ES) y AV Foundation. Arriba del todo está Cocoa Touch, la capa que un desarrollador de iOS toca
+con más frecuencia, porque ahí vive UIKit, el framework que define los objetos de interfaz y el
+comportamiento de la app, el manejo de eventos táctiles y el dibujo en pantalla.
+
+Compara los dos diagramas y fíjate en la idea que sobrevive al cambio de nombres, ya que en Android el
+kernel de Linux es la única capa con acceso directo al hardware, y en iOS ese papel lo cumple Core OS. Todo
+lo que está por encima, en cualquiera de las dos plataformas, es una abstracción construida sobre esa
+capa base. Por eso una aplicación normal, en cualquiera de los dos sistemas, no puede tocar el
+hardware directamente, tiene que pasar por el framework de arriba, que a su vez pasa por las capas
+intermedias hasta llegar al kernel o a Core OS.
+
+## Cómo se agrupan los dispositivos móviles
+
+No existe una norma única, tipo ISO, que clasifique de forma oficial y universal un dispositivo como
+smartphone, tablet o wearable. Lo que sí existe, y es lo que de verdad usan la industria y las dos
+plataformas dominantes, es una categorización funcional según la forma física del dispositivo (en
+inglés, *form factor*) y según el uso que se le da, no una clasificación regulatoria con número de
+norma.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos ecosistemas organizados por forma fisica del dispositivo: Android cubre telefonos y tablets con la misma base y perfiles distintos, mas Wear OS para wearables, Android TV y Android Auto; Apple separa iOS para iPhone, iPadOS para iPad y watchOS para Apple Watch, cada uno documentado como plataforma independiente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="360" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cada ecosistema agrupa sus dispositivos por forma física y por uso</text>
+  <rect x="20" y="34" width="330" height="222" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="370" y="34" width="330" height="222" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="185" y="56" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Android (un solo SO, varios perfiles)</text>
+  <text x="535" y="56" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Apple (un SO distinto por forma)</text>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="36" y="70" width="140" height="52" rx="9"/>
+    <rect x="184" y="70" width="150" height="52" rx="9"/>
+    <rect x="36" y="132" width="140" height="52" rx="9"/>
+    <rect x="184" y="132" width="150" height="52" rx="9"/>
+  </g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="36" y="194" width="298" height="48" rx="9"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="386" y="70" width="298" height="52" rx="9"/>
+    <rect x="386" y="132" width="298" height="52" rx="9"/>
+  </g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="386" y="194" width="298" height="48" rx="9"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f">
+    <text x="106" y="92">Teléfono</text><text x="106" y="108" font-size="11" fill="#5b6876">Android base</text>
+    <text x="259" y="92">Tablet</text><text x="259" y="108" font-size="11" fill="#5b6876">misma base Android</text>
+    <text x="106" y="154">Android TV</text><text x="106" y="170" font-size="11" fill="#5b6876">perfil para TV</text>
+    <text x="259" y="154">Android Auto</text><text x="259" y="170" font-size="11" fill="#5b6876">perfil para el carro</text>
+  </g>
+  <text x="185" y="222" font-size="13" font-weight="600" fill="#0e6f6c" text-anchor="middle">Wear OS</text>
+  <text x="185" y="238" font-size="11" fill="#3c7d7a" text-anchor="middle">wearable, SDK y guías propias</text>
+  <g text-anchor="middle" font-size="12" fill="#12324f">
+    <text x="535" y="92">iOS</text><text x="535" y="108" font-size="11" fill="#5b6876">plataforma del iPhone</text>
+    <text x="535" y="154">iPadOS</text><text x="535" y="170" font-size="11" fill="#5b6876">plataforma del iPad</text>
+  </g>
+  <text x="535" y="214" font-size="13" font-weight="600" fill="#0e6f6c" text-anchor="middle">watchOS</text>
+  <text x="535" y="230" font-size="11" fill="#3c7d7a" text-anchor="middle">wearable, plataforma del Apple Watch</text>
+</svg>
+
+:::
+
+Android trata la diferencia de forma como parte de su estrategia multidispositivo, con un SDK y unas
+guías de diseño propias para teléfonos y tablets, para Wear OS (los wearables), para Android TV y
+para Android Auto. Apple va un paso más allá y separa el sistema operativo mismo según el dispositivo:
+iOS para el iPhone, iPadOS para el iPad y watchOS para el Apple Watch, cada uno documentado como una
+plataforma independiente en Apple Developer, aunque las tres compartan Core OS y buena parte de los
+frameworks base descritos en la sección anterior.
+
+Diferenciar teléfono de tablet dentro de Android tiene además una historia técnica concreta que vale
+la pena conocer. Durante años, el manifiesto de una app declaraba el atributo `<supports-screens>` y
+usaba el calificador `smallestWidth`, por ejemplo `sw600dp` para una tablet de 7 pulgadas o `sw720dp`
+para una de 10, para decidir que layout mostrar. El enfoque moderno, documentado por Android
+Developers, son las *window size classes* (compacta, media, expandida), y la propia documentación
+oficial aclara algo que sorprende a quien programa pensando en "si es tablet, hago esto", ya que esas
+clases de tamaño no están pensadas para preguntar si un dispositivo es una tablet, sino para adaptar el
+layout al espacio disponible en pantalla, que no es lo mismo. Un teléfono grande en modo horizontal
+puede caer en la misma clase de tamaño que una tablet pequeña, así que decidir el layout por
+categoría de dispositivo es, cada vez más, la forma equivocada de resolver el problema.
+
+Para los wearables sí existe una referencia formal y citable, aunque acotada a esa categoría, la norma
+IEEE 360-2022, *IEEE Standard for Wearable Consumer Electronic Devices*, ya que define terminología y
+arquitectura comunes y sirve de paraguas para especificaciones técnicas posteriores sobre seguridad,
+idoneidad de uso y áreas funcionales como salud, actividad física e infoentretenimiento. La literatura técnica
+sobre wearables también los clasifica por donde se llevan puestos: dispositivos de cabeza (gafas,
+cascos), de tronco (prendas), de mano o muñeca (relojes, brazaletes) y de pie (calzado, calcetines).
+Ninguna de esas dos referencias reemplaza a una norma ISO de categorización general de dispositivos
+móviles, porque esa norma general, hasta donde alcanza esta investigación, no existe.
+
+## Dos niveles de "modo de operación" que conviene no mezclar
+
+La expresión "modo de operación" se usa en la práctica para dos cosas distintas, y mezclarlas es el
+error más común al estudiar este tema. Por un lado están los *estados de ejecución de una aplicación*,
+que el sistema operativo controla app por app, mientras el resto del teléfono sigue funcionando con
+normalidad. Por otro lado están los *modos de operación del dispositivo completo*, como el ahorro de
+energía o el modo avión, que afectan a todas las apps y a todas las radios a la vez, sin importar cuál
+está en pantalla en ese momento.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de alcance: a la izquierda un estado de app afecta solo a esa aplicacion mientras las demas siguen igual; a la derecha un modo de dispositivo como ahorro de energia o modo avion afecta a todas las apps y a todas las radios del telefono a la vez" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Un alcance distinto para la app y para el teléfono completo</text>
+  <rect x="20" y="32" width="320" height="168" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="360" y="32" width="320" height="168" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="180" y="54" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Estado de la app</text>
+  <text x="520" y="54" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Modo del dispositivo</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="130" y="70" width="100" height="60" rx="9"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="36" y="70" width="80" height="60" rx="9"/><rect x="244" y="70" width="80" height="60" rx="9"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="76" y="104">app B</text><text x="284" y="104">app C</text></g>
+  <text x="180" y="100" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">app A</text>
+  <text x="180" y="116" font-size="11" fill="#3c7d7a" text-anchor="middle">en pausa</text>
+  <text x="180" y="156" font-size="11.5" fill="#5b6876" text-anchor="middle">solo app A cambia de estado</text>
+  <text x="180" y="176" font-size="11.5" fill="#5b6876" text-anchor="middle">B y C siguen igual que antes</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="376" y="70" width="288" height="60" rx="9"/></g>
+  <text x="520" y="94" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">todas las apps A, B y C</text>
+  <text x="520" y="112" font-size="11" fill="#3c7d7a" text-anchor="middle">y las radios celular, WiFi, Bluetooth</text>
+  <text x="520" y="156" font-size="11.5" fill="#5b6876" text-anchor="middle">el cambio aplica al teléfono entero</text>
+  <text x="520" y="176" font-size="11.5" fill="#5b6876" text-anchor="middle">sin distinguir qué app está activa</text>
+</svg>
+
+:::
+
+Las siguientes dos secciones cubren el primer nivel, el estado de la app, en Android y en iOS. Después
+de eso llega el segundo nivel, el modo avión y el ahorro de energía, que es donde aparecen los casos
+más interesantes de este tema, incluido uno donde el diseño de una aplicación choca de frente contra
+la política de ahorro de energía del sistema.
+
+## El ciclo de vida de una app en Android
+
+Android controla el estado de cada actividad (cada pantalla de una app) mediante una secuencia fija de
+callbacks que invoca el propio sistema, no el código de la app, y que decide en qué momento la
+actividad puede interactuar con el usuario y cuándo pasa a segundo plano.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ciclo de vida de una actividad en Android: onCreate, onStart y onResume llevan al estado Resumed en primer plano; onPause y onStop la llevan a segundo plano; una flecha de vuelta desde onStop hacia onStart representa el reinicio cuando el usuario regresa, y onDestroy termina el ciclo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov1t2a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="360" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Callbacks del ciclo de vida de una actividad en Android</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="60" width="108" height="46" rx="9"/><rect x="150" y="60" width="108" height="46" rx="9"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="280" y="60" width="120" height="46" rx="9"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="422" y="60" width="108" height="46" rx="9"/><rect x="552" y="60" width="108" height="46" rx="9"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="290" y="180" width="140" height="46" rx="9"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f">
+    <text x="74" y="88">onCreate()</text><text x="204" y="88">onStart()</text><text x="340" y="82">onResume()</text>
+    <text x="340" y="98" font-size="11" fill="#0e6f6c">estado Resumed</text>
+    <text x="476" y="88">onPause()</text><text x="606" y="88">onStop()</text><text x="360" y="207">onDestroy()</text>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov1t2a)">
+    <path d="M128,83 L146,83"/><path d="M258,83 L276,83"/><path d="M400,83 L418,83"/><path d="M530,83 L548,83"/>
+    <path d="M606,106 L400,180"/>
+  </g>
+  <path d="M552,106 C420,150 300,150 258,108" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#lenmov1t2a)"/>
+  <text x="405" y="140" font-size="11" fill="#5b6876">el usuario vuelve y el sistema llama onStart() de nuevo, sin pasar por onCreate()</text>
+  <text x="360" y="248" font-size="11.5" fill="#5b6876" text-anchor="middle">Fuera de Resumed la actividad está en segundo plano o ya no existe</text>
+</svg>
+
+:::
+
+La secuencia recorre `onCreate()`, `onStart()`, `onResume()`, `onPause()`, `onStop()` y `onDestroy()`.
+El estado *Resumed*, el que se alcanza después de `onResume()`, es el único en el que la actividad está
+en primer plano interactuando con el usuario; sale de ahí en cuanto algo le quita el foco, una llamada
+entrante, la navegación a otra actividad o que el usuario apague la pantalla.
+
+Ese detalle de la flecha punteada es justo el que sorprende a quien recién empieza. Cuando el usuario
+sale de una app con el botón de inicio y vuelve un rato después, Android no vuelve a llamar a
+`onCreate()`, porque la actividad nunca llegó a `onDestroy()`, solo llegó hasta `onStop()`. El sistema
+retoma desde `onStart()`, así que cualquier inicialización pesada que solo debería correr una vez
+tiene que vivir en `onCreate()`, no en `onStart()`, o se repetirá cada vez que el usuario regrese.
+
+## Los cinco estados de una app en iOS
+
+La documentación de Apple sobre el ciclo de vida de una app, dentro de UIKit y del delegado
+`UIApplicationDelegate`, distingue cinco estados posibles para saber cuánto puede hacer una app en
+cada momento.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco estados de una app en iOS: Not running, Inactive de transicion, Active en primer plano, Background ejecutando trabajo pendiente y Suspended en memoria sin ejecutar codigo; el sistema puede terminar una app suspendida sin avisar" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov1t2b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="360" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Los cinco estados de una app según Apple</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="10" y="60" width="118" height="56" rx="9"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="152" y="60" width="118" height="56" rx="9"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="294" y="60" width="118" height="56" rx="9"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="436" y="60" width="118" height="56" rx="9"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="578" y="60" width="132" height="56" rx="9"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f">
+    <text x="69" y="84">Not running</text><text x="69" y="100" font-size="11" fill="#5b6876">no lanzada o terminada</text>
+    <text x="211" y="84">Inactive</text><text x="211" y="100" font-size="11" fill="#5b6876">transición, sin eventos</text>
+    <text x="353" y="84" font-weight="700" fill="#0e6f6c">Active</text><text x="353" y="100" font-size="11" fill="#3c7d7a">primer plano normal</text>
+    <text x="495" y="84">Background</text><text x="495" y="100" font-size="11" fill="#5b6876">ejecuta trabajo pendiente</text>
+    <text x="644" y="84">Suspended</text><text x="644" y="100" font-size="11" fill="#5b6876">en memoria, sin ejecutar</text>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov1t2b)">
+    <path d="M128,88 L150,88"/><path d="M270,88 L292,88"/><path d="M412,88 L434,88"/><path d="M554,88 L576,88"/>
+  </g>
+  <path d="M69,60 C69,-4 353,-4 353,58" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#lenmov1t2b)" transform="translate(0,20)"/>
+  <text x="360" y="150" font-size="11" fill="#5b6876" text-anchor="middle">cuando se abre la app, Not running pasa a Inactive y de ahí a Active</text>
+  <text x="360" y="188" font-size="11.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">Suspended puede terminar sin avisar si el sistema necesita esa memoria</text>
+  <text x="360" y="212" font-size="11" fill="#5b6876" text-anchor="middle">no hay callback garantizado en ese momento, por eso no debe guardarse ahí trabajo crítico</text>
+</svg>
+
+:::
+
+*Not running* es una app que no se ha lanzado o que el sistema terminó. *Inactive* es un estado de
+transición, en primer plano pero sin recibir eventos todavía, por ejemplo el instante en que entra una
+llamada mientras la app está abierta. *Active* es el estado normal en primer plano, procesando eventos
+con normalidad. *Background* significa que la app sigue ejecutando código porque tiene trabajo
+pendiente, y en cuanto ese trabajo termina o se acaba el tiempo permitido, el sistema la pasa a
+*Suspended*, en memoria pero sin ejecutar ni una línea de código, y en ese estado el sistema puede
+terminarla sin avisar si necesita liberar memoria para otra cosa.
+
+::: {.callout-tip}
+## Reto 1. Predice el estado
+
+Estás usando una app de mensajería en tu iPhone, en primer plano, cuando entra una llamada telefónica.
+Contestas la llamada y, mientras hablas, presionas el botón de inicio para revisar el calendario.
+Marca en qué estado queda la app de mensajería en cada momento de esta secuencia.
+
+- **Momento 1**, suena la llamada mientras miras la app, antes de contestar.
+
+<label><input type="checkbox"> Active</label>
+<label><input type="checkbox"> Inactive</label>
+<label><input type="checkbox"> Background</label>
+
+- **Momento 2**, contestas la llamada y sigues sin tocar el botón de inicio.
+
+<label><input type="checkbox"> Active</label>
+<label><input type="checkbox"> Background</label>
+<label><input type="checkbox"> Suspended</label>
+
+- **Momento 3**, presionas el botón de inicio para abrir el calendario.
+
+<label><input type="checkbox"> Inactive, para siempre mientras no la abras de nuevo</label>
+<label><input type="checkbox"> Background y después Suspended</label>
+<label><input type="checkbox"> Not running de inmediato</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+- **Momento 1, Inactive.** La llamada entrante interrumpe la interacción normal pero la app de
+  mensajería sigue en primer plano por una fracción de segundo, en transición, sin procesar eventos
+  todavía. Ese es exactamente el ejemplo que usa la documentación de Apple para describir Inactive.
+- **Momento 2, Background.** En cuanto contestas, la pantalla de llamada toma el primer plano y la app
+  de mensajería pasa a segundo plano, ejecutando código solo si tiene trabajo pendiente, por ejemplo
+  terminar de guardar un mensaje a medio escribir.
+- **Momento 3, Background y después Suspended.** Al abrir el calendario la app de mensajería sigue en
+  Background mientras le queda trabajo por terminar, y en cuanto ese trabajo se acaba, o se agota el
+  tiempo que el sistema le da, pasa a Suspended, en memoria pero sin ejecutar ni una línea, hasta que
+  el usuario la abra de nuevo o el sistema decida liberar esa memoria. No pasa a Not running de
+  inmediato, porque ese estado es para cuando el sistema ya la terminó, no mientras solo está
+  esperando en memoria.
+:::
+
+## Modo avión, una decisión regulatoria antes que una de batería
+
+El modo avión suspende la transmisión de todas las tecnologías de radiofrecuencia del dispositivo a
+la vez, la radio celular, el WiFi y el Bluetooth, y tanto Android como iOS documentan esta función
+como algo que el usuario activa manualmente (o que se activa de forma automática en ciertos
+contextos), permitiendo después reactivar el WiFi o el Bluetooth de forma selectiva sin salir del
+modo avión.
+
+Su origen no es de ahorro de energía, aunque coloquialmente también se use para eso, sino regulatorio.
+La documentación de soporte de Apple y de Android, junto con reportes técnicos consistentes, ubican el
+origen de esta restricción en una decisión de la FCC (la Comisión Federal de Comunicaciones de
+Estados Unidos), que en 1991 prohibió el uso en vuelo de teléfonos celulares y otros dispositivos
+inalámbricos por el riesgo de interferencia con los sistemas de la aeronave, ya que a mayor altitud el
+teléfono intenta, con más potencia, encontrar torres celulares cada vez más lejanas. Esta guía no cita
+el número exacto del reglamento (47 CFR) porque esa cifra específica no se pudo verificar en la fuente
+primaria de la FCC durante la preparación de este material; si necesitas ese número exacto para un
+trabajo, revísalo directamente en fcc.gov antes de citarlo.
+
+## Doze y App Standby, el ahorro de energía de Android
+
+Android administra el ahorro de energía con dos mecanismos, documentados en la guía oficial de
+optimización para Doze y App Standby, que actúan en momentos distintos. *Doze* se activa cuando el
+dispositivo queda desconectado de la corriente, inmóvil y con la pantalla apagada durante un tiempo,
+mientras que *App Standby* es independiente del estado general del teléfono, y actúa sobre una app
+específica cuando el sistema determina que el usuario lleva un rato sin interactuar con ella.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ciclo de Doze: el dispositivo desconectado, inmovil y con pantalla apagada entra en Doze, suspende red, ignora wake locks y difiere alarmas y trabajos; periodicamente abre una ventana de mantenimiento breve para completar ese trabajo pendiente y vuelve a dormir por un periodo mas largo; se mueve, enciende pantalla o se conecta al cargador y sale por completo de Doze" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov1t2c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="360" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Doze alterna entre reposo profundo y ventanas breves de mantenimiento</text>
+  <rect x="20" y="36" width="230" height="82" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="135" y="58" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Condiciones de entrada</text>
+  <text x="135" y="78" font-size="11" fill="#5b6876" text-anchor="middle">sin cargador, inmóvil,</text>
+  <text x="135" y="94" font-size="11" fill="#5b6876" text-anchor="middle">pantalla apagada un rato</text>
+  <path d="M250,77 L292,77" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov1t2c)"/>
+  <rect x="300" y="36" width="200" height="82" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="400" y="58" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Doze profundo</text>
+  <text x="400" y="78" font-size="11" fill="#3c7d7a" text-anchor="middle">red suspendida, wake locks</text>
+  <text x="400" y="94" font-size="11" fill="#3c7d7a" text-anchor="middle">ignorados, alarmas diferidas</text>
+  <path d="M500,77 L542,77" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov1t2c)"/>
+  <rect x="550" y="36" width="150" height="82" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="625" y="58" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Ventana breve</text>
+  <text x="625" y="78" font-size="11" fill="#5b6876" text-anchor="middle">sync, jobs y alarmas</text>
+  <text x="625" y="94" font-size="11" fill="#5b6876" text-anchor="middle">pendientes se resuelven</text>
+  <path d="M625,118 C625,150 400,150 400,120" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#lenmov1t2c)"/>
+  <text x="512" y="145" font-size="11" fill="#5b6876" text-anchor="middle">vuelve a Doze, por un período cada vez más largo</text>
+  <rect x="230" y="170" width="270" height="60" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="365" y="192" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Salida completa de Doze</text>
+  <text x="365" y="210" font-size="11" fill="#5b6876" text-anchor="middle">el usuario mueve el teléfono, enciende la</text>
+  <text x="365" y="224" font-size="11" fill="#5b6876" text-anchor="middle">pantalla, o lo conecta a un cargador</text>
+</svg>
+
+:::
+
+Dentro de la fase profunda de Doze, el sistema suspende el acceso a red, ignora los *wake locks* que
+mantendrían el procesador despierto, no realiza escaneos de WiFi, y no deja correr *sync adapters* ni
+trabajos programados con `JobScheduler` o `WorkManager`. Las alarmas normales de `AlarmManager` se
+difieren también, con dos excepciones documentadas: `setAndAllowWhileIdle()` y
+`setExactAndAllowWhileIdle()` siguen disparando, pero limitadas a una vez cada nueve minutos por app, y
+`setAlarmClock()`, pensada para alarmas de reloj que el usuario espera que suenen sin falta, dispara
+con normalidad. Periódicamente el sistema abre una ventana de mantenimiento breve donde toda esa cola
+de trabajo pendiente se completa de una vez, y luego vuelve a dormir por un período cada vez más
+largo, hasta que el usuario mueve el teléfono, enciende la pantalla o lo conecta a un cargador, momento
+en el que Doze se desactiva por completo.
+
+Existe un patrón de diseño que Google recomienda, en lugar de pelear contra Doze, para apps que
+necesitan avisar al usuario en cuanto llega algo nuevo, como una app de mensajería, y consiste en usar
+Firebase Cloud Messaging (FCM) con mensajes de alta prioridad. Incluso dentro de Doze, el sistema entrega ese
+mensaje y le da a la app acceso temporal a la red y un *wake lock* parcial para procesarlo, y después
+regresa el dispositivo a su estado inactivo. La app nunca necesita mantener su propia conexión
+persistente, que sí quedaría bloqueada por Doze, porque el sistema le abre una ventana exacta cuando
+hay algo que entregar.
+
+::: {.callout-tip}
+## Reto 2. Encuentra los errores de diseño
+
+Un compañero de equipo está construyendo una app de chat para Android y te muestra su plan. La app
+abre un socket propio hacia su servidor apenas se instala, mantiene ese socket abierto todo el tiempo
+con un *wake lock* parcial adquirido en segundo plano para que el sistema nunca apague el radio de
+red, y además planea pedirle al usuario, desde la primera pantalla, que desactive la optimización de
+batería para su app mediante `ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`.
+
+Antes de seguir leyendo, identifica al menos dos problemas concretos que este diseño va a tener en un
+teléfono real, y explica por qué el tercer paso, pedir la exención de optimización de batería, no
+resuelve el problema de fondo.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+- **Primer problema, el socket se rompe en cuanto el teléfono entra en Doze.** La app asumió que un
+  *wake lock* mantiene la red disponible para siempre, pero dentro de Doze el acceso a red se suspende
+  sin importar cuántos *wake locks* parciales tenga adquiridos la app, así que el socket se cae de
+  todas formas, y la app nunca se entera hasta que Doze termine y ella siga corriendo, si es que sigue
+  corriendo.
+- **Segundo problema, si el dispositivo no entra en Doze pero la app queda inactiva, entra en App
+  Standby**, que es un mecanismo aparte y actúa sobre esa app en particular, restringiéndole el acceso
+  a red y difiriendo sus tareas programadas aunque el resto del teléfono siga funcionando con
+  normalidad.
+- **Sobre pedir la exención de optimización de batería**, la política de Google Play para
+  `ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` solo permite pedirla cuando la función central de la
+  app se vería afectada de verdad sin ella, como una app VOIP que necesita audio en tiempo real, y no
+  la concede para casos como mensajería instantánea, que la propia política espera que resuelva con
+  FCM de alta prioridad, exactamente como se explicó arriba. Pedirle al usuario esa exención desde la
+  primera pantalla, además de no resolver Doze ni App Standby de forma confiable, es justo el tipo de
+  petición que Play Store puede rechazar en revisión. La corrección real no es pelear con más
+  permisos, es rediseñar la app para recibir sus mensajes por FCM en vez de mantener un socket propio.
+:::
+
+## Low Power Mode, el ahorro de energía de iOS
+
+Apple resuelve el mismo problema, batería baja, con un mecanismo más simple de explicar, Low Power
+Mode. Según el soporte oficial de Apple, este modo reduce el consumo de batería optimizando el
+dispositivo para las tareas esenciales, llamadas, correo, mensajes e internet, mediante varias
+medidas a la vez, reduce el rendimiento de CPU y GPU, baja el brillo de la pantalla, pausa actividades
+discrecionales y en segundo plano, y en los modelos con pantalla ProMotion limita la tasa de refresco
+a 60 Hz. El modo se apaga automáticamente en cuanto el dispositivo se carga al 80% o más, y en los
+dispositivos compatibles con la función Adaptive Power se activa solo por debajo del 20% de batería;
+esa cifra del 20% no aplica a todos los modelos de iPhone, porque Apple la documenta como una función
+disponible solo en dispositivos compatibles, sin publicar la lista completa de esos modelos.
+
+Ni Google ni Apple publican una cifra oficial de cuánto porcentaje de batería ahorra Doze, App Standby
+o Low Power Mode, así que cualquier porcentaje concreto que encuentres en un blog de terceros no
+debería tratarse como un dato de fabricante, y esta guía tampoco lo inventa.
+
+## Caso de estudio, por qué un Apple Watch no mantiene el Bluetooth conectado
+
+Un estudiante está diseñando una app para Apple Watch que lee, cada pocos segundos, la frecuencia
+cardíaca de un sensor externo por Bluetooth, y quiere que esa lectura siga llegando incluso cuando el
+usuario sale de la app para revisar la hora o contestar un mensaje. Antes de que empiece a programar,
+vale la pena que se pregunte algo, si su app fuera para iPhone en lugar de para el reloj, ¿tendría
+margen para mantener esa misma conexión Bluetooth activa en segundo plano por más tiempo? Y si la
+respuesta es distinta entre las dos plataformas, ¿de dónde viene esa diferencia?
+
+La documentación de Apple para desarrolladores de watchOS es clara en este punto, ya que el reloj puede
+mantener una conexión Bluetooth con un accesorio solo mientras la app está en primer plano, o durante
+una sesión de trabajo en segundo plano activa; en cuanto el usuario sale de la app en el reloj, esa
+conexión Bluetooth se termina, y no vuelve a estar disponible hasta que la app tenga tiempo de
+ejecución de nuevo. Desde watchOS 8, Background App Refresh permite reconectar de forma periódica en
+segundo plano, por ejemplo para actualizar una complicación en la esfera del reloj o enviar una
+notificación local si la batería del sensor está baja, pero eso es una ventana limitada y programada
+por el sistema, no una conexión persistente que la app controle.
+
+La respuesta a la pregunta de arriba es que sí, un iPhone tiene, en general, más margen para procesos
+en segundo plano que un Apple Watch, precisamente porque el reloj es una categoría de dispositivo más
+pequeña, con una batería mucho más chica, y su sistema de administración de energía es todavía más
+estricto que el de un teléfono. El estudiante no puede diseñar su app de sensor cardíaco como si fuera
+una app de iPhone, tiene que asumir desde el principio que la lectura llegará en ráfagas cuando el
+sistema le abra ventana, no como un flujo continuo, y diseñar la interfaz y el almacenamiento de datos
+alrededor de esa limitación, no en contra de ella.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Qué hace un sistema operativo móvil y por qué existe una pila de capas en lugar de que la app
+      hable directo con el hardware
+- [ ] Las capas de Android, del kernel de Linux a las apps del sistema, y las de iOS, de Core OS a
+      Cocoa Touch, y cuál capa de cada una toca el hardware directamente
+- [ ] Por qué no existe una norma general de categorización de dispositivos móviles, y que sí existe
+      para wearables (IEEE 360-2022)
+- [ ] La diferencia entre un estado de app, que afecta solo a esa app, y un modo de dispositivo, que
+      afecta a todas las apps y radios a la vez
+- [ ] Los estados de una actividad en Android y los cinco estados de una app en iOS
+- [ ] Por qué el modo avión tiene origen regulatorio y no solo de ahorro de energía
+- [ ] Cómo funcionan Doze y App Standby en Android, y por qué FCM de alta prioridad es la alternativa
+      recomendada a mantener un socket propio
+- [ ] Por qué un wearable como el Apple Watch limita más la conectividad en segundo plano que un
+      teléfono
+:::
+
+## Antes del Tema 3
+
+1. Elige una app que uses a diario y ubica, con tus propias palabras, en cuál capa de la pila (kernel,
+   HAL, runtime o framework, en Android, o Core OS, Core Services, Media o Cocoa Touch, en iOS) vive
+   cada una de tres funciones suyas, por ejemplo tomar una foto, mostrar una notificación y dibujar un
+   botón.
+2. Pon tu teléfono en modo avión, reactiva el WiFi manualmente, e intenta usar tres apps distintas.
+   Anota cuáles siguen funcionando y cuáles no, y explica por qué en cada caso.
+3. Revisa, en la configuración de tu propio teléfono, si tiene activado algo parecido a Doze, App
+   Standby o Low Power Mode en este momento, y en qué porcentaje de batería se activa según tu
+   dispositivo.
+
+Con las capas de software, la categorización de dispositivos y los modos de operación ya vistos, el
+Tema 3 entra a lo que pasa cuando una persona real toca ese teléfono: los modelos de interacción
+táctil y por voz, los permisos que ya se mencionaron al hablar de la capa de apps, el sandboxing que
+aisla cada aplicación de las demás, y las amenazas de seguridad más comunes que enfrenta un
+dispositivo móvil.
+
+## Recursos
+
+- Android Open Source Project / Android Developers. [Platform architecture](https://developer.android.com/guide/platform).
+- Android Developers. [Optimize for Doze and App Standby](https://developer.android.com/training/monitoring-device-state/doze-standby).
+- Android Open Source Project. [Power management](https://source.android.com/docs/core/power/mgmt) y [Platform power management with Doze](https://source.android.com/docs/core/power/platform_mgmt).
+- Android Developers. [The activity lifecycle](https://developer.android.com/guide/components/activities/activity-lifecycle).
+- Android Developers. [Get started with Wear OS](https://developer.android.com/training/wearables) y [Principles of Wear OS development](https://developer.android.com/training/wearables/principles).
+- Android Developers. [`<supports-screens>`](https://developer.android.com/guide/topics/manifest/supports-screens-element) y [Use window size classes](https://developer.android.com/develop/ui/views/layout/use-window-size-classes).
+- Apple Developer Documentation. Managing your app's life cycle, dentro de UIKit y `UIApplicationDelegate`, developer.apple.com/documentation.
+- Apple Support. [Use Low Power Mode to save battery life on your iPhone or iPad](https://support.apple.com/en-us/101604).
+- Apple Developer. [`ProcessInfo.isLowPowerModeEnabled`](https://developer.apple.com/documentation/foundation/processinfo/islowpowermodeenabled).
+- Apple Developer. [watchOS](https://developer.apple.com/watchos/) y WWDC21, [Connect Bluetooth devices to Apple Watch](https://developer.apple.com/videos/play/wwdc2021/10005/).
+- IEEE Standards Association. [IEEE 360-2022, IEEE Standard for Wearable Consumer Electronic Devices, Overview and Architecture](https://standards.ieee.org/ieee/360/6244/).
+
+::: {.pie-doc}
+Lenguajes de computación para móviles. Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redaccion de esta guia conto con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

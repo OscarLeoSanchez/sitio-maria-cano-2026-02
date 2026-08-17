@@ -1,0 +1,796 @@
+---
+title: "Tema 1. El dispositivo y las tres formas de construir"
+subtitle: "Lenguajes de computación para móviles. Unidad 1"
+author: "Oscar Leonel Sánchez Conde"
+format:
+  revealjs:
+    theme: [default, ../../../estilos/presentacion.scss]
+    slide-number: c/t
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Lo de hoy
+
+::: {.tarjetas}
+::: {.tarjeta}
+[El aparato]{.titulo}
+
+Qué tiene un teléfono que un computador de escritorio no tiene, y qué le cambia
+eso a quien programa.
+:::
+
+::: {.tarjeta}
+[El aislamiento]{.titulo}
+
+Por qué el aviso de permiso lo muestra el navegador, y no el sistema operativo.
+:::
+
+::: {.clave}
+[Las tres formas]{.titulo}
+
+Nativa, multiplataforma y web. Con qué se escribe cada una, cómo llega al
+usuario y a qué del aparato alcanza.
+:::
+:::
+
+Sesión de contextualización. No instalamos nada, no escribimos código, no hay
+nota. El objeto de estudio lo traes en el bolsillo.
+
+## Antes de empezar: diagnóstico de entrada
+
+::: {.destacado}
+**No tiene nota y no afecta tu calificación.** Lo uso para saber con qué base
+llega el grupo y ajustar el ritmo del curso.
+:::
+
+::: {.pasos}
+1. Abre <https://forms.gle/KQrpRSKN2YW7UgxY7> en el teléfono o en el portátil.
+2. Escribe tu nombre completo como aparece en el sistema académico.
+3. Responde con sinceridad. "No lo conozco" es la respuesta más útil que me
+   puedes dar.
+:::
+
+Toma unos 35 minutos y se responde completo en esta sesión.
+
+## El aparato {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 1
+:::
+
+Qué hay dentro, quién manda sobre tu código y qué sabe el aparato de su entorno.
+
+## Quién pregunta cuando un sitio quiere tu ubicación
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un sitio servido por HTTPS consulta el estado de un permiso, y el estado devuelto es siempre uno de tres: prompt, que produce el aviso, granted o denied" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="pmov1" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <rect x="10" y="92" width="142" height="76" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="196" y="92" width="222" height="76" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="470" y="12" width="280" height="64" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#f5f7fa" stroke="#cfd8e3">
+    <rect x="470" y="96" width="280" height="64" rx="10"/>
+    <rect x="470" y="180" width="280" height="64" rx="10"/>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#pmov1)">
+    <path d="M156,130 L190,130"/>
+    <path d="M422,124 C444,124 442,52 464,46"/>
+    <path d="M422,130 L464,130"/>
+    <path d="M422,136 C444,136 442,206 464,212"/>
+  </g>
+  <g text-anchor="middle">
+    <text x="81" y="126" font-size="14" font-weight="700" fill="#0e6f6c">https</text>
+    <text x="81" y="146" font-size="11.5" fill="#3c7d7a">contexto seguro</text>
+    <text x="307" y="124" font-size="12.5" font-weight="600" fill="#12324f">navigator.permissions</text>
+    <text x="307" y="142" font-size="12.5" font-weight="600" fill="#12324f">.query()</text>
+    <text x="610" y="38" font-size="14" font-weight="700" fill="#0e6f6c">prompt</text>
+    <text x="610" y="58" font-size="11.5" fill="#3c7d7a">el navegador muestra el aviso</text>
+    <g font-size="14" font-weight="600" fill="#12324f">
+      <text x="610" y="122">granted</text>
+      <text x="610" y="206">denied</text>
+    </g>
+    <g font-size="11.5" fill="#5b6876">
+      <text x="610" y="142">ya lo autorizaste antes</text>
+      <text x="610" y="226">bloqueado, no vuelve a preguntar</text>
+    </g>
+  </g>
+</svg>
+
+:::
+
+::: {.tarjetas}
+::: {.clave}
+[El aviso lo escribe el navegador]{.titulo}
+
+El sitio no redacta ese texto y el sistema operativo no interviene. Por eso el
+aviso se ve igual en sitios distintos.
+:::
+
+::: {.tarjeta}
+[Sin HTTPS no hay permiso que pedir]{.titulo}
+
+El contexto seguro es requisito. Vuelve dos veces más en esta sesión: en los
+sensores y en las Progressive Web Apps.
+:::
+:::
+
+::: {.fuente}
+MDN, Permissions API. El estado es siempre uno de esos tres.
+:::
+
+## Un solo chip, no una placa
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 236" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda una placa de escritorio con procesador, memoria en ranuras, tarjeta grafica y disco como piezas separadas; a la derecha un unico circuito integrado que contiene CPU, GPU, memoria, radios, camara y entrada y salida" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <path d="M382,14 L382,224" stroke="#cfd8e3" stroke-width="1.5" stroke-dasharray="6 5" fill="none"/>
+  <rect x="10" y="44" width="352" height="164" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="26" y="70" width="146" height="52" rx="8"/>
+    <rect x="190" y="70" width="156" height="52" rx="8"/>
+    <rect x="26" y="136" width="146" height="52" rx="8"/>
+    <rect x="190" y="136" width="156" height="52" rx="8"/>
+  </g>
+  <rect x="400" y="44" width="350" height="164" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#ffffff" stroke="#c7d6e6">
+    <rect x="416" y="84" width="104" height="46" rx="8"/>
+    <rect x="528" y="84" width="104" height="46" rx="8"/>
+    <rect x="640" y="84" width="94" height="46" rx="8"/>
+    <rect x="416" y="140" width="104" height="46" rx="8"/>
+    <rect x="528" y="140" width="104" height="46" rx="8"/>
+    <rect x="640" y="140" width="94" height="46" rx="8"/>
+  </g>
+  <g text-anchor="middle">
+    <g font-size="14" font-weight="700" fill="#12324f">
+      <text x="186" y="30">Escritorio: piezas sueltas</text>
+      <text x="575" y="30">Teléfono: un solo circuito integrado</text>
+    </g>
+    <g font-size="13" font-weight="600" fill="#12324f">
+      <text x="99" y="101">Procesador</text><text x="268" y="101">Memoria en ranuras</text>
+      <text x="99" y="167">Tarjeta gráfica</text><text x="268" y="167">Disco</text>
+    </g>
+    <text x="575" y="70" font-size="15" font-weight="700" fill="#0e6f6c">SoC</text>
+    <g font-size="12.5" fill="#12324f">
+      <text x="468" y="112">CPU</text><text x="580" y="112">GPU</text><text x="687" y="112">Cámara</text>
+      <text x="468" y="168">Memoria</text><text x="580" y="168">Radios</text><text x="687" y="168">E/S</text>
+    </g>
+  </g>
+</svg>
+
+:::
+
+::: {.fuente}
+ARM, SoC development: un sistema de procesamiento completo en un solo circuito integrado.
+:::
+
+## Dos consecuencias para todo el semestre
+
+::: {.tarjetas}
+::: {.clave}
+[La memoria es fija]{.titulo}
+
+No puedes pedirle al usuario que agregue más. El aparato que tiene es el que
+tiene, y ahí corre tu aplicación.
+:::
+
+::: {.clave}
+[La memoria es compartida]{.titulo}
+
+El sistema, tu aplicación y todas las demás sacan de la misma bolsa. El sistema
+tiene que poder recuperarle memoria a alguien, y ese alguien puede ser tu
+aplicación mientras el usuario mira otra cosa.
+:::
+:::
+
+## Quién decide cuándo corre tu código
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Android lo dice así]{.titulo}
+
+`WorkManager` agrupa tareas y la restricción `RequiresCharging` impide ejecutar
+trabajo salvo que el equipo esté cargando. El sistema limita a propósito la
+ubicación en segundo plano.
+:::
+
+::: {.tarjeta}
+[Apple lo dice así]{.titulo}
+
+Minimizar entrada y salida, agrupar transacciones de red y usar clases de
+calidad de servicio para priorizar. La red es uno de los mayores consumos de
+energía.
+:::
+:::
+
+::: {.destacado}
+**Tu código declara condiciones y el sistema escoge el momento.** Dos empresas
+con sistemas distintos publican la misma recomendación.
+:::
+
+::: {.fuente}
+Android, Optimizar para la batería del dispositivo. Apple, Energy Efficiency Guide for iOS Apps.
+:::
+
+## Lo que el aparato sabe de su entorno
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 286" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda las tres familias de sensores de Android, movimiento, posicion y ambiente; a la derecha lo que expone el navegador con la Generic Sensor API, DeviceOrientation y Geolocation, con la condicion de contexto seguro" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <rect x="10" y="36" width="356" height="240" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="394" y="36" width="356" height="240" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <g fill="#ffffff" stroke="#c7d6e6">
+    <rect x="26" y="58" width="324" height="66" rx="9"/>
+    <rect x="26" y="132" width="324" height="60" rx="9"/>
+    <rect x="26" y="200" width="324" height="60" rx="9"/>
+  </g>
+  <rect x="410" y="58" width="324" height="90" rx="9" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="410" y="156" width="324" height="50" rx="9" fill="#ffffff" stroke="#c7d6e6"/>
+  <rect x="410" y="214" width="324" height="46" rx="9" fill="#fbf6ef" stroke="#d9a441"/>
+  <g text-anchor="middle">
+    <g font-size="14.5" font-weight="700" fill="#12324f">
+      <text x="188" y="26">Android: tres familias</text><text x="572" y="26">Desde el navegador</text>
+    </g>
+    <g font-size="13.5" font-weight="600" fill="#12324f">
+      <text x="188" y="80">Movimiento</text><text x="188" y="154">Posición</text><text x="188" y="222">Ambiente</text>
+    </g>
+    <g font-size="11.5" fill="#5b6876">
+      <text x="188" y="100">acelerómetro, gravedad, giroscopio,</text><text x="188" y="116">vector de rotación, en tres ejes</text>
+      <text x="188" y="174">posición del dispositivo respecto al</text><text x="188" y="188">marco de referencia del mundo</text>
+      <text x="188" y="242">un solo valor por evento: grados</text><text x="188" y="256">Celsius, hectopascales</text>
+    </g>
+    <text x="572" y="80" font-size="13.5" font-weight="700" fill="#0e6f6c">Generic Sensor API</text>
+    <g font-size="12" fill="#3c7d7a">
+      <text x="572" y="102">Accelerometer, Gyroscope,</text><text x="572" y="120">Magnetometer, AmbientLightSensor</text>
+    </g>
+    <text x="572" y="180" font-size="12.5" font-weight="600" fill="#12324f">DeviceOrientation y Geolocation</text>
+    <text x="572" y="196" font-size="11.5" fill="#5b6876">interfaces separadas y más antiguas</text>
+    <text x="572" y="234" font-size="12" font-weight="600" fill="#7a5a1e">Solo con HTTPS, y con soporte</text>
+    <text x="572" y="250" font-size="12" font-weight="600" fill="#7a5a1e">desigual entre navegadores</text>
+  </g>
+</svg>
+
+:::
+
+## Los sensores se reconocen por lo que hace el aparato
+
+::: {.tarjetas}
+::: {.tarjeta}
+[La pantalla gira]{.titulo}
+
+Algo mide rotación. Acelerómetro y giroscopio, de la familia de movimiento.
+:::
+
+::: {.tarjeta}
+[Se apaga contra la oreja]{.titulo}
+
+Algo mide proximidad. La pantalla se apaga sola durante la llamada.
+:::
+
+::: {.tarjeta}
+[El brillo se ajusta solo]{.titulo}
+
+Algo mide luz ambiente, de la familia de ambiente. Un valor por evento.
+:::
+:::
+
+::: {.destacado}
+**Cuando dependas de un sensor, la pregunta obligatoria es qué hace tu
+aplicación donde ese sensor no existe.** El soporte desde el navegador es
+desigual.
+:::
+
+## El aislamiento {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 2
+:::
+
+Dónde vive cada aplicación, y por qué eso decide quién pregunta.
+
+## Dos maneras de aislar una aplicación
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 274" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda tres aplicaciones de Android, cada una con identificador de usuario propio dentro del sandbox del sistema; a la derecha dos origenes distintos dentro del sandbox del navegador, cada uno con su propio permiso" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <rect x="10" y="36" width="356" height="228" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="394" y="36" width="356" height="228" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <g fill="#ffffff" stroke="#c7d6e6">
+    <rect x="24" y="58" width="104" height="72" rx="9"/>
+    <rect x="136" y="58" width="104" height="72" rx="9"/>
+    <rect x="248" y="58" width="104" height="72" rx="9"/>
+  </g>
+  <rect x="24" y="142" width="328" height="42" rx="9" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="408" y="58" width="328" height="106" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#ffffff" stroke="#c7d6e6">
+    <rect x="422" y="88" width="150" height="62" rx="8"/>
+    <rect x="580" y="88" width="142" height="62" rx="8"/>
+  </g>
+  <g text-anchor="middle">
+    <g font-size="14.5" font-weight="700" fill="#12324f">
+      <text x="188" y="26">Android</text><text x="572" y="26">Una aplicación web</text>
+    </g>
+    <g font-size="12.5" font-weight="600" fill="#12324f">
+      <text x="76" y="90">Aplicación 1</text><text x="188" y="90">Aplicación 2</text><text x="300" y="90">Aplicación 3</text>
+      <text x="497" y="114">https://sitio-a</text><text x="651" y="114">https://sitio-b</text>
+    </g>
+    <g font-size="11.5" fill="#5b6876">
+      <text x="76" y="108">identificador</text><text x="188" y="108">identificador</text><text x="300" y="108">identificador</text>
+      <text x="76" y="122">propio</text><text x="188" y="122">propio</text><text x="300" y="122">propio</text>
+      <text x="497" y="134">su propio permiso</text><text x="651" y="134">otro permiso</text>
+      <text x="188" y="208">El sistema la instala con identidad propia</text><text x="188" y="224">y la aísla de las demás</text>
+      <text x="572" y="190">El permiso queda amarrado al origen, o sea</text><text x="572" y="206">al dominio. Cambia el dominio y pregunta otra vez.</text>
+      <text x="572" y="230">La aplicación vive dentro del navegador y no</text><text x="572" y="246">tiene identidad propia en el sistema</text>
+    </g>
+    <text x="188" y="169" font-size="13" font-weight="700" fill="#0e6f6c">Sandbox de aplicaciones del sistema</text>
+    <text x="572" y="78" font-size="13" font-weight="700" fill="#0e6f6c">Sandbox del navegador</text>
+  </g>
+</svg>
+
+:::
+
+::: {.fuente}
+Android, App security best practices: cada aplicación recibe un identificador de
+usuario único con permisos muy limitados.
+:::
+
+## Los tres niveles de permiso de Android
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Normal]{.titulo}
+
+Lo concede el sistema solo, sin preguntar. El riesgo para el usuario es bajo.
+:::
+
+::: {.clave}
+[Peligroso]{.titulo}
+
+Exige consentimiento explícito del usuario. Cámara, ubicación, contactos.
+:::
+
+::: {.tarjeta}
+[De firma]{.titulo}
+
+Reservado a aplicaciones firmadas por el mismo desarrollador.
+:::
+:::
+
+::: {.destacado}
+Una nativa concede permisos una vez y se queda instalada con su identidad. Un
+sitio que se muda de dominio empieza de cero.
+:::
+
+## Las tres formas de construir {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 3
+:::
+
+Nativa, multiplataforma y web. El vocabulario que usamos el resto del semestre.
+
+## Con qué se escribe, cómo llega, a qué accede
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 288" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuadro comparativo de tres columnas, nativa, multiplataforma y web, con tres filas: con que se escribe, como llega al usuario y a que del aparato accede" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <g fill="#e4f2f1" stroke="#8fc9c5">
+    <rect x="128" y="8" width="200" height="34" rx="8"/>
+    <rect x="336" y="8" width="200" height="34" rx="8"/>
+    <rect x="544" y="8" width="200" height="34" rx="8"/>
+  </g>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="128" y="52" width="200" height="66" rx="8"/>
+    <rect x="336" y="52" width="200" height="66" rx="8"/>
+    <rect x="544" y="52" width="200" height="66" rx="8"/>
+    <rect x="128" y="128" width="200" height="66" rx="8"/>
+    <rect x="336" y="128" width="200" height="66" rx="8"/>
+    <rect x="544" y="128" width="200" height="66" rx="8"/>
+    <rect x="128" y="204" width="200" height="66" rx="8"/>
+    <rect x="336" y="204" width="200" height="66" rx="8"/>
+    <rect x="544" y="204" width="200" height="66" rx="8"/>
+  </g>
+  <g font-size="12" font-weight="600" fill="#5b6876">
+    <text x="10" y="78">Con qué</text><text x="10" y="94">se escribe</text>
+    <text x="10" y="154">Cómo llega</text><text x="10" y="170">al usuario</text>
+    <text x="10" y="230">A qué del</text><text x="10" y="246">aparato accede</text>
+  </g>
+  <g text-anchor="middle">
+    <g font-size="15" font-weight="700" fill="#0e6f6c">
+      <text x="228" y="31">Nativa</text><text x="436" y="31">Multiplataforma</text><text x="644" y="31">Web</text>
+    </g>
+    <g font-size="12" fill="#12324f">
+      <text x="228" y="80">El lenguaje y el SDK</text><text x="228" y="98">de la plataforma</text>
+      <text x="436" y="80">Primitivos de React que se</text><text x="436" y="98">renderizan como nativo</text>
+      <text x="644" y="80">Tecnologías de la</text><text x="644" y="98">plataforma web</text>
+      <text x="228" y="156">Por la tienda oficial</text><text x="228" y="174">de la plataforma</text>
+      <text x="436" y="156">Por la tienda oficial,</text><text x="436" y="174">igual que una nativa</text>
+      <text x="644" y="156">Por una URL, sin tienda</text><text x="644" y="174">y sin revisión</text>
+      <text x="228" y="232">A las APIs del sistema</text><text x="228" y="250">que declare por permiso</text>
+      <text x="436" y="232">A las mismas APIs nativas</text><text x="436" y="250">que cualquier aplicación</text>
+      <text x="644" y="232">Solo a lo que el</text><text x="644" y="250">navegador exponga</text>
+    </g>
+  </g>
+</svg>
+
+:::
+
+## Lo que cambia en el día a día
+
+| | Nativa | Multiplataforma | Web |
+|---|---|---|---|
+| Una base de código sirve para | Una plataforma | Varias plataformas | Cualquier navegador |
+| El usuario la consigue | En la tienda | En la tienda | Abriendo un enlace |
+| Publicar una corrección | Pasa por la tienda | Pasa por la tienda | Se sube y ya está |
+
+::: {.fuente}
+React Native se presenta con el lema "Learn Once, Write Anywhere". MDN define la
+aplicación web como la que se construye con tecnologías de la plataforma web y
+ofrece una experiencia parecida a la de una aplicación propia de la plataforma.
+:::
+
+## Cómo se reconoce cada camino desde afuera
+
+Cuatro señales que se ven sin abrir el código de una aplicación instalada.
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Cómo llegó]{.titulo}
+
+Si la abriste desde una tienda o desde un enlace.
+:::
+
+::: {.tarjeta}
+[Sin red]{.titulo}
+
+Si sigue sirviendo con el modo avión puesto.
+:::
+
+::: {.tarjeta}
+[En los dos sistemas]{.titulo}
+
+Si se siente igual en Android y en iPhone.
+:::
+
+::: {.tarjeta}
+[Los permisos]{.titulo}
+
+Si te los pidió al instalar o sobre la marcha.
+:::
+:::
+
+## Progressive Web Apps {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 4
+:::
+
+La variante de la tercera columna que trabajamos en la Unidad 3.
+
+## Tres requisitos, ninguno opcional
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 228" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres requisitos, manifiesto web app, servicio por HTTPS y service worker registrado, que juntos producen una aplicacion instalable que sigue abriendo sin conexion" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="pmov2" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="10" y="16" width="228" height="96" rx="10"/>
+    <rect x="252" y="16" width="228" height="96" rx="10"/>
+    <rect x="494" y="16" width="228" height="96" rx="10"/>
+  </g>
+  <rect x="10" y="164" width="712" height="52" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#pmov2)">
+    <path d="M124,116 L124,158"/>
+    <path d="M366,116 L366,158"/>
+    <path d="M608,116 L608,158"/>
+  </g>
+  <g text-anchor="middle">
+    <g font-size="14" font-weight="700" fill="#12324f">
+      <text x="124" y="46">Manifiesto web app</text>
+      <text x="366" y="46">Servicio por HTTPS</text>
+      <text x="608" y="46">Service worker</text>
+    </g>
+    <g font-size="11.5" fill="#5b6876">
+      <text x="124" y="70">nombre, iconos y</text><text x="124" y="86">display: standalone</text>
+      <text x="366" y="70">el mismo contexto seguro</text><text x="366" y="86">de los permisos y los sensores</text>
+      <text x="608" y="70">registrado, para que la</text><text x="608" y="86">aplicación funcione sin conexión</text>
+    </g>
+    <text x="366" y="188" font-size="14.5" font-weight="700" fill="#0e6f6c">Se instala en la pantalla de inicio y sigue abriendo sin conexión</text>
+    <text x="366" y="206" font-size="11.5" fill="#3c7d7a">Sin service worker algunos navegadores igual ofrecen instalar, pero el resultado se cae en cuanto se va la red</text>
+  </g>
+</svg>
+
+:::
+
+## El service worker se pone en el medio
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 258" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La pagina pide un recurso, el service worker intercepta la peticion y la resuelve por la red cuando hay conexion o por la cache cuando no la hay, y en los dos casos devuelve una respuesta" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="pmov3" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <rect x="8" y="98" width="156" height="72" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="200" y="84" width="176" height="100" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="428" y="20" width="146" height="62" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="428" y="186" width="146" height="62" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="610" y="98" width="142" height="72" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#pmov3)">
+    <path d="M168,134 L194,134"/>
+    <path d="M380,114 C406,114 404,58 422,52"/>
+    <path d="M380,154 C406,154 404,212 422,218"/>
+    <path d="M578,52 C598,52 600,112 604,124"/>
+    <path d="M578,218 C598,218 600,158 604,146"/>
+  </g>
+  <g text-anchor="middle">
+    <g font-size="14" font-weight="600" fill="#12324f">
+      <text x="86" y="128">La página</text><text x="501" y="46">Red</text><text x="501" y="212">Caché</text>
+    </g>
+    <g font-size="11.5" fill="#5b6876">
+      <text x="86" y="148">pide un recurso</text><text x="501" y="66">se trae del servidor</text><text x="501" y="232">lo que guardó antes</text>
+    </g>
+    <text x="288" y="122" font-size="14.5" font-weight="700" fill="#0e6f6c">Service worker</text>
+    <g font-size="11.5" fill="#3c7d7a">
+      <text x="288" y="144">intercepta la petición</text><text x="288" y="162">y decide de dónde sale</text>
+    </g>
+    <text x="681" y="130" font-size="14" font-weight="700" fill="#0e6f6c">Respuesta</text>
+    <text x="681" y="150" font-size="11.5" fill="#3c7d7a">sin notar de dónde vino</text>
+    <g font-size="11.5" font-weight="600" fill="#5b6876">
+      <text x="404" y="94">con conexión</text><text x="404" y="184">sin conexión</text>
+    </g>
+  </g>
+</svg>
+
+:::
+
+::: {.destacado}
+La rama de abajo cambia la experiencia: sin red la petición no falla, y por eso
+una aplicación web puede abrir en el metro.
+:::
+
+## La letra pequeña de iOS
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 216" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un sitio abierto en una pestana de Safari no recibe notificaciones push, y la misma aplicacion web agregada a la pantalla de inicio si las recibe desde iOS 16.4" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="pmov4" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <rect x="10" y="20" width="288" height="72" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="10" y="124" width="288" height="72" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="440" y="20" width="310" height="72" rx="10" fill="#fbf6ef" stroke="#d9a441"/>
+  <rect x="440" y="124" width="310" height="72" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#pmov4)">
+    <path d="M302,56 L434,56"/>
+    <path d="M302,160 L434,160"/>
+  </g>
+  <g text-anchor="middle">
+    <g font-size="13.5" font-weight="600" fill="#12324f">
+      <text x="154" y="52">Abierta en una pestaña</text><text x="154" y="70">de Safari</text>
+      <text x="154" y="156">Agregada a la pantalla</text><text x="154" y="174">de inicio</text>
+    </g>
+    <text x="595" y="50" font-size="14" font-weight="700" fill="#7a5a1e">Sin notificaciones push</text>
+    <text x="595" y="70" font-size="11.5" fill="#7a5a1e">no importa que el sitio las tenga programadas</text>
+    <text x="595" y="154" font-size="14" font-weight="700" fill="#0e6f6c">Con Web Push, desde iOS 16.4</text>
+    <text x="595" y="174" font-size="11.5" fill="#3c7d7a">y desde iPadOS 16.4</text>
+    <text x="368" y="42" font-size="11.5" font-weight="600" fill="#5b6876">push</text>
+    <text x="368" y="146" font-size="11.5" font-weight="600" fill="#5b6876">push</text>
+  </g>
+</svg>
+
+:::
+
+::: {.letra-pequena}
+**Si tu producto depende de notificaciones**, ese paso extra del usuario deja de
+ser un detalle y se vuelve parte del diseño. En Colombia importa: parte del grupo
+usa iPhone.
+:::
+
+::: {.fuente}
+WebKit, Web Push for Web Apps on iOS and iPadOS.
+:::
+
+## Tres confusiones que conviene resolver hoy
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Sitio responsivo no es aplicación]{.titulo}
+
+Para que se comporte como aplicación hacen falta manifiesto, HTTPS y service
+worker. Sin eso es un sitio que se ve bien en el teléfono.
+:::
+
+::: {.tarjeta}
+[Responsivo no es adaptable]{.titulo}
+
+Responsivo reorganiza un mismo layout con media queries. Adaptable sirve
+variantes distintas de interfaz según el dispositivo o la capacidad detectada.
+:::
+
+::: {.tarjeta}
+[La PWA no reemplaza a la nativa]{.titulo}
+
+En iOS el push exige instalación previa. El acceso a sensores desde la web tiene
+soporte desigual entre navegadores.
+:::
+:::
+
+## Con qué se encuentra la gente {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 5
+:::
+
+Los números que deciden la plataforma de referencia del curso.
+
+## La mayoría del tráfico web ya entra por un teléfono
+
+::: {.datos}
+::: {.dato}
+[53,37%]{.cifra}[Del tráfico web mundial viene de un móvil]{.rotulo}
+:::
+
+::: {.dato}
+[83,28%]{.cifra}[Android en Colombia]{.rotulo}
+:::
+
+::: {.dato}
+[16,72%]{.cifra}[iOS en Colombia]{.rotulo}
+:::
+:::
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuota de Android en los sistemas operativos moviles: 68,36 por ciento en el mundo y 83,28 por ciento en Colombia, sobre el total de cada region" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="10" y="22" font-size="12.5" font-weight="600" fill="#5b6876">Cuota de Android sobre el total de sistemas operativos móviles</text>
+  <g fill="#eef4fa" stroke="#cfd8e3">
+    <rect x="150" y="44" width="580" height="42" rx="5"/>
+    <rect x="150" y="106" width="580" height="42" rx="5"/>
+  </g>
+  <g fill="#2a78d6">
+    <rect x="150" y="44" width="396" height="42" rx="5"/>
+    <rect x="150" y="106" width="483" height="42" rx="5"/>
+  </g>
+  <g text-anchor="end" font-size="14" font-weight="650" fill="#12324f">
+    <text x="138" y="71">Mundo</text>
+    <text x="138" y="133">Colombia</text>
+  </g>
+  <g font-size="14" font-weight="700" fill="#12324f">
+    <text x="558" y="71">68,36%</text>
+    <text x="645" y="133">83,28%</text>
+  </g>
+  <text x="150" y="164" font-size="11" fill="#6b7885">El resto de cada barra corresponde a iOS. StatCounter Global Stats, julio de 2026.</text>
+</svg>
+
+:::
+
+::: {.destacado}
+**Colombia tiene unos 15 puntos más de Android que el promedio mundial.** Por eso
+Android es la plataforma de referencia en clase: es el aparato sobre el que casi
+todos pueden probar.
+:::
+
+## Angular y React
+
+| Encuesta | React | Angular |
+|---|---|---|
+| Stack Overflow Developer Survey 2024, uso | 39,5% | 17,1% |
+| State of JS 2024, uso | 82% | 50% |
+| State of JS 2024, retención | 75% | 54% |
+
+::: {.columns}
+::: {.column width="48%"}
+::: {.neutro}
+**Angular** se presenta como el framework para construir aplicaciones web
+modernas. Lo mantiene un equipo de Google, está basado en TypeScript y su
+arquitectura es de componentes.
+:::
+:::
+
+::: {.column width="48%"}
+::: {.neutro}
+**React** se llama a sí mismo librería y no framework, y aclara que no prescribe
+enrutamiento ni obtención de datos.
+:::
+:::
+:::
+
+::: {.destacado}
+Esas cifras dicen cuánta gente lo usa, no cuál te conviene aprender. **La
+decisión la tomo con el resultado de la pregunta 32 del diagnóstico** y la
+anuncio en clase con el argumento a la vista.
+:::
+
+## El mapa del semestre
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 176" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las tres unidades del curso como etapas encadenadas: el dispositivo, las herramientas de trabajo y la web multiplataforma" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="pmov5" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <g fill="#e4f2f1" stroke="#8fc9c5">
+    <rect x="64" y="8" width="116" height="28" rx="14"/>
+    <rect x="322" y="8" width="116" height="28" rx="14"/>
+    <rect x="580" y="8" width="116" height="28" rx="14"/>
+  </g>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="8" y="48" width="228" height="108" rx="10"/>
+    <rect x="266" y="48" width="228" height="108" rx="10"/>
+    <rect x="524" y="48" width="228" height="108" rx="10"/>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#pmov5)">
+    <path d="M240,102 L260,102"/>
+    <path d="M498,102 L518,102"/>
+  </g>
+  <g text-anchor="middle">
+    <g font-size="13" font-weight="700" fill="#0e6f6c">
+      <text x="122" y="27">Unidad 1</text><text x="380" y="27">Unidad 2</text><text x="638" y="27">Unidad 3</text>
+    </g>
+    <g font-size="15" font-weight="600" fill="#12324f">
+      <text x="122" y="78">El dispositivo</text><text x="380" y="78">Las herramientas</text><text x="638" y="78">La web multiplataforma</text>
+    </g>
+    <g font-size="11.5" fill="#5b6876">
+      <text x="122" y="104">componentes, sensores,</text><text x="122" y="122">permisos y las tres</text><text x="122" y="140">formas de construir</text>
+      <text x="380" y="104">línea de comandos, Git,</text><text x="380" y="122">repositorio remoto,</text><text x="380" y="140">depuración y empaquetado</text>
+      <text x="638" y="104">Progressive Web Apps</text><text x="638" y="122">y un framework:</text><text x="638" y="140">Angular o React</text>
+    </g>
+  </g>
+</svg>
+
+:::
+
+Hoy cubrimos la parte conceptual de la Unidad 1. Las radios del dispositivo y los
+modos de operación con y sin conexión entran en la Semana 2.
+
+## Lo que te llevas de hoy
+
+Al salir deberías poder explicar cada punto sin mirar la guía.
+
+::: {.recuento}
+- Qué es un SoC, y por qué la memoria del teléfono es fija y compartida
+- Por qué el sistema operativo decide cuándo corre tu trabajo en segundo plano
+- Las tres familias de sensores, y qué alcanza la web desde el navegador
+- Por qué el aviso de permiso lo muestra el navegador
+- Los tres caminos para construir, y en qué se diferencian
+- Los tres requisitos de instalabilidad de una PWA
+- Qué hace un service worker cuando no hay red
+- Qué exige iOS para las notificaciones push
+:::
+
+## Para la próxima sesión
+
+Una o dos páginas en la plataforma, antes de la Semana 2. Sin nota.
+
+::: {.pasos}
+1. **Los sensores de tu teléfono**, clasificados en movimiento, posición y
+   ambiente, y marcados según si una aplicación web podría leerlos.
+2. **Una aplicación que uses**, con tu apuesta sobre por cuál de los tres caminos
+   está construida y la evidencia en la que te apoyas.
+3. **Una función de esa aplicación que dejaría de servir sin conexión.** Qué
+   tendría que haber guardado antes, y quién haría ese trabajo en una aplicación
+   web.
+:::
+
+::: {.pie-diapositiva}
+Lenguajes de computación para móviles. Fundación Universitaria María Cano.
+Semestre 2026-02.
+:::

@@ -1,0 +1,539 @@
+---
+title: "Tema 2. Una base de datos, toda la empresa"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                              |
+|--------|--------------------------------------------------------------|
+| Unidad | Unidad 1. Introducción a los sistemas de bases de datos       |
+| Tema   | Tema 2. Integración de las bases de datos en la organización |
+:::
+
+El Tema 1 explicó por qué el procesamiento de archivos falla cuando varias personas necesitan el
+mismo dato al mismo tiempo, y por qué un sistema gestor de bases de datos (SGBD) nace justamente
+para resolver esas anomalías. Hoy das el paso siguiente, que es dejar de mirar la base de datos
+como una pieza de software aislada y empezar a mirarla como una pieza de la organización completa.
+Vas a ver en qué áreas reales de una empresa aparece un SGBD, qué gana la organización cuando
+integra sus datos ahí en vez de dejarlos repartidos, y qué le cuesta esa decisión, porque integrar
+datos no es gratis ni está libre de riesgo, y dos casos documentados de brechas de seguridad lo
+van a dejar claro antes de terminar la guía.
+
+## Dónde aparece una base de datos dentro de una organización
+
+Casi ningún sistema de información moderno funciona sin una base de datos detrás, y no es una
+coincidencia sino una consecuencia de lo que viste en el Tema 1. Silberschatz, Korth y Sudarshan,
+en el capítulo introductorio de *Fundamentos de bases de datos*, listan los sectores donde el uso
+de bases de datos ya es la norma y no la excepción, porque cada uno de esos sectores enfrenta el
+mismo problema estructural de una organización que Doña Marta enfrentaba con sus arepas, multiplicado
+por miles o millones de registros y por decenas de personas que necesitan leer y escribir esos
+registros a la vez.
+
+- **Banca.** Cuentas, préstamos y transacciones bancarias, donde cada movimiento tiene que quedar
+  registrado sin perderse y sin duplicarse.
+- **Líneas aéreas.** Reservas e itinerarios, donde dos personas no pueden terminar con el mismo
+  puesto del mismo vuelo.
+- **Universidades.** Matrícula, registro de cursos y notas, el mismo tipo de dato que la Plataforma
+  académica de esta universidad administra por ti cada semestre.
+- **Recursos humanos y nómina.** Empleados, salarios, retenciones y prestaciones, donde un error de
+  cálculo repetido en varios archivos termina en una liquidación mal pagada.
+- **Manufactura.** Gestión de la cadena de suministro y seguimiento de producción e inventario.
+- **Finanzas.** Registro de ventas y compras de instrumentos financieros como acciones y bonos.
+- **Ventas.** Información de clientes, productos y transacciones de venta.
+- **Comercio electrónico.** Catálogos de productos y órdenes en línea, la base de cualquier tienda
+  que compras por internet.
+
+Esa lista conecta con la organización como un todo porque centralizar los datos permite aplicar de
+forma más uniforme las normas de integridad y de seguridad, y porque facilita que distintas áreas
+de la misma empresa accedan a la información que necesitan sin depender de que otra área les pase
+un archivo por correo, una idea que retomas con más detalle en la sección de beneficios más
+adelante en esta misma guía.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 288" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una base de datos central de la organizacion, rodeada de las areas que la usan a diario: banca, aerolineas, universidades, recursos humanos, manufactura, finanzas, ventas y comercio electronico" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="base2a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">La base de datos como pieza compartida de la organizacion</text>
+  <circle cx="380" cy="144" r="78" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="138" font-size="15" font-weight="700" fill="#0e6f6c" text-anchor="middle">base de</text>
+  <text x="380" y="156" font-size="15" font-weight="700" fill="#0e6f6c" text-anchor="middle">datos</text>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="20" y="40" width="128" height="46" rx="9"/>
+    <rect x="20" y="118" width="128" height="46" rx="9"/>
+    <rect x="20" y="196" width="128" height="46" rx="9"/>
+    <rect x="612" y="40" width="128" height="46" rx="9"/>
+    <rect x="612" y="118" width="128" height="46" rx="9"/>
+    <rect x="612" y="196" width="128" height="46" rx="9"/>
+    <rect x="316" y="250" width="128" height="30" rx="9"/>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#base2a)">
+    <path d="M148,63 L306,110"/>
+    <path d="M148,141 L302,144"/>
+    <path d="M148,219 L306,178"/>
+    <path d="M612,63 L454,110"/>
+    <path d="M612,141 L458,144"/>
+    <path d="M612,219 L454,178"/>
+    <path d="M380,250 L380,222"/>
+  </g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f">
+    <text x="84" y="67">Banca</text>
+    <text x="84" y="145">Aerolineas</text>
+    <text x="84" y="223">Universidades</text>
+    <text x="676" y="67">Manufactura</text>
+    <text x="676" y="145">Finanzas</text>
+    <text x="676" y="223">Ventas</text>
+    <text x="380" y="269">Comercio electronico</text>
+  </g>
+  <text x="20" y="20" font-size="11" fill="#5b6876">Recursos humanos y nomina tambien consulta la misma base, sin caja propia por espacio</text>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Reto 1. Encuentra tu propia base de datos
+
+Elige una aplicación que usaste hoy antes de llegar a esta guía, uno de los ocho sectores de la
+lista de arriba o cualquier otro. En dos o tres frases responde qué área de esa organización usa
+seguramente la misma base de datos que otra área distinta, y qué pasaría si cada área tuviera su
+propio archivo separado en vez de compartir la base.
+:::
+
+## Cómo una agencia de crédito depende de su base de datos
+
+Piensa en una agencia de reporte de crédito como Equifax, que evalúa el riesgo financiero de
+cientos de millones de personas para que bancos, aseguradoras y otras empresas decidan si les dan
+un préstamo o una tarjeta. Antes de leer cómo lo resuelve, pregúntate qué pasaría si esa agencia
+intentara operar con archivos sueltos en vez de con una base de datos centralizada, sabiendo que
+recibe información desde bancos, prestamistas y tribunales, y que tiene que responder consultas de
+crédito en tiempo real a miles de clientes simultáneos.
+
+La respuesta es que sería prácticamente imposible mantenerla consistente. Una agencia de este tipo
+agrega datos financieros y de identidad provenientes de múltiples fuentes, los integra bajo un
+esquema común dentro de un SGBD relacional, y sirve consultas de crédito en milisegundos porque el
+optimizador de consultas del motor decide de antemano cuál es la forma más rápida de buscar entre
+cientos de millones de registros, sin que cada aplicación cliente tenga que programar ese algoritmo
+de búsqueda por su cuenta. Es exactamente el escenario que sostiene el argumento de integrar los
+datos en la organización, ya que ninguna combinación de archivos independientes en cada banco fuente
+podría ofrecer una respuesta única, consistente y casi instantánea a la pregunta de cuánto riesgo
+representa una persona.
+
+## Los beneficios de integrar los datos en un SGBD
+
+Elmasri y Navathe, en *Fundamentals of Database Systems*, dedican una sección completa del capítulo
+1 a explicar por qué una organización prefiere el enfoque de base de datos sobre el procesamiento de
+archivos, y cada beneficio que listan responde directamente a una de las anomalías que viste en el
+Tema 1.
+
+- **Control de la redundancia.** El SGBD centraliza los datos y evita las copias descontroladas del
+  mismo dato en archivos distintos, y cuando sí existe redundancia planificada por rendimiento, el
+  propio sistema se encarga de mantenerla consistente en vez de dejarlo en manos de cada programador.
+- **Restricción de acceso no autorizado.** Un subsistema de seguridad y autorización define qué
+  cuentas de usuario pueden leer, insertar, modificar o eliminar cada dato, con permisos que se
+  pueden aplicar a nivel de tabla, de columna o incluso de fila.
+- **Almacenamiento persistente para las estructuras de datos de los programas.** La base sirve como
+  repositorio permanente, con mecanismos de recuperación como los puntos de control y la reversión
+  de cambios ante una falla.
+- **Procesamiento eficiente de consultas.** Los índices y el optimizador de consultas eligen la ruta
+  de acceso más rápida a los datos, sin que el programador tenga que codificar a mano el algoritmo
+  de búsqueda.
+- **Copias de seguridad y recuperación.** Un subsistema dedicado devuelve la base de datos a un
+  estado consistente después de una falla de hardware o de software.
+- **Múltiples interfaces de usuario.** Lenguajes de consulta interactivos, interfaces de programación
+  de aplicaciones, formularios e informes, cada uno pensado para un perfil distinto, desde un
+  analista hasta un programador.
+- **Representación de relaciones complejas entre datos.** Un modelo relacional puede representar
+  relaciones muy variadas entre múltiples tipos de entidades, algo que el procesamiento de archivos
+  maneja mal porque cada archivo vive aislado de los demás.
+- **Aplicación de restricciones de integridad.** Las reglas de tipo de dato, de unicidad y de
+  integridad referencial se declaran una sola vez en el esquema, en vez de quedar repetidas dentro
+  del código de cada programa que toca esos datos.
+
+Dos beneficios más merecen su propia sección porque son los que más sorprenden a quien recién llega
+a este tema, la independencia de datos y la concurrencia controlada.
+
+### Independencia de datos, cambiar por dentro sin romper por fuera
+
+La *independencia de datos* es la capacidad de modificar cómo está organizada la base de datos sin
+tener que reescribir los programas que la usan, y es un beneficio que el procesamiento de archivos
+no ofrece en absoluto, porque ahí cada programa conoce el formato exacto del archivo que lee. Esta
+capacidad se apoya en la arquitectura de tres esquemas que describen tanto Elmasri y Navathe como
+Silberschatz, Korth y Sudarshan, con un esquema externo que es la vista que cada aplicación o cada
+usuario tiene de los datos, un esquema conceptual que describe toda la base de datos sin entrar en
+detalles de almacenamiento, y un esquema interno que sí describe cómo están guardados los datos
+físicamente en disco.
+
+- **Independencia lógica.** Es la posibilidad de cambiar el esquema conceptual, por ejemplo agregar
+  una entidad o un atributo nuevo, sin tener que modificar los esquemas externos ni los programas de
+  aplicación que dependen de ellos.
+- **Independencia física.** Es la posibilidad de cambiar el esquema interno, por ejemplo la
+  organización de los archivos, las estructuras de almacenamiento o la estrategia de indexación, sin
+  tocar el esquema conceptual ni los programas de aplicación.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arquitectura de tres esquemas: externo arriba con tres vistas de aplicacion, conceptual en medio con el esquema completo de la organizacion, interno abajo con la organizacion fisica en disco; la independencia logica separa el nivel externo del conceptual y la independencia fisica separa el conceptual del interno" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Los tres esquemas y donde vive cada tipo de independencia</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="40" y="34" width="150" height="50" rx="9"/><rect x="275" y="34" width="150" height="50" rx="9"/><rect x="510" y="34" width="150" height="50" rx="9"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="115" y="56">vista nomina</text><text x="115" y="72">(RR. HH.)</text><text x="350" y="56">vista ventas</text><text x="350" y="72">(comercial)</text><text x="585" y="56">vista inventario</text><text x="585" y="72">(bodega)</text></g>
+  <text x="10" y="64" font-size="11" fill="#5b6876">externo</text>
+  <rect x="180" y="122" width="340" height="56" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="146" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">esquema conceptual</text>
+  <text x="350" y="164" font-size="11" fill="#5b6876" text-anchor="middle">toda la organizacion, sin detalles de almacenamiento</text>
+  <text x="10" y="154" font-size="11" fill="#5b6876">conceptual</text>
+  <rect x="230" y="216" width="240" height="50" rx="9" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="350" y="238" font-size="12.5" fill="#12324f" text-anchor="middle">archivos, indices, disco</text>
+  <text x="350" y="254" font-size="11" fill="#5b6876" text-anchor="middle">organizacion fisica real</text>
+  <text x="10" y="246" font-size="11" fill="#5b6876">interno</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><path d="M115,84 L200,124"/><path d="M350,84 L350,120"/><path d="M585,84 L500,124"/><path d="M350,178 L350,214"/></g>
+  <rect x="440" y="90" width="240" height="26" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="560" y="107" font-size="11" fill="#12324f" text-anchor="middle">independencia logica: cambia esto sin tocar arriba</text>
+  <rect x="440" y="182" width="240" height="26" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="560" y="199" font-size="11" fill="#12324f" text-anchor="middle">independencia fisica: cambia esto sin tocar arriba</text>
+</svg>
+
+:::
+
+Un ejemplo concreto ayuda a que la definición deje de ser abstracta. Si el área de bodega necesita
+un atributo nuevo en el esquema conceptual, como la ubicación en el almacén de cada producto, la
+independencia lógica es lo que evita que el área de ventas tenga que tocar una sola línea de su
+programa, porque su vista externa sigue mostrando exactamente los mismos campos que mostraba antes.
+Y si el administrador de la base decide cambiar la estrategia de indexación para que las consultas
+de inventario corran más rápido, la independencia física es lo que evita que cualquiera de las dos
+áreas se entere del cambio, porque ninguna de las dos programa contra la estructura física de disco.
+
+### Concurrencia controlada y las propiedades ACID
+
+El procesamiento de archivos, según documenta Silberschatz, Korth y Sudarshan, sufre anomalías de
+acceso concurrente cuando varios usuarios leen y modifican el mismo archivo al mismo tiempo sin
+ningún control, lo que produce resultados incorrectos conocidos como condiciones de carrera. Un
+SGBD resuelve esto serializando o coordinando el acceso concurrente entre las transacciones que
+compiten por el mismo dato, ya sea con bloqueos sobre las filas que cada transacción toca o con
+técnicas como el control de concurrencia multiversión, en inglés *multiversion concurrency control*
+o MVCC, según el motor de base de datos de que se trate. Oracle documenta de forma oficial, para su
+motor TimesTen, que ese control se logra con bloqueo a nivel de fila combinado con dos niveles de
+aislamiento, lectura confirmada (*read committed*) y serializable, y que esa combinación es
+justamente la que garantiza las propiedades ACID, atomicidad, consistencia, aislamiento y
+durabilidad.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 246" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos transacciones intentando tocar la misma cuenta al mismo tiempo; el gestor de concurrencia del SGBD las ordena una despues de la otra en vez de dejarlas chocar, y la cuenta termina en un estado consistente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="base2b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="350" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Concurrencia controlada sobre una misma cuenta</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="40" width="180" height="46" rx="9"/><rect x="20" y="146" width="180" height="46" rx="9"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="110" y="59">transaccion A</text><text x="110" y="75">retira $200.000</text><text x="110" y="165">transaccion B</text><text x="110" y="181">retira $150.000</text></g>
+  <rect x="260" y="88" width="180" height="56" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="112" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">gestor de</text>
+  <text x="350" y="130" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">concurrencia</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#base2b)"><path d="M200,63 L256,102"/><path d="M200,169 L256,130"/></g>
+  <rect x="500" y="88" width="180" height="56" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="590" y="112" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">cuenta con</text>
+  <text x="590" y="130" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">saldo consistente</text>
+  <path d="M440,116 L496,116" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#base2b)"/>
+  <text x="350" y="184" font-size="11.5" fill="#5b6876" text-anchor="middle">A se ejecuta completa, despues B se ejecuta completa</text>
+  <text x="350" y="204" font-size="11.5" fill="#5b6876" text-anchor="middle">nunca las dos a medias sobre el mismo saldo al mismo tiempo</text>
+  <text x="350" y="226" font-size="11" fill="#0e6f6c" text-anchor="middle">esto es lo que garantizan las propiedades ACID</text>
+</svg>
+
+:::
+
+Ese mismo principio de ordenar el acceso concurrente en vez de dejarlo chocar es lo que sostiene la
+propiedad de atomicidad cuando la operación no es un simple retiro sobre una sola cuenta, sino una
+transferencia entre dos cuentas distintas. Vuelve al ejemplo clásico de una transferencia bancaria
+entre dos cuentas, que el Tema 1 ya usó para explicar los problemas de atomicidad del procesamiento
+de archivos. Si el sistema falla justo después de restar de la cuenta origen y antes de sumar en la
+cuenta destino, un archivo suelto puede quedar en un estado inconsistente donde el dinero
+simplemente desapareció. Las propiedades ACID que documenta Oracle garantizan que esa transferencia
+se ejecute completa o no se ejecute en absoluto, que nunca deje al sistema en un estado a medias.
+
+::: {.callout-tip}
+## Reto 2. Une cada beneficio con la anomalía que resuelve
+
+Marca con cuál de las anomalías del procesamiento de archivos, que viste en el Tema 1, se conecta
+mejor cada beneficio del SGBD. Puede que un beneficio se conecte con más de una anomalía, así que
+justifica tu elección en una frase antes de revisar la solución.
+
+<label><input type="checkbox"> Control de la redundancia se conecta principalmente con la redundancia e inconsistencia de datos</label>
+
+<label><input type="checkbox"> La concurrencia controlada se conecta principalmente con las anomalías de acceso concurrente</label>
+
+<label><input type="checkbox"> Las propiedades ACID se conectan principalmente con los problemas de atomicidad</label>
+
+<label><input type="checkbox"> La restricción de acceso no autorizado se conecta principalmente con los problemas de seguridad</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+Las cuatro casillas son correctas, y no por casualidad, porque cada beneficio de la lista de
+Elmasri y Navathe existe justamente porque alguien identificó primero una anomalía del
+procesamiento de archivos y diseñó un mecanismo del SGBD para resolverla. El control de la
+redundancia ataca de frente el problema de que el mismo dato viva repetido en varios archivos con
+formatos distintos. La concurrencia controlada, con bloqueos o con control de concurrencia
+multiversión, ataca las condiciones de carrera que aparecen cuando dos usuarios escriben el mismo
+archivo al tiempo. Las propiedades ACID, en particular la atomicidad, garantizan que una operación
+como la transferencia bancaria no deje al sistema en un estado intermedio si falla a la mitad. Y la
+restricción de acceso no autorizado, con permisos por tabla, columna o fila, ataca directamente el
+problema de seguridad de que en archivos sueltos es difícil aplicar permisos granulares por tipo de
+dato. Ningún beneficio de la lista aparece por casualidad, cada uno tiene una anomalía concreta
+detrás que lo justifica.
+:::
+
+## Las limitaciones de un SGBD frente a archivos planos
+
+Integrar los datos de una organización en un SGBD no es una decisión sin costo, y Connolly y Begg,
+en *Database Systems*, dedican una sección completa a las desventajas de este enfoque, justamente
+para que quien decide adoptar un SGBD lo haga con los ojos abiertos y no solo mirando la lista de
+beneficios.
+
+- **Complejidad.** Un SGBD es software complejo que exige personal especializado, administradores
+  de bases de datos o DBA, para diseñarlo, implementarlo y administrarlo correctamente. No es una
+  herramienta que cualquier persona del equipo pueda configurar sin formación específica.
+- **Costo.** Incluye licencias en el caso de un SGBD comercial, hardware adicional porque un motor
+  generalista necesita más memoria y almacenamiento de los que exigiría un sistema de archivos
+  simple hecho a la medida, y el costo de convertir un sistema de archivos existente a un sistema de
+  base de datos, incluida la capacitación del personal que va a operarlo. Esta guía no da cifras de
+  esos costos porque varían demasiado según el proveedor, el tamaño de la organización y el país, y
+  no existe una fuente verificable con un número único y actual para citar aquí.
+- **Sobrecarga de rendimiento.** Un SGBD generalista impone una capa de procesamiento, verificación
+  de integridad, seguridad, concurrencia y recuperación, que un sistema de archivos hecho a la
+  medida de una sola aplicación no necesita, así que puede ser más lento para una tarea muy puntual
+  y muy simple que ese archivo especializado resolvería más rápido.
+- **Mayor impacto de una falla.** Centralizar los datos de toda la organización en un único sistema
+  significa que una falla del SGBD, o un ataque exitoso contra él, afecta simultáneamente a todas
+  las aplicaciones que dependen de esa base, en lugar de afectar solo a un archivo aislado como
+  pasaría en el procesamiento de archivos.
+- **Vulnerabilidad como riesgo organizacional.** La misma centralización que da los beneficios de
+  integridad y de control de acceso también concentra el riesgo, ya que si la capa de seguridad o la
+  configuración del SGBD falla, la exposición es masiva y ocurre de una sola vez, no archivo por
+  archivo.
+
+Ese último punto suena abstracto hasta que se mira un caso real y documentado. Los dos casos
+siguientes muestran qué pasa cuando el beneficio teórico de seguridad de un SGBD no se aplicó bien
+en la práctica.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 232" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion del impacto de una falla: con archivos sueltos una falla afecta solo un archivo, con una base de datos centralizada una falla en la capa de seguridad expone todos los datos de la organizacion a la vez" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">La centralizacion concentra tambien el riesgo</text>
+  <text x="175" y="40" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Archivos sueltos</text>
+  <text x="525" y="40" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Base de datos centralizada</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="56" width="80" height="40" rx="7"/><rect x="130" y="56" width="80" height="40" rx="7"/><rect x="230" y="56" width="80" height="40" rx="7"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="70" y="80">nomina</text><text x="170" y="80">ventas</text><text x="270" y="80">clientes</text></g>
+  <text x="170" y="118" font-size="11" fill="#5b6876" text-anchor="middle">si falla uno</text>
+  <text x="170" y="134" font-size="11" fill="#5b6876" text-anchor="middle">los otros dos siguen intactos</text>
+  <rect x="440" y="56" width="170" height="80" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="525" y="80" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">un solo SGBD</text>
+  <text x="525" y="98" font-size="11" fill="#12324f" text-anchor="middle">nomina, ventas y</text>
+  <text x="525" y="114" font-size="11" fill="#12324f" text-anchor="middle">clientes, todo junto</text>
+  <text x="525" y="158" font-size="11" fill="#5b6876" text-anchor="middle">una falla de seguridad expone</text>
+  <text x="525" y="174" font-size="11" fill="#5b6876" text-anchor="middle">las tres cosas al mismo tiempo</text>
+  <text x="350" y="212" font-size="11.5" fill="#5b6876" text-anchor="middle">el mismo diseno que evita la redundancia tambien concentra el impacto de un solo fallo</text>
+</svg>
+
+:::
+
+## La brecha de Equifax de 2017
+
+La misma Equifax que sirve como ejemplo de agencia de crédito bien integrada tuvo, en 2017, una de
+las brechas de datos más grandes documentadas hasta ahora. Antes de leer qué pasó, pregúntate esto,
+si un SGBD ofrece por diseño un subsistema de seguridad y autorización que restringe el acceso no
+autorizado, ¿cómo es posible que una falla de seguridad expusiera de todas formas la información de
+más de cien millones de personas?
+
+La Oficina de Rendición de Cuentas del Gobierno de Estados Unidos, en su informe oficial GAO-18-559
+de septiembre de 2018, documenta que atacantes accedieron a información personal de al menos 145.5
+millones de consumidores estadounidenses a través del portal de disputas de consumidores de la
+empresa, explotando una vulnerabilidad conocida del software Apache Struts que Equifax no había
+parchado a tiempo. El propio informe no se queda en ese único error técnico, sino que agrupa las
+fallas de fondo en cuatro categorías, deficiencias en los procesos de identificación de la amenaza,
+deficiencias en los procesos de detección de la intrusión, una segmentación inadecuada del acceso a
+las bases de datos, y una gobernanza de datos deficiente.
+
+La respuesta a la pregunta de análisis es que el subsistema de seguridad de un SGBD ofrece el
+mecanismo, no la garantía. Un motor de base de datos puede segmentar el acceso por tabla, por columna
+o por fila, pero solo si alguien lo configura así y lo mantiene actualizado. El informe del GAO
+señala precisamente que la segmentación del acceso a las bases de datos de Equifax fue inadecuada,
+lo que significa que la tecnología para restringir el acceso existía, y sin embargo la organización
+no la aplicó con suficiente rigor. Es el mismo patrón que viste con el campo privado y el método sin
+validación del Reto 2 del Tema 1, solo que aquí a escala de toda una empresa, tener el mecanismo
+disponible no sirve de nada si nadie lo hace cumplir de forma consistente. Y el tamaño mismo de la
+brecha, 145.5 millones de personas en un solo incidente, es la prueba concreta de la limitación de
+"mayor impacto de una falla" de la que habla la sección anterior, porque toda esa información vivía
+centralizada en el mismo sistema.
+
+::: {.callout-tip}
+## Reto 3. Diagnostica la brecha de Equifax
+
+Con base en lo que acabas de leer del informe del GAO, responde en un párrafo corto, si Equifax
+hubiera seguido usando archivos sueltos por área en vez de una base de datos centralizada, ¿el
+riesgo de que un atacante expusiera 145.5 millones de registros en un solo incidente habría sido
+mayor, menor o distinto? Justifica tu respuesta con al menos una limitación y al menos un beneficio
+de los que viste en esta guía.
+:::
+
+## Segundo caso, la base de datos expuesta de Novaestrat en Ecuador
+
+No hace falta un ataque sofisticado para que una base de datos exponga a una organización entera,
+y el caso de Novaestrat en Ecuador lo demuestra con un error de configuración básico en lugar de una
+vulnerabilidad de software. Antes de leer los detalles, pregúntate qué tan grave puede ser dejar una
+base de datos accesible en internet sin ninguna autenticación, sin que nadie tenga siquiera que
+robar una contraseña para entrar.
+
+Según el reporte original de investigadores de seguridad de vpnMentor, confirmado por medios
+especializados como SiliconANGLE, una base de datos Elasticsearch de aproximadamente 18 GB,
+propiedad de la empresa ecuatoriana Novaestrat, quedó expuesta públicamente sin autenticación en un
+servidor ubicado en Miami. Esa base contenía datos personales, nombre completo, fecha de nacimiento,
+direcciones, número de cédula y composición del núcleo familiar, de cerca de 20.8 millones de
+registros de personas, una cifra que incluso supera la población de Ecuador en ese momento, de unos
+17 millones de habitantes, lo que sugiere que la base incluía registros duplicados o de personas
+fallecidas además de la población viva.
+
+La gravedad de este caso está justo en lo que no pasó, que fue la aplicación del beneficio de
+restricción de acceso no autorizado que la sección de beneficios de arriba describe como parte de
+lo que un SGBD ofrece por diseño. El sistema nunca llegó a exigir usuario ni contraseña para
+consultar los datos, así que cualquier persona con la dirección del servidor podía leer la base
+completa, sin que hiciera falta vulnerar ninguna capa de seguridad, porque esa capa nunca se activó.
+La limitación de "vulnerabilidad" que viste como una desventaja teórica del enfoque de SGBD se
+vuelve aquí una falla operativa concreta, y con consecuencias legales reales, ya que un directivo de
+la empresa fue arrestado después de que se conociera el caso.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una base de datos Elasticsearch sin autenticacion, accesible directamente desde internet sin usuario ni contrasena, comparada con una base de datos con el subsistema de seguridad activo que exige autenticacion antes de responder" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="base2c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="175" y="24" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Novaestrat, 2019</text>
+  <text x="525" y="24" font-size="12.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">con seguridad activa</text>
+  <rect x="30" y="46" width="120" height="42" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="90" y="71" font-size="11.5" fill="#12324f" text-anchor="middle">cualquiera</text>
+  <path d="M150,67 L246,67" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#base2c)"/>
+  <text x="198" y="58" font-size="11" fill="#5b6876" text-anchor="middle">sin usuario</text>
+  <text x="198" y="86" font-size="11" fill="#5b6876" text-anchor="middle">ni contrasena</text>
+  <rect x="250" y="46" width="140" height="42" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="320" y="65" font-size="11.5" fill="#12324f" text-anchor="middle">18 GB expuestos</text>
+  <text x="320" y="81" font-size="11" fill="#5b6876" text-anchor="middle">unos 20 millones</text>
+  <rect x="30" y="130" width="120" height="42" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="90" y="155" font-size="11.5" fill="#12324f" text-anchor="middle">cualquiera</text>
+  <path d="M150,151 L246,151" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#base2c)"/>
+  <rect x="250" y="115" width="80" height="72" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="290" y="140" font-size="11" fill="#0e6f6c" text-anchor="middle">pide</text>
+  <text x="290" y="156" font-size="11" fill="#0e6f6c" text-anchor="middle">usuario y</text>
+  <text x="290" y="172" font-size="11" fill="#0e6f6c" text-anchor="middle">contrasena</text>
+  <text x="198" y="142" font-size="11" fill="#5b6876" text-anchor="middle">acceso</text>
+  <text x="198" y="197" font-size="11" fill="#5b6876" text-anchor="middle">bloqueado sin credenciales validas</text>
+  <path d="M330,151 L450,151" fill="none" stroke="#cfd8e3" stroke-width="1.6" stroke-dasharray="5 5"/>
+  <rect x="460" y="130" width="140" height="42" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="530" y="149" font-size="11" fill="#12324f" text-anchor="middle">datos protegidos</text>
+  <text x="530" y="165" font-size="11" fill="#5b6876" text-anchor="middle">solo si hay credenciales</text>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Reto 4. El mismo beneficio en dos empresas
+
+Vuelve a la lista de beneficios de un SGBD de esta guía. Elige uno solo, distinto de la
+restricción de acceso no autorizado que ya usaste para explicar Equifax y Novaestrat, y escribe un
+párrafo corto explicando qué le habría pasado a Novaestrat si tampoco hubiera contado con ese
+beneficio, aunque en la práctica sí lo tuviera disponible dentro de Elasticsearch. Por ejemplo, qué
+habría pasado sin control de la redundancia, o sin copias de seguridad y recuperación.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+No hay una única respuesta correcta, porque el reto pide razonar sobre un beneficio distinto en cada
+caso, pero un ejemplo con copias de seguridad y recuperación ayuda a ver el patrón. Si Novaestrat
+hubiera sufrido, además de la exposición pública, una falla de hardware en el mismo servidor sin
+copias de seguridad recientes, la organización habría perdido de forma permanente los datos de
+millones de personas, no solo expuesto su contenido. La lección general es que los beneficios
+de un SGBD no son excluyentes entre sí, cada uno cubre un riesgo distinto, y que un solo beneficio
+mal configurado, como pasó aquí con la restricción de acceso, no anula el valor de los demás, pero
+tampoco un beneficio bien configurado en un frente protege contra una falla en otro frente
+completamente distinto.
+:::
+
+## Decidir si conviene integrar los datos en un SGBD
+
+Toda la evidencia de esta guía apunta a una idea central, que ni los beneficios ni las limitaciones
+de un SGBD son absolutos, sino que dependen de qué tan grande es la organización, cuántas personas
+necesitan acceder a los mismos datos al tiempo, y qué tan grave sería para esa organización una
+falla de seguridad. La siguiente tabla resume el contraste entre mantener archivos sueltos por área
+y centralizar los datos en un SGBD, esta vez puesto en términos de decisión organizacional en lugar
+de en términos técnicos.
+
+| Factor de decisión | Archivos sueltos por área | Base de datos centralizada en un SGBD |
+|---|---|---|
+| Consistencia entre áreas | Cada área tiene su propia copia, que se desincroniza con el tiempo | Un solo dato, compartido y controlado por el motor |
+| Costo inicial | Bajo, cualquier hoja de cálculo sirve para empezar | Más alto, exige licencias o infraestructura y personal capacitado |
+| Impacto de una falla de seguridad | Limitado al archivo comprometido | Puede alcanzar a toda la organización de una sola vez |
+| Velocidad de una consulta compleja | Depende de que alguien la programe a mano, área por área | El optimizador de consultas del motor la resuelve de forma centralizada |
+| Personal necesario | El que ya opera cada área | Exige además administradores de bases de datos |
+
+Ninguna fila de esa tabla dice que un SGBD siempre gana. Una cafetería pequeña como la del Tema 1
+probablemente no necesita un SGBD completo con administrador dedicado, el costo y la complejidad no
+se justifican todavía para tres o cuatro personas que llevan pocas cuentas. Una agencia de crédito
+como Equifax, en cambio, no tiene alternativa real, porque ningún conjunto de archivos podría
+sostener su volumen de consultas simultáneas. La decisión de integrar los datos en un SGBD es, en el
+fondo, una decisión de costo y beneficio que cada organización tiene que tomar según su propia
+escala, no una regla universal de que más base de datos siempre es mejor.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Al menos cinco sectores u organizaciones reales donde un SGBD es parte normal de la operación
+- [ ] Los beneficios de integrar los datos en un SGBD, y qué anomalía del procesamiento de archivos
+      resuelve cada uno
+- [ ] La diferencia entre independencia lógica e independencia física, con un ejemplo propio de cada
+      una
+- [ ] Qué garantizan las propiedades ACID y por qué la concurrencia controlada las necesita
+- [ ] Las cinco limitaciones de un SGBD frente a archivos planos: complejidad, costo, sobrecarga de
+      rendimiento, mayor impacto de una falla y vulnerabilidad
+- [ ] Qué falló concretamente en la brecha de Equifax de 2017 y en la exposición de Novaestrat de
+      2019, según las fuentes oficiales citadas en esta guía
+- [ ] Por qué integrar los datos en un SGBD es una decisión de costo y beneficio, no una regla
+      universal
+:::
+
+## Cierre de la Unidad 1
+
+Con este tema se cierra la Unidad 1. Ya sabes por qué surgió un SGBD frente a las anomalías del
+procesamiento de archivos, dónde aparece de verdad dentro de una organización, y qué gana y qué
+arriesga esa organización al integrar sus datos ahí. La Unidad 2 deja de mirar la base de datos
+desde afuera, como decisión organizacional, y empieza a mirarla desde adentro, con el modelo entidad
+relación, la herramienta con la que vas a representar en un diagrama las cosas que la cafetería del
+Tema 1, o cualquier otra organización, necesita guardar, y cómo se relacionan esas cosas entre sí.
+
+## Recursos
+
+- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Fundamentos de bases de datos.* Capítulo 1,
+  secciones sobre el propósito de los sistemas de bases de datos y las aplicaciones típicas por
+  sector.
+- Elmasri, R. y Navathe, S. B. *Fundamentos de sistemas de bases de datos.* Capítulo 1, sección
+  sobre las ventajas de usar el enfoque de SGBD.
+- Connolly, T. y Begg, C. *Sistemas de bases de datos.* Capítulo 1, secciones sobre las ventajas y
+  las desventajas de los SGBD.
+- U.S. Government Accountability Office. *Data Protection: Actions Taken by Equifax and Federal
+  Agencies in Response to the 2017 Breach* (GAO-18-559), septiembre de 2018.
+  [gao.gov/products/gao-18-559](https://www.gao.gov/products/gao-18-559)
+- vpnMentor. "Report: Ecuadorian Breach Reveals Sensitive Personal Data."
+  [vpnmentor.com/blog/report-ecuador-leak](https://www.vpnmentor.com/blog/report-ecuador-leak/)
+- SiliconANGLE. "Misconfigured database exposes personal info of almost everyone in Ecuador"
+  (septiembre de 2019).
+  [siliconangle.com/2019/09/16/misconfigured-database-exposes-personal-information-almost-every-person-ecuador](https://siliconangle.com/2019/09/16/misconfigured-database-exposes-personal-information-almost-every-person-ecuador/)
+- IBM. "What is a database management system?"
+  [ibm.com/docs/en/zos-basic-skills?topic=zos-what-is-database-management-system](https://www.ibm.com/docs/en/zos-basic-skills?topic=zos-what-is-database-management-system)
+- Oracle. "Ensuring ACID Semantics."
+  [docs.oracle.com/en/database/other-databases/timesten/22.1/operations/ensuring-acid-semantics](https://docs.oracle.com/en/database/other-databases/timesten/22.1/operations/ensuring-acid-semantics.html)
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redaccion de esta guia conto con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

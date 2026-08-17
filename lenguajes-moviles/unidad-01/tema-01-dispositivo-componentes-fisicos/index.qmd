@@ -1,0 +1,625 @@
+---
+title: "Tema 1. Un computador entero en una sola pastilla"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                                |
+|--------|--------------------------------------------------------------------------------|
+| Unidad | Unidad 1. Tecnologías en desarrollo de aplicaciones para dispositivos móviles |
+| Tema   | Tema 1. El dispositivo móvil y sus componentes físicos                        |
+:::
+
+[Diapositivas de la sesión](presentacion.qmd)
+
+Antes de escribir la primera línea de código para un teléfono conviene entender qué hay dentro
+del aparato, porque casi toda decisión que vas a tomar en esta carrera (qué tan fluida se ve una
+animación, cuánta batería gasta una aplicación en segundo plano, si un sensor está disponible o
+no, si un pago por acercamiento es seguro) depende de una pieza de hardware concreta. Este primer
+tema de la Unidad 1 recorre esa base física en cuatro capas: el chip que integra todo el
+computador, los núcleos que reparten el trabajo entre sí, los radios que conectan el teléfono con
+el resto del mundo, y los sensores que le permiten percibir su propio movimiento y su entorno. Con
+esa base construida, el Tema 2 se mueve al software que corre encima de este hardware, y el Tema 3
+cierra la unidad con la forma en que el usuario interactúa con todo esto y los riesgos de
+seguridad que trae.
+
+## Un sistema completo en una sola pastilla
+
+En un computador de escritorio el procesador, la memoria, la tarjeta gráfica y el disco son piezas
+separadas montadas en una placa, y cada una se cambia sin tocar las otras. ARM define el
+desarrollo de un *SoC* (System-on-Chip) como diseñar e implementar un sistema de procesamiento
+completo, con CPU, memoria, entrada y salida, periféricos y almacenamiento, en un solo circuito
+integrado. El teléfono es exactamente eso, ya que reúne en una sola pastilla de silicio los
+bloques que en un escritorio serían chips independientes, entre ellos la CPU, la GPU, el módem
+celular, el DSP (procesador de señal digital, que se encarga del audio y de otras señales
+continuas), el ISP (procesador de señal de imagen, que convierte lo que capta la cámara en una
+fotografía utilizable) y, en los chips más recientes, el NPU (unidad de procesamiento neuronal
+dedicada a tareas de inteligencia artificial).
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 268" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda una placa de escritorio con procesador, memoria, tarjeta grafica y disco como piezas separadas; a la derecha un unico chip SoC que integra CPU, GPU, modem celular, DSP, ISP y NPU" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <path d="M382,14 L382,232" stroke="#cfd8e3" stroke-width="1.5" stroke-dasharray="6 5" fill="none"/>
+  <rect x="10" y="44" width="352" height="172" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="26" y="70" width="146" height="52" rx="8"/>
+    <rect x="190" y="70" width="156" height="52" rx="8"/>
+    <rect x="26" y="140" width="146" height="52" rx="8"/>
+    <rect x="190" y="140" width="156" height="52" rx="8"/>
+  </g>
+  <rect x="400" y="44" width="350" height="172" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="416" y="86" width="104" height="46" rx="8"/>
+    <rect x="528" y="86" width="104" height="46" rx="8"/>
+    <rect x="640" y="86" width="94" height="46" rx="8"/>
+    <rect x="416" y="142" width="104" height="46" rx="8"/>
+    <rect x="528" y="142" width="104" height="46" rx="8"/>
+    <rect x="640" y="142" width="94" height="46" rx="8"/>
+  </g>
+  <g text-anchor="middle">
+    <g font-size="13.5" font-weight="700" fill="#12324f">
+      <text x="186" y="30">Escritorio: piezas sueltas en la placa</text>
+      <text x="575" y="30">Teléfono: una sola pastilla (SoC)</text>
+    </g>
+    <g font-size="13" font-weight="600" fill="#12324f">
+      <text x="99" y="101">Procesador</text><text x="268" y="101">Memoria en ranuras</text>
+      <text x="99" y="171">Tarjeta gráfica</text><text x="268" y="171">Disco</text>
+    </g>
+    <g font-size="12.5" fill="#12324f">
+      <text x="468" y="114">CPU</text><text x="580" y="114">GPU</text><text x="687" y="114">Módem</text>
+      <text x="468" y="170">DSP</text><text x="580" y="170">ISP</text><text x="687" y="170">NPU</text>
+    </g>
+    <text x="380" y="250" font-size="12" fill="#5b6876">La memoria del teléfono es fija y compartida entre el sistema y todas las aplicaciones</text>
+  </g>
+</svg>
+
+:::
+
+De esa integración salen dos consecuencias que arrastras todo el semestre. La memoria es *fija*,
+así que no puedes pedirle al usuario que agregue más como haría con un módulo RAM. Y es
+*compartida*, ya que el sistema, tu aplicación y todas las demás sacan de la misma bolsa, lo que
+obliga al sistema operativo a poder recuperarle memoria a alguien cuando hace falta, y ese alguien
+puede ser tu aplicación mientras el usuario mira otra cosa. Integrar todo en una sola pastilla
+también reduce el espacio físico que ocupa el conjunto, la latencia entre un bloque y otro (los
+datos viajan distancias mucho más cortas que entre chips separados en una placa) y el consumo de
+energía, tres restricciones que definen buena parte del diseño de software móvil que vas a ver en
+el resto del programa.
+
+## El procesador: núcleos grandes y núcleos pequeños en el mismo chip
+
+La CPU de casi cualquier smartphone usa arquitectura ARM, que a su vez se basa en el diseño
+*RISC* (Reduced Instruction Set Computer, o computador con un conjunto reducido de
+instrucciones). Un procesador RISC trabaja con instrucciones más simples y uniformes que las de un
+procesador CISC de escritorio tradicional, lo que permite fabricar núcleos que ocupan menos
+superficie de silicio, gastan menos energía por instrucción ejecutada y disipan menos calor, tres
+cualidades que importan mucho más en un aparato que depende de una batería y que no lleva
+ventilador.
+
+Esa base RISC hizo posible una idea que hoy está en casi cualquier gama media o alta, que consiste
+en combinar, en el mismo chip, núcleos de alto rendimiento con núcleos de bajo consumo, coherentes
+entre sí y con el mismo repertorio de instrucciones, para que el sistema operativo pueda mover el
+trabajo de unos a otros sin que la aplicación note la diferencia. ARM la llama arquitectura
+*big.LITTLE*, y su primera implementación combinó núcleos Cortex-A15 (los "big", de alto
+rendimiento) con núcleos Cortex-A7 (los "LITTLE", de bajo consumo), ambos sobre el mismo conjunto
+de instrucciones Armv7-A y conectados por una interconexión coherente llamada CCI-400, según
+documenta la International Journal of Computer Applications en su artículo sobre esta
+arquitectura. La pieza que decide en cuál cluster corre cada hilo es el planificador del sistema
+operativo, en un modo de trabajo que ARM llama *Heterogeneous Multi-Processing* (HMP, procesamiento
+heterogéneo), en el que el planificador puede usar todos los núcleos a la vez, asignando los hilos
+de alta prioridad o intensivos en cómputo a los núcleos big, y las tareas de fondo a los núcleos
+LITTLE.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El planificador HMP asigna hilos de alta prioridad al cluster big y tareas de fondo al cluster LITTLE, ambos coherentes por la interconexion CCI-400" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="leng1b1" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">El planificador HMP decide en qué cluster corre cada hilo</text>
+  <rect x="270" y="30" width="220" height="50" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="60" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Planificador HMP (sistema operativo)</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#leng1b1)">
+    <path d="M320,80 C260,110 200,120 180,138"/>
+    <path d="M440,80 C520,110 580,120 600,138"/>
+  </g>
+  <g font-size="11.5" fill="#5b6876" text-anchor="middle">
+    <text x="220" y="102">hilo de alta prioridad,</text><text x="220" y="118">intensivo en cómputo</text>
+    <text x="560" y="102">tarea de fondo,</text><text x="560" y="118">poco exigente</text>
+  </g>
+  <rect x="40" y="140" width="280" height="150" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="440" y="140" width="280" height="150" rx="12" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="180" y="164" font-size="14" font-weight="700" fill="#0e6f6c" text-anchor="middle">Cluster big (Cortex-A15)</text>
+  <text x="580" y="164" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Cluster LITTLE (Cortex-A7)</text>
+  <g fill="#ffffff" stroke="#8fc9c5">
+    <rect x="70" y="178" width="60" height="44" rx="6"/><rect x="150" y="178" width="60" height="44" rx="6"/>
+    <rect x="70" y="230" width="60" height="44" rx="6"/><rect x="150" y="230" width="60" height="44" rx="6"/>
+  </g>
+  <g fill="#ffffff" stroke="#c7d6e6">
+    <rect x="470" y="178" width="60" height="44" rx="6"/><rect x="550" y="178" width="60" height="44" rx="6"/>
+    <rect x="470" y="230" width="60" height="44" rx="6"/><rect x="550" y="230" width="60" height="44" rx="6"/>
+  </g>
+  <g font-size="11.5" fill="#12324f" text-anchor="middle">
+    <text x="100" y="204">A15</text><text x="180" y="204">A15</text><text x="100" y="256">A15</text><text x="180" y="256">A15</text>
+    <text x="500" y="204">A7</text><text x="580" y="204">A7</text><text x="500" y="256">A7</text><text x="580" y="256">A7</text>
+  </g>
+  <text x="180" y="304" font-size="11.5" fill="#3c7d7a" text-anchor="middle">alto rendimiento, alto consumo</text>
+  <text x="580" y="304" font-size="11.5" fill="#5b6876" text-anchor="middle">bajo consumo</text>
+  <rect x="320" y="200" width="120" height="24" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="216" font-size="11.5" fill="#5b6876" text-anchor="middle">CCI-400 (coherente)</text>
+</svg>
+
+:::
+
+Esta es la razón técnica de un comportamiento que seguramente ya notaste: el mismo teléfono se
+siente rapidísimo revisando notificaciones y se calienta al grabar video en 4K. No es el mismo
+núcleo trabajando distinto, son literalmente clusters de núcleos distintos, y el sistema operativo
+elige entre ellos sin que tu aplicación tenga que pedirlo explícitamente.
+
+::: {.callout-tip}
+## Reto 1. Quién atiende cada tarea
+
+Tu teléfono está reproduciendo música en segundo plano mientras grabas un video en 4K con la
+cámara. El planificador del sistema operativo, apoyado en la arquitectura big.LITTLE, tiene que
+decidir en qué cluster de núcleos corre cada tarea.
+
+Antes de leer la solución, marca tu predicción:
+
+<label><input type="checkbox"> Reproducir música en segundo plano corre en el cluster big (alto rendimiento)</label><br>
+<label><input type="checkbox"> Reproducir música en segundo plano corre en el cluster LITTLE (bajo consumo)</label><br>
+<label><input type="checkbox"> Grabar video en 4K corre en el cluster big (alto rendimiento)</label><br>
+<label><input type="checkbox"> Grabar video en 4K corre en el cluster LITTLE (bajo consumo)</label>
+
+¿Por qué el planificador tomaría esa decisión y no la contraria?
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+Reproducir música en segundo plano corre en el cluster LITTLE, y grabar video en 4K corre en el
+cluster big. Reproducir un archivo de audio es una tarea de baja prioridad y poco exigente en
+cómputo, así que el planificador HMP la deja en los núcleos de bajo consumo para estirar la
+batería. Grabar video en 4K obliga al ISP a procesar cada cuadro que capta el sensor, y a un
+codificador de video dedicado a comprimirlo y escribirlo a almacenamiento a alta velocidad, una
+carga intensiva que necesita los núcleos big. Es exactamente la regla que describe el HMP
+scheduler según la International Journal of Computer Applications: asignar los hilos de alta
+prioridad o intensivos en cómputo a los núcleos big, y las tareas de fondo a los LITTLE.
+:::
+
+## La zona segura dentro del mismo chip
+
+Integrar todo en una sola pastilla también obliga a resolver un problema nuevo, porque hay que
+proteger una clave criptográfica o una huella dactilar cuando esa clave vive en el mismo chip que
+ejecuta miles de aplicaciones de terceros, algunas de las cuales podrían estar comprometidas. ARM
+resuelve esto particionando el chip en dos mundos. El *Normal World* ejecuta el sistema operativo
+rico, Android o iOS, con todas las aplicaciones, y por su tamaño y complejidad tiene una superficie
+de ataque grande. El *Secure World* ejecuta un kernel mucho más pequeño llamado TEE (Trusted
+Execution Environment, entorno de ejecución confiable), dedicado únicamente a servicios de
+confianza como la gestión de claves criptográficas y la verificación biométrica, con una superficie
+de ataque mucho menor porque hace mucho menos cosas.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El chip se divide en Normal World, que corre el sistema operativo rico y las aplicaciones, y Secure World, que corre el TEE con claves y biometria; el Secure Monitor controla el paso entre los dos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="leng1c1" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Un mismo chip, dos mundos separados por hardware</text>
+  <rect x="20" y="36" width="300" height="188" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="440" y="36" width="300" height="188" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="330" y="90" width="100" height="80" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#leng1c1)">
+    <path d="M320,110 L336,110"/>
+    <path d="M430,150 L444,150"/>
+  </g>
+  <g text-anchor="middle">
+    <text x="170" y="60" font-size="14" font-weight="700" fill="#12324f">Normal World</text>
+    <g font-size="12" fill="#5b6876">
+      <text x="170" y="86">sistema operativo rico:</text>
+      <text x="170" y="104">Android o iOS, y todas</text>
+      <text x="170" y="122">las aplicaciones</text>
+    </g>
+    <text x="170" y="150" font-size="12.5" font-weight="600" fill="#12324f">superficie de ataque grande</text>
+    <text x="170" y="168" font-size="11" fill="#5b6876">por su tamaño y complejidad</text>
+    <text x="590" y="60" font-size="14" font-weight="700" fill="#0e6f6c">Secure World</text>
+    <g font-size="12" fill="#3c7d7a">
+      <text x="590" y="86">TEE: Trusty en Android,</text>
+      <text x="590" y="104">Secure Enclave en Apple</text>
+    </g>
+    <text x="590" y="132" font-size="12" fill="#3c7d7a">claves criptográficas,</text>
+    <text x="590" y="150" font-size="12" fill="#3c7d7a">verificación biométrica</text>
+    <text x="590" y="176" font-size="12.5" font-weight="600" fill="#0e6f6c">superficie de ataque pequeña</text>
+    <text x="380" y="122" font-size="12" font-weight="700" fill="#12324f">Secure</text>
+    <text x="380" y="138" font-size="12" font-weight="700" fill="#12324f">Monitor</text>
+  </g>
+  <text x="380" y="246" font-size="11.5" fill="#5b6876" text-anchor="middle">El Secure Monitor es el único camino entre los dos mundos, y ningún activo del mundo seguro cruza sin pasar por él</text>
+</svg>
+
+:::
+
+Un "Secure Monitor" actúa como guardián que controla cada cambio entre los dos mundos, de modo
+que, según la documentación oficial de ARM sobre TrustZone para Armv8-A, ningún activo del mundo
+seguro quede accesible desde el mundo normal. Android implementa su TEE con Trusty, y Apple con el
+Secure Enclave. Esto explica algo que probablemente diste por sentado: cuando desbloqueas el
+teléfono con la huella, la comparación entre tu huella y la guardada no ocurre en el sistema
+operativo que corren tus aplicaciones, sino dentro del Secure World, así que aunque una aplicación
+maliciosa lograra comprometer Android o iOS por completo, seguiría sin poder leer tu huella
+original.
+
+## Los radios: cómo entra y sale la información
+
+Un teléfono no es útil aislado; necesita comunicarse por al menos cuatro radios distintos, cada uno
+estandarizado por un organismo diferente, operando en una banda de frecuencia distinta y con un
+alcance muy distinto entre sí.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro radios del telefono comparados por organismo que los estandariza, banda de frecuencia y alcance relativo: celular por 3GPP, Wi-Fi por IEEE 802.11 y Wi-Fi Alliance, Bluetooth LE por Bluetooth SIG, y NFC por el NFC Forum, con el alcance decreciendo de celular a NFC" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro radios, cuatro organismos, alcances muy distintos</text>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="10" y="34" width="740" height="58" rx="8"/>
+    <rect x="10" y="100" width="740" height="58" rx="8"/>
+    <rect x="10" y="166" width="740" height="58" rx="8"/>
+    <rect x="10" y="232" width="740" height="58" rx="8"/>
+  </g>
+  <g font-size="13" font-weight="700" fill="#0e6f6c">
+    <text x="26" y="58">Celular (WWAN)</text>
+    <text x="26" y="124">Wi-Fi</text>
+    <text x="26" y="190">Bluetooth LE</text>
+    <text x="26" y="256">NFC</text>
+  </g>
+  <g font-size="11.5" fill="#12324f">
+    <text x="26" y="76">3GPP: GSM, UMTS, LTE, 5G NR</text>
+    <text x="26" y="142">IEEE 802.11, certificado por Wi-Fi Alliance</text>
+    <text x="26" y="208">Bluetooth SIG, Core 4.0 en adelante</text>
+    <text x="26" y="274">NFC Forum, ISO/IEC 18092 y 14443</text>
+  </g>
+  <g font-size="11.5" fill="#5b6876">
+    <text x="330" y="58">bandas licenciadas según país</text>
+    <text x="330" y="124">2,4 GHz, 5 GHz y 6 GHz (Wi-Fi 6E)</text>
+    <text x="330" y="190">2,4 GHz ISM, 40 canales de 2 MHz</text>
+    <text x="330" y="256">13,56 MHz</text>
+  </g>
+  <g fill="#8fc9c5">
+    <rect x="560" y="46" width="170" height="14" rx="7"/>
+    <rect x="560" y="112" width="110" height="14" rx="7"/>
+    <rect x="560" y="178" width="55" height="14" rx="7"/>
+    <rect x="560" y="244" width="14" height="14" rx="7"/>
+  </g>
+  <text x="380" y="292" font-size="11" fill="#5b6876" text-anchor="middle">las barras representan alcance relativo, sin escala exacta entre radios</text>
+</svg>
+
+:::
+
+### La red celular (WWAN)
+
+La red celular la estandariza 3GPP (3rd Generation Partnership Project), un consorcio de varios
+organismos regionales de estandarización que mantiene las especificaciones de GSM y 2G, UMTS y
+WCDMA (3G), LTE (4G) y 5G, publicadas en releases numerados; la serie "38", por ejemplo, cubre 5G
+NR. Desde finales de 2018, 5G NR direcciona tres escenarios de uso que conviene distinguir porque
+resuelven problemas distintos: eMBB (banda ancha móvil mejorada, para descargar video en alta
+resolución), URLLC (comunicaciones ultra confiables de baja latencia, pensadas para control
+industrial o vehículos autónomos, no para una app de redes sociales) y mMTC (comunicación masiva
+tipo máquina, para miles de sensores de bajo consumo conectados en una misma zona).
+
+### Wi-Fi
+
+La capa física y de acceso al medio de Wi-Fi la define el estándar IEEE 802.11, mientras que la
+marca comercial "Wi-Fi" y la certificación de interoperabilidad entre fabricantes las gestiona la
+Wi-Fi Alliance, así que un router y un teléfono de marcas distintas se conectan entre sí porque
+ambos pasaron la misma certificación, no solo porque implementan el mismo estándar técnico. Wi-Fi
+opera en tres bandas con compromisos distintos: 2,4 GHz ofrece mayor alcance pero más interferencia
+porque la comparten muchos otros aparatos, con canales separados apenas 5 MHz entre sí; 5 GHz
+equilibra velocidad y alcance; y desde Wi-Fi 6E, la banda de 6 GHz ofrece espectro limpio, sin
+dispositivos antiguos compitiendo por el canal, y canales más anchos, a cambio de un alcance más
+corto.
+
+### Bluetooth de baja energía (BLE)
+
+El Bluetooth SIG estandariza Bluetooth, y en su especificación Core 4.0, publicada en 2010,
+introdujo Bluetooth Low Energy (BLE) como un sistema de radio de baja complejidad pensado para
+transmitir paquetes pequeños de datos con el menor gasto de energía posible, frente al Bluetooth
+clásico (BR/EDR) que prioriza más ancho de banda a costa de más consumo. BLE opera en la misma
+banda ISM de 2,4 GHz que Wi-Fi, con 40 canales separados 2 MHz entre sí, y usa salto de frecuencia
+adaptativo para esquivar interferencia, cambiando de canal constantemente en vez de quedarse fijo
+en uno solo.
+
+### NFC y la emulación de tarjeta
+
+NFC es una tecnología inalámbrica de alcance muy corto, de apenas unos pocos centímetros, que
+opera a 13,56 MHz y se basa en los estándares ISO/IEC 18092 (NFCIP-1) e ISO/IEC 14443 (tarjetas de
+proximidad), formalizados por el NFC Forum. Una particularidad que lo distingue de los otros tres
+radios es que puede transferir energía además de datos, lo que le permite operar tarjetas o
+etiquetas sin batería propia en modo pasivo: el propio campo del lector alimenta el chip de la
+tarjeta el tiempo suficiente para completar la transacción. El NFC Forum define tres modos de
+operación: lector o escritor, punto a punto entre dos dispositivos, y emulación de tarjeta.
+
+Ese tercer modo es el que hizo posible pagar con el teléfono. Desde Android 4.4, el mecanismo
+Host-based Card Emulation (HCE) permite que cualquier aplicación emule una tarjeta NFC sin
+necesitar un elemento seguro dedicado en el hardware, enrutando los datos directamente a la CPU del
+teléfono.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El lector NFC envia un comando APDU SELECT AID al telefono, el servicio HCE que corre en la CPU del host recibe la peticion enrutada por el AID y responde con un APDU de respuesta, en un intercambio semiduplex" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="leng1e1" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Emulación de tarjeta por host (HCE): intercambio de APDUs</text>
+  <rect x="30" y="60" width="200" height="120" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="530" y="60" width="200" height="120" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="130" y="90" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Terminal / lector NFC</text>
+  <text x="630" y="90" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Teléfono: servicio HCE</text>
+  <text x="630" y="112" font-size="11" fill="#3c7d7a" text-anchor="middle">corre en la CPU del host,</text>
+  <text x="630" y="128" font-size="11" fill="#3c7d7a" text-anchor="middle">sin elemento seguro dedicado</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#leng1e1)">
+    <path d="M232,110 L526,110"/>
+    <path d="M526,150 L232,150"/>
+  </g>
+  <g font-size="11.5" fill="#5b6876" text-anchor="middle">
+    <text x="380" y="100">1. Comando APDU: SELECT AID</text>
+    <text x="380" y="142">2. Respuesta APDU del servicio</text>
+  </g>
+  <text x="380" y="200" font-size="11.5" fill="#12324f" text-anchor="middle">El sistema enruta la transacción al servicio según el AID (hasta 16 bytes)</text>
+  <text x="380" y="220" font-size="11.5" fill="#5b6876" text-anchor="middle">Tiempo recomendado de respuesta por transacción completa: hasta unos 300 ms</text>
+</svg>
+
+:::
+
+La comunicación entre el lector y el teléfono se hace con APDUs (Application Protocol Data Units,
+definidos en ISO/IEC 7816-4) en un modelo semidúplex: el lector envía un comando APDU, típicamente
+`SELECT AID`, y el servicio responde. El AID (Application ID, de hasta 16 bytes) es el que
+determina a qué servicio de qué aplicación se enruta la transacción cuando el teléfono tiene
+instaladas varias aplicaciones capaces de emular tarjetas. Usar HCE requiere que el fabricante
+declare el feature `android.hardware.nfc.hce` y que la aplicación pida el permiso `NFC`, y la
+documentación de Android recomienda que el tiempo de respuesta de una transacción completa no
+supere un límite razonable de unos 300 milisegundos, porque el usuario está sosteniendo el teléfono
+contra el lector y una demora perceptible se siente como un fallo.
+
+### Un pago sin tarjeta física (caso de éxito)
+
+Piensa en la tarjeta de transporte de una ciudad que también funciona agregada al teléfono. Antes
+de seguir, pregúntate qué reemplaza exactamente al chip físico de la tarjeta plástica cuando el
+mismo servicio corre desde una aplicación. La respuesta es HCE, ya que la aplicación registra un
+servicio que responde a comandos APDU exactamente como respondería el chip de la tarjeta física,
+así que para el torniquete del sistema de transporte no hay ninguna diferencia entre acercar la
+tarjeta plástica o acercar el teléfono. El radio NFC de 13,56 MHz sigue siendo el mismo, lo único
+que cambió es que el software, protegido por el sandbox del sistema operativo, reemplazó al
+elemento seguro dedicado que antes era obligatorio para este tipo de aplicación.
+
+### Cuando el radio no sabe de dónde viene la señal (caso de falla)
+
+Ahora piensa en el problema contrario. Kaspersky documentó, en agosto de 2025, intentos de
+desplegar en Brasil un malware llamado "SuperCard X", diseñado para autorizar retiros fraudulentos
+en cajeros y pagos en punto de venta sin que el teléfono de la víctima salga de su bolsillo; el
+reporte precisa que se trató de intentos de despliegue del malware, sin confirmar que se hayan
+concretado ataques contra víctimas reales, pero sí describe con detalle cómo opera la técnica.
+Antes de leer cómo lo logra, pregúntate: si NFC solo alcanza unos pocos centímetros, ¿cómo puede un
+atacante usar la tarjeta de una víctima que está a kilómetros de distancia? La técnica se llama
+ataque de relay, en la que un dispositivo controlado por el atacante se acerca físicamente a la
+tarjeta o al teléfono de la víctima, y retransmite en tiempo real, por Wi-Fi o Bluetooth, cada
+comando y cada respuesta hacia otro dispositivo del atacante que está pegado al terminal de pago
+real. El terminal recibe respuestas válidas y a tiempo, así que las acepta.
+
+::: {.callout-tip}
+## Reto 2. Por qué funciona el ataque de relay
+
+Vuelve al caso de SuperCard X. Antes de leer la solución, marca la explicación que crees correcta
+sobre por qué un ataque de relay NFC logra autorizar un pago fraudulento:
+
+<label><input type="checkbox"> Porque el atacante rompió el cifrado de la comunicación NFC entre la tarjeta y el terminal</label><br>
+<label><input type="checkbox"> Porque el protocolo NFC no verifica de forma confiable que el dispositivo esté realmente cerca del terminal</label><br>
+<label><input type="checkbox"> Porque el alcance real de NFC es de varios metros y no de unos centímetros</label>
+
+Escribe en una frase qué le tendría que agregar el protocolo para cerrar este hueco.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La opción correcta es la segunda. NFC sí tiene alcance corto, de pocos centímetros, y ese alcance
+no se rompe físicamente: lo que se rompe es la suposición de que estar dentro de ese rango prueba
+cercanía real, porque un dispositivo intermediario retransmite la señal por otro canal hacia un
+segundo dispositivo lejos de ahí, y el terminal de pago no tiene forma de distinguir una señal
+retransmitida de una señal físicamente cercana. El cifrado del enlace NFC no está roto, es
+irrelevante para este ataque. Lo que le falta al protocolo es un mecanismo de *distance bounding*
+(acotamiento de distancia), una medición del tiempo de ida y vuelta de la señal lo bastante
+estricta como para detectar el retraso adicional que introduce retransmitirla por otro canal.
+:::
+
+## Los sensores: cómo el teléfono percibe su entorno y su propio movimiento
+
+Android agrupa sus sensores, según su documentación oficial de Sensors Overview, en tres familias.
+Los sensores de movimiento miden fuerzas de aceleración y rotación, entre ellos el acelerómetro,
+la gravedad, el giroscopio, la aceleración lineal y el vector de rotación. Los sensores
+ambientales entregan un solo valor por evento, como el barómetro, el termómetro, el higrómetro o
+el fotómetro. Los sensores de posición informan la posición física del dispositivo respecto a un
+marco de referencia externo, como el magnetómetro y el sensor de proximidad.
+
+::: {.tabla-ancha}
+| Familia | Ejemplos | Naturaleza |
+|---|---|---|
+| Movimiento | Acelerómetro, giroscopio | El acelerómetro y el giroscopio son siempre sensores de hardware; gravedad, aceleración lineal y vector de rotación pueden ser híbridos, calculados por fusión de sensores en software |
+| Posición | Magnetómetro, proximidad | Informan la posición del dispositivo respecto al marco de referencia del mundo |
+| Ambiente | Barómetro, termómetro, higrómetro, fotómetro | Un solo valor por evento, en grados Celsius, hectopascales u otra unidad física |
+:::
+
+El acelerómetro mide la fuerza de aceleración en metros por segundo al cuadrado en tres ejes,
+incluida la gravedad, mientras que el giroscopio mide la tasa de rotación en radianes por segundo
+alrededor de esos mismos tres ejes. Ese sistema de coordenadas está fijo respecto a la orientación
+natural del dispositivo, no rota junto con la pantalla, así que una aplicación que necesite
+mapearlo a la orientación visible tiene que llamar explícitamente a `remapCoordinateSystem()`.
+Desde Android 12 (API 31), el acceso a estos sensores mediante `registerListener()` está limitado a
+200 Hz por defecto, salvo que la aplicación declare el permiso `HIGH_SAMPLING_RATE_SENSORS`, una
+restricción que la propia documentación de Android justifica por privacidad, no solo por batería.
+En Apple, el framework Core Motion cumple un papel equivalente: `CMMotionManager` gestiona los
+servicios de movimiento, y `CMDeviceMotion` encapsula mediciones ya fusionadas de actitud, tasa de
+rotación y aceleración del dispositivo.
+
+Esa última frase, "no solo por privacidad", tiene una razón concreta que conviene conocer antes de
+llegar al Tema 3 de esta unidad, donde se trabajan los permisos a fondo. A diferencia de la cámara
+o del GPS, el acelerómetro y el giroscopio históricamente no pedían permiso explícito para leerse
+en Android ni en iOS, porque se consideraban sensores inofensivos. Investigación académica en
+seguridad móvil ha documentado que esas lecturas se pueden usar como canal lateral para inferir qué
+tecla se pulsó en un teclado virtual en pantalla, aprovechando la vibración diminuta que cada toque
+transmite al cuerpo del teléfono, bajo condiciones de laboratorio con un dispositivo y un teclado
+específicos. La tasa de acierto exacta varía según el estudio, el modelo de teléfono y el teclado
+probado, así que no existe una cifra universal que puedas citar como válida para cualquier
+teléfono; lo que importa para este curso es la brecha que revela, entre lo que el modelo de
+permisos del sistema operativo considera riesgoso y el riesgo real que puede esconder un sensor que
+se ve inofensivo.
+
+## GPS y la posición por trilateración
+
+El GPS no calcula tu posición por triangulación, que mide ángulos, sino por *trilateración*, que
+mide distancias. El receptor mide el tiempo de viaje de la señal desde al menos cuatro satélites:
+tres para obtener una posición en tres dimensiones, y un cuarto para resolver el desfase del reloj
+del propio receptor, porque un teléfono no lleva un reloj atómico a bordo tan preciso como el de
+los satélites, y ese pequeño error de reloj hay que corregirlo con una ecuación adicional en vez de
+con hardware más caro. A partir del tiempo de viaje, el receptor calcula una distancia (un rango) a
+cada satélite, y la posición real es el punto donde se cruzan las esferas definidas por esos
+rangos.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres satelites, cada uno con una circunferencia que representa el rango medido por tiempo de vuelo de la señal; las tres circunferencias se cruzan cerca del punto donde esta el receptor" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Trilateración: la intersección de los rangos da la posición</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="4 4">
+    <circle cx="200" cy="120" r="193"/>
+    <circle cx="560" cy="120" r="193"/>
+    <circle cx="380" cy="300" r="110"/>
+  </g>
+  <g fill="#e4f2f1" stroke="#8fc9c5">
+    <circle cx="200" cy="120" r="9"/>
+    <circle cx="560" cy="120" r="9"/>
+    <circle cx="380" cy="300" r="9"/>
+  </g>
+  <circle cx="380" cy="190" r="7" fill="#0e6f6c" stroke="#ffffff"/>
+  <g font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">
+    <text x="200" y="100">Satélite 1</text>
+    <text x="560" y="100">Satélite 2</text>
+    <text x="380" y="286">Satélite 3</text>
+  </g>
+  <text x="380" y="212" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">receptor</text>
+  <text x="380" y="314" font-size="11" fill="#5b6876" text-anchor="middle">Un cuarto satélite, no dibujado, resuelve el desfase del reloj del receptor sin necesitar reloj atómico a bordo</text>
+</svg>
+
+:::
+
+GPS.gov, la oficina de coordinación del gobierno de Estados Unidos para este sistema, documenta el
+método de trilateración que acabas de ver y advierte que la exactitud real que consigue un receptor
+civil básico, sin corrección diferencial, depende de la geometría de los satélites visibles, de la
+obstrucción por edificios o árboles y de las condiciones atmosféricas, así que no hay una sola
+cifra que aplique a cualquier equipo ni a cualquier condición: el resultado varía según el receptor
+y el entorno en el que se mida. Tampoco existe una cifra oficial única para el GPS asistido
+(A-GPS), que combina un smartphone con Wi-Fi y antenas celulares para acelerar el primer cálculo de
+posición.
+
+### Cuando la señal satelital se falsifica (caso de falla)
+
+En junio de 2017, más de veinte embarcaciones cerca del puerto ruso de Novorossiysk, en el mar
+Negro, reportaron posiciones GPS erróneas, en la ubicación de un aeropuerto tierra adentro. Antes
+de seguir, pregúntate: si la trilateración solo necesita medir el tiempo de viaje de una señal,
+¿qué pasa si esa señal no viene realmente de un satélite? Ese episodio, documentado por GPS World y
+por Sophos News, se considera el primer caso bien registrado de "mass spoofing" (suplantación
+masiva) fuera de un experimento universitario. La señal GPS civil estándar no está firmada
+criptográficamente, así que el receptor no tiene forma de verificar que la señal que está midiendo
+viene de verdad de un satélite en órbita; un transmisor terrestre lo bastante potente puede
+simplemente imitarla y hacerse pasar por varios satélites a la vez, y el receptor calcula una
+posición perfectamente válida desde el punto de vista matemático, solo que completamente falsa.
+
+## La cámara: el sensor que ve
+
+El sensor de imagen de un teléfono moderno es de tipo CMOS (Complementary Metal-Oxide-Semiconductor),
+en el que fotodiodos ubicados bajo filtros de color detectan la luz que llega, y circuitos con
+transistores CMOS amplifican y leen la señal eléctrica que cada fotodiodo genera. Sony, proveedor
+dominante de estos sensores en teléfonos, introdujo en 2009 el diseño retroiluminado, BSI por sus
+siglas en inglés (Back-Side Illuminated), que capta la luz desde la parte trasera del sustrato de
+silicio en vez de desde el frente.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de dos sensores CMOS: en el diseño frontal la luz atraviesa el cableado antes de llegar al fotodiodo, en el diseño retroiluminado BSI el cableado queda detras del fotodiodo y la luz llega directo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Retroiluminado (BSI): el cableado deja de bloquear la luz</text>
+  <text x="180" y="40" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Diseño frontal (FSI)</text>
+  <text x="580" y="40" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Retroiluminado (BSI, 2009)</text>
+  <g text-anchor="middle" font-size="11.5">
+    <text x="180" y="60" fill="#5b6876">luz entrante</text>
+    <text x="580" y="60" fill="#5b6876">luz entrante</text>
+  </g>
+  <g stroke-width="1.2">
+    <rect x="90" y="68" width="180" height="26" rx="4" fill="#eef4fa" stroke="#c7d6e6"/>
+    <rect x="90" y="94" width="180" height="26" rx="4" fill="#eef4fa" stroke="#c7d6e6"/>
+    <rect x="90" y="120" width="180" height="34" rx="4" fill="#f5f7fa" stroke="#cfd8e3"/>
+    <rect x="90" y="154" width="180" height="34" rx="4" fill="#e4f2f1" stroke="#8fc9c5"/>
+  </g>
+  <g stroke-width="1.2">
+    <rect x="490" y="68" width="180" height="26" rx="4" fill="#eef4fa" stroke="#c7d6e6"/>
+    <rect x="490" y="94" width="180" height="26" rx="4" fill="#eef4fa" stroke="#c7d6e6"/>
+    <rect x="490" y="120" width="180" height="34" rx="4" fill="#e4f2f1" stroke="#8fc9c5"/>
+    <rect x="490" y="154" width="180" height="34" rx="4" fill="#f5f7fa" stroke="#cfd8e3"/>
+  </g>
+  <g font-size="11" fill="#12324f" text-anchor="middle">
+    <text x="180" y="85">microlente</text><text x="180" y="111">filtro de color</text>
+    <text x="180" y="140">cableado (bloquea luz)</text><text x="180" y="174">fotodiodo</text>
+    <text x="580" y="85">microlente</text><text x="580" y="111">filtro de color</text>
+    <text x="580" y="140">fotodiodo</text><text x="580" y="174">cableado (detrás)</text>
+  </g>
+  <rect x="140" y="200" width="480" height="60" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="222" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">CMOS apilado (stacked, 2012)</text>
+  <text x="380" y="242" font-size="11.5" fill="#5b6876" text-anchor="middle">separa en capas distintas el arreglo de píxeles y el circuito de procesamiento de señal</text>
+</svg>
+
+:::
+
+En el diseño frontal tradicional, la luz tiene que atravesar el cableado del circuito antes de
+llegar al fotodiodo, y ese cableado bloquea una parte de la luz que debería captarse. Al mover el
+cableado detrás del fotodiodo, el diseño BSI deja que la luz llegue casi directo, lo que
+aproximadamente duplica la sensibilidad del sensor y reduce el ruido frente al diseño frontal
+convencional, según documenta Sony Semiconductor Solutions. En 2012 la misma compañía introdujo el
+CMOS apilado (stacked), que separa en capas físicas distintas el arreglo de píxeles y el circuito
+de procesamiento de señal, y las une entre sí, lo que permite montar circuitos de procesamiento
+mucho más grandes y complejos sin agrandar el sensor. Ese circuito de procesamiento es,
+precisamente, el ISP que ya viste integrado en el SoC al inicio de este tema: la cámara nunca es un
+sensor aislado, es un sensor CMOS trabajando en conjunto con un bloque especializado del mismo
+chip.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Qué es un SoC y por qué integrar CPU, GPU, módem, DSP, ISP y NPU en una sola pastilla cambia el diseño frente a un escritorio
+- [ ] Qué es la arquitectura big.LITTLE y cómo decide el planificador HMP en qué cluster corre cada tarea
+- [ ] Qué separa al Normal World del Secure World en TrustZone, y por qué eso protege claves y biometría
+- [ ] Qué organismo estandariza cada radio (3GPP, IEEE junto con Wi-Fi Alliance, Bluetooth SIG, NFC Forum) y en qué banda opera cada uno
+- [ ] Cómo funciona la emulación de tarjeta por host (HCE) y por qué un ataque de relay la puede engañar
+- [ ] Cómo calcula el GPS tu posición por trilateración, y por qué esa señal se puede suplantar
+- [ ] Qué avance introdujo el sensor BSI y el CMOS apilado en las cámaras de los teléfonos
+:::
+
+Con el hardware ya mapeado, el Tema 2 se mueve al software que corre encima de todo esto: el
+sistema operativo móvil, sus capas, la manera en que se clasifican los dispositivos entre
+smartphone, tablet y wearable, y los modos de operación que el sistema activa según la batería, la
+carga y la conectividad disponible.
+
+## Recursos
+
+Documentación oficial y fuentes verificables, que son las que usa este tema.
+
+- ARM. [SoC development](https://www.arm.com/glossary/soc-development).
+- ARM Developer. [TrustZone for Armv8-A](https://developer.arm.com/-/media/Arm%20Developer%20Community/PDF/Learn%20the%20Architecture/TrustZone%20for%20Armv8-A.pdf) (PDF, versión 1.0).
+- International Journal of Computer Applications, vol. 119, n.° 1. [big.LITTLE Architecture: Heterogeneous Multicore Processing](https://ijcaonline.net/archives/volume119/issue1/21034-3106/).
+- 3GPP. [Sitio oficial](https://www.3gpp.org/) y [Specifications by Series](https://www.3gpp.org/specifications-technologies/specifications-by-series).
+- Bluetooth SIG. [The Bluetooth Low Energy Primer](https://www.bluetooth.com/bluetooth-le-primer/).
+- NFC Forum. [NFC Technology](https://nfc-forum.org/learn/nfc-technology/).
+- Android Developers. [Host-based card emulation overview](https://developer.android.com/develop/connectivity/nfc/hce), [Sensors overview](https://developer.android.com/develop/sensors-and-location/sensors/sensors_overview) y [Motion sensors](https://developer.android.com/develop/sensors-and-location/sensors/sensors_motion).
+- Apple Developer Documentation. [Core Motion](https://developer.apple.com/documentation/coremotion) y [Gyroscope and accelerometer](https://developer.apple.com/design/human-interface-guidelines/gyro-and-accelerometer).
+- GPS.gov (National Coordination Office for Space-Based Positioning, Navigation, and Timing, EE. UU.). [Trilateration](https://www.gps.gov/trilateration).
+- GPS World. [Spoofing in the Black Sea: What really happened?](https://www.gpsworld.com/spoofing-in-the-black-sea-what-really-happened/)
+- Sophos News. [Suspected mass-spoofing of ships' GPS in the Black Sea](https://news.sophos.com/en-us/2017/09/26/suspected-mass-spoofing-of-ships-gps-in-the-black-sea/) (26 de septiembre de 2017).
+- Kaspersky Official Blog. [Direct and reverse NFC relay attacks being used to steal money](https://www.kaspersky.com/blog/nfc-gate-relay-attacks-2026/55116/).
+- Sony Semiconductor Solutions Group. [Common Technology of Image Sensors](https://www.sony-semicon.com/en/technology/is/index.html).
+
+::: {.pie-doc}
+Lenguajes de computación para móviles. Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::
