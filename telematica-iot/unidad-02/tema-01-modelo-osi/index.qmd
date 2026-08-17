@@ -1,0 +1,484 @@
+---
+title: "Tema 1. El mapa de siete capas"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                         |
+|--------|-------------------------------------------------------------------------|
+| Unidad | Unidad 2. Modelo OSI y arquitectura TCP/IP                             |
+| Tema   | Tema 1. El modelo OSI, sus siete capas y el encapsulamiento entre ellas |
+:::
+
+El Tema 3 cerró la Unidad 1 explicando el camino físico que recorre una señal, sea un cable de cobre,
+un hilo de vidrio o el aire libre. Ese camino es apenas uno de los problemas que hay que resolver para
+que dos dispositivos se comuniquen de verdad, porque antes de que un bit llegue a algún lado hace falta
+ponerse de acuerdo en muchas otras decisiones, como se divide la información en trozos manejables, como
+se le pone una dirección a cada dispositivo, como se decide por dónde viaja un paquete cuando hay varias
+rutas posibles, como se recupera un dato que se perdió en el camino, y como el software de un extremo
+entiende el formato en el que llegó la información del otro extremo. La Unidad 2 empieza por poner esas
+decisiones en orden, con un modelo que lleva décadas usándose exactamente para eso, el modelo OSI.
+
+## Por qué hace falta un modelo antes que un protocolo
+
+Si alguien intentara resolver toda la comunicación entre dos computadores con un único bloque de código
+gigante, ese bloque tendría que saber al mismo tiempo cómo se codifican los voltajes en un cable, cómo
+se calcula la mejor ruta entre dos redes, cómo se retransmite un paquete perdido y cómo se traduce el
+formato de un archivo, todo mezclado. Cualquier cambio pequeño, como pasar de cobre a fibra óptica,
+obligaría a revisar ese bloque completo de arriba a abajo, porque nada estaría separado de nada. La idea
+de dividir la comunicación en *capas* resuelve justo ese problema, cada capa se encarga de un grupo
+acotado de tareas, ofrece una interfaz clara a la capa que tiene encima, y puede cambiar por dentro sin
+que las demás capas se enteren, siempre que esa interfaz se mantenga igual.
+
+El estándar que formaliza esta idea para las redes de datos es la norma ISO/IEC 7498-1, "Information
+technology - Open Systems Interconnection - Basic Reference Model: The Basic Model", publicada por la
+Organización Internacional de Normalización, ISO, y adoptada como texto técnicamente equivalente por la
+Unión Internacional de Telecomunicaciones bajo la Recomendación UIT-T X.200. Vale la pena detenerse en
+un punto que se presta a confusión, OSI, sigla de Open Systems Interconnection, es un *modelo de
+referencia*, un marco conceptual de siete capas para describir funciones de comunicación, y no una
+implementación real ni un conjunto de protocolos que uses todos los días. La arquitectura que sí corre
+hoy en Internet es TCP/IP, y el Tema 2 de esta unidad la compara capa por capa contra OSI. Confundir el
+modelo con una implementación es el primer error que conviene evitar desde ya, porque ningún sistema
+operativo, ni Windows ni Linux ni el firmware de un sensor IoT, tiene literalmente siete módulos de
+software separados que se llamen "capa 1", "capa 2" y así sucesivamente.
+
+## Las siete capas del modelo OSI
+
+La norma numera las capas de la 1, la más cercana al medio físico, a la 7, la más cercana al programa
+que usa la persona. Cada capa entrega su información a la capa de abajo, y esa información recibe un
+nombre distinto según en qué capa está viajando, lo que la norma llama la *unidad de datos de protocolo*
+o PDU. Así se ven las siete, con la función que cumple cada una y el nombre de su PDU:
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 452" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las siete capas del modelo OSI apiladas de la aplicacion en la capa 7 hasta la fisica en la capa 1, con una funcion breve y el nombre de la PDU de cada capa" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="360" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Las siete capas del modelo OSI, de la aplicación a la física</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="50" y="34" width="430" height="44" rx="8"/><rect x="50" y="88" width="430" height="44" rx="8"/><rect x="50" y="142" width="430" height="44" rx="8"/><rect x="50" y="250" width="430" height="44" rx="8"/><rect x="50" y="304" width="430" height="44" rx="8"/><rect x="50" y="358" width="430" height="44" rx="8"/></g>
+<rect x="50" y="196" width="430" height="44" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+<g font-size="13.5" font-weight="700" fill="#12324f"><text x="66" y="54">7. Aplicación</text><text x="66" y="108">6. Presentación</text><text x="66" y="162">5. Sesión</text><text x="66" y="270">3. Red</text><text x="66" y="324">2. Enlace de datos</text><text x="66" y="378">1. Física</text></g>
+<text x="66" y="216" font-size="13.5" font-weight="700" fill="#0e6f6c">4. Transporte</text>
+<g font-size="11" fill="#5b6876"><text x="66" y="72">provee servicios de red al software del usuario</text><text x="66" y="126">traduce formato: codificación, compresión, cifrado</text><text x="66" y="180">abre, mantiene y cierra la sesión de comunicación</text><text x="66" y="288">direccionamiento lógico y enrutamiento entre nodos</text><text x="66" y="342">tramas entre nodos vecinos; controla acceso al medio</text><text x="66" y="396">bits crudos: voltaje, luz, radiofrecuencia</text></g>
+<text x="66" y="234" font-size="11" fill="#3c7d7a">transmisión confiable extremo a extremo; usa puertos</text>
+<g font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="end"><text x="470" y="60">PDU: Datos</text><text x="470" y="114">PDU: Datos</text><text x="470" y="168">PDU: Datos</text><text x="470" y="222">PDU: Segmento</text><text x="470" y="276">PDU: Paquete</text><text x="470" y="330">PDU: Trama</text><text x="470" y="384">PDU: Bit</text></g>
+<text x="360" y="420" font-size="11.5" fill="#5b6876" text-anchor="middle">Los datos bajan capa por capa en el emisor y suben capa por capa, en orden inverso, en el receptor</text>
+</svg>
+
+:::
+
+La capa 4, transporte, queda resaltada aparte porque marca una frontera útil, de la 5 a la 7 hacia
+arriba las capas se ocupan de lo que necesita el software de aplicación, y de la 3 hacia abajo se ocupan
+de mover datos entre nodos de la red sin importarles qué aplicación los generó. A continuación va cada
+capa con más detalle, empezando por la más cercana al medio físico porque es la más fácil de tocar con
+las manos y la que ya conectaste con el Tema 3 de la Unidad 1.
+
+### Capa 1, física
+
+La capa física resuelve un solo problema, pero es el problema del que ninguna otra capa puede
+prescindir, cómo convertir una secuencia de bits en algo que un medio de transmisión pueda llevar de un
+punto a otro, sea variación de voltaje en un cable de cobre, variación de intensidad de luz en una fibra
+óptica o variación de amplitud en una onda de radio. Esto ya lo viste en detalle en el Tema 2 y el Tema 3
+de la Unidad 1, la codificación de línea, la modulación y los seis medios de transmisión, guiados y no
+guiados, son contenido de esta capa. La capa física no sabe qué significan los bits que transporta, ni
+si forman parte de una trama válida o de basura, solo entrega bits crudos a la capa de arriba.
+
+### Capa 2, enlace de datos
+
+La capa de enlace de datos resuelve el transporte confiable de una *trama* entre dos nodos que están
+conectados directamente por el mismo medio físico, un cable entre dos switches o un enlace de radio
+entre un sensor y su gateway. Dos tareas concretas caen aquí, decidir quién puede transmitir en un
+momento dado cuando varios dispositivos comparten el mismo medio, lo que se llama control de acceso al
+medio, y detectar, y en algunos casos corregir, errores que ocurrieron durante ese salto puntual. El
+Tema 3 de esta misma unidad profundiza en Ethernet, la tecnología más común de esta capa, con su
+direccionamiento MAC y su formato de trama.
+
+### Capa 3, red
+
+La capa de red resuelve el problema de mover un *paquete* entre dos nodos que no están conectados
+directamente, cuando entre el origen y el destino hay varias redes intermedias por atravesar. Aquí vive
+el direccionamiento lógico, una dirección que identifica a un dispositivo sin importar en qué red física
+concreta esté conectado, y el enrutamiento, la decisión de por cuál camino, entre varios posibles, debe
+salir cada paquete. Conviene una aclaración de vocabulario, algunos textos usan "datagrama" en vez de
+"paquete" para referirse a esta PDU, sobre todo cuando el servicio no establece una conexión previa;
+no hay una convención única entre todos los autores, así que no te sorprenda ver ambos términos según el
+libro que estés leyendo.
+
+### Capa 4, transporte
+
+La capa de transporte resuelve la entrega confiable de un *segmento* entre los dos programas finales que
+se están comunicando, no solo entre los dos dispositivos, sino entre dos procesos concretos dentro de
+esos dispositivos. Para eso usa números de puerto, que permiten que varias aplicaciones del mismo
+computador reciban datos de la red al mismo tiempo sin mezclarse, y mecanismos de control de flujo y de
+errores de punta a punta, cosas como confirmar que un segmento llegó y reenviarlo si no llegó. Esta
+capa es la frontera entre lo que le importa a la red, entregar datos de un lado a otro, y lo que le
+importa a la aplicación, recibir esos datos completos y en orden.
+
+### Capa 5, sesión
+
+La capa de sesión resuelve la administración de una conversación sostenida en el tiempo entre dos
+sistemas, abrirla, mantenerla activa mientras dure el intercambio y cerrarla de forma ordenada cuando
+termina. En la práctica, encontrar un protocolo real que corresponda de forma limpia y exclusiva a esta
+capa es más difícil de lo que el modelo sugiere, y el Tema 2 de esta unidad va a explicar por qué.
+
+### Capa 6, presentación
+
+La capa de presentación resuelve que los dos extremos de la comunicación entiendan el mismo formato de
+datos, aunque por dentro cada uno represente la información de forma distinta. Codificación de
+caracteres, compresión para ocupar menos espacio y cifrado para que nadie más pueda leer el contenido
+son tareas típicas de esta capa. Al igual que con la capa de sesión, en el software real esta función
+casi nunca aparece como un módulo separado y aislado.
+
+### Capa 7, aplicación
+
+La capa de aplicación resuelve el último paso, ofrecerle al programa que usa la persona, o al programa
+que usa otro programa, los servicios de red que necesita para hacer su trabajo, compartir un archivo,
+consultar una página, enviar un mensaje. Es la única capa con la que interactúa directamente quien usa
+el sistema, aunque por debajo estén trabajando las otras seis sin que se note.
+
+::: {.callout-tip}
+## Reto 1. Predice antes de revisar
+
+Antes de seguir leyendo, marca las afirmaciones que creas verdaderas sobre el modelo OSI, sin volver a
+mirar la sección anterior.
+
+<label><input type="checkbox"> OSI es el conjunto de protocolos que usa Internet hoy para transportar datos.</label>
+
+<label><input type="checkbox"> Una capa solo se comunica directamente, dentro del mismo dispositivo, con la capa que tiene justo encima y la que tiene justo debajo.</label>
+
+<label><input type="checkbox"> Un router opera exclusivamente en la capa de enlace de datos.</label>
+
+<label><input type="checkbox"> El encabezado que agrega la capa de transporte en el emisor llega intacto hasta la capa de aplicación del receptor.</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+Ninguna de las cuatro es verdadera tal como está escrita.
+
+- **OSI no es lo que Internet usa hoy**, ya que Internet corre sobre la arquitectura TCP/IP, que el
+  Tema 2 va a comparar con OSI capa por capa. OSI es el modelo de referencia con el que se enseña y se
+  diagnostica, no el conjunto de protocolos en producción.
+- **La comunicación directa entre capas sí es correcta, pero falta matizarla**, porque dentro de un
+  mismo dispositivo cada capa entrega su PDU a la capa inmediatamente inferior a través de una interfaz
+  definida, y esa parte de la afirmación describe bien el modelo. El problema de la frase completa
+  aparece más abajo, en la sección sobre comunicación par a par, donde vas a ver que la capa N de un
+  sistema también "habla" en teoría con la capa N del otro sistema, aunque físicamente nunca se toquen.
+- **Un router opera en la capa de red, la capa 3, no en la de enlace**, mientras que un switch es el que
+  opera típicamente en la capa 2. Esta distinción vuelve más adelante, en la sección sobre por qué el
+  modelo importa para clasificar equipos.
+- **El encabezado de transporte no llega a la aplicación**, ya que cada capa retira su propio
+  encabezado antes de entregarle el contenido a la capa de arriba, así que la capa de aplicación del
+  receptor nunca ve el encabezado que puso la capa de transporte del emisor. Eso es justamente el
+  principio de encapsulamiento que viene a continuación.
+:::
+
+## Comunicación par a par, y el camino real que siguen los datos
+
+El modelo OSI describe la comunicación entre capas de dos maneras distintas, y las dos son ciertas al
+mismo tiempo aunque parezcan contradecirse. Por un lado, la capa N de un sistema se piensa como si
+hablara directamente con la capa N del sistema remoto, siguiendo las reglas de un protocolo de esa capa,
+esto se llama comunicación *par a par*, del inglés *peer to peer*, y es la forma en que conviene razonar
+sobre el diseño de un protocolo, la capa de transporte del emisor le habla a la capa de transporte del
+receptor sin que le importe cómo llegó ahí el mensaje. Por otro lado, esa conversación es puramente
+lógica, ya que físicamente ningún dato salta directo de la capa de transporte de un sistema a la capa de
+transporte del otro; los datos bajan por toda la pila del emisor, cruzan el único enlace físico real que
+existe entre los dos sistemas, y suben por toda la pila del receptor.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos pilas de siete capas, emisor a la izquierda y receptor a la derecha; lineas punteadas horizontales muestran la comunicacion logica par a par entre capas del mismo numero, y una flecha solida muestra el camino real que bajan los datos por el emisor, cruzan el unico enlace fisico real y suben por el receptor" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="tpi2b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#0e6f6c"/></marker></defs>
+<text x="360" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Comunicación par a par (lógica) frente al camino real de los datos</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="34" width="150" height="22"/><rect x="60" y="60" width="150" height="22"/><rect x="60" y="86" width="150" height="22"/><rect x="60" y="112" width="150" height="22"/><rect x="60" y="138" width="150" height="22"/><rect x="60" y="164" width="150" height="22"/><rect x="60" y="190" width="150" height="22"/></g>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="510" y="34" width="150" height="22"/><rect x="510" y="60" width="150" height="22"/><rect x="510" y="86" width="150" height="22"/><rect x="510" y="112" width="150" height="22"/><rect x="510" y="138" width="150" height="22"/><rect x="510" y="164" width="150" height="22"/><rect x="510" y="190" width="150" height="22"/></g>
+<g font-size="11" fill="#12324f"><text x="68" y="49">7 Aplicación</text><text x="68" y="75">6 Presentación</text><text x="68" y="101">5 Sesión</text><text x="68" y="127">4 Transporte</text><text x="68" y="153">3 Red</text><text x="68" y="179">2 Enlace</text><text x="68" y="205">1 Física</text></g>
+<g font-size="11" fill="#12324f"><text x="518" y="49">7 Aplicación</text><text x="518" y="75">6 Presentación</text><text x="518" y="101">5 Sesión</text><text x="518" y="127">4 Transporte</text><text x="518" y="153">3 Red</text><text x="518" y="179">2 Enlace</text><text x="518" y="205">1 Física</text></g>
+<g stroke="#cfd8e3" stroke-width="1.3" stroke-dasharray="4 4"><line x1="210" y1="45" x2="510" y2="45"/><line x1="210" y1="71" x2="510" y2="71"/><line x1="210" y1="97" x2="510" y2="97"/><line x1="210" y1="123" x2="510" y2="123"/><line x1="210" y1="149" x2="510" y2="149"/><line x1="210" y1="175" x2="510" y2="175"/></g>
+<line x1="210" y1="201" x2="510" y2="201" stroke="#8fb3d1" stroke-width="1.8"/>
+<text x="360" y="225" font-size="11" fill="#5b6876" text-anchor="middle">único enlace físico real, entre la capa 1 física del emisor y la del receptor</text>
+<path d="M135,56 L135,201 L585,201 L585,56" fill="none" stroke="#0e6f6c" stroke-width="2.2" marker-end="url(#tpi2b)"/>
+<text x="360" y="250" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">línea sólida: el camino real de los datos, bajar, cruzar, subir</text>
+<text x="360" y="272" font-size="11" fill="#5b6876" text-anchor="middle">línea punteada: la conversación lógica entre capas del mismo número, nunca ocurre en la práctica</text>
+</svg>
+
+:::
+
+Esta distinción explica algo que a primera vista parece extraño, que la capa de transporte del emisor
+"le hable" a la capa de transporte del receptor usando un lenguaje propio, encabezados, números de
+secuencia, confirmaciones, sin que las capas de red o de enlace por las que en verdad pasan esos datos
+entiendan una sola palabra de ese lenguaje. Para esas capas intermedias, el segmento completo de
+transporte es solo carga útil, datos que hay que transportar sin abrir ni interpretar.
+
+## El principio de encapsulamiento
+
+El mecanismo que hace posible esa comunicación lógica par a par, mientras los datos en realidad solo
+bajan y suben por la pila local, es el *encapsulamiento*. La norma ISO/IEC 7498-1 lo describe así, la
+PDU que produce la capa N se entrega a la capa N menos uno, donde pasa a llamarse *unidad de datos de
+servicio*, SDU. La capa N menos uno toma esa SDU, le agrega su propio encabezado, y en algunos casos un
+remolque al final, y el resultado se convierte en la PDU de la capa N menos uno. Este proceso se repite
+capa por capa, siempre hacia abajo, en el emisor, y se revierte exactamente al revés en el receptor,
+donde cada capa retira su propio encabezado y su propio remolque antes de entregar lo que queda a la
+capa de arriba, lo que se llama desencapsulamiento.
+
+Esto es exactamente lo que explica por qué una trama Ethernet "contiene" un paquete, que "contiene" un
+segmento, que "contiene" los datos de la aplicación, no como una metáfora suelta, sino como la
+descripción literal de cómo se construye byte a byte lo que viaja por el medio físico.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El encapsulamiento paso a paso: los datos de las capas 5 a 7 se envuelven primero con un encabezado de transporte formando el segmento, luego con un encabezado de red formando el paquete, y por ultimo con un encabezado y un trailer de enlace formando la trama" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="tpi2c" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+<text x="270" y="20" font-size="12.5" fill="#5b6876" text-anchor="middle">(de las capas 5, 6 y 7)</text>
+<rect x="270" y="30" width="160" height="34" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+<text x="350" y="51" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Datos</text>
+<path d="M350,64 L350,84" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#tpi2c)"/>
+<text x="470" y="78" font-size="11" fill="#5b6876">capa 4 agrega su encabezado</text>
+<text x="315" y="86" font-size="11.5" font-weight="600" fill="#5b6876" text-anchor="middle">Segmento (PDU de la capa 4)</text>
+<g><rect x="200" y="90" width="70" height="34" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/><rect x="270" y="90" width="160" height="34" rx="6" fill="#eef4fa" stroke="#c7d6e6"/></g>
+<text x="235" y="111" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Enc. transp.</text>
+<text x="350" y="111" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Datos</text>
+<path d="M315,124 L315,144" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#tpi2c)"/>
+<text x="470" y="138" font-size="11" fill="#5b6876">capa 3 agrega su encabezado</text>
+<text x="285" y="146" font-size="11.5" font-weight="600" fill="#5b6876" text-anchor="middle">Paquete (PDU de la capa 3)</text>
+<g><rect x="140" y="150" width="60" height="34" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/><rect x="200" y="150" width="70" height="34" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/><rect x="270" y="150" width="160" height="34" rx="6" fill="#eef4fa" stroke="#c7d6e6"/></g>
+<text x="170" y="171" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Enc. red</text>
+<text x="235" y="171" font-size="11" fill="#5b6876" text-anchor="middle">Enc. transp.</text>
+<text x="350" y="171" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Datos</text>
+<path d="M285,184 L285,204" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#tpi2c)"/>
+<text x="500" y="198" font-size="11" fill="#5b6876">capa 2 agrega encabezado y trailer</text>
+<text x="285" y="206" font-size="11.5" font-weight="600" fill="#5b6876" text-anchor="middle">Trama (PDU de la capa 2)</text>
+<g><rect x="80" y="210" width="60" height="34" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/><rect x="140" y="210" width="60" height="34" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/><rect x="200" y="210" width="70" height="34" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/><rect x="270" y="210" width="160" height="34" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><rect x="430" y="210" width="60" height="34" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/></g>
+<text x="110" y="231" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Enc. enlace</text>
+<text x="170" y="231" font-size="11" fill="#5b6876" text-anchor="middle">Enc. red</text>
+<text x="235" y="231" font-size="11" fill="#5b6876" text-anchor="middle">Enc. transp.</text>
+<text x="350" y="231" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Datos</text>
+<text x="460" y="231" font-size="11" fill="#5b6876" text-anchor="middle">Trailer</text>
+<text x="360" y="270" font-size="11.5" fill="#5b6876" text-anchor="middle">La capa física no agrega su propio encabezado: convierte esta trama completa, bit a bit, en una señal</text>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Caso de estudio, un mensaje de chat que baja y sube por la pila
+
+Un estudiante escribe "Hola" en una aplicación de mensajería en su celular y lo envía a un servidor en
+la nube por wifi. Antes de seguir leyendo, piensa, ¿qué le pasa exactamente a esos cuatro caracteres
+entre que el estudiante toca "enviar" y el momento en que el servidor recibe algo, y qué debe pasar en
+el servidor para que su software vuelva a mostrar el texto "Hola" tal cual, sin nada agregado?
+
+Al bajar por la pila del celular, la aplicación de mensajería, en capa 7, produce los datos "Hola" con
+el formato que use ese protocolo de chat. La capa de presentación puede cifrarlos y la de sesión los
+asocia a la conversación abierta con el servidor, pero para el resto de este ejemplo trátalos como una
+sola unidad de datos que baja intacta hasta la capa de transporte. Ahí se convierte en un segmento, con
+un encabezado que identifica, entre otras cosas, a qué puerto del servidor va dirigido. La capa de red
+envuelve ese segmento en un paquete con las direcciones de origen y destino. La capa de enlace lo
+envuelve otra vez en una trama con las direcciones físicas del siguiente salto, y le agrega además un
+remolque para detectar errores. La capa física, por último, convierte toda esa trama en una señal de
+radio que sale de la antena del celular.
+
+En el servidor ocurre exactamente lo inverso, capa 1 recibe la señal y la convierte de vuelta en bits,
+capa 2 arma la trama, verifica el remolque y si el resultado es válido entrega el paquete hacia arriba y
+descarta su propio encabezado, capa 3 hace lo mismo con las direcciones de red y entrega el segmento,
+capa 4 entrega los datos al puerto correcto, y así hasta que la capa 7 del servidor recibe exactamente
+"Hola", sin ningún encabezado de ninguna de las capas intermedias, porque cada una retiró el suyo antes
+de pasar el contenido hacia arriba.
+:::
+
+## Por qué el modelo importa aunque nadie tenga siete módulos separados
+
+Ningún sistema operativo real divide su código en siete piezas que coincidan una a una con las siete
+capas de la norma; buena parte del software de red mezcla varias capas en una sola implementación por
+razones de eficiencia. El valor del modelo no está entonces en describir cómo está construido el
+software por dentro, sino en ofrecer un vocabulario común para tres tareas muy prácticas, diagnosticar
+en qué punto falla una comunicación, "¿el problema está en la capa 1, en la 2 o en la 3?", diseñar
+protocolos de forma modular, donde cada capa solo depende de la interfaz que le ofrece la de abajo y no
+de su implementación interna, y clasificar equipos de red según hasta qué capa necesitan mirar para
+hacer su trabajo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 244" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro equipos de red asociados a la capa OSI mas alta que necesitan leer para funcionar: hub y repetidor en capa fisica, switch en capa de enlace, router en capa de red, y firewall de siguiente generacion hasta la capa de aplicacion" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="360" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un equipo de red se clasifica por la capa más alta que necesita leer</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="30" width="180" height="26"/><rect x="60" y="56" width="180" height="26"/><rect x="60" y="82" width="180" height="26"/><rect x="60" y="108" width="180" height="26"/><rect x="60" y="134" width="180" height="26"/><rect x="60" y="160" width="180" height="26"/><rect x="60" y="186" width="180" height="26"/></g>
+<g font-size="11.5" fill="#12324f"><text x="72" y="47">7 Aplicación</text><text x="72" y="73">6 Presentación</text><text x="72" y="99">5 Sesión</text><text x="72" y="125">4 Transporte</text><text x="72" y="151">3 Red</text><text x="72" y="177">2 Enlace</text><text x="72" y="203">1 Física</text></g>
+<g stroke="#cfd8e3" stroke-width="1.3" stroke-dasharray="3 3"><line x1="240" y1="43" x2="440" y2="43"/><line x1="240" y1="147" x2="440" y2="147"/><line x1="240" y1="173" x2="440" y2="173"/><line x1="240" y1="199" x2="440" y2="199"/></g>
+<g fill="#e4f2f1" stroke="#8fc9c5"><rect x="440" y="28" width="220" height="34" rx="8"/><rect x="440" y="132" width="220" height="30" rx="8"/><rect x="440" y="158" width="220" height="30" rx="8"/><rect x="440" y="184" width="220" height="30" rx="8"/></g>
+<g font-size="11.5" font-weight="600" fill="#0e6f6c" text-anchor="middle"><text x="550" y="49">firewall de siguiente generación</text><text x="550" y="151">router</text><text x="550" y="177">switch</text><text x="550" y="203">hub / repetidor</text></g>
+<text x="360" y="230" font-size="11" fill="#5b6876" text-anchor="middle">un switch opera en capa 2, un router en capa 3; un firewall moderno puede inspeccionar hasta la capa 7</text>
+</svg>
+
+:::
+
+## Un caso donde la separación de capas se rompe a propósito
+
+El modelo describe una separación limpia, cada capa solo toca su propio encabezado y le entrega a la de
+arriba únicamente lo que le corresponde. En redes reales, sin embargo, hay dispositivos intermedios que
+violan esa separación de forma deliberada, y el IETF los documentó formalmente en la RFC 3234,
+"Middleboxes: Taxonomy and Issues". Un *middlebox* es cualquier dispositivo intermedio que hace algo más
+que reenviar un paquete sin tocarlo, un NAT que traduce direcciones, un firewall que filtra tráfico, un
+proxy que intercepta conexiones. Traducida al español, la RFC 3234 dice que ese tipo de desvío o
+modificación viola la suposición arquitectónica básica de que los paquetes viajan del origen al destino
+esencialmente sin cambios, es decir, contradice la idea de que cada nodo intermedio solo debería mirar
+hasta la capa 3 para decidir por dónde reenviar un paquete, sin abrir ni tocar la capa 4.
+
+Piensa en un caso muy cercano a este curso, una pasarela IoT doméstica que conecta varios sensores por
+wifi a Internet. Antes de seguir, pregúntate, según la separación estricta de capas, ¿debería esa
+pasarela necesitar leer el número de puerto de la capa de transporte para hacer su trabajo de reenviar
+paquetes?
+
+La respuesta, en el modelo puro, sería que no, un dispositivo que solo enruta paquetes debería bastarle
+con la dirección de la capa 3. En la práctica, sin embargo, esa misma pasarela casi siempre hace
+traducción de direcciones, NAT, para que varios sensores con direcciones privadas compartan una sola
+dirección pública. El siguiente diagrama muestra ese desvío antes de entrar en el detalle técnico de qué
+campos reescribe exactamente.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un paquete que sale de un cliente con una direccion IP y un puerto privados pasa por un dispositivo NAT o firewall que lee y reescribe tanto la direccion de capa 3 como el puerto de capa 4 antes de reenviarlo al servidor, algo que un enrutador que solo respetara la capa 3 no deberia necesitar hacer" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="tpi2d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+<text x="360" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un NAT lee y reescribe informacion de dos capas a la vez</text>
+<rect x="40" y="90" width="140" height="56" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+<text x="110" y="122" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">sensor IoT</text>
+<rect x="290" y="90" width="160" height="56" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+<text x="370" y="115" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">pasarela NAT</text>
+<text x="370" y="132" font-size="11" fill="#3c7d7a" text-anchor="middle">lee capa 3 y capa 4</text>
+<rect x="540" y="90" width="140" height="56" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+<text x="610" y="122" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">servidor</text>
+<path d="M180,118 L286,118" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#tpi2d)"/>
+<path d="M450,118 L536,118" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#tpi2d)"/>
+<text x="233" y="105" font-size="11" fill="#5b6876" text-anchor="middle">IP: 192.168.1.10</text>
+<text x="233" y="168" font-size="11" fill="#5b6876" text-anchor="middle">puerto: 5000</text>
+<text x="493" y="105" font-size="11" fill="#5b6876" text-anchor="middle">IP: 200.1.1.5</text>
+<text x="493" y="168" font-size="11" fill="#5b6876" text-anchor="middle">puerto: 60000</text>
+<text x="370" y="180" font-size="11" fill="#5b6876" text-anchor="middle">un router "puro" solo debería mirar la capa 3; el NAT reescribe capa 3 y capa 4 a la vez</text>
+<text x="360" y="215" font-size="11" fill="#5b6876" text-anchor="middle">RFC 3234, "Middleboxes: Taxonomy and Issues": el paquete no llega esencialmente sin cambios</text>
+</svg>
+
+:::
+
+Como el diagrama muestra, para lograr esa traducción la pasarela tiene que leer y reescribir, al mismo
+tiempo, la dirección de la capa 3 y el número de puerto de la capa 4, algo que un enrutador "puro" según
+el modelo jamás debería necesitar tocar. La misma RFC 3234 señala, sobre otro tipo de middlebox que
+mejora el rendimiento de TCP interceptando la conexión, que este tipo de dispositivo puede engañar a las
+aplicaciones entregando un servicio poco confiable sobre un socket TCP que se supone confiable,
+justamente porque intercepta y reescribe tráfico de una capa que no le "correspondería" tocar.
+
+Esta observación no es una crítica al modelo, sino un recordatorio de que un modelo de referencia
+describe cómo conviene razonar sobre una comunicación en capas, no una ley física que ningún dispositivo
+pueda violar. Los diseñadores de redes reales rompen la separación estricta cuando les conviene por
+razones prácticas muy concretas, y entender esa tensión, entre el modelo ordenado y la red real, es
+parte de lo que distingue a quien solo memorizó las siete capas de quien de verdad entiende para qué
+sirven.
+
+## Por qué la pila de protocolos OSI no ganó, aunque el modelo sí sobrevivió
+
+Vale la pena cerrar con una distinción que conecta directamente con el Tema 2. Además del modelo de
+referencia de siete capas, ISO también intentó construir una pila completa de protocolos concretos que
+implementaran esas siete capas. Esa pila de protocolos, distinta del modelo, terminó abandonada en la
+práctica. Las razones documentadas de forma cualitativa apuntan a que resultó demasiado compleja, con
+tantas variantes y opciones que las implementaciones de distintos fabricantes solían no interoperar bien
+entre sí, mientras que TCP/IP ya llevaba tiempo funcionando en redes reales como ARPANET cuando OSI
+todavía se estaba terminando de definir. El modelo de referencia sobrevivió como herramienta didáctica y
+de diagnóstico precisamente porque describe funciones, no una implementación concreta que competir; la
+pila de protocolos OSI, en cambio, sí competía directamente contra TCP/IP y perdió esa competencia. El
+Tema 2 retoma este punto con la comparación capa por capa entre los cuatro niveles de TCP/IP y los siete
+de OSI.
+
+::: {.callout-tip}
+## Reto 2. Ubica el problema en su capa
+
+Vas a diseñar un sistema de sensores IoT que manda una lectura de temperatura cada cinco minutos a un
+servidor en la nube por wifi. Antes de leer la solución, identifica en qué capa OSI se resolvería cada
+uno de estos cuatro problemas.
+
+1. Elegir la ruta entre el sensor y el servidor cuando hay varios enrutadores posibles en el camino.
+2. Detectar si un bit se corrompió por interferencia de otra red inalámbrica cercana durante ese salto.
+3. Garantizar que, si un paquete se pierde en el camino, la lectura se reenvíe y no se pierda.
+4. Convertir la lectura de temperatura, un número de punto flotante, a una secuencia de bytes que tanto
+   el sensor como el servidor interpreten de la misma forma.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+- **Elegir la ruta entre varios enrutadores posibles es tarea de la capa 3, red**, ya que decidir por
+  cuál camino sale un paquete cuando hay varias rutas disponibles es, literalmente, la definición de
+  enrutamiento que abrió la sección de la capa de red.
+- **Detectar un bit corrompido durante un salto puntual es tarea de la capa 2, enlace de datos**, porque
+  la capa física entrega los bits tal como llegaron, sin evaluarlos, y es la capa de enlace la que
+  agrega el remolque que permite detectar errores ocurridos en ese salto concreto entre el sensor y el
+  primer punto de la red.
+- **Garantizar que un paquete perdido se reenvíe es tarea de la capa 4, transporte**, ya que el control
+  de errores de punta a punta, entre los dos procesos finales y no entre cada par de nodos intermedios,
+  es responsabilidad de la capa de transporte.
+- **Convertir un número de punto flotante a bytes con un formato común es tarea de la capa 6,
+  presentación**, porque el sensor y el servidor se ponen de acuerdo en cómo se representan los
+  números, sin que a ninguno de los dos le importe el medio por el que viajaron esos bytes, es
+  exactamente el problema que resuelve la capa de presentación.
+
+Fíjate en que cada problema tiene un dueño claro, y en que ese dueño no cambia aunque cambies el medio,
+wifi por cable, o el destino, un servidor en la nube por otro sensor cercano. Esa estabilidad es
+justamente lo que gana un equipo de ingeniería al organizar el trabajo en capas.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] Por qué OSI es un modelo de referencia y no un conjunto de protocolos en uso
+- [ ] El nombre, el número y la función de cada una de las siete capas, y el nombre de su PDU
+- [ ] Qué significa que dos capas se comuniquen par a par, y por qué eso no es lo mismo que el camino
+      físico real que siguen los datos
+- [ ] Cómo funciona el encapsulamiento, PDU y SDU, y por qué cada capa retira su propio encabezado al
+      desencapsular
+- [ ] Por qué un switch, un router y un firewall de siguiente generación se clasifican por capas
+      distintas del modelo
+- [ ] Un caso real, documentado en una RFC, donde un dispositivo de red rompe deliberadamente la
+      separación estricta de capas
+:::
+
+## Antes del Tema 2
+
+1. Repasa el diagrama de la pila de siete capas hasta que puedas dibujarla de memoria, con el número, el
+   nombre y la PDU de cada una, sin mirar la guía.
+2. Elige cualquier aplicación que uses todos los días, un navegador, una app de mensajería, un juego en
+   línea, y describe en un párrafo qué le tocaría hacer a la capa de transporte y qué le tocaría hacer a
+   la capa de red en una conexión típica de esa aplicación.
+3. Vuelve a leer la sección sobre por qué la pila de protocolos OSI no se adoptó, porque el Tema 2 parte
+   de esa misma pregunta para explicar por qué TCP/IP sí ganó adopción práctica.
+
+El Tema 2 toma estas mismas siete capas y las compara, una por una, contra las cuatro capas de la
+arquitectura TCP/IP, la que de verdad corre en Internet, y explica con una fuente primaria del IETF por
+qué la capa de aplicación de TCP/IP fusiona funciones que en OSI están repartidas en tres capas
+distintas.
+
+## Recursos
+
+- International Organization for Standardization. ISO/IEC 7498-1, "Information technology - Open
+  Systems Interconnection - Basic Reference Model: The Basic Model". Norma base del modelo OSI.
+- Unión Internacional de Telecomunicaciones. Recomendación UIT-T X.200, "Information technology - Open
+  Systems Interconnection - Basic Reference Model: The basic model". Texto técnicamente equivalente a
+  ISO/IEC 7498-1.
+- IETF RFC 1122. Braden, R. (ed.), "Requirements for Internet Hosts, Communication Layers", octubre de
+  1989. [rfc-editor.org, RFC 1122](https://www.rfc-editor.org/rfc/rfc1122.html)
+- IETF RFC 3234. Carpenter, B.; Brim, S., "Middleboxes: Taxonomy and Issues", febrero de 2002.
+  [rfc-editor.org, RFC 3234](https://www.rfc-editor.org/rfc/rfc3234.txt)
+- IEEE Standards Association. IEEE 802.3, "IEEE Standard for Ethernet". Cubre las capas física y de
+  enlace de datos con la tecnología que retoma el Tema 3 de esta unidad.
+  [standards.ieee.org, IEEE 802.3](https://standards.ieee.org/ieee/802.3/7071/)
+- Tanenbaum, A. S. y Wetherall, D. *Redes de computadoras.* Pearson. Capítulo sobre arquitectura de
+  protocolos en capas y el modelo de referencia OSI.
+- Kurose, J. F. y Ross, K. W. *Computer Networking, A Top-Down Approach.* Pearson. Capítulo 1, sección
+  sobre la organización en capas de los protocolos de red y su contraste con el modelo OSI.
+- Forouzan, B. A. *Transmisión de datos y redes de comunicaciones.* McGraw-Hill. Capítulo sobre los
+  modelos de referencia OSI y TCP/IP, y el proceso de encapsulamiento.
+
+::: {.pie-doc}
+Telemática para IoT (TPI01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

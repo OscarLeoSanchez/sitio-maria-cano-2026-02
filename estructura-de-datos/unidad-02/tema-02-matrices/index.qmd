@@ -1,0 +1,555 @@
+---
+title: "Tema 2. La fila se convierte en cuadrícula"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                 |
+|--------|-------------------------------------------------|
+| Unidad | Unidad 2. Estructuras fijas                      |
+| Tema   | Tema 2. Matrices                                 |
+:::
+
+El Tema 1 dejó claro que un arreglo guarda sus elementos en una sola fila indexada por una posición, y
+que esa posición se calcula con aritmética en vez de buscarse, lo que le da acceso en tiempo constante,
+O(1). Hoy esa misma idea se estira a dos dimensiones. Una matriz sigue siendo un bloque de tamaño fijo
+con acceso por cálculo aritmético, solo que el cálculo ahora combina dos índices en vez de uno, y esa
+combinación es la que vas a entender a fondo en esta guía, junto con la forma real en que Java y Python
+la representan por dentro.
+
+## De una fila a una cuadrícula
+
+Una *matriz*, en el sentido de estructura de datos, es una colección de tamaño fijo donde cada elemento
+se ubica con un par de índices en vez de uno solo, la fila y la columna. Todos los elementos comparten
+el mismo tipo, igual que en un arreglo de una dimensión, y acceder a `M[i][j]` sigue siendo O(1) porque
+la posición se calcula a partir de `i` y `j`, nunca se recorre la estructura para encontrarla. Piensa en
+una hoja de cálculo pequeña, una foto en escala de grises o un tablero de ajedrez, en los tres casos la
+posición de un dato se describe con dos coordenadas y ninguna búsqueda hace falta para llegar a ella.
+
+Java y Python indexan sus estructuras desde 0, así que en una matriz de tres filas y cuatro columnas la
+fila válida va de 0 a 2 y la columna válida va de 0 a 3. La Especificación del Lenguaje Java lo confirma
+en el capítulo dedicado a los arreglos, donde el rango de índices de cualquier arreglo va desde 0 hasta
+su longitud menos uno.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuadricula de una matriz de 3 filas por 4 columnas, con la celda de la fila 1 columna 2 resaltada y etiquetada M abre corchete 1 cierra corchete abre corchete 2 cierra corchete" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="350" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Una matriz se indexa por un par (fila, columna)</text>
+<g font-size="12" fill="#5b6876" text-anchor="middle"><text x="219" y="50">col 0</text><text x="299" y="50">col 1</text><text x="379" y="50">col 2</text><text x="459" y="50">col 3</text></g>
+<g font-size="12" fill="#5b6876" text-anchor="end"><text x="170" y="88">fila 0</text><text x="170" y="138">fila 1</text><text x="170" y="188">fila 2</text></g>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="180" y="60" width="78" height="48" rx="4"/><rect x="260" y="60" width="78" height="48" rx="4"/><rect x="340" y="60" width="78" height="48" rx="4"/><rect x="420" y="60" width="78" height="48" rx="4"/><rect x="180" y="110" width="78" height="48" rx="4"/><rect x="260" y="110" width="78" height="48" rx="4"/><rect x="420" y="110" width="78" height="48" rx="4"/><rect x="180" y="160" width="78" height="48" rx="4"/><rect x="260" y="160" width="78" height="48" rx="4"/><rect x="340" y="160" width="78" height="48" rx="4"/><rect x="420" y="160" width="78" height="48" rx="4"/></g>
+<rect x="340" y="110" width="78" height="48" rx="4" fill="#e4f2f1" stroke="#8fc9c5"/>
+<text x="379" y="139" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">M[1][2]</text>
+<text x="350" y="238" font-size="11.5" fill="#5b6876" text-anchor="middle">El primer indice mueve la fila (vertical); el segundo mueve la columna (horizontal)</text>
+</svg>
+
+:::
+
+En código, escribir `M[1][2]` significa entrar primero a la fila 1 y luego, dentro de ella, a la
+posición 2. Ese orden, primero fila y después columna, es una convención que comparten Java y Python, y
+que conviene fijar desde ya porque el resto de la guía la da por sentada.
+
+## Recorridos: por filas y por columnas
+
+Recorrer una matriz completa exige dos bucles anidados, uno para cada dimensión, y el orden en que se
+anidan cambia el orden en que se visitan los elementos aunque el resultado final cubra la misma
+cantidad de celdas. El recorrido por filas, el más natural cuando el almacenamiento interno guarda las
+filas seguidas, pone el bucle de la fila afuera y el de la columna adentro, así que se completa toda la
+fila 0 antes de pasar a la fila 1. El recorrido por columnas invierte el anidamiento, completa toda la
+columna 0, con un elemento de cada fila, antes de pasar a la columna 1.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos cuadriculas de 3 por 3: la izquierda numerada en el orden de recorrido por filas, de 1 a 9 de izquierda a derecha y de arriba a abajo; la derecha numerada en el orden de recorrido por columnas, de 1 a 9 de arriba a abajo y de izquierda a derecha" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="165" y="24" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Recorrido por filas</text>
+<text x="575" y="24" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Recorrido por columnas</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="44" width="70" height="50"/><rect x="130" y="44" width="70" height="50"/><rect x="200" y="44" width="70" height="50"/><rect x="60" y="94" width="70" height="50"/><rect x="130" y="94" width="70" height="50"/><rect x="200" y="94" width="70" height="50"/><rect x="60" y="144" width="70" height="50"/><rect x="130" y="144" width="70" height="50"/><rect x="200" y="144" width="70" height="50"/></g>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="470" y="44" width="70" height="50"/><rect x="540" y="44" width="70" height="50"/><rect x="610" y="44" width="70" height="50"/><rect x="470" y="94" width="70" height="50"/><rect x="540" y="94" width="70" height="50"/><rect x="610" y="94" width="70" height="50"/><rect x="470" y="144" width="70" height="50"/><rect x="540" y="144" width="70" height="50"/><rect x="610" y="144" width="70" height="50"/></g>
+<g font-size="14" font-weight="700" fill="#0e6f6c" text-anchor="middle"><text x="95" y="74">1</text><text x="165" y="74">2</text><text x="235" y="74">3</text><text x="95" y="124">4</text><text x="165" y="124">5</text><text x="235" y="124">6</text><text x="95" y="174">7</text><text x="165" y="174">8</text><text x="235" y="174">9</text></g>
+<g font-size="14" font-weight="700" fill="#0e6f6c" text-anchor="middle"><text x="505" y="74">1</text><text x="575" y="74">4</text><text x="645" y="74">7</text><text x="505" y="124">2</text><text x="575" y="124">5</text><text x="645" y="124">8</text><text x="505" y="174">3</text><text x="575" y="174">6</text><text x="645" y="174">9</text></g>
+<text x="165" y="222" font-size="11.5" fill="#5b6876" text-anchor="middle">bucle externo en i (fila), interno en j (columna)</text>
+<text x="575" y="222" font-size="11.5" fill="#5b6876" text-anchor="middle">bucle externo en j (columna), interno en i (fila)</text>
+</svg>
+
+:::
+
+```java
+int[][] matriz = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+
+// recorrido por filas
+for (int i = 0; i < matriz.length; i++) {
+    for (int j = 0; j < matriz[i].length; j++) {
+        System.out.print(matriz[i][j] + " ");
+    }
+}
+
+// recorrido por columnas
+for (int j = 0; j < matriz[0].length; j++) {
+    for (int i = 0; i < matriz.length; i++) {
+        System.out.print(matriz[i][j] + " ");
+    }
+}
+```
+
+```python
+matriz = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+
+# recorrido por filas
+for fila in matriz:
+    for valor in fila:
+        print(valor, end=" ")
+
+# recorrido por columnas
+for j in range(len(matriz[0])):
+    for i in range(len(matriz)):
+        print(matriz[i][j], end=" ")
+```
+
+En `matriz.length` se lee cuántas filas tiene la matriz en Java, y `matriz[i].length` cuántas columnas
+tiene esa fila en particular, lo que ya adelanta algo que la sección de Java va a explicar con calma,
+que cada fila puede en principio tener su propia longitud. En Python, `len(matriz)` da el número de
+filas y `len(matriz[0])` el número de columnas de la primera fila, tomada como referencia.
+
+La documentación oficial de Python muestra un caso concreto donde el recorrido por columnas se vuelve
+una operación con nombre propio, la *transposición*, que convierte filas en columnas y columnas en
+filas. El tutorial oficial del lenguaje trae este ejemplo exacto con comprensión de listas anidada:
+
+```python
+matriz = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]
+transpuesta = [[fila[i] for fila in matriz] for i in range(len(matriz[0]))]
+# transpuesta = [[1, 5, 9], [2, 6, 10], [3, 7, 11], [4, 8, 12]]
+
+# la misma idea, de forma mas compacta
+transpuesta2 = list(zip(*matriz))
+```
+
+## Cómo vive una matriz en memoria: el orden por filas
+
+Hasta aquí la matriz se ha tratado como una cuadrícula abstracta, pero la memoria de una computadora no
+tiene cuadrículas, tiene una sola fila larga de posiciones consecutivas. Para guardar una matriz ahí
+dentro hace falta decidir en qué orden se acomodan sus filas y columnas, y la convención que usan C y
+NumPy por defecto se llama *row-major order*, orden por filas, y consiste en poner primero todos los
+elementos de la fila 0, seguidos de todos los de la fila 1, y así sucesivamente. El orden contrario,
+donde se guarda primero cada columna completa, se llama *column-major order* y es el que usa Fortran; la
+documentación de referencia de NumPy expone ambos órdenes con el parámetro `order`, `'C'` para el orden
+por filas y `'F'` para el orden por columnas, y permite comprobar cuál tiene un arreglo dado con las
+banderas `C_CONTIGUOUS` y `F_CONTIGUOUS`. Java no entra en esta comparación de la misma forma porque,
+como vas a ver en la siguiente sección, una matriz en Java no es un único bloque contiguo sino un
+arreglo de arreglos independientes en el montículo (heap); el orden por filas que sigue describe
+entonces el caso de un bloque contiguo real, como el de C o NumPy, y sirve para entender la idea general
+de localidad de memoria antes de ver por qué Java la resuelve distinto.
+
+Moverse una columna hacia la derecha, de `M[i][j]` a `M[i][j+1]`, cuesta un solo salto de un elemento en
+memoria dentro de un bloque contiguo de este tipo. Moverse una fila hacia abajo, de `M[i][j]` a
+`M[i+1][j]`, cuesta un salto de `numeroColumnas` elementos, porque hay que atravesar el resto de la fila
+actual antes de llegar a la siguiente. Esa diferencia de costo entre saltar por columna y saltar por
+fila es exactamente lo que la referencia de NumPy describe con el concepto de *stride*, el número de
+bytes que hay que avanzar en memoria para moverse un paso en cada dimensión.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Doce celdas de memoria en fila representando una matriz de 3 por 4 guardada en orden por filas; agrupadas en tres bloques de cuatro con las etiquetas fila 0, fila 1 y fila 2; la celda numero 6 desde 0, que corresponde a M 1 2, esta resaltada; debajo la formula posicion igual fila por numero de columnas mas columna" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Una matriz de 3x4 en orden por filas ocupa doce posiciones seguidas</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="60" width="53" height="40"/><rect x="85" y="60" width="53" height="40"/><rect x="140" y="60" width="53" height="40"/><rect x="195" y="60" width="53" height="40"/><rect x="250" y="60" width="53" height="40"/><rect x="305" y="60" width="53" height="40"/><rect x="415" y="60" width="53" height="40"/><rect x="470" y="60" width="53" height="40"/><rect x="525" y="60" width="53" height="40"/><rect x="580" y="60" width="53" height="40"/><rect x="635" y="60" width="53" height="40"/></g>
+<rect x="360" y="60" width="53" height="40" fill="#e4f2f1" stroke="#8fc9c5"/>
+<g font-size="11" fill="#12324f" text-anchor="middle"><text x="56" y="83">(0,0)</text><text x="111" y="83">(0,1)</text><text x="166" y="83">(0,2)</text><text x="221" y="83">(0,3)</text><text x="276" y="83">(1,0)</text><text x="331" y="83">(1,1)</text><text x="386" y="83">(1,2)</text><text x="441" y="83">(1,3)</text><text x="551" y="83">(2,1)</text><text x="606" y="83">(2,2)</text><text x="661" y="83">(2,3)</text></g>
+<text x="496" y="83" font-size="11" fill="#12324f" text-anchor="middle">(2,0)</text>
+<text x="386" y="72" font-size="11" font-weight="700" fill="#0e6f6c" text-anchor="middle">M[1][2]</text>
+<g stroke="#8fb3d1" stroke-width="1.4"><line x1="30" y1="112" x2="248" y2="112"/><line x1="250" y1="112" x2="468" y2="112"/><line x1="470" y1="112" x2="688" y2="112"/></g>
+<g font-size="11" fill="#5b6876" text-anchor="middle"><text x="139" y="128">fila 0 (4 elementos contiguos)</text><text x="359" y="128">fila 1</text><text x="579" y="128">fila 2</text></g>
+<g font-size="11.5" fill="#5b6876"><text x="30" y="46">+1 = una columna</text><text x="500" y="46">+4 = una fila (numero de columnas)</text></g>
+<text x="380" y="168" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">posicion = fila * numero_columnas + columna</text>
+<text x="380" y="192" font-size="11.5" fill="#5b6876" text-anchor="middle">M[1][2] con numero_columnas=4 cae en la posicion 1*4+2 = 6, la septima celda del bloque completo (tercera celda de la fila 1)</text>
+<text x="380" y="212" font-size="11" fill="#5b6876" text-anchor="middle">C y NumPy usan por defecto este orden (order='C'); Fortran usa el orden por columnas (order='F'); Java no es un bloque contiguo, como se ve mas adelante</text>
+</svg>
+
+:::
+
+Con el orden por filas, la posición en memoria de `M[i][j]` dentro de una matriz de `numeroColumnas`
+columnas se calcula así, sin necesidad de buscar nada:
+
+```
+posicion = i * numeroColumnas + j
+```
+
+Esto no es un detalle solo teórico. Cuando el almacenamiento real es contiguo en un orden y el código
+recorre la matriz en el orden contrario, cada paso salta lejos en memoria en vez de avanzar a la celda
+inmediatamente siguiente, y esa falta de localidad puede volver el recorrido más lento. La propia
+referencia de `ndarray` de NumPy documenta este fenómeno al hablar de la contigüidad de un arreglo y de
+que ciertas operaciones necesitan copiar los datos primero si el arreglo no está contiguo en el orden
+que esa operación necesita. No hay una cifra oficial de cuánto más lento resulta, porque el efecto
+depende del tamaño de la matriz, del equipo donde corra el programa y de su memoria caché, así que
+cualquier número concreto que veas en internet sin fuente hay que tomarlo con reserva; lo verificable es
+el mecanismo, no un porcentaje fijo.
+
+Caso de estudio. Imagina que trabajas con una matriz de miles de filas y columnas, guardada en el orden
+por filas que ya viste, y necesitas sumar todos sus elementos. Tienes dos formas de escribir el bucle
+doble, con la fila afuera y la columna adentro, o al revés, y en los dos casos el resultado numérico de
+la suma es idéntico, lo que lleva a preguntarse por qué elegir un orden en vez del otro importaría en
+absoluto. La resolución está en la localidad de memoria explicada arriba, con la fila afuera y la
+columna adentro cada acceso sucesivo cae en la celda inmediatamente siguiente en memoria, mientras que
+con el orden invertido cada acceso salta una fila completa de distancia. El resultado es el mismo en
+ambos casos; lo que cambia es cuánto trabajo de más le pide el recorrido a la memoria de la máquina para
+entregar cada dato, y ese costo varía según el equipo y el tamaño de la matriz, así que la guía general
+es recorrer en el mismo orden en que la estructura está guardada, sin prometer un número fijo de mejora.
+
+## Matrices en Java: arreglos de arreglos
+
+La Especificación del Lenguaje Java es explícita en un punto que sorprende a quien viene de otros
+lenguajes, un arreglo multidimensional en Java es en realidad un arreglo cuyos componentes son a su vez
+arreglos, algo distinto de lo que ocurre en C o en Fortran, donde una matriz es un único bloque
+contiguo. Escribir `int[][] m` no crea un bloque rectangular de memoria, crea un arreglo de referencias,
+donde cada referencia apunta a un arreglo `int[]` independiente que vive en el montículo (heap) por su
+cuenta.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama que muestra el arreglo m como tres referencias, m0 m1 m2, cada una apuntando con una flecha a un arreglo de fila independiente de cuatro celdas ubicado por separado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="esd22a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+<text x="350" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">int[][] m: un arreglo de referencias a arreglos independientes</text>
+<rect x="30" y="40" width="150" height="176" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+<text x="105" y="60" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">m (int[][])</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="50" y="70" width="110" height="40"/><rect x="50" y="122" width="110" height="40"/><rect x="50" y="174" width="110" height="40"/></g>
+<g font-size="12" fill="#12324f" text-anchor="middle"><text x="105" y="94">m[0]</text><text x="105" y="146">m[1]</text><text x="105" y="198">m[2]</text></g>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="330" y="70" width="200" height="40"/><rect x="330" y="122" width="200" height="40"/><rect x="330" y="174" width="200" height="40"/></g>
+<g stroke="#c7d6e6"><line x1="380" y1="70" x2="380" y2="110"/><line x1="430" y1="70" x2="430" y2="110"/><line x1="480" y1="70" x2="480" y2="110"/><line x1="380" y1="122" x2="380" y2="162"/><line x1="430" y1="122" x2="430" y2="162"/><line x1="480" y1="122" x2="480" y2="162"/><line x1="380" y1="174" x2="380" y2="214"/><line x1="430" y1="174" x2="430" y2="214"/><line x1="480" y1="174" x2="480" y2="214"/></g>
+<g font-size="11" fill="#5b6876" text-anchor="middle"><text x="430" y="230">cada fila es un objeto arreglo independiente</text></g>
+<g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd22a)"><path d="M160,90 L326,90"/><path d="M160,142 L326,142"/><path d="M160,194 L326,194"/></g>
+</svg>
+
+:::
+
+Esta arquitectura, un arreglo de arreglos y no un bloque único, trae dos consecuencias prácticas que la
+carta descriptiva pide dominar.
+
+La primera es que las filas pueden tener longitudes distintas entre sí, algo válido en Java y que se
+conoce como arreglo irregular o *jagged array*. No es un error, es una posibilidad que a veces se usa a
+propósito, por ejemplo para representar una matriz triangular sin desperdiciar espacio en la mitad que
+no se necesita:
+
+```java
+int[][] triangular = new int[4][];
+for (int i = 0; i < triangular.length; i++) {
+    triangular[i] = new int[i + 1];  // fila 0 tiene 1 celda, fila 1 tiene 2, etc.
+}
+```
+
+La segunda consecuencia es una trampa real de la sintaxis de creación, y conviene verla antes de
+tropezar con ella en un programa grande. `new int[3][4]`, con las dos dimensiones explícitas, crea de
+inmediato las tres filas y llena cada una de sus cuatro celdas con el valor por defecto del tipo, cero
+para `int`. En cambio `new int[3][]`, con la segunda dimensión vacía, crea únicamente el arreglo externo
+de tres referencias, y dejando cada una de esas referencias en `null` hasta que el programa le asigne
+explícitamente un arreglo de fila.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion entre new int abre corchete 3 cierra corchete abre corchete 2 cierra corchete, que crea de inmediato tres filas con ceros, y new int abre corchete 3 cierra corchete abre corchete cierra corchete, que deja las tres referencias en null hasta que se les asigne una fila" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="175" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">new int[3][2]</text>
+<text x="525" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">new int[3][]</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="90" y="34" width="60" height="36"/><rect x="150" y="34" width="60" height="36"/><rect x="90" y="70" width="60" height="36"/><rect x="150" y="70" width="60" height="36"/><rect x="90" y="106" width="60" height="36"/><rect x="150" y="106" width="60" height="36"/></g>
+<g font-size="12" fill="#12324f" text-anchor="middle"><text x="120" y="57">0</text><text x="180" y="57">0</text><text x="120" y="93">0</text><text x="180" y="93">0</text><text x="120" y="129">0</text><text x="180" y="129">0</text></g>
+<text x="175" y="164" font-size="11.5" fill="#0e6f6c" text-anchor="middle">las tres filas ya existen, con ceros</text>
+<g fill="#f5f7fa" stroke="#cfd8e3"><rect x="450" y="34" width="150" height="36"/><rect x="450" y="70" width="150" height="36"/><rect x="450" y="106" width="150" height="36"/></g>
+<g font-size="12.5" font-weight="600" fill="#5b6876" text-anchor="middle"><text x="525" y="57">null</text><text x="525" y="93">null</text><text x="525" y="129">null</text></g>
+<text x="525" y="164" font-size="11.5" fill="#0e6f6c" text-anchor="middle">ninguna fila existe todavia</text>
+<text x="350" y="200" font-size="11.5" fill="#5b6876" text-anchor="middle">escribir en una fila que sigue en null, antes de asignarle un arreglo, lanza NullPointerException</text>
+</svg>
+
+:::
+
+```java
+int[][] matrizCompleta = new int[3][2]; // las tres filas ya existen, en 0
+matrizCompleta[0][0] = 5;               // funciona sin problema
+
+int[][] matrizIncompleta = new int[3][]; // solo el arreglo externo existe
+matrizIncompleta[0][0] = 5;              // NullPointerException: matrizIncompleta[0] es null
+
+matrizIncompleta[0] = new int[2]; // ahora si existe la fila 0
+matrizIncompleta[0][0] = 5;       // ahora si funciona
+```
+
+Un `NullPointerException` al escribir en una matriz casi siempre significa justo esto, que se usó la
+forma `new tipo[n][]` sin asignar todavía cada fila, y se intentó escribir en una fila que sigue en
+`null`.
+
+Como cada fila es un objeto independiente, copiar una matriz completa exige más cuidado que copiar un
+arreglo de una sola dimensión. El método `clone()` de un arreglo hace una copia superficial, tal como lo
+documenta la Especificación del Lenguaje Java en la sección 10.7 sobre miembros de arreglos, y en una
+matriz eso significa que copia las tres referencias del arreglo externo, no el contenido de cada fila:
+
+```java
+int[][] original = {{1, 2}, {3, 4}};
+int[][] copiaSuperficial = original.clone();
+copiaSuperficial[0][0] = 999;
+System.out.println(original[0][0]); // imprime 999, tambien cambio
+
+int[][] copiaProfunda = new int[original.length][];
+for (int i = 0; i < original.length; i++) {
+    copiaProfunda[i] = original[i].clone(); // clona cada fila por separado
+}
+copiaProfunda[0][0] = 999;
+System.out.println(original[0][0]); // sigue en 1, esta copia si es independiente
+```
+
+`copiaSuperficial` y `original` terminan apuntando a las mismas tres filas, así que modificar una fila
+desde una variable se refleja en la otra. Para una copia de verdad independiente hay que copiar cada
+fila una por una, como hace `copiaProfunda`.
+
+## Matrices en Python: listas de listas
+
+Python no trae un tipo de arreglo bidimensional en el lenguaje ni en su biblioteca estándar. El módulo
+`array` de la biblioteca estándar, documentado oficialmente, solo crea arreglos de una dimensión, y su
+propia documentación remite a NumPy para trabajo con matrices. Por eso la convención idiomática en
+Python puro es la lista de listas, `matriz[i][j]`, donde la lista externa contiene una lista por fila.
+
+La forma correcta de construir una matriz de filas independientes es una comprensión de listas anidada:
+
+```python
+filas, columnas = 3, 4
+matriz = [[0] * columnas for _ in range(filas)]
+matriz[0][0] = 99
+print(matriz)  # [[99, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+```
+
+Existe un atajo que parece equivalente y no lo es, y la propia documentación oficial de Python lo señala
+como el error clásico de quien recién llega al lenguaje. La FAQ oficial, en la sección "How do I create
+a multidimensional list?", explica que el operador de repetición `*` sobre una secuencia no copia los
+elementos que repite, sino que solo repite referencias al mismo objeto, y con una lista mutable como
+fila eso significa que las tres "filas" terminan siendo la misma lista vista tres veces.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion: en mal igual a corchete corchete 0 por 2 corchete cerrado por 3, las tres posiciones de la lista externa apuntan al mismo objeto lista; en bien, construida con comprension de listas, cada posicion apunta a un objeto lista distinto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="esd22b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+<text x="175" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">mal = [[0]*2] * 3</text>
+<text x="565" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">bien = [[0]*2 for _ in range(3)]</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="36" width="90" height="34"/><rect x="60" y="80" width="90" height="34"/><rect x="60" y="124" width="90" height="34"/></g>
+<g font-size="11.5" fill="#12324f" text-anchor="middle"><text x="105" y="58">mal[0]</text><text x="105" y="102">mal[1]</text><text x="105" y="146">mal[2]</text></g>
+<rect x="230" y="72" width="90" height="46" fill="#e4f2f1" stroke="#8fc9c5"/>
+<text x="275" y="99" font-size="11.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">[0, 0]</text>
+<g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd22b)"><path d="M150,53 C180,60 210,75 228,88"/><path d="M150,97 L228,97"/><path d="M150,141 C180,134 210,118 228,106"/></g>
+<text x="275" y="140" font-size="11" fill="#5b6876" text-anchor="middle">un solo objeto lista, referenciado tres veces</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="450" y="36" width="90" height="34"/><rect x="450" y="80" width="90" height="34"/><rect x="450" y="124" width="90" height="34"/></g>
+<g font-size="11.5" fill="#12324f" text-anchor="middle"><text x="495" y="58">bien[0]</text><text x="495" y="102">bien[1]</text><text x="495" y="146">bien[2]</text></g>
+<g fill="#e4f2f1" stroke="#8fc9c5"><rect x="620" y="36" width="90" height="34"/><rect x="620" y="80" width="90" height="34"/><rect x="620" y="124" width="90" height="34"/></g>
+<g font-size="11" fill="#0e6f6c" text-anchor="middle"><text x="665" y="58">[0, 0]</text><text x="665" y="102">[0, 0]</text><text x="665" y="146">[0, 0]</text></g>
+<g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd22b)"><path d="M540,53 L618,53"/><path d="M540,97 L618,97"/><path d="M540,141 L618,141"/></g>
+<text x="665" y="184" font-size="11" fill="#5b6876" text-anchor="middle">tres objetos lista distintos, cada uno con su propio contenido</text>
+</svg>
+
+:::
+
+El siguiente código en Python muestra el problema y su corrección:
+
+```python
+mal = [[0] * 2] * 3     # se ve como una matriz de 3x2, pero no lo es
+mal[0][0] = 5
+print(mal)  # [[5, 0], [5, 0], [5, 0]]  -- las tres filas cambiaron
+
+bien = [[0] * 2 for _ in range(3)]  # tres listas independientes de verdad
+bien[0][0] = 5
+print(bien)  # [[5, 0], [0, 0], [0, 0]]  -- solo cambio la fila 0
+```
+
+Caso de estudio. Un estudiante programa el tablero del "juego de la vida", una cuadrícula de celdas
+vivas o muertas que cambian según sus vecinas, y arranca el tablero así, `tablero = [[False] * ancho] *
+alto`. La cuadrícula se imprime bien al principio, con todas las celdas en `False`, lo que lleva a
+preguntarse qué ocurre la primera vez que el estudiante marca una sola celda como viva con
+`tablero[0][0] = True`. Siguiendo el mismo mecanismo del ejemplo `mal` de arriba, la fila 0 y todas las
+demás filas son en realidad la misma lista, así que la columna 0 de cada fila del tablero se enciende a
+la vez, y el estudiante ve un tablero con una columna entera viva en vez de una sola celda, un resultado
+que no tiene sentido para las reglas del juego y que solo se explica revisando cómo se construyó la
+estructura, no revisando la lógica de las reglas.
+
+## Un vistazo a NumPy
+
+NumPy no forma parte del alcance detallado de este tema, pero conviene saber que existe porque es la
+herramienta que la comunidad científica y de datos usa en la práctica para trabajar con matrices en
+Python. Según su propia documentación oficial, un `ndarray` es un contenedor de tamaño fijo y tipo
+homogéneo, guardado en un único bloque contiguo de memoria, lo que le permite ejecutar operaciones
+completas sobre la matriz en código C precompilado en vez de en bucles interpretados de Python. Algunas
+funciones de creación documentadas oficialmente son `np.array()` a partir de una lista de listas,
+`np.zeros((filas, columnas))`, `np.ones(...)` y `np.eye(n)` para la matriz identidad. Este curso no
+profundiza en NumPy, la biblioteca queda como referencia para cuando el trabajo con matrices se vuelva
+lo bastante grande o numérico como para justificarla.
+
+## Operaciones básicas sobre matrices
+
+Con la representación ya clara, las operaciones típicas de curso se reducen a combinar los dos bucles
+anidados de la sección de recorridos con una regla concreta por operación.
+
+Sumar dos matrices del mismo tamaño exige sumar cada par de celdas correspondientes:
+
+```java
+int[][] suma(int[][] a, int[][] b) {
+    int[][] resultado = new int[a.length][a[0].length];
+    for (int i = 0; i < a.length; i++) {
+        for (int j = 0; j < a[i].length; j++) {
+            resultado[i][j] = a[i][j] + b[i][j];
+        }
+    }
+    return resultado;
+}
+```
+
+```python
+def sumar(a, b):
+    filas, columnas = len(a), len(a[0])
+    resultado = [[0] * columnas for _ in range(filas)]
+    for i in range(filas):
+        for j in range(columnas):
+            resultado[i][j] = a[i][j] + b[i][j]
+    return resultado
+```
+
+Buscar un valor recorre la matriz igual que sumarla, con la diferencia de que puede detenerse en cuanto
+encuentra lo que busca, sin visitar el resto de las celdas:
+
+```python
+def buscar(matriz, objetivo):
+    for i, fila in enumerate(matriz):
+        for j, valor in enumerate(fila):
+            if valor == objetivo:
+                return (i, j)
+    return None
+```
+
+La transposición ya apareció arriba con la comprensión de listas anidada de la documentación oficial de
+Python; su versión en Java exige un arreglo nuevo de dimensiones invertidas y el mismo doble bucle:
+
+```java
+int[][] transponer(int[][] m) {
+    int[][] t = new int[m[0].length][m.length];
+    for (int i = 0; i < m.length; i++) {
+        for (int j = 0; j < m[i].length; j++) {
+            t[j][i] = m[i][j];
+        }
+    }
+    return t;
+}
+```
+
+::: {.callout-tip}
+## Reto 1. Predice el resultado de la matriz mal construida
+
+Antes de correr nada, responde a mano qué imprime este código Python:
+
+```python
+tablero = [[0] * 3] * 3
+tablero[1][1] = 9
+print(tablero)
+```
+
+<label><input type="checkbox"> `[[0, 0, 0], [0, 9, 0], [0, 0, 0]]`, solo cambio la celda central</label>
+<label><input type="checkbox"> `[[0, 9, 0], [0, 9, 0], [0, 9, 0]]`, cambio la columna del medio en las tres filas</label>
+<label><input type="checkbox"> Un error de índice, porque `tablero[1][1]` no existe</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La respuesta correcta es la segunda opción. `[[0] * 3] * 3` repite tres veces una referencia a la misma
+lista `[0, 0, 0]`, así que `tablero[0]`, `tablero[1]` y `tablero[2]` son en realidad el mismo objeto
+visto desde tres nombres distintos. Al escribir `tablero[1][1] = 9` se modifica esa única lista
+compartida, y como las tres filas apuntan a ella, la columna del medio queda en 9 en las tres filas a la
+vez. La forma correcta habría sido `tablero = [[0] * 3 for _ in range(3)]`, que crea tres listas
+independientes en vez de tres referencias a la misma.
+:::
+
+::: {.callout-tip}
+## Reto 2. Encuentra el problema en este código Java
+
+El siguiente método compila sin ningún error. Léelo con calma antes de decidir qué pasa al ejecutarlo.
+
+```java
+public static int[][] crearTablero(int filas) {
+    int[][] tablero = new int[filas][];
+    for (int i = 0; i < filas; i++) {
+        tablero[i][0] = i; // marca la primera columna con el numero de fila
+    }
+    return tablero;
+}
+```
+
+<label><input type="checkbox"> Se ejecuta sin problema y devuelve el tablero esperado</label>
+<label><input type="checkbox"> Lanza `NullPointerException` en la primera vuelta del bucle</label>
+<label><input type="checkbox"> Lanza `ArrayIndexOutOfBoundsException` porque `filas` es muy grande</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La respuesta correcta es la segunda opción. `new int[filas][]` crea únicamente el arreglo externo, con
+`filas` referencias, y cada una de ellas arranca en `null` porque la segunda dimensión no se
+especificó. La primera vuelta del bucle intenta escribir en `tablero[0][0]`, pero `tablero[0]` todavía
+es `null`, así que Java lanza `NullPointerException` antes de llegar a asignar nada. La corrección exige
+crear cada fila explícitamente antes de escribir en ella:
+
+```java
+public static int[][] crearTablero(int filas) {
+    int[][] tablero = new int[filas][];
+    for (int i = 0; i < filas; i++) {
+        tablero[i] = new int[1]; // ahora si existe la fila
+        tablero[i][0] = i;
+    }
+    return tablero;
+}
+```
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] Por qué el acceso `M[i][j]` es O(1), igual que en un arreglo de una dimensión
+- [ ] La diferencia entre recorrer una matriz por filas y recorrerla por columnas
+- [ ] Qué es el orden por filas (row-major order) y cómo se calcula la posición de `M[i][j]` en memoria
+- [ ] Por qué en Java una matriz es un arreglo de arreglos, y qué diferencia hay entre `new int[n][m]`
+      y `new int[n][]`
+- [ ] Por qué `[[0] * n] * m` en Python no crea filas independientes, y cómo corregirlo con una
+      comprensión de listas
+- [ ] Cómo escribir suma, búsqueda y transposición de matrices en Java y en Python
+:::
+
+## Antes del Tema 3
+
+1. Ejecuta el ejemplo `mal` y el ejemplo `bien` de la sección de Python en tu propio equipo, y confirma
+   con tus ojos la diferencia que la guía describió.
+2. Escribe una función que multiplique dos matrices cuadradas del mismo tamaño, usando tres bucles
+   anidados, y pruébala con matrices de 2x2 antes de probar con matrices más grandes.
+3. Vuelve a la clase `Pila` que dejaste con cuatro métodos lanzando `UnsupportedOperationException` en
+   el Tema 2 de la Unidad 1, y piensa qué arreglo necesitarías por dentro para que `apilar` y
+   `desapilar` funcionen de verdad.
+
+Con vectores y matrices ya cubiertos, el Tema 3 vuelve a la clase `Pila` que quedó pendiente en la
+Unidad 1 y por fin le da un arreglo por dentro, con redimensionamiento incluido cuando se llena, y
+construye además una `Cola` respaldada por un arreglo circular. Ahí vas a analizar la complejidad de
+cada operación, apilar, desapilar, encolar y desencolar, apoyado en todo lo que ya sabes de arreglos
+desde el Tema 1 y de memoria contigua desde este tema.
+
+## Recursos
+
+- Gosling, J. et al. *The Java Language Specification, Java SE 21 Edition.* Capítulo 10, Arrays.
+- Weiss, M. A. *Estructuras de datos en Java.* Capítulo sobre arreglos y su representación en memoria.
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Sección sobre arreglos
+  multidimensionales.
+- [Oracle Java Tutorials: Arrays](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/arrays.html)
+- [The Java Language Specification, SE 21, Capítulo 10: Arrays](https://docs.oracle.com/javase/specs/jls/se21/html/jls-10.html)
+- [Python docs: The Python Tutorial, 5. Data Structures, sección 5.1.4 Nested List Comprehensions](https://docs.python.org/3/tutorial/datastructures.html)
+- [Python docs: Built-in Types, Common Sequence Operations](https://docs.python.org/3/library/stdtypes.html#common-sequence-operations)
+- [Python FAQ: How do I create a multidimensional list?](https://docs.python.org/3/faq/programming.html#faq-multidimensional-list)
+- [Python docs: array, Efficient arrays of numeric values](https://docs.python.org/3/library/array.html)
+- [NumPy Reference: The N-dimensional array (ndarray)](https://numpy.org/doc/stable/reference/arrays.ndarray.html)
+- [NumPy User Guide: What is NumPy?](https://numpy.org/doc/stable/user/whatisnumpy.html)
+- [NumPy User Guide: Array creation](https://numpy.org/doc/stable/user/basics.creation.html)
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

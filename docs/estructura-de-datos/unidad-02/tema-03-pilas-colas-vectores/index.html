@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Oscar Leonel Sánchez Conde">
+
+<title>Tema 3. Pilas y colas usando vectores – Clases María Cano 2026-02</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../estilos/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-8713356167177fd77be9341a95314561.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-9d905b06f1e8b96cef5de7dac512495c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No se han encontrado resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-02/index.html">Unidad 2. Estructuras fijas</a></li><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-02/tema-03-pilas-colas-vectores/index.html">Tema 3. Pilas y colas usando vectores</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../../../">Clases María Cano 2026-02</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Presentación del curso</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 1. Introducción a las estructuras de datos</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-01-generalidades-algoritmos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Generalidades de algoritmos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-02-poo/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. Paradigma de programación orientada a objetos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-03-recursividad/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Recursividad e implementación</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-04-estrategias/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 4. Estrategias de programación</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 2. Estructuras fijas</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/tema-01-vectores-arreglos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Vectores o arreglos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/tema-02-matrices/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. La fila se convierte en cuadrícula</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/tema-03-pilas-colas-vectores/index.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Tema 3. Pilas y colas usando vectores</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta guía</h2>
+   
+  <ul>
+  <li><a href="#el-contrato-que-quedó-pendiente" id="toc-el-contrato-que-quedó-pendiente" class="nav-link active" data-scroll-target="#el-contrato-que-quedó-pendiente"><span class="header-section-number">1</span> El contrato que quedó pendiente</a></li>
+  <li><a href="#diseñando-la-pila-y-la-cola-con-arreglo-por-dentro" id="toc-diseñando-la-pila-y-la-cola-con-arreglo-por-dentro" class="nav-link" data-scroll-target="#diseñando-la-pila-y-la-cola-con-arreglo-por-dentro"><span class="header-section-number">2</span> Diseñando la Pila y la Cola con arreglo por dentro</a></li>
+  <li><a href="#qué-pasa-cuando-el-arreglo-se-llena" id="toc-qué-pasa-cuando-el-arreglo-se-llena" class="nav-link" data-scroll-target="#qué-pasa-cuando-el-arreglo-se-llena"><span class="header-section-number">3</span> Qué pasa cuando el arreglo se llena</a></li>
+  <li><a href="#cómo-apilar-desapilar-y-cima-operan-sobre-el-arreglo-interno" id="toc-cómo-apilar-desapilar-y-cima-operan-sobre-el-arreglo-interno" class="nav-link" data-scroll-target="#cómo-apilar-desapilar-y-cima-operan-sobre-el-arreglo-interno"><span class="header-section-number">4</span> Cómo apilar, desapilar y cima operan sobre el arreglo interno</a></li>
+  <li><a href="#cuanto-debe-crecer-el-arreglo-nuevo" id="toc-cuanto-debe-crecer-el-arreglo-nuevo" class="nav-link" data-scroll-target="#cuanto-debe-crecer-el-arreglo-nuevo"><span class="header-section-number">5</span> Cuanto debe crecer el arreglo nuevo</a></li>
+  <li><a href="#por-qué-amortizado-y-no-simplemente-o1" id="toc-por-qué-amortizado-y-no-simplemente-o1" class="nav-link" data-scroll-target="#por-qué-amortizado-y-no-simplemente-o1"><span class="header-section-number">6</span> Por qué “amortizado” y no simplemente O(1)</a></li>
+  <li><a href="#un-error-silencioso-que-dejan-las-referencias-que-sobran" id="toc-un-error-silencioso-que-dejan-las-referencias-que-sobran" class="nav-link" data-scroll-target="#un-error-silencioso-que-dejan-las-referencias-que-sobran"><span class="header-section-number">7</span> Un error silencioso que dejan las referencias que sobran</a></li>
+  <li><a href="#por-qué-no-basta-con-mover-el-índice-0-en-una-cola-simple" id="toc-por-qué-no-basta-con-mover-el-índice-0-en-una-cola-simple" class="nav-link" data-scroll-target="#por-qué-no-basta-con-mover-el-índice-0-en-una-cola-simple"><span class="header-section-number">8</span> Por qué no basta con mover el índice 0 en una cola simple</a></li>
+  <li><a href="#los-indices-que-le-dan-la-vuelta-al-arreglo-en-una-cola-circular" id="toc-los-indices-que-le-dan-la-vuelta-al-arreglo-en-una-cola-circular" class="nav-link" data-scroll-target="#los-indices-que-le-dan-la-vuelta-al-arreglo-en-una-cola-circular"><span class="header-section-number">9</span> Los indices que le dan la vuelta al arreglo en una cola circular</a></li>
+  <li><a href="#cómo-encolar-desencolar-y-frente-operan-sobre-el-arreglo" id="toc-cómo-encolar-desencolar-y-frente-operan-sobre-el-arreglo" class="nav-link" data-scroll-target="#cómo-encolar-desencolar-y-frente-operan-sobre-el-arreglo"><span class="header-section-number">10</span> Cómo encolar, desencolar y frente operan sobre el arreglo</a></li>
+  <li><a href="#por-qué-redimensionar-una-cola-circular-no-es-una-copia-directa" id="toc-por-qué-redimensionar-una-cola-circular-no-es-una-copia-directa" class="nav-link" data-scroll-target="#por-qué-redimensionar-una-cola-circular-no-es-una-copia-directa"><span class="header-section-number">11</span> Por qué redimensionar una cola circular no es una copia directa</a></li>
+  <li><a href="#complejidad-de-la-cola" id="toc-complejidad-de-la-cola" class="nav-link" data-scroll-target="#complejidad-de-la-cola"><span class="header-section-number">12</span> Complejidad de la cola</a></li>
+  <li><a href="#lo-que-arraydeque-y-deque-ya-resuelven-en-el-lenguaje" id="toc-lo-que-arraydeque-y-deque-ya-resuelven-en-el-lenguaje" class="nav-link" data-scroll-target="#lo-que-arraydeque-y-deque-ya-resuelven-en-el-lenguaje"><span class="header-section-number">13</span> Lo que ArrayDeque y deque ya resuelven en el lenguaje</a></li>
+  <li><a href="#lo-que-te-llevas-de-hoy" id="toc-lo-que-te-llevas-de-hoy" class="nav-link" data-scroll-target="#lo-que-te-llevas-de-hoy"><span class="header-section-number">14</span> Lo que te llevas de hoy</a></li>
+  <li><a href="#cierre-de-la-unidad-2" id="toc-cierre-de-la-unidad-2" class="nav-link" data-scroll-target="#cierre-de-la-unidad-2"><span class="header-section-number">15</span> Cierre de la Unidad 2</a></li>
+  <li><a href="#recursos" id="toc-recursos" class="nav-link" data-scroll-target="#recursos"><span class="header-section-number">16</span> Recursos</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-02/index.html">Unidad 2. Estructuras fijas</a></li><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-02/tema-03-pilas-colas-vectores/index.html">Tema 3. Pilas y colas usando vectores</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Tema 3. Pilas y colas usando vectores</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Autor/a</div>
+    <div class="quarto-title-meta-contents">
+             <p>Oscar Leonel Sánchez Conde </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Fecha de publicación</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">17 de agosto de 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="ficha">
+<table class="caption-top table">
+<tbody>
+<tr class="odd">
+<td>Unidad</td>
+<td>Unidad 2. Estructuras fijas</td>
+</tr>
+<tr class="even">
+<td>Tema</td>
+<td>Tema 3. Pilas y colas usando vectores</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>El Tema 2 de esta unidad recorrió la matriz, un arreglo de arreglos donde cada posición se ubica por fila y columna. Hoy vuelves a un arreglo de una sola dimensión, pero con una tarea distinta, ya que no vas a recorrerlo libremente sino a esconderlo por completo detrás de dos contratos que ya conoces. La Unidad 1 cerró su Tema 2 con una clase <code>Pila</code> cuyos cuatro métodos, <code>apilar</code>, <code>desapilar</code>, <code>cima</code> y <code>estaVacia</code>, lanzaban <code>UnsupportedOperationException</code> con el mensaje <code>"llega en la Unidad 2"</code>. Ese momento llegó. Hoy completas esa misma clase con un arreglo por dentro, resuelves el problema de qué hacer cuando el arreglo se llena, y construyes desde cero el contrato hermano de la pila, la cola, con una técnica que la primera vez sorprende a casi todo el mundo, el arreglo circular.</p>
+<section id="el-contrato-que-quedó-pendiente" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="el-contrato-que-quedó-pendiente"><span class="header-section-number">1</span> El contrato que quedó pendiente</h2>
+<p>Antes de tocar código, vale la pena mirar de nuevo la clase tal como quedó al final del Tema 2 de la Unidad 1, porque hoy no la reescribes desde cero, la completas.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">class</span> Pila <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">apilar</span><span class="op">(</span><span class="bu">Object</span> elemento<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">UnsupportedOperationException</span><span class="op">(</span><span class="st">"llega en la Unidad 2"</span><span class="op">);</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="bu">Object</span> <span class="fu">desapilar</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">UnsupportedOperationException</span><span class="op">(</span><span class="st">"llega en la Unidad 2"</span><span class="op">);</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="bu">Object</span> <span class="fu">cima</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">UnsupportedOperationException</span><span class="op">(</span><span class="st">"llega en la Unidad 2"</span><span class="op">);</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">estaVacia</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">UnsupportedOperationException</span><span class="op">(</span><span class="st">"llega en la Unidad 2"</span><span class="op">);</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Los cuatro nombres, y qué recibe y devuelve cada uno, quedaron fijos desde entonces, así que nada de lo que sigue les cambia la firma. Lo único que faltaba decidir era la memoria, si por dentro hay un arreglo o una lista enlazada, y esa decisión es justamente el tema de hoy. La Unidad 3 va a resolver el mismo contrato con una lista enlazada, sin que ese cambio futuro obligue a tocar ni una línea del código que ya use <code>Pila</code> hoy, que es exactamente la promesa que el encapsulamiento hace posible.</p>
+</section>
+<section id="diseñando-la-pila-y-la-cola-con-arreglo-por-dentro" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="diseñando-la-pila-y-la-cola-con-arreglo-por-dentro"><span class="header-section-number">2</span> Diseñando la Pila y la Cola con arreglo por dentro</h2>
+<p>Las dos clases de hoy comparten la misma idea de fondo, guardar un arreglo privado y dos enteros que llevan la cuenta de dónde está cada cosa. En la pila basta con un contador de elementos, <code>tamaño</code>, porque siempre se entra y se sale por el mismo extremo. En la cola hace falta un dato más, <code>frente</code>, porque el extremo de entrada y el de salida son distintos, y como vas a ver más adelante en el tema, ese detalle es justo lo que obliga al arreglo circular.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagramas de clase UML de Pila y Cola con sus campos ahora decididos: Pila guarda un arreglo datos y un contador tamaño; Cola guarda un arreglo datos, un indice frente y un contador tamaño; ambas exponen solo sus cuatro metodos de siempre" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Lo que estaba “por decidir” en la Unidad 1 ya tiene forma</text> <rect x="30" y="34" width="330" height="200" rx="6" fill="#e4f2f1" stroke="#8fc9c5"></rect> <g stroke="#8fc9c5"><line x1="30" y1="68" x2="360" y2="68"></line><line x1="30" y1="118" x2="360" y2="118"></line></g> <text x="195" y="56" font-size="15" font-weight="700" fill="#0e6f6c" text-anchor="middle">Pila</text> <g font-size="12" fill="#12324f"><text x="44" y="88">- datos: Object[]</text><text x="44" y="106">- tamaño: int</text></g> <g font-size="12" fill="#12324f"><text x="44" y="138">+ apilar(elemento: Object)</text><text x="44" y="158">+ desapilar(): Object</text><text x="44" y="178">+ cima(): Object</text><text x="44" y="198">+ estaVacia(): boolean</text></g> <rect x="400" y="34" width="330" height="200" rx="6" fill="#eef4fa" stroke="#c7d6e6"></rect> <g stroke="#c7d6e6"><line x1="400" y1="68" x2="730" y2="68"></line><line x1="400" y1="136" x2="730" y2="136"></line></g> <text x="565" y="56" font-size="15" font-weight="700" fill="#12324f" text-anchor="middle">Cola</text> <g font-size="12" fill="#12324f"><text x="414" y="88">- datos: Object[]</text><text x="414" y="106">- frente: int</text><text x="414" y="124">- tamaño: int</text></g> <g font-size="12" fill="#12324f"><text x="414" y="156">+ encolar(elemento: Object)</text><text x="414" y="176">+ desencolar(): Object</text><text x="414" y="196">+ frente(): Object</text><text x="414" y="216">+ estaVacia(): boolean</text></g>
+</svg>
+</div>
+<p>Ninguno de los dos campos internos es público, así que el código que ya usa <code>Pila</code> desde el Tema 2 de la Unidad 1 no ve ningún cambio en cómo se llama, solo deja de ver la excepción.</p>
+</section>
+<section id="qué-pasa-cuando-el-arreglo-se-llena" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="qué-pasa-cuando-el-arreglo-se-llena"><span class="header-section-number">3</span> Qué pasa cuando el arreglo se llena</h2>
+<p>El método privado <code>redimensionar</code> es el corazón técnico de la pila con arreglo. Cuando <code>apilar</code> encuentra que <code>tamaño</code> ya alcanzó el largo del arreglo actual, no hay ninguna casilla libre donde escribir, así que la única salida es crear un arreglo nuevo más grande, copiar ahí todo lo que había, y descartar el arreglo viejo.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mecanica del redimensionamiento: un arreglo lleno de capacidad 4 no tiene casilla libre para apilar un quinto elemento; se crea un arreglo nuevo del doble de capacidad, se copian los cuatro elementos existentes, y solo entonces se escribe el elemento nuevo en la posicion 4" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="esd23a" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">apilar(5) sobre una pila llena de capacidad 4</text> <text x="130" y="38" font-size="11.5" fill="#5b6876" text-anchor="middle">arreglo lleno, tamaño == capacidad</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="48" width="50" height="40"></rect><rect x="80" y="48" width="50" height="40"></rect><rect x="130" y="48" width="50" height="40"></rect><rect x="180" y="48" width="50" height="40"></rect></g> <g text-anchor="middle" font-size="12" fill="#12324f"><text x="55" y="72">1</text><text x="105" y="72">2</text><text x="155" y="72">3</text><text x="205" y="72">4</text></g> <path d="M230,68 L280,68" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#esd23a)"></path> <text x="330" y="112" font-size="11.5" fill="#5b6876" text-anchor="middle">1. arreglo nuevo, capacidad 8</text> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="280" y="124" width="35" height="36"></rect><rect x="315" y="124" width="35" height="36"></rect><rect x="350" y="124" width="35" height="36"></rect><rect x="385" y="124" width="35" height="36"></rect><rect x="420" y="124" width="35" height="36"></rect><rect x="455" y="124" width="35" height="36"></rect><rect x="490" y="124" width="35" height="36"></rect><rect x="525" y="124" width="35" height="36"></rect></g> <text x="402" y="180" font-size="11.5" fill="#5b6876" text-anchor="middle">2. se copian los 4 elementos existentes</text> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="280" y="124" width="35" height="36"></rect><rect x="315" y="124" width="35" height="36"></rect><rect x="350" y="124" width="35" height="36"></rect><rect x="385" y="124" width="35" height="36"></rect></g> <g text-anchor="middle" font-size="11.5" fill="#0e6f6c"><text x="297" y="146">1</text><text x="332" y="146">2</text><text x="367" y="146">3</text><text x="402" y="146">4</text></g> <rect x="420" y="124" width="35" height="36" fill="#e4f2f1" stroke="#8fc9c5" stroke-dasharray="4 3"></rect> <text x="437" y="146" font-size="11.5" fill="#0e6f6c" text-anchor="middle">5</text> <text x="437" y="176" font-size="11" fill="#5b6876" text-anchor="middle">3. recien</text> <text x="437" y="190" font-size="11" fill="#5b6876" text-anchor="middle">ahora se escribe</text> <text x="620" y="146" font-size="11.5" fill="#5b6876">3 casillas quedan</text> <text x="620" y="162" font-size="11.5" fill="#5b6876">libres para el futuro</text> <text x="380" y="230" font-size="11.5" fill="#5b6876" text-anchor="middle">El arreglo viejo se descarta; datos ahora apunta al nuevo. El costo de copiar es O(n) esta vez.</text>
+</svg>
+</div>
+<p>Nota el orden exacto de los pasos, primero se agranda el arreglo, después se copia lo que ya había, y solo al final se escribe el elemento nuevo que motivó todo esto. Invertir ese orden, por ejemplo tratar de escribir el elemento nuevo antes de tener dónde ponerlo, es la forma más común de romper esta implementación cuando se escribe por primera vez.</p>
+</section>
+<section id="cómo-apilar-desapilar-y-cima-operan-sobre-el-arreglo-interno" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="cómo-apilar-desapilar-y-cima-operan-sobre-el-arreglo-interno"><span class="header-section-number">4</span> Cómo apilar, desapilar y cima operan sobre el arreglo interno</h2>
+<p><code>apilar</code> escribe el elemento nuevo en la posición <code>tamaño</code> del arreglo y después incrementa <code>tamaño</code> en uno, salvo que el arreglo esté lleno, caso que ya viste en la sección anterior. <code>desapilar</code> hace lo contrario, decrementa <code>tamaño</code> y devuelve lo que había en esa posición, después de comprobar que la pila no esté vacía. <code>cima</code> simplemente lee <code>datos[tamaño - 1]</code> sin tocar nada.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">class</span> Pila <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="bu">Object</span><span class="op">[]</span> datos<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="dt">int</span> tamaño<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="fu">Pila</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        datos <span class="op">=</span> <span class="kw">new</span> <span class="bu">Object</span><span class="op">[</span><span class="dv">10</span><span class="op">];</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        tamaño <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">apilar</span><span class="op">(</span><span class="bu">Object</span> elemento<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>tamaño <span class="op">==</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>            <span class="fu">redimensionar</span><span class="op">();</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        datos<span class="op">[</span>tamaño<span class="op">]</span> <span class="op">=</span> elemento<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        tamaño<span class="op">++;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="bu">Object</span> <span class="fu">desapilar</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="fu">estaVacia</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">IllegalStateException</span><span class="op">(</span><span class="st">"la pila esta vacia"</span><span class="op">);</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        tamaño<span class="op">--;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        <span class="bu">Object</span> elemento <span class="op">=</span> datos<span class="op">[</span>tamaño<span class="op">];</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        datos<span class="op">[</span>tamaño<span class="op">]</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> elemento<span class="op">;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="bu">Object</span> <span class="fu">cima</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="fu">estaVacia</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">IllegalStateException</span><span class="op">(</span><span class="st">"la pila esta vacia"</span><span class="op">);</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> datos<span class="op">[</span>tamaño <span class="op">-</span> <span class="dv">1</span><span class="op">];</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">estaVacia</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tamaño <span class="op">==</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="dt">void</span> <span class="fu">redimensionar</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>        <span class="bu">Object</span><span class="op">[]</span> datosNuevos <span class="op">=</span> <span class="kw">new</span> <span class="bu">Object</span><span class="op">[</span>datos<span class="op">.</span><span class="fu">length</span> <span class="op">*</span> <span class="dv">2</span><span class="op">];</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>        <span class="bu">System</span><span class="op">.</span><span class="fu">arraycopy</span><span class="op">(</span>datos<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> datosNuevos<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">);</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        datos <span class="op">=</span> datosNuevos<span class="op">;</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Pila:</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._datos <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> <span class="dv">10</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._tamaño <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> apilar(<span class="va">self</span>, elemento):</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>._tamaño <span class="op">==</span> <span class="bu">len</span>(<span class="va">self</span>._datos):</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>._redimensionar()</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._datos[<span class="va">self</span>._tamaño] <span class="op">=</span> elemento</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._tamaño <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> desapilar(<span class="va">self</span>):</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.esta_vacia():</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">IndexError</span>(<span class="st">"la pila esta vacia"</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._tamaño <span class="op">-=</span> <span class="dv">1</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        elemento <span class="op">=</span> <span class="va">self</span>._datos[<span class="va">self</span>._tamaño]</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._datos[<span class="va">self</span>._tamaño] <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> elemento</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> cima(<span class="va">self</span>):</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.esta_vacia():</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">IndexError</span>(<span class="st">"la pila esta vacia"</span>)</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>._datos[<span class="va">self</span>._tamaño <span class="op">-</span> <span class="dv">1</span>]</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> esta_vacia(<span class="va">self</span>):</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>._tamaño <span class="op">==</span> <span class="dv">0</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> _redimensionar(<span class="va">self</span>):</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        datos_nuevos <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> (<span class="bu">len</span>(<span class="va">self</span>._datos) <span class="op">*</span> <span class="dv">2</span>)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>._tamaño):</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>            datos_nuevos[i] <span class="op">=</span> <span class="va">self</span>._datos[i]</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._datos <span class="op">=</span> datos_nuevos</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Fíjate en un detalle que fácilmente se pasa por alto, <code>desapilar</code> no solo decrementa <code>tamaño</code>, también deja la casilla que queda libre en <code>None</code> o en <code>null</code>. Eso no hace falta para que el código funcione, la próxima llamada a <code>apilar</code> va a sobrescribir esa casilla de todas formas, y sin embargo dejarla así tal cual es un error real y bien documentado que vale la pena entender antes de seguir, así que vuelve sobre él más adelante en este mismo tema.</p>
+</section>
+<section id="cuanto-debe-crecer-el-arreglo-nuevo" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="cuanto-debe-crecer-el-arreglo-nuevo"><span class="header-section-number">5</span> Cuanto debe crecer el arreglo nuevo</h2>
+<p>La decisión de cuánto más grande hacer el arreglo nuevo, el <em>factor de crecimiento</em>, no tiene una única respuesta correcta, y las estructuras equivalentes de la biblioteca estándar de Java y de Python lo resuelven de formas distintas, con compromisos distintos entre memoria desperdiciada y frecuencia de copias.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 232" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres estrategias reales de crecimiento: java.util.Vector duplica la capacidad segun su Javadoc; java.util.ArrayList no fija su factor por contrato aunque en la practica crece cerca de 1.5 veces; CPython usa una formula concreta visible en su codigo fuente que agrega aproximadamente un octavo mas 3 o 6 y trunca a multiplo de 4" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Tres formas reales de resolver el mismo problema</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="34" width="230" height="150" rx="10"></rect><rect x="270" y="34" width="230" height="150" rx="10"></rect><rect x="520" y="34" width="220" height="150" rx="10"></rect></g> <g text-anchor="middle" font-size="12.5" font-weight="700" fill="#12324f"><text x="135" y="58">java.util.Vector</text><text x="385" y="58">java.util.ArrayList</text><text x="630" y="58">CPython (listas)</text></g> <g text-anchor="middle" font-size="11.5" fill="#0e6f6c"><text x="135" y="80">duplica: factor 2</text><text x="385" y="80">no especificado</text><text x="630" y="80">formula concreta</text></g> <g text-anchor="middle" font-size="11" fill="#3c7d7a"><text x="135" y="100">documentado en el</text><text x="135" y="115">Javadoc como</text><text x="135" y="130">comportamiento oficial</text></g> <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="385" y="100">el contrato solo promete</text><text x="385" y="115">costo amortizado O(1);</text><text x="385" y="130">~1.5x es detalle de</text><text x="385" y="145">OpenJDK, no garantia</text></g> <g text-anchor="middle" font-size="10.5" fill="#3c7d7a"><text x="630" y="100">nuevo = n + n/8 + 3 o 6</text><text x="630" y="115">truncado a multiplo</text><text x="630" y="130">de 4 (listobject.c)</text></g> <text x="135" y="164" font-size="10.5" fill="#5b6876" text-anchor="middle">mas memoria libre,</text> <text x="135" y="177" font-size="10.5" fill="#5b6876" text-anchor="middle">menos copias</text> <text x="630" y="150" font-size="10.5" fill="#5b6876" text-anchor="middle">crecimiento moderado</text> <text x="630" y="163" font-size="10.5" fill="#5b6876" text-anchor="middle">y predecible</text> <text x="380" y="212" font-size="11.5" fill="#5b6876" text-anchor="middle">Las tres logran la misma cota asintotica, O(1) amortizado por insercion, con compromisos distintos.</text>
+</svg>
+</div>
+<p>El Javadoc de <code>Vector</code> en Java SE 17 lo dice de forma explícita, si el incremento de capacidad no se configura, que es el caso por defecto, la capacidad del vector se duplica cada vez que necesita crecer. <code>ArrayList</code>, en cambio, deja la política de crecimiento fuera del contrato público, su Javadoc dice únicamente que agregar un elemento tiene costo amortizado constante, sin comprometerse a un factor exacto, así que aunque en la práctica de OpenJDK el crecimiento observado ronda 1.5 veces, presentar esa cifra como una garantía del lenguaje sería un error, porque el propio fabricante la deja fuera de lo que promete. CPython resuelve el mismo problema con una fórmula concreta y visible en su código fuente, en la función que redimensiona listas dentro de <code>listobject.c</code>, que agrega aproximadamente un octavo del tamaño nuevo, más 3 si ese tamaño nuevo es menor que nueve o más 6 en caso contrario, y trunca el resultado hacia abajo a un múltiplo de cuatro con una operación AND a nivel de bits. La documentación oficial de Python explica el motivo en su sección de preguntas frecuentes, cuando el arreglo debe crecer se reserva algo de espacio extra para que las próximas operaciones no necesiten otro realojamiento, lo que da un comportamiento amortizado lineal sobre una secuencia larga de <code>append</code>. La clase <code>Pila</code> de esta guía usa la opción más simple de las tres, duplicar, la misma que <code>Vector</code>, porque el objetivo aquí es que entiendas el mecanismo, no que memorices una fórmula de producción.</p>
+</section>
+<section id="por-qué-amortizado-y-no-simplemente-o1" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="por-qué-amortizado-y-no-simplemente-o1"><span class="header-section-number">6</span> Por qué “amortizado” y no simplemente O(1)</h2>
+<p>La tabla resume las cuatro operaciones de la pila:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Operación</th>
+<th>Peor caso</th>
+<th>Amortizado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>apilar</code></td>
+<td>O(n), cuando toca redimensionar</td>
+<td>O(1)</td>
+</tr>
+<tr class="even">
+<td><code>desapilar</code></td>
+<td>O(1)</td>
+<td>O(1)</td>
+</tr>
+<tr class="odd">
+<td><code>cima</code></td>
+<td>O(1)</td>
+<td>O(1)</td>
+</tr>
+<tr class="even">
+<td><code>estaVacia</code></td>
+<td>O(1)</td>
+<td>O(1)</td>
+</tr>
+</tbody>
+</table>
+<p>Que una operación individual pueda costar O(n) y que aun así se hable de O(1) en promedio no es una contradicción, es el resultado central del <em>análisis amortizado</em>, la técnica que reparte el costo caro de unas pocas operaciones entre todas las operaciones baratas que las rodean. La idea, tal como la desarrollan Cormen, Leiserson, Rivest y Stein en el capítulo dedicado al análisis amortizado, en la sección que llaman tablas dinámicas, es la siguiente, si la capacidad se duplica cada vez, entonces el costo de copiar en cada redimensión sucesiva forma una serie geométrica.</p>
+<div class="diagrama">
+<svg viewbox="0 0 700 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Serie geometrica de costos de copia al apilar n elementos con duplicacion: redimensiones sucesivas copian 1, luego 2, luego 4, luego 8 elementos; la suma de todas las copias es menor que 2n, asi que el costo por operacion, repartido entre las n operaciones, queda acotado por una constante" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="350" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">n apilamientos desde vacio: costo de copia en cada redimension</text> <g fill="#e4f2f1" stroke="#8fc9c5"> <rect x="60" y="150" width="30" height="16"></rect> <rect x="120" y="134" width="30" height="32"></rect> <rect x="180" y="102" width="30" height="64"></rect> <rect x="240" y="38" width="30" height="128"></rect> </g> <g text-anchor="middle" font-size="11" fill="#0e6f6c"><text x="75" y="146">copia 1</text><text x="135" y="130">copia 2</text><text x="195" y="98">copia 4</text><text x="255" y="34">copia 8</text></g> <text x="380" y="60" font-size="12.5" fill="#12324f">suma total de copias para llegar a n = 8:</text> <text x="380" y="80" font-size="12.5" fill="#12324f">1 + 2 + 4 + 8 = 15, y 15 &lt; 2 x 8 = 16</text> <text x="380" y="108" font-size="11.5" fill="#5b6876">esa cota, siempre menor que 2n,</text> <text x="380" y="124" font-size="11.5" fill="#5b6876">se cumple para cualquier n</text> <text x="380" y="150" font-size="12.5" font-weight="600" fill="#0e6f6c">costo total / n operaciones</text> <text x="380" y="168" font-size="12.5" font-weight="600" fill="#0e6f6c">menor que una constante = O(1) amortizado</text>
+</svg>
+</div>
+<p>Para <em>n</em> apilamientos consecutivos desde una pila vacía que duplica su capacidad cada vez, el costo total de todas las copias de redimensión, sumadas, queda acotado por menos de 2<em>n</em>, ya que la serie 1 + 2 + 4 + … + n/2 nunca supera a n.&nbsp;Repartir ese costo total entre las <em>n</em> operaciones da menos de 2 unidades de trabajo por operación en promedio, sin importar cuál operación en particular fue la cara. Ese es exactamente el sentido de “amortizado”, no que cada operación cueste poco, sino que el total para una secuencia larga crece de forma lineal, y por lo tanto cada operación cuesta poco en promedio. Cormen y sus coautores desarrollan además la variante de achicar el arreglo cuando queda muy vacío, con el cuidado de no reducirlo apenas cruza la mitad, porque alternar entre apilar y desapilar justo en ese punto produciría una redimensión en cada operación y arruinaría la cota amortizada; esta guía no implementa ese achicamiento, pero vale la pena que sepas que existe y por qué el umbral no puede ser exactamente la mitad.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 1. Traza las redimensiones
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Imagina una pila que arranca con capacidad 4 y duplica su capacidad cada vez que se llena, igual que <code>Vector</code>. Vas a apilar ocho elementos seguidos, uno tras otro, sin desapilar ninguno. Antes de seguir, responde, ¿en qué apilamiento exacto, el primero, el segundo, y así, ocurre cada redimensión, y qué capacidad tiene el arreglo justo después de cada una?</p>
+<p><label><input type="checkbox"> La primera redimensión ocurre en el quinto apilamiento</label> <label><input type="checkbox"> La primera redimensión ocurre en el cuarto apilamiento</label> <label><input type="checkbox"> Después de la última redimensión de esta secuencia, la capacidad queda en 8</label> <label><input type="checkbox"> Después de la última redimensión de esta secuencia, la capacidad queda en 16</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 1
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La pila arranca con capacidad 4 y tamaño 0. Los apilamientos 1, 2, 3 y 4 caben sin problema, porque <code>tamaño == datos.length</code> solo se cumple justo antes del quinto. Al llegar el quinto apilamiento, <code>tamaño</code> vale 4 y <code>datos.length</code> también vale 4, así que se dispara la redimensión antes de escribir ese quinto elemento, la capacidad pasa de 4 a 8, y el quinto elemento se escribe ya en el arreglo nuevo. Los apilamientos 6, 7 y 8 caben en las casillas que quedaron libres, así que no vuelve a redimensionar dentro de esta secuencia de ocho. La respuesta correcta es entonces la primera opción, la redimensión ocurre en el quinto apilamiento, y la tercera, la capacidad queda en 8, no en 16, porque solo hizo falta una redimensión para las ocho inserciones.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="un-error-silencioso-que-dejan-las-referencias-que-sobran" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="un-error-silencioso-que-dejan-las-referencias-que-sobran"><span class="header-section-number">7</span> Un error silencioso que dejan las referencias que sobran</h2>
+<p>Antes de dejar la pila y pasar a la cola, conviene detenerse en por qué <code>desapilar</code> deja la casilla liberada en <code>null</code>, un detalle que en el código de arriba puede parecer un capricho de estilo. Piensa en el siguiente caso de estudio.</p>
+<p>Un equipo escribe una pila con arreglo por dentro, prácticamente idéntica a la de esta guía, salvo que su <code>desapilar</code> solo decrementa <code>tamaño</code> y devuelve el elemento, sin poner <code>null</code> en la casilla que queda libre. El programa compila, corre, y en las pruebas de todos los días funciona sin ningún error visible, apila y desapila miles de veces sin que nada se rompa. Ya que el código nunca vuelve a leer esa casilla porque <code>tamaño</code> ya no la incluye, ¿hay algún problema real, o es solo una cuestión de prolijidad?</p>
+<p>Sí hay un problema real, y Joshua Bloch lo documenta como uno de los ejemplos más citados de <em>Effective Java</em>, en el ítem que trata sobre eliminar referencias obsoletas, usando precisamente una pila con arreglo por dentro como caso de estudio. Aunque el código lógicamente ya olvidó ese elemento, porque <code>tamaño</code> dice que ya no forma parte de la pila, el arreglo interno todavía guarda una referencia física a él en esa casilla, y mientras esa referencia exista, el recolector de basura no puede liberar la memoria del objeto, sin importar que el resto del programa nunca vuelva a usarlo. Bloch llama a esto una <em>referencia obsoleta</em>, una referencia que el programa nunca más va a desreferenciar pero que sigue viva desde el punto de vista de la memoria. El síntoma no aparece de inmediato, ya que el programa sigue funcionando bien durante mucho tiempo, y solo se manifiesta como una fuga de memoria lenta, cada vez más lenta o más pesada, o como un <code>OutOfMemoryError</code> mucho después y muy lejos de la línea donde en realidad ocurrió el error. Es la misma lección que el Tema 2 de la Unidad 1 ya trajo con las excepciones de “no implementado”, falla rápido y en voz alta es preferible a un fallo silencioso, solo que aplicada ahora no a un método sin terminar sino a una estructura de datos que retiene memoria que ya no le pertenece a nadie.</p>
+</section>
+<section id="por-qué-no-basta-con-mover-el-índice-0-en-una-cola-simple" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="por-qué-no-basta-con-mover-el-índice-0-en-una-cola-simple"><span class="header-section-number">8</span> Por qué no basta con mover el índice 0 en una cola simple</h2>
+<p>Con la pila resuelta, toca construir el contrato hermano. Antes de llegar al arreglo circular, vale la pena ver por qué la solución ingenua no sirve. Si <code>desencolar</code> siempre libera la posición 0 del arreglo y <code>encolar</code> siempre escribe al final, entonces cada <code>desencolar</code> obliga a recorrer y desplazar una posición hacia la izquierda a todos los elementos que quedan, uno por uno, para que la posición 0 vuelva a quedar disponible para el próximo elemento. Eso convierte a <code>desencolar</code>, que debería ser una operación barata, en una operación O(n), y en una cola que se usa mucho, ese desplazamiento repetido es justo el tipo de costo escondido que este curso quiere que aprendas a detectar.</p>
+<p>La solución no es mover los elementos, es dejar de moverlos por completo. En vez de eso, se mueven los <em>índices</em>, <code>frente</code> y la posición donde toca escribir a continuación, y el arreglo se trata como si el final se enrollara hacia el principio en cuanto se acaba el espacio físico.</p>
+</section>
+<section id="los-indices-que-le-dan-la-vuelta-al-arreglo-en-una-cola-circular" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="los-indices-que-le-dan-la-vuelta-al-arreglo-en-una-cola-circular"><span class="header-section-number">9</span> Los indices que le dan la vuelta al arreglo en una cola circular</h2>
+<p>El campo <code>frente</code> guarda la posición del primer elemento lógico de la cola, no necesariamente la posición 0 del arreglo. El campo <code>tamaño</code> cuenta cuántos elementos hay guardados en este momento. Con esos dos datos, la posición donde escribir el próximo elemento se calcula como <code>(frente + tamaño) % capacidad</code>, y el operador módulo es justamente lo que hace que ese cálculo “de la vuelta” al llegar al final físico del arreglo y siga contando desde la posición 0.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cola circular de capacidad 6: el arreglo se dibuja como un anillo, frente apunta a la posicion 4 y tamaño vale 3, asi que los elementos ocupan las posiciones 4, 5 y 0, dando la vuelta; debajo se contrastan cola vacia y cola llena, ambas con frente igual a fin si no se usa un contador de tamaño" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Una cola circular de capacidad 6, con frente = 4 y tamaño = 3</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="40" width="70" height="42"></rect><rect x="100" y="40" width="70" height="42"></rect><rect x="170" y="40" width="70" height="42"></rect><rect x="240" y="40" width="70" height="42"></rect><rect x="310" y="40" width="70" height="42"></rect><rect x="380" y="40" width="70" height="42"></rect></g> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="30" y="40" width="70" height="42"></rect><rect x="310" y="40" width="70" height="42"></rect><rect x="380" y="40" width="70" height="42"></rect></g> <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="65" y="34">0</text><text x="135" y="34">1</text><text x="205" y="34">2</text><text x="275" y="34">3</text><text x="345" y="34">4</text><text x="415" y="34">5</text></g> <g text-anchor="middle" font-size="12" fill="#12324f"><text x="65" y="66">c</text><text x="345" y="66">a</text><text x="415" y="66">b</text></g> <text x="345" y="98" font-size="11" fill="#0e6f6c" text-anchor="middle">frente = 4</text> <text x="135" y="94" font-size="11" fill="#5b6876" text-anchor="middle">(frente+tamaño)%6 = 1</text> <text x="135" y="108" font-size="10.5" fill="#5b6876" text-anchor="middle">proxima escritura</text> <text x="380" y="120" font-size="11" fill="#5b6876" text-anchor="middle">el elemento “a” quedo antes que “b”, pero fisicamente esta mas a la izquierda que “c”: eso es “dar la vuelta”</text> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="60" y="150" width="290" height="120" rx="10"></rect><rect x="410" y="150" width="290" height="120" rx="10"></rect></g> <text x="205" y="172" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">cola vacia</text> <text x="555" y="172" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">cola llena</text> <text x="205" y="196" font-size="11.5" fill="#5b6876" text-anchor="middle">tamaño = 0</text> <text x="555" y="196" font-size="11.5" fill="#5b6876" text-anchor="middle">tamaño = capacidad</text> <text x="205" y="220" font-size="11.5" fill="#0e6f6c" text-anchor="middle">sin contador, frente == fin</text> <text x="555" y="220" font-size="11.5" fill="#0e6f6c" text-anchor="middle">sin contador, frente == fin</text> <text x="205" y="244" font-size="11" fill="#5b6876" text-anchor="middle">los dos casos se ven igual</text> <text x="555" y="244" font-size="11" fill="#5b6876" text-anchor="middle">sin un tercer dato que los distinga</text>
+</svg>
+</div>
+<p>Aquí aparece la trampa que sorprende a casi todo el mundo la primera vez que implementa una cola circular. Si en vez de un contador de tamaño se usan solo dos índices desnudos, <code>frente</code> y <code>fin</code>, sin nada más, entonces <code>frente == fin</code> es ambiguo, porque tanto una cola vacía como una cola completamente llena llegan exactamente a esa misma condición, y no hay forma de distinguir los dos casos con solo esa comparación. Hay dos soluciones estándar para esa ambigüedad. Una es guardar un contador de elementos aparte, que es la técnica que usa esta guía. La otra es sacrificar deliberadamente una casilla del arreglo, nunca llenarla del todo, de modo que cuando <code>fin</code> alcanza a <code>frente</code> el buffer está vacío, y cuando <code>fin</code> queda una posición detrás de <code>frente</code> está lleno, sin ambigüedad y sin necesitar ningún contador aparte; esta segunda técnica es la que documenta la página oficial del núcleo de Linux dedicada a los <em>buffers</em> circulares. El mismo documento describe además una optimización real de bajo nivel, si la capacidad del buffer es una potencia de dos, el módulo se puede reemplazar por una máscara AND bit a bit, mucho más barata en hardware que una división. Esta guía usa el contador explícito por ser la opción más fácil de razonar para quien construye su primera cola circular, pero vale la pena que sepas que la alternativa de sacrificar una casilla existe, se usa de verdad en sistemas donde cada instrucción cuenta, y es la que documenta el núcleo de Linux.</p>
+</section>
+<section id="cómo-encolar-desencolar-y-frente-operan-sobre-el-arreglo" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="cómo-encolar-desencolar-y-frente-operan-sobre-el-arreglo"><span class="header-section-number">10</span> Cómo encolar, desencolar y frente operan sobre el arreglo</h2>
+<p>Con <code>frente</code> y <code>tamaño</code> ya definidos, las cuatro operaciones quedan cortas.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">class</span> Cola <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="bu">Object</span><span class="op">[]</span> datos<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="dt">int</span> frente<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="dt">int</span> tamaño<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="fu">Cola</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        datos <span class="op">=</span> <span class="kw">new</span> <span class="bu">Object</span><span class="op">[</span><span class="dv">10</span><span class="op">];</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        frente <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        tamaño <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">encolar</span><span class="op">(</span><span class="bu">Object</span> elemento<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>tamaño <span class="op">==</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>            <span class="fu">redimensionar</span><span class="op">();</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> posicion <span class="op">=</span> <span class="op">(</span>frente <span class="op">+</span> tamaño<span class="op">)</span> <span class="op">%</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        datos<span class="op">[</span>posicion<span class="op">]</span> <span class="op">=</span> elemento<span class="op">;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        tamaño<span class="op">++;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="bu">Object</span> <span class="fu">desencolar</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="fu">estaVacia</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">IllegalStateException</span><span class="op">(</span><span class="st">"la cola esta vacia"</span><span class="op">);</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>        <span class="bu">Object</span> elemento <span class="op">=</span> datos<span class="op">[</span>frente<span class="op">];</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>        datos<span class="op">[</span>frente<span class="op">]</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>        frente <span class="op">=</span> <span class="op">(</span>frente <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">%</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">;</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        tamaño<span class="op">--;</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> elemento<span class="op">;</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="bu">Object</span> <span class="fu">frente</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="fu">estaVacia</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">IllegalStateException</span><span class="op">(</span><span class="st">"la cola esta vacia"</span><span class="op">);</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> datos<span class="op">[</span>frente<span class="op">];</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">estaVacia</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tamaño <span class="op">==</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Cola:</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._datos <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> <span class="dv">10</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._frente <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._tamaño <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> encolar(<span class="va">self</span>, elemento):</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>._tamaño <span class="op">==</span> <span class="bu">len</span>(<span class="va">self</span>._datos):</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>._redimensionar()</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        posicion <span class="op">=</span> (<span class="va">self</span>._frente <span class="op">+</span> <span class="va">self</span>._tamaño) <span class="op">%</span> <span class="bu">len</span>(<span class="va">self</span>._datos)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._datos[posicion] <span class="op">=</span> elemento</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._tamaño <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> desencolar(<span class="va">self</span>):</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.esta_vacia():</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">IndexError</span>(<span class="st">"la cola esta vacia"</span>)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        elemento <span class="op">=</span> <span class="va">self</span>._datos[<span class="va">self</span>._frente]</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._datos[<span class="va">self</span>._frente] <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._frente <span class="op">=</span> (<span class="va">self</span>._frente <span class="op">+</span> <span class="dv">1</span>) <span class="op">%</span> <span class="bu">len</span>(<span class="va">self</span>._datos)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._tamaño <span class="op">-=</span> <span class="dv">1</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> elemento</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> frente(<span class="va">self</span>):</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.esta_vacia():</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">IndexError</span>(<span class="st">"la cola esta vacia"</span>)</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>._datos[<span class="va">self</span>._frente]</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> esta_vacia(<span class="va">self</span>):</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>._tamaño <span class="op">==</span> <span class="dv">0</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>desencolar</code> avanza <code>frente</code> con el mismo cálculo módulo que usa <code>encolar</code> para la posición de escritura, así que los dos extremos dan la vuelta al arreglo de la misma forma. Igual que en la pila, <code>desencolar</code> deja en <code>null</code> la casilla que libera, por la misma razón de referencias obsoletas que ya viste arriba, solo que ahora aplicada al extremo de salida de la cola.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 2. Encuentra el error de esta cola circular
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>El siguiente fragmento en Java compila y corre sin ningún error visible en pruebas rápidas, pero tiene un error de diseño serio. Léelo con calma antes de seguir.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">class</span> ColaConError <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="bu">Object</span><span class="op">[]</span> datos <span class="op">=</span> <span class="kw">new</span> <span class="bu">Object</span><span class="op">[</span><span class="dv">6</span><span class="op">];</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="dt">int</span> frente <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="dt">int</span> fin <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">encolar</span><span class="op">(</span><span class="bu">Object</span> elemento<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        datos<span class="op">[</span>fin<span class="op">]</span> <span class="op">=</span> elemento<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        fin <span class="op">=</span> <span class="op">(</span>fin <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">%</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="bu">Object</span> <span class="fu">desencolar</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        <span class="bu">Object</span> elemento <span class="op">=</span> datos<span class="op">[</span>frente<span class="op">];</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        frente <span class="op">=</span> <span class="op">(</span>frente <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">%</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> elemento<span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">estaVacia</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> frente <span class="op">==</span> fin<span class="op">;</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Antes de seguir, responde en una frase, ¿qué le pasa a esta cola si se encolan seis elementos seguidos sin desencolar ninguno, y por qué <code>estaVacia</code> no puede detectarlo?</p>
+<p><label><input type="checkbox"> La cola queda llena y estaVacia devuelve correctamente falso</label> <label><input type="checkbox"> La cola queda llena, pero estaVacia devuelve true porque frente volvio a igualar a fin</label> <label><input type="checkbox"> El septimo encolar sobrescribe en silencio el primer elemento, sin lanzar ningun error</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 2
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><code>ColaConError</code> no tiene ningún contador de tamaño, solo dos índices desnudos, así que hereda exactamente la ambigüedad que describe la documentación del núcleo de Linux citada arriba. Si se encolan seis elementos seguidos en un arreglo de capacidad 6, <code>fin</code> avanza de 0 a 1, 2, 3, 4, 5 y de vuelta a 0 con el módulo, así que después del sexto <code>encolar</code>, <code>fin</code> vuelve a valer 0, exactamente el mismo valor que <code>frente</code>. En ese punto <code>estaVacia</code> devuelve <code>true</code>, porque compara <code>frente == fin</code>, sin poder distinguir entre una cola recién creada y una cola completamente llena. Peor todavía, si alguien llama a <code>encolar</code> una séptima vez creyendo que hay espacio, porque <code>estaVacia</code> dijo que sí lo había, el código escribe en <code>datos[0]</code>, sobrescribiendo en silencio el primer elemento que se había encolado, sin lanzar ningún error ni ninguna advertencia. Las respuestas correctas son la segunda, <code>estaVacia</code> devuelve <code>true</code> de forma incorrecta cuando la cola está llena, y la tercera, el séptimo <code>encolar</code> sobrescribe el primer elemento sin avisar. La corrección exige agregar el contador <code>tamaño</code>, exactamente como hace la clase <code>Cola</code> de esta guía, y usarlo tanto en <code>encolar</code> como en <code>desencolar</code> y en <code>estaVacia</code>, en vez de comparar <code>frente</code> con <code>fin</code> directamente.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="por-qué-redimensionar-una-cola-circular-no-es-una-copia-directa" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="por-qué-redimensionar-una-cola-circular-no-es-una-copia-directa"><span class="header-section-number">11</span> Por qué redimensionar una cola circular no es una copia directa</h2>
+<p>Redimensionar la pila fue una copia simple, porque sus elementos siempre ocupan desde la posición 0 hasta <code>tamaño - 1</code>. En la cola circular eso ya no es cierto, los elementos pueden estar “envueltos”, parte al final físico del arreglo y parte al principio, así que copiar el arreglo posición por posición tal cual produciría un desorden lógico, el elemento que era el frente dejaría de estarlo.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Redimensionar una cola circular envuelta: los elementos a, b y c ocupan las posiciones 4, 5 y 0 de un arreglo de capacidad 6; copiarlos tal cual a un arreglo nuevo dejaria a c antes que a y b; en cambio se recorre desde frente dando la vuelta con modulo y se escribe en orden logico a partir de la posicion 0 del arreglo nuevo, con frente reiniciado a 0" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="esd23b" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Linealizar antes de copiar: el orden logico manda, no la posicion fisica</text> <text x="210" y="38" font-size="11.5" fill="#5b6876" text-anchor="middle">arreglo viejo, envuelto (frente = 4)</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="48" width="60" height="36"></rect><rect x="90" y="48" width="60" height="36"></rect><rect x="150" y="48" width="60" height="36"></rect><rect x="210" y="48" width="60" height="36"></rect><rect x="270" y="48" width="60" height="36"></rect><rect x="330" y="48" width="60" height="36"></rect></g> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="30" y="48" width="60" height="36"></rect><rect x="270" y="48" width="60" height="36"></rect><rect x="330" y="48" width="60" height="36"></rect></g> <g text-anchor="middle" font-size="12" fill="#12324f"><text x="60" y="70">c</text><text x="300" y="70">a</text><text x="360" y="70">b</text></g> <text x="300" y="98" font-size="10.5" fill="#0e6f6c" text-anchor="middle">frente</text> <path d="M300,104 C300,140 385,155 455,112" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd23b)"></path> <text x="385" y="168" font-size="11" fill="#5b6876" text-anchor="middle">recorrer desde frente, con modulo, en orden logico</text> <text x="580" y="38" font-size="11.5" fill="#5b6876" text-anchor="middle">arreglo nuevo, lineal (frente = 0)</text> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="450" y="90" width="60" height="36"></rect><rect x="510" y="90" width="60" height="36"></rect><rect x="570" y="90" width="60" height="36"></rect></g> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="630" y="90" width="60" height="36"></rect><rect x="690" y="90" width="30" height="36"></rect></g> <g text-anchor="middle" font-size="12" fill="#12324f"><text x="480" y="112">a</text><text x="540" y="112">b</text><text x="600" y="112">c</text></g> <text x="580" y="140" font-size="11" fill="#5b6876" text-anchor="middle">orden logico preservado: a, b, c</text> <text x="380" y="200" font-size="11.5" fill="#5b6876" text-anchor="middle">Copiar posicion por posicion sin linealizar dejaria c antes que a: error de implementacion frecuente en este tema.</text>
+</svg>
+</div>
+<p>La corrección es recorrer desde <code>frente</code>, dando la vuelta con módulo tantas veces como haga falta, y escribir cada elemento en su orden lógico dentro del arreglo nuevo, empezando en la posición 0, para terminar reiniciando <code>frente</code> a 0.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span> <span class="dt">void</span> <span class="fu">redimensionar</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">Object</span><span class="op">[]</span> datosNuevos <span class="op">=</span> <span class="kw">new</span> <span class="bu">Object</span><span class="op">[</span>datos<span class="op">.</span><span class="fu">length</span> <span class="op">*</span> <span class="dv">2</span><span class="op">];</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> tamaño<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        datosNuevos<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> datos<span class="op">[(</span>frente <span class="op">+</span> i<span class="op">)</span> <span class="op">%</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">];</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    datos <span class="op">=</span> datosNuevos<span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    frente <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _redimensionar(<span class="va">self</span>):</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    capacidad_vieja <span class="op">=</span> <span class="bu">len</span>(<span class="va">self</span>._datos)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    datos_nuevos <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> (capacidad_vieja <span class="op">*</span> <span class="dv">2</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>._tamaño):</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        datos_nuevos[i] <span class="op">=</span> <span class="va">self</span>._datos[(<span class="va">self</span>._frente <span class="op">+</span> i) <span class="op">%</span> capacidad_vieja]</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>._datos <span class="op">=</span> datos_nuevos</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>._frente <span class="op">=</span> <span class="dv">0</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Es el punto donde más se equivoca quien implementa esto por primera vez, así que vale la pena decirlo una vez más de forma directa, redimensionar una cola circular no es <code>System.arraycopy</code> ni un simple recorte de lista, es recorrer en orden lógico, empezando por <code>frente</code>, y volver a escribir desde cero.</p>
+</section>
+<section id="complejidad-de-la-cola" class="level2" data-number="12">
+<h2 data-number="12" class="anchored" data-anchor-id="complejidad-de-la-cola"><span class="header-section-number">12</span> Complejidad de la cola</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Operación</th>
+<th>Peor caso</th>
+<th>Amortizado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>encolar</code></td>
+<td>O(n), cuando toca redimensionar</td>
+<td>O(1)</td>
+</tr>
+<tr class="even">
+<td><code>desencolar</code></td>
+<td>O(1)</td>
+<td>O(1)</td>
+</tr>
+<tr class="odd">
+<td><code>frente</code></td>
+<td>O(1)</td>
+<td>O(1)</td>
+</tr>
+<tr class="even">
+<td><code>estaVacia</code></td>
+<td>O(1)</td>
+<td>O(1)</td>
+</tr>
+</tbody>
+</table>
+<p>El razonamiento amortizado es idéntico al que ya viste para la pila, la serie geométrica de las copias de redimensión sucesivas queda acotada por menos de 2<em>n</em> para <em>n</em> encolamientos, así que el costo por operación en promedio sigue siendo O(1), aunque una operación puntual, la que dispara la redimensión, cueste O(n) esa vez.</p>
+</section>
+<section id="lo-que-arraydeque-y-deque-ya-resuelven-en-el-lenguaje" class="level2" data-number="13">
+<h2 data-number="13" class="anchored" data-anchor-id="lo-que-arraydeque-y-deque-ya-resuelven-en-el-lenguaje"><span class="header-section-number">13</span> Lo que ArrayDeque y deque ya resuelven en el lenguaje</h2>
+<p>Lo que construiste hoy no es un ejercicio aislado, es en esencia una versión simplificada de una herramienta que Java y Python ya traen resuelta. El Javadoc de <code>java.util.ArrayDeque</code>, en Java SE 17, describe la clase literalmente como una implementación de arreglo redimensionable de la interfaz <code>Deque</code>, cuyas operaciones principales corren en tiempo constante amortizado, y agrega una recomendación explícita, que es probable que <code>ArrayDeque</code> sea más rápida que <code>Stack</code> cuando se usa como pila, y más rápida que <code>LinkedList</code> cuando se usa como cola, precisamente porque usa un arreglo circular interno en vez de heredar de <code>Vector</code> como hace la vieja <code>Stack</code>, el mismo problema de herencia que ya viste en el Tema 2 de la Unidad 1 al comparar herencia con composición.</p>
+<p>En Python, <code>collections.deque</code> resuelve el mismo problema desde una implementación distinta, y la documentación oficial aclara la diferencia con una lista común, <code>deque</code> da aproximadamente el mismo rendimiento O(1) en ambos extremos, mientras que una <code>list</code> de Python incurre en costos de movimiento de memoria O(n) para las operaciones <code>pop(0)</code> e <code>insert(0, v)</code>. Eso explica por qué una lista de Python es excelente como pila, <code>append</code> y <code>pop</code> al final son O(1) amortizado, pero mala como cola si se intenta usar <code>pop(0)</code> para sacar por el frente, y es exactamente la razón por la que hace falta la disciplina del arreglo circular si se insiste en resolver una cola con un solo arreglo plano en vez de usar <code>deque</code> directamente.</p>
+</section>
+<section id="lo-que-te-llevas-de-hoy" class="level2" data-number="14">
+<h2 data-number="14" class="anchored" data-anchor-id="lo-que-te-llevas-de-hoy"><span class="header-section-number">14</span> Lo que te llevas de hoy</h2>
+<div class="checklist">
+<p>Al salir de este tema deberías poder explicar, sin mirar la guía:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">Cómo <code>apilar</code>, <code>desapilar</code> y <code>cima</code> leen y escriben sobre el arreglo interno de la <code>Pila</code></label></li>
+<li><label><input type="checkbox">Por qué redimensionar exige crear un arreglo nuevo, copiar, y solo entonces escribir el elemento que motivó la redimensión, en ese orden</label></li>
+<li><label><input type="checkbox">Que “amortizado” describe el costo repartido entre una secuencia larga de operaciones, no el costo de una operación individual</label></li>
+<li><label><input type="checkbox">Por qué <code>frente == fin</code> es ambiguo en una cola circular sin contador, y cómo un contador de tamaño resuelve esa ambigüedad</label></li>
+<li><label><input type="checkbox">Por qué redimensionar una cola circular exige linealizar en vez de copiar posición por posición</label></li>
+<li><label><input type="checkbox">Por qué dejar en <code>null</code> la casilla que libera <code>desapilar</code> o <code>desencolar</code> evita una fuga de memoria, aunque el programa funcione igual sin hacerlo</label></li>
+<li><label><input type="checkbox">Que <code>ArrayDeque</code> en Java y <code>deque</code> en Python resuelven de fondo el mismo problema que construiste hoy a mano</label></li>
+</ul>
+</div>
+</section>
+<section id="cierre-de-la-unidad-2" class="level2" data-number="15">
+<h2 data-number="15" class="anchored" data-anchor-id="cierre-de-la-unidad-2"><span class="header-section-number">15</span> Cierre de la Unidad 2</h2>
+<p>Con esto se completa la Unidad 2. El Tema 1 fijó cómo un arreglo guarda datos en un bloque contiguo de memoria y qué separa el acceso O(1) de la inserción y el borrado O(n). El Tema 2 llevó esa misma idea a dos dimensiones con las matrices. Y este Tema 3 usó ambas piezas para completar el contrato de la <code>Pila</code> que quedó pendiente desde la Unidad 1, y para construir desde cero el contrato hermano, la <code>Cola</code>, con la técnica del arreglo circular. La Unidad 3 retoma exactamente los mismos dos contratos, <code>Pila</code> y <code>Cola</code>, con la misma firma de métodos que no cambia, pero con una memoria interna distinta, la lista enlazada, para que compares de primera mano qué gana y qué pierde cada decisión de implementación frente a un contrato que, visto desde afuera, se ve exactamente igual.</p>
+</section>
+<section id="recursos" class="level2" data-number="16">
+<h2 data-number="16" class="anchored" data-anchor-id="recursos"><span class="header-section-number">16</span> Recursos</h2>
+<ul>
+<li>Weiss, M. A. <em>Estructuras de datos en Java.</em> Capítulo sobre pilas, colas y su implementación con arreglos.</li>
+<li>Goodrich, M. T. y Tamassia, R. <em>Estructuras de datos y algoritmos.</em> Capítulo sobre pilas, colas y arreglos redimensionables.</li>
+<li>Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. <em>Introduction to Algorithms.</em> Capítulo dedicado al análisis amortizado, en la sección sobre tablas dinámicas.</li>
+<li>Bloch, J. (2018). <em>Effective Java</em> (3.a ed.). Addison-Wesley. Ítem sobre eliminar referencias obsoletas, con una pila respaldada por arreglo como caso de estudio; e ítem 18, “Favor composition over inheritance”, ya citado en el Tema 2 de la Unidad 1.</li>
+<li><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Vector.html">Javadoc de <code>java.util.Vector</code>, Java SE 17</a></li>
+<li><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/ArrayList.html">Javadoc de <code>java.util.ArrayList</code>, Java SE 17</a></li>
+<li><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/ArrayDeque.html">Javadoc de <code>java.util.ArrayDeque</code>, Java SE 17</a></li>
+<li><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Stack.html">Javadoc de <code>java.util.Stack</code>, Java SE 17</a></li>
+<li>The Linux Kernel documentation. <a href="https://www.kernel.org/doc/html/latest/core-api/circular-buffers.html">Circular Buffers</a></li>
+<li>Python Software Foundation. <a href="https://docs.python.org/3/faq/design.html#how-are-lists-implemented-in-cpython">Python FAQ: How are lists implemented in CPython?</a></li>
+<li>Python Software Foundation. <a href="https://github.com/python/cpython/blob/main/Objects/listobject.c">Código fuente de CPython, <code>Objects/listobject.c</code></a></li>
+<li><a href="https://docs.python.org/3/library/collections.html#collections.deque"><code>collections.deque</code>, documentación oficial de Python 3</a></li>
+</ul>
+<div class="pie-doc">
+<p>Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.</p>
+<p><strong>Transparencia.</strong> La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.</p>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/oscarleosanchez\.github\.io\/sitio-maria-cano-2026-02\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Oscar Leonel Sánchez Conde</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

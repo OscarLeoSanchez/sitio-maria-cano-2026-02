@@ -1,0 +1,525 @@
+---
+title: "Tema 1. Vectores o arreglos"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                     |
+|--------|-----------------------------------------------------|
+| Unidad | Unidad 2. Estructuras fijas                        |
+| Tema   | Tema 1. Vectores o arreglos                        |
+:::
+
+La Unidad 1 cerró con la clase `Pila` modelada sin implementación de memoria, sus cuatro métodos,
+`apilar`, `desapilar`, `cima` y `estaVacia`, lanzando `UnsupportedOperationException` con el mensaje
+"llega en la Unidad 2", precisamente porque faltaba decidir con qué se iba a construir esa pila por
+dentro. Esa decisión empieza a tomarse hoy, con la estructura de memoria más simple y más usada de
+toda la programación, el *arreglo*, también llamado *vector*.
+
+Un arreglo no es un concepto exclusivo de Java ni de Python. Es la forma más directa que tiene una
+computadora de guardar varios valores del mismo tipo uno junto al otro en memoria, y casi cualquier
+otra estructura de datos que vas a estudiar en este curso, pilas, colas, tablas hash, montículos,
+termina apoyándose en un arreglo por dentro, tarde o temprano. Entender bien cómo funciona un arreglo,
+qué operaciones son rápidas y cuáles son lentas, y por qué, es la base sobre la que se construye todo
+lo demás en esta unidad.
+
+## Qué es un arreglo y cómo se calcula un acceso
+
+Un arreglo es un bloque contiguo de memoria dividido en un número fijo de casillas del mismo tamaño,
+cada una identificada por un índice numérico que empieza en cero. La Especificación del Lenguaje Java
+lo define formalmente en el capítulo 10, donde dice que un arreglo es un objeto que contiene un número
+fijo de componentes, todas del mismo tipo, y que ese número, la longitud del arreglo, nunca cambia una
+vez que el arreglo fue creado.
+
+Esa palabra, contiguo, explica todo lo demás en este tema. Si conoces la dirección de memoria donde
+empieza el arreglo, la *dirección base*, y sabes cuántos bytes ocupa cada elemento, puedes calcular la
+dirección exacta de cualquier casilla con una multiplicación y una suma, sin recorrer nada para
+llegar hasta ella.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arreglo de cinco casillas contiguas en memoria, indices de 0 a 4, con la formula direccion base mas indice por tamano de elemento resaltada para calcular el acceso al indice 2 en tiempo constante" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Un arreglo es un bloque contiguo: el indice calcula la direccion, no la busca</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="50" width="120" height="60" rx="6"/><rect x="180" y="50" width="120" height="60" rx="6"/><rect x="300" y="50" width="120" height="60" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/><rect x="420" y="50" width="120" height="60" rx="6"/><rect x="540" y="50" width="120" height="60" rx="6"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="120" y="86">10</text><text x="240" y="86">20</text><text x="360" y="86">30</text><text x="480" y="86">40</text><text x="600" y="86">50</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="120" y="128">indice 0</text><text x="240" y="128">indice 1</text><text x="360" y="128" fill="#0e6f6c" font-weight="600">indice 2</text><text x="480" y="128">indice 3</text><text x="600" y="128">indice 4</text></g>
+  <path d="M360,140 L360,160" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <rect x="200" y="164" width="320" height="50" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="360" y="186" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">direccion = base + 2 * tamano_elemento</text>
+  <text x="360" y="204" font-size="11" fill="#5b6876" text-anchor="middle">una multiplicacion y una suma: siempre O(1), sin importar el tamano del arreglo</text>
+</svg>
+
+:::
+
+```java
+int[] numeros = new int[5];
+numeros[0] = 10;
+numeros[1] = 20;
+numeros[2] = 30;
+System.out.println(numeros[1]);       // 20
+System.out.println(numeros.length);   // 5
+```
+
+En Java, `new int[5]` reserva las cinco casillas de una vez y las llena con el valor por defecto del
+tipo, cero para `int`, antes de que el código asigne nada, tal como lo describe la especificación del
+lenguaje en su sección 4.12.5, la misma regla de inicialización por defecto que ya viste con los
+campos de una clase en la Unidad 1. El campo `length` es público y final, así que se puede leer
+siempre, pero nunca se puede reasignar, porque la longitud de un arreglo Java queda fija desde el
+momento en que se crea.
+
+En Python, un arreglo se declara como una lista, con corchetes:
+
+```python
+numeros = [10, 20, 30]
+print(numeros[1])      # 20
+print(len(numeros))    # 3
+```
+
+Acceder a `numeros[1]` en los dos lenguajes hace lo mismo por dentro, calcular la dirección de esa
+casilla con la fórmula dirección base más índice por tamaño del elemento, y traer el valor que hay
+ahí. No importa si el arreglo tiene tres elementos o tres millones, ese cálculo toma el mismo tiempo,
+porque es una multiplicación y una suma, nunca un recorrido. Por eso acceder a un elemento por su
+índice es una operación de complejidad O(1), constante, independiente del tamaño del arreglo. La
+documentación oficial de `java.util.ArrayList` lo confirma para la versión dinámica del arreglo, ya
+que dice que las operaciones `get` y `set` se ejecutan en tiempo constante, y la FAQ de diseño de
+CPython dice exactamente lo mismo de las listas de Python, que indexar una lista es una operación
+cuyo costo es independiente del tamaño de la lista o del valor del índice.
+
+Pedir un índice que no existe no da un valor cualquiera, avisa. En Java, `numeros[5]` sobre un
+arreglo de longitud 5 lanza `ArrayIndexOutOfBoundsException` en tiempo de ejecución, porque Java
+revisa el rango del índice en cada acceso de forma obligatoria, lo que la especificación del lenguaje
+llama *verificación de límites*. En Python, `numeros[5]` sobre una lista de tres elementos lanza
+`IndexError`. Ningún índice fuera de rango pasa en silencio en ninguno de los dos lenguajes.
+
+## Recorrer un arreglo
+
+Casi todo lo que se hace con un arreglo empieza por recorrerlo, visitar cada casilla una vez en
+orden, para sumar valores, buscar el máximo, imprimir el contenido o transformarlo.
+
+```java
+for (int i = 0; i < numeros.length; i++) {
+    System.out.println(numeros[i]);
+}
+for (int n : numeros) {
+    System.out.println(n);
+}
+```
+
+```python
+for i in range(len(numeros)):
+    print(numeros[i])
+for n in numeros:
+    print(n)
+```
+
+El `for` con índice explícito y el `for` mejorado, `for (int n : numeros)` en Java y `for n in
+numeros` en Python, llegan al mismo resultado, pero el segundo esconde el índice y evita el error más
+común de esta operación, equivocarse por uno en la condición del ciclo, entrar con `i <= length` en
+vez de `i < length` y terminar accediendo a una casilla que no existe. Cada acceso individual sigue
+costando O(1), pero recorrer las n casillas del arreglo completo cuesta O(n), porque el trabajo
+total crece en proporción directa al número de elementos.
+
+## Por qué insertar o eliminar no cuesta lo mismo que acceder
+
+Acceder a una casilla no toca ninguna otra casilla. Insertar o eliminar un elemento en una posición
+que no sea el final sí las toca, porque para que el arreglo siga siendo contiguo, sin huecos, hay que
+correr de lugar a todos los elementos que quedan después de la posición afectada.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Insertar el valor 25 en el indice 2 de un arreglo de cuatro elementos obliga a desplazar una casilla a la derecha a los dos elementos que venian despues de esa posicion" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Insertar en medio desplaza todo lo que viene despues</text>
+  <text x="110" y="46" font-size="12" font-weight="600" fill="#5b6876">antes</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="56" width="100" height="50" rx="6"/><rect x="160" y="56" width="100" height="50" rx="6"/><rect x="260" y="56" width="100" height="50" rx="6"/><rect x="360" y="56" width="100" height="50" rx="6"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f"><text x="110" y="86">10</text><text x="210" y="86">20</text><text x="310" y="86">30</text><text x="410" y="86">40</text></g>
+  <text x="230" y="140" font-size="12" font-weight="600" fill="#5b6876">despues de insertar 25 en el indice 2</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="150" width="100" height="50" rx="6"/><rect x="160" y="150" width="100" height="50" rx="6"/><rect x="260" y="150" width="100" height="50" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/><rect x="360" y="150" width="100" height="50" rx="6"/><rect x="460" y="150" width="100" height="50" rx="6"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f"><text x="110" y="180">10</text><text x="210" y="180">20</text><text x="310" y="180" fill="#0e6f6c" font-weight="700">25</text><text x="410" y="180">30</text><text x="510" y="180">40</text></g>
+  <text x="380" y="216" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">30 y 40 se movieron una casilla a la derecha: en el peor caso se mueven todos, O(n)</text>
+</svg>
+
+:::
+
+```python
+numeros = [10, 20, 30, 40]
+numeros.insert(2, 25)
+print(numeros)   # [10, 20, 25, 30, 40]
+```
+
+`insert` no hace magia, por dentro corre 30 y 40 una posición a la derecha para abrirle campo a 25 y
+después escribe 25 en el índice 2. Eliminar funciona igual, al revés, quitar un elemento del medio
+obliga a correr hacia la izquierda a todos los que quedan después de él para cerrar el hueco. En el
+peor de los casos, insertar o eliminar en el índice 0 de un arreglo con n elementos mueve los n
+elementos completos, así que la complejidad de esa operación es O(n).
+
+Insertar o eliminar en el extremo final es distinto, porque no hay nada después que mover, siempre
+que el arreglo tenga espacio de sobra reservado para el nuevo elemento. Esa condición, tener espacio
+de sobra, es justo lo que separa a un arreglo de tamaño fijo de una lista dinámica, y es el tema de
+las próximas dos secciones. La tabla resume las cinco operaciones que vas a usar sobre arreglos y
+listas durante todo el curso:
+
+| Operación | Complejidad | Por qué |
+|---|---|---|
+| Acceder o leer `a[i]` | O(1) | una multiplicación y una suma, sin recorrer nada |
+| Modificar `a[i] = x` | O(1) | la misma dirección de la lectura, solo cambia lo que escribe |
+| Insertar o eliminar al final | O(1) amortizado | no hay elementos posteriores que desplazar, si hay espacio |
+| Insertar o eliminar al inicio o en medio | O(n) | hay que desplazar todos los elementos posteriores |
+| Buscar por valor, no por índice | O(n) | hay que revisar casilla por casilla hasta encontrarlo |
+
+## Arreglos nativos en Java, memoria fija desde que nacen
+
+Un arreglo Java reserva su bloque de memoria completo en el momento de `new` y no existe ninguna
+operación que lo haga más grande después. Para "crecer" hay que crear un arreglo nuevo, de la
+longitud que haga falta, y copiar ahí los elementos del arreglo viejo. Eso es exactamente lo que hace
+`java.util.Arrays.copyOf`, y es también el mecanismo interno que usa `ArrayList` cada vez que se queda
+sin espacio.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo Java de tres casillas llenas no puede crecer; Arrays.copyOf crea un arreglo nuevo de seis casillas, copia los tres valores existentes, llena el resto con el valor por defecto y el arreglo original queda disponible para el recolector de basura" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Un arreglo Java no crece: Arrays.copyOf crea uno nuevo y copia</text>
+  <text x="150" y="46" font-size="12" font-weight="600" fill="#5b6876">arreglo original, longitud 3, lleno</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="56" width="90" height="48" rx="6"/><rect x="150" y="56" width="90" height="48" rx="6"/><rect x="240" y="56" width="90" height="48" rx="6"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="105" y="85">10</text><text x="195" y="85">20</text><text x="285" y="85">30</text></g>
+  <text x="105" y="132" font-size="11" fill="#5b6876">Arrays.copyOf(original, 6)</text>
+  <path d="M165,120 L165,150" fill="none" stroke="#8fb3d1" stroke-width="1.8"/>
+  <text x="150" y="176" font-size="12" font-weight="600" fill="#5b6876">arreglo nuevo, longitud 6</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="60" y="186" width="80" height="44" rx="6"/><rect x="145" y="186" width="80" height="44" rx="6"/><rect x="230" y="186" width="80" height="44" rx="6"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="315" y="186" width="80" height="44" rx="6"/><rect x="400" y="186" width="80" height="44" rx="6"/><rect x="485" y="186" width="80" height="44" rx="6"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="100" y="212">10</text><text x="185" y="212">20</text><text x="270" y="212">30</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="355" y="212">0</text><text x="440" y="212">0</text><text x="525" y="212">0</text></g>
+  <text x="640" y="90" font-size="11.5" fill="#5b6876">el arreglo original</text>
+  <text x="640" y="106" font-size="11.5" fill="#5b6876">queda para el</text>
+  <text x="640" y="122" font-size="11.5" fill="#5b6876">recolector de basura</text>
+  <text x="640" y="212" font-size="11.5" fill="#0e6f6c" font-weight="600">copiar cuesta O(n)</text>
+</svg>
+
+:::
+
+```java
+int[] original = {10, 20, 30};
+int[] masGrande = java.util.Arrays.copyOf(original, 6);
+System.out.println(java.util.Arrays.toString(masGrande));
+// [10, 20, 30, 0, 0, 0]
+```
+
+`original` sigue existiendo en memoria hasta que el recolector de basura de Java lo libera, pero
+`masGrande` es un objeto distinto, con su propia dirección base, y las tres primeras casillas quedan
+con los valores copiados mientras las tres nuevas arrancan en cero, el valor por defecto de `int`.
+Copiar los n elementos existentes cuesta O(n), así que si necesitas crecer un arreglo Java muchas
+veces seguidas, cada crecimiento paga ese costo de copia completo. Este es justamente el punto donde
+un arreglo de tamaño fijo se queda corto frente a lo que necesita una pila o una cola que reciben
+elementos sin que el programa sepa de antemano cuántos van a llegar, y es la razón por la que el Tema
+3 de esta unidad va a construir la clase `Pila` sobre un arreglo que se redimensiona igual que
+`masGrande`, no sobre un arreglo de longitud fija que se quede sin espacio a mitad de programa.
+
+## Listas de Python, arreglos dinámicos por dentro
+
+La lista de Python se ve como una estructura que crece sin límite, `append` cuantas veces quieras, sin
+que el programador tenga que declarar ningún tamaño. Por dentro no hay ninguna magia distinta de lo
+que acabas de ver con `Arrays.copyOf`, hay el mismo arreglo contiguo de tamaño fijo, solo que Python lo
+esconde y lo redimensiona automáticamente cuando hace falta. La FAQ oficial de diseño de CPython lo
+dice sin rodeos, traducido, las listas de CPython son en realidad arreglos de longitud variable, no
+listas enlazadas al estilo Lisp, la implementación usa un arreglo contiguo de referencias a otros
+objetos, y cuando se añaden o insertan elementos ese arreglo de referencias se redimensiona.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una lista de Python con cinco elementos usados ocupa por dentro un arreglo con mas de cinco casillas reservadas; el largo logico que devuelve len es distinto de la capacidad reservada en memoria, que la lista no expone directamente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">len() muestra el tamano logico, no la capacidad reservada</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="60" y="50" width="80" height="60" rx="6"/><rect x="140" y="50" width="80" height="60" rx="6"/><rect x="220" y="50" width="80" height="60" rx="6"/><rect x="300" y="50" width="80" height="60" rx="6"/><rect x="380" y="50" width="80" height="60" rx="6"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="460" y="50" width="80" height="60" rx="6"/><rect x="540" y="50" width="80" height="60" rx="6"/><rect x="620" y="50" width="80" height="60" rx="6"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="100" y="84">a</text><text x="180" y="84">b</text><text x="260" y="84">c</text><text x="340" y="84">d</text><text x="420" y="84">e</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="500" y="84">libre</text><text x="580" y="84">libre</text><text x="660" y="84">libre</text></g>
+  <path d="M60,130 L460,130" stroke="#8fb3d1" stroke-width="1.6"/>
+  <text x="260" y="150" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">len(lista) = 5</text>
+  <path d="M460,168 L740,168" stroke="#cfd8e3" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <text x="600" y="188" font-size="11.5" fill="#5b6876" text-anchor="middle">capacidad interna reservada, mayor que 5, no visible desde Python puro</text>
+</svg>
+
+:::
+
+```python
+numeros = []
+print(id(numeros))
+for i in range(20):
+    numeros.append(i)
+print(id(numeros))
+```
+
+Las dos llamadas a `id()` devuelven el mismo número. El objeto lista nunca cambia de identidad
+mientras le agregas elementos, aunque por dentro el arreglo de referencias que la sostiene se haya
+reemplazado varias veces durante esas veinte llamadas a `append`. Ese reemplazo es exactamente el
+mismo `copyOf` que viste en Java, reservar un bloque nuevo más grande, copiar las referencias
+existentes y liberar el bloque viejo, solo que Python lo hace por ti y no te obliga a pedirlo
+explícitamente. `len(numeros)` siempre te dice cuántos elementos hay en uso, nunca cuántas casillas
+hay reservadas de más, porque esa capacidad interna es un detalle de implementación que la lista no
+expone directamente en Python puro.
+
+## Qué pasa exactamente al redimensionar
+
+Si Python tuviera que pedir espacio nuevo cada vez que agregas un solo elemento, cada `append` costaría
+O(n) por la copia, y encadenar n llamadas a `append` costaría O(n al cuadrado) en total. Eso no es lo
+que pasa. El código fuente de CPython, en la función `list_resize` del archivo `Objects/listobject.c`,
+pide siempre más espacio del que hace falta en ese momento:
+
+```c
+new_allocated = ((size_t)newsize + (newsize >> 3) + 6) & ~(size_t)3;
+```
+
+En palabras, la nueva capacidad reservada es el tamaño que se necesita, más un octavo de ese tamaño,
+más seis, redondeado hacia abajo al múltiplo de cuatro más cercano. El comentario del propio código
+fuente explica la intención, traducido, esto sobrerreserva proporcionalmente al tamaño de la lista,
+dejando espacio para crecimiento adicional, y esa sobrerreserva, moderada pero constante, es la que da
+un comportamiento de tiempo lineal amortizado a lo largo de una secuencia larga de llamadas a
+`append`. La secuencia real de capacidades que produce esa fórmula, verificada en el propio código
+fuente, empieza así, 0, 4, 8, 16, 24, 32, 40, 52, 64, 76. Los primeros saltos crecen mucho más rápido
+que eso, de 8 a 16 es el doble y de 16 a 24 es una vez y media, pero a medida que la lista crece el
+factor de crecimiento se acerca cada vez más a un límite asintótico de 1.125 veces por salto, que es
+lo que deja la fórmula del código fuente cuando el término `newsize >> 3` domina sobre el `+6` fijo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Secuencia de capacidades reservadas por CPython al crecer una lista mediante append repetido: 0, 4, 8, 16, 24, 32, 40, 52, con barras crecientes que ilustran que el factor de crecimiento es mayor al inicio y se acerca a 1.125 veces por salto conforme la lista crece" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">La capacidad crece por saltos, no de a uno: secuencia real de CPython</text>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="50" y="190" width="50" height="8" rx="2"/>
+    <rect x="112" y="166" width="50" height="32" rx="2"/>
+    <rect x="174" y="150" width="50" height="48" rx="2"/>
+    <rect x="236" y="118" width="50" height="80" rx="2"/>
+    <rect x="298" y="94" width="50" height="104" rx="2"/>
+    <rect x="360" y="70" width="50" height="128" rx="2"/>
+    <rect x="422" y="46" width="50" height="152" rx="2" fill="#e4f2f1" stroke="#8fc9c5"/>
+    <rect x="484" y="14" width="50" height="184" rx="2"/>
+  </g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="75" y="206">0</text><text x="137" y="206">4</text><text x="199" y="206">8</text><text x="261" y="206">16</text><text x="323" y="206">24</text><text x="385" y="206">32</text><text x="447" y="206">40</text><text x="509" y="206">52</text></g>
+  <text x="640" y="70" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">cada salto copia todo</text>
+  <text x="640" y="88" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">lo existente, O(n)</text>
+  <text x="640" y="120" font-size="11.5" fill="#0e6f6c" font-weight="600" text-anchor="middle">pero ocurre cada vez</text>
+  <text x="640" y="136" font-size="11.5" fill="#0e6f6c" font-weight="600" text-anchor="middle">mas rara vez</text>
+  <text x="380" y="228" font-size="11.5" fill="#5b6876" text-anchor="middle">limite asintotico del factor de crecimiento: 1.125x, formula exacta en listobject.c</text>
+</svg>
+
+:::
+
+El argumento formal detrás de esta idea se llama *análisis amortizado*, y aparece desarrollado en el
+capítulo 17, sección 17.4, "Dynamic Tables", de la segunda edición de 2001 de *Introduction to
+Algorithms*, de Cormen, Leiserson, Rivest y Stein. La idea central es que aunque una llamada individual
+a `append` pueda costar O(n) cuando dispara una copia, esas copias ocurren cada vez con menos
+frecuencia, así que el costo promedio por llamada, repartido entre las n llamadas de una secuencia
+larga, termina siendo O(1). `ArrayList` de Java hace exactamente el mismo trato, el Javadoc de
+`ArrayList` garantiza que agregar un elemento tiene costo amortizado constante, pero deja
+explícitamente sin especificar cuál es la política exacta de crecimiento más allá de esa garantía. El
+factor cercano a 1.5 veces que suele citarse para `ArrayList` no aparece en esa documentación pública,
+sino que se lee directamente en el método `grow` del código fuente de OpenJDK, donde la nueva
+capacidad se calcula como la capacidad anterior más la mitad de la capacidad anterior, así que conviene
+tratarlo como un detalle de implementación observado, no como una promesa de la API.
+
+## Caso de estudio: la cola que se volvió lenta sin que el código se viera mal
+
+Un estudiante construye un sistema de tareas pendientes en Python. Cada tarea nueva se agrega al final
+de una lista con `tareas.append(tarea)`, y cuando llega el momento de procesar la siguiente tarea en
+orden de llegada, la saca del inicio de la lista con `tareas.pop(0)`. El programa funciona, las
+pruebas con pocas tareas pasan rápido, y el código se ve limpio, dos líneas, ninguna de las dos parece
+sospechosa por sí sola.
+
+Antes de seguir, la pregunta de análisis, si encolar con `append` es O(1) amortizado, y desencolar con
+`pop(0)` cuesta O(n) porque hay que desplazar todos los elementos restantes una posición hacia la
+izquierda, ¿cuál es la complejidad total de procesar n tareas con este esquema, encolarlas todas y
+después desencolarlas todas en orden, y por qué ese costo no se nota con pocos datos?
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion visual entre append en el extremo final de una lista, que no desplaza nada y cuesta O(1) amortizado, y pop(0) en el extremo inicial, que obliga a desplazar todos los elementos restantes y cuesta O(n)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">No todos los extremos cuestan igual en una lista de Python</text>
+  <text x="140" y="44" font-size="12" font-weight="600" fill="#0e6f6c">append(x): agrega al final</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="54" width="70" height="46" rx="6"/><rect x="130" y="54" width="70" height="46" rx="6"/><rect x="200" y="54" width="70" height="46" rx="6"/><rect x="270" y="54" width="70" height="46" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="95" y="82">a</text><text x="165" y="82">b</text><text x="235" y="82">c</text><text x="305" y="82" fill="#0e6f6c" font-weight="700">x</text></g>
+  <text x="200" y="118" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">nada se mueve: O(1) amortizado</text>
+  <text x="140" y="154" font-size="12" font-weight="600" fill="#5b6876">pop(0): quita del inicio</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="60" y="164" width="70" height="46" rx="6"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="130" y="164" width="70" height="46" rx="6"/><rect x="200" y="164" width="70" height="46" rx="6"/><rect x="270" y="164" width="70" height="46" rx="6"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#5b6876"><text x="95" y="192">a</text><text x="165" y="192">b</text><text x="235" y="192">c</text><text x="305" y="192">x</text></g>
+  <text x="500" y="118" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">b, c y x se recorren y se</text>
+  <text x="500" y="134" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">desplazan una casilla a la</text>
+  <text x="500" y="150" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">izquierda: O(n)</text>
+  <text x="380" y="215" font-size="11.5" fill="#5b6876" text-anchor="middle">por eso la documentacion oficial de deque desaconseja usar una lista como cola</text>
+</svg>
+
+:::
+
+La respuesta es que el costo total es O(n al cuadrado), no O(n). Desencolar la primera tarea desplaza
+n menos uno elementos, desencolar la segunda desplaza n menos dos, y así sucesivamente, hasta la
+última, que no desplaza nada. La suma de esa serie, n menos uno más n menos dos más, hasta cero, crece
+proporcional a n al cuadrado, no a n. Con diez tareas esa diferencia es invisible, cien
+desplazamientos contra diez, pero con cien mil tareas, un caso realista para una cola de trabajos en
+producción, la diferencia entre O(n) y O(n al cuadrado) es la diferencia entre un programa que
+responde y uno que se cuelga. La documentación oficial de la clase `collections.deque` de Python
+advierte exactamente este error, traducido, aunque los objetos lista soportan operaciones similares,
+están optimizados para operaciones rápidas de longitud fija, e incurren en costos de movimiento de
+memoria O(n) para las operaciones `pop(0)` e `insert(0, v)`, que cambian tanto el tamaño como la
+posición de la representación de datos subyacente. Este es exactamente el tipo de trampa que el Tema
+3 de esta unidad va a resolver formalmente, con una cola construida sobre un arreglo circular que
+encola y desencola en O(1), sin desplazar nada.
+
+## Cuando faltan los límites, por qué Java revisa y C no
+
+Ya viste que en Java y en Python un índice fuera de rango lanza una excepción de inmediato,
+`ArrayIndexOutOfBoundsException` en un caso e `IndexError` en el otro. Esa verificación obligatoria no
+es un detalle menor, porque en lenguajes que no la hacen, como C, escribir fuera de los límites de un
+arreglo es uno de los errores de software documentados más peligrosos que existen.
+
+MITRE mantiene un catálogo público de debilidades de software, el CWE, *Common Weakness Enumeration*,
+y la entrada CWE-787, "Out-of-bounds Write", cubre exactamente este error. Su definición oficial,
+traducida, dice que el producto escribe datos más allá del final, o antes del inicio, del búfer
+previsto. El ejemplo que la propia ficha de MITRE usa es directo:
+
+```c
+int id_sequence[3];
+id_sequence[3] = 456;  // fuera de limites: los indices validos son 0, 1 y 2
+```
+
+En C ese código compila sin ninguna queja y se ejecuta, escribiendo 456 en una posición de memoria que
+no le pertenece al arreglo, potencialmente sobre otra variable o sobre información de control del
+programa. MITRE documenta que esto puede causar corrupción de memoria, y en algunos casos permitir que
+un atacante modifique datos de control, como direcciones de retorno, para ejecutar código no previsto.
+CWE-787 ocupó el primer puesto de la lista "2023 CWE Top 25 Most Dangerous Software Weaknesses" que
+publica MITRE, con la mayor cantidad de vulnerabilidades explotadas conocidas de toda la lista. Java
+evita esta categoría completa de error por diseño, ya que la verificación de límites que viste arriba,
+`ArrayIndexOutOfBoundsException`, corta el programa en la línea exacta donde ocurre el acceso inválido
+en vez de dejarlo escribir en una dirección de memoria que no le corresponde.
+
+::: {.callout-tip}
+## Reto 1. Predice el costo de insertar siempre al inicio
+
+El siguiente código construye una lista de n elementos insertando siempre en la posición 0:
+
+```python
+lista = []
+for i in range(n):
+    lista.insert(0, i)
+```
+
+Antes de leer la solución, marca la opción que crees correcta sobre la complejidad total de este
+ciclo completo, en función de n:
+
+<label><input type="checkbox"> O(n), porque cada inserción cuesta poco y son n inserciones en total</label>
+
+<label><input type="checkbox"> O(n al cuadrado), porque cada inserción desplaza todo lo que ya había, y eso se repite n veces</label>
+
+<label><input type="checkbox"> O(1), porque insertar al inicio de una lista es tan barato como insertar al final</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La opción correcta es la segunda, O(n al cuadrado). En la primera vuelta del ciclo la lista está
+vacía, así que `insert(0, 0)` no desplaza nada. En la segunda vuelta ya hay un elemento, así que
+insertar en la posición 0 desplaza ese elemento una casilla. En la vuelta i, hay i elementos que
+desplazar. La suma de desplazamientos a lo largo de las n vueltas es 0 más 1 más 2, hasta n menos uno,
+que crece proporcional a n al cuadrado, exactamente el mismo patrón del caso de estudio de la cola con
+`pop(0)` que viste arriba, solo que ahora en el extremo de entrada en vez del de salida. La opción
+tres es la trampa más común, insertar al inicio nunca es tan barato como insertar al final en un
+arreglo, porque el final no tiene nada que desplazar y el inicio siempre desplaza todo lo demás.
+:::
+
+::: {.callout-tip}
+## Reto 2. Predice qué hace este código Java
+
+```java
+int[] datos = new int[4];
+for (int i = 0; i <= datos.length; i++) {
+    datos[i] = i * 10;
+}
+```
+
+Antes de correrlo, marca la opción que crees correcta sobre lo que pasa al ejecutar este fragmento:
+
+<label><input type="checkbox"> El programa llena las cuatro casillas con 0, 10, 20 y 30, y termina sin error</label>
+
+<label><input type="checkbox"> El programa lanza ArrayIndexOutOfBoundsException al intentar escribir en el índice 4</label>
+
+<label><input type="checkbox"> El programa deja la quinta posición en null sin avisar y sigue corriendo</label>
+
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La opción correcta es la segunda. `datos` tiene longitud 4, así que sus índices válidos son 0, 1, 2 y
+3. La condición del ciclo usa `i <= datos.length`, que en la última vuelta deja pasar `i` igual a 4, un
+valor que sí es menor o igual a `datos.length`, que vale 4, pero que ya no corresponde a ninguna
+casilla del arreglo. Al ejecutar `datos[4] = 40`, Java revisa el índice antes de escribir y lanza
+`ArrayIndexOutOfBoundsException`, deteniendo el programa en esa línea exacta. Este es el clásico error
+de conteo por uno, la condición correcta del ciclo debía ser `i < datos.length`, no `i <=
+datos.length`. La opción tres describe lo que pasaría en un lenguaje sin verificación de límites, no
+en Java.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] Qué es un arreglo, por qué es contiguo, y cómo se calcula la dirección de un índice
+- [ ] Por qué acceder a `a[i]` es O(1) y por qué insertar o eliminar en medio es O(n)
+- [ ] Por qué un arreglo Java no puede crecer, y qué hace `Arrays.copyOf` para simular que crece
+- [ ] Por qué una lista de Python es, por dentro, un arreglo dinámico y no una lista enlazada
+- [ ] Qué pasa exactamente cuando una lista de Python se redimensiona, y por qué eso hace que
+      `append` sea O(1) amortizado en vez de O(1) puro
+- [ ] Por qué usar `pop(0)` para simular una cola con una lista es un antipatrón documentado
+      oficialmente, y qué complejidad produce en un ciclo
+- [ ] Por qué la verificación de límites de Java evita una categoría entera de errores graves de
+      software
+:::
+
+## Antes del Tema 2
+
+1. Ejecuta el Reto 1 con distintos valores de n, por ejemplo 100, 1000 y 10000, y mide cuánto tarda
+   cada corrida con el reloj de tu propio equipo. El tiempo exacto va a depender de tu máquina, pero
+   la forma en que crece de una corrida a la siguiente debería confirmar el O(n al cuadrado).
+2. Reescribe el sistema de tareas del caso de estudio usando `collections.deque` en vez de una lista,
+   y compara el código, cuántas líneas cambiaron para resolver el problema de fondo.
+3. Con la clase `Pila` de la Unidad 1 abierta, piensa qué campo privado necesitaría por dentro para
+   guardar sus elementos si la construyeras sobre un arreglo, y qué pasaría con ese campo cuando la
+   pila se llena.
+
+Hoy viste el arreglo en una sola dimensión, una fila de casillas indexadas por un único número. El
+Tema 2 de esta unidad extiende esa misma idea a dos dimensiones, la matriz, donde cada casilla se
+ubica por fila y por columna, y vas a ver cómo esas dos coordenadas terminan aplanándose sobre la
+misma memoria contigua que ya conoces de hoy.
+
+## Recursos
+
+- Gosling, J. et al. *The Java Language Specification, Java SE 21 Edition.* Capítulo 10, Arrays.
+- Oracle, *The Java Tutorials: Arrays.*
+  [docs.oracle.com, arrays](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/arrays.html)
+- Oracle, *Javadoc de `java.util.ArrayList`, Java SE 21 API Specification.*
+  [docs.oracle.com, ArrayList](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/ArrayList.html)
+- Python Software Foundation, *The Python Tutorial: 5. Data Structures.*
+  [docs.python.org, datastructures](https://docs.python.org/3/tutorial/datastructures.html)
+- Python Software Foundation, *Design and History FAQ*, pregunta "How are lists implemented in
+  CPython?". [docs.python.org, design](https://docs.python.org/3/faq/design.html)
+- Código fuente de CPython, `Objects/listobject.c`, función `list_resize`.
+  [github.com, listobject.c](https://github.com/python/cpython/blob/main/Objects/listobject.c)
+- Código fuente de OpenJDK, `java.base/java.util.ArrayList`, método `grow`.
+  [github.com, ArrayList.java](https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/java/util/ArrayList.java)
+- Python Software Foundation, *`collections.deque`, The Python Standard Library.*
+  [docs.python.org, collections](https://docs.python.org/3/library/collections.html#collections.deque)
+- Cormen, T. H.; Leiserson, C. E.; Rivest, R. L.; Stein, C. (2001). *Introduction to Algorithms* (2.a
+  ed.). MIT Press. Capítulo 17, "Amortized Analysis", sección 17.4, "Dynamic Tables".
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo sobre arreglos y
+  análisis de complejidad.
+- MITRE, *CWE-787: Out-of-bounds Write.* [cwe.mitre.org, 787](https://cwe.mitre.org/data/definitions/787.html)
+- MITRE, *2023 CWE Top 25 Most Dangerous Software Weaknesses.*
+  [cwe.mitre.org, 2023 top25 list](https://cwe.mitre.org/top25/archive/2023/2023_top25_list.html)
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

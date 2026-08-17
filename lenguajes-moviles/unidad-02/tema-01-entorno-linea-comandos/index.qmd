@@ -1,0 +1,606 @@
+---
+title: "Tema 1. El taller antes que el código"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                                             |
+|--------|---------------------------------------------------------------------------------------------|
+| Unidad | Unidad 2. Herramientas de trabajo en desarrollo de aplicaciones para dispositivos móviles     |
+| Tema   | Tema 1. Entorno de trabajo y línea de comandos                                                |
+:::
+
+Hasta ahora este curso se movió en el terreno de los conceptos, los lenguajes y los paradigmas que
+hacen posible una aplicación móvil. Esta unidad cambia de terreno y entra al taller donde de verdad se
+construye software, con las herramientas que vas a abrir todos los días del resto de tu carrera. El
+primer tema de esa caja de herramientas es el que más se subestima porque parece el más básico, la
+terminal y la línea de comandos, junto con los gestores de paquetes que instalan lo que tu código
+necesita, los editores e IDE donde ese código se escribe, y los comandos que te dejan moverte por el
+sistema operativo y controlar lo que corre en el sin soltar el teclado.
+
+## La terminal, el shell y la línea de comandos
+
+Estas tres palabras se usan como sinónimos en la conversación diaria, pero MDN, la documentación de
+Mozilla para desarrollo web, las distingue con precisión porque son tres cosas distintas que trabajan
+juntas. Vale la pena separarlas antes de tocar un solo comando.
+
+- **La terminal** es el programa que abres, la ventana con fondo oscuro y texto monoespaciado que ves
+  en la pantalla. Existe como interfaz de texto para ejecutar programas desde hace décadas y hoy está
+  disponible en todos los sistemas operativos modernos, incluidos los móviles.
+- **El shell** es la sesión que corre dentro de esa ventana, con su propio prompt personalizable, sus
+  atajos de teclado y sus variables de entorno. Dos terminales distintas pueden abrir el mismo shell, y
+  un mismo shell se puede configurar de formas muy distintas según quien lo use.
+- **La línea de comandos** es el renglón exacto donde escribes, el lugar donde parpadea el cursor
+  esperando la siguiente instrucción.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 262" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres capas anidadas: la terminal es el programa que abre la ventana, el shell es la sesión con su prompt y sus variables de entorno, y la línea de comandos es el renglón exacto donde se escribe y parpadea el cursor" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Tres palabras que se confunden, tres capas distintas</text>
+  <rect x="40" y="40" width="620" height="192" rx="14" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="66" y="66" font-size="13" font-weight="600" fill="#12324f">terminal</text>
+  <text x="66" y="84" font-size="11" fill="#5b6876">el programa que abres, la ventana en la pantalla</text>
+  <rect x="86" y="96" width="528" height="120" rx="12" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="108" y="118" font-size="13" font-weight="600" fill="#12324f">shell</text>
+  <text x="108" y="136" font-size="11" fill="#5b6876">la sesión: prompt, atajos, variables de entorno</text>
+  <rect x="128" y="148" width="446" height="50" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="150" y="170" font-size="13" font-weight="700" fill="#0e6f6c">línea de comandos</text>
+  <text x="150" y="187" font-size="11" fill="#3c7d7a">el renglón donde escribes, donde parpadea el cursor</text>
+  <text x="350" y="248" font-size="11.5" fill="#5b6876" text-anchor="middle">Tres capas que se confunden en la conversación diaria, pero que MDN distingue con precisión</text>
+</svg>
+
+:::
+
+En Windows conviven varios shells a la vez, y no todos ofrecen lo mismo. `cmd`, el intérprete de
+comandos más antiguo, carece de paridad con las herramientas Unix que vas a encontrar en casi cualquier
+tutorial de desarrollo móvil. MDN recomienda para Windows usar WSL, el subsistema de Windows para
+Linux, como la mejor opción para tener esa paridad, y menciona a Git Bash y a PowerShell como
+alternativas razonables cuando instalar WSL no es posible.
+
+PowerShell merece un vistazo aparte porque viene preinstalado en todas las versiones modernas de
+Windows y no funciona como `cmd`. Según Microsoft Learn, PowerShell es un shell de línea de comandos y
+un entorno de scripting pensado para automatizar tareas administrativas de sistemas Windows. En vez de
+comandos sueltos como `dir` o `copy` trabaja con *cmdlets*, que siguen la convención Verbo-Sustantivo,
+una convención que Microsoft documenta de forma extensa en sus guías de PowerShell, `Get-ChildItem`
+para listar, `Set-Location` para cambiar de carpeta, `Get-Process` para ver qué está corriendo,
+`Stop-Service` para detener un servicio. Aprenderte esa convención vale más que memorizar cmdlets
+sueltos, porque en cuanto sabes que `Get-` lee información y `Set-` la cambia, puedes adivinar el
+nombre de un cmdlet que nunca usaste antes.
+
+```powershell
+PS C:\Users\estudiante> Get-Location
+PS C:\Users\estudiante> Get-ChildItem
+PS C:\Users\estudiante> Set-Location proyectos
+PS C:\Users\estudiante\proyectos> Get-Process | Select-Object -First 5
+```
+
+### Caso de estudio: el script que funciona a mano pero no al ejecutarlo
+
+Un estudiante escribe un script corto en PowerShell, `revisar.ps1`, que imprime la fecha y limpia una
+carpeta temporal. Lo prueba escribiendo cada línea directamente en la consola y todo funciona. Guarda
+esas mismas líneas en el archivo, hace doble clic o lo ejecuta con `.\revisar.ps1`, y PowerShell
+responde con un error que menciona `UnauthorizedAccess` y dice que ejecutar scripts está deshabilitado
+en el sistema. Antes de seguir leyendo, piensa en la pregunta, si el comando funcionó perfecto escrito
+a mano en la misma consola, ¿por qué falla exactamente el mismo comando al venir de un archivo `.ps1`?
+
+La respuesta está en la *execution policy*, la política de ejecución de PowerShell, que Microsoft Learn
+documenta como `Restricted` por defecto en Windows 10 y 11 para equipos cliente, y como `RemoteSigned`
+en Windows Server. Esa política no evalúa lo que hace el script, evalúa únicamente si el archivo tiene
+permiso de correr como script, y `Restricted` bloquea todos los `.ps1` sin excepción, aunque el mismo
+código escrito a mano en la consola se ejecute sin ningún problema. Es una medida de seguridad
+deliberada, pensada para que un archivo descargado de internet no se ejecute solo con hacerle doble
+clic, no un límite infranqueable ni un error del script.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El mismo comando escrito directamente en la consola se ejecuta sin problema, pero guardado en un archivo .ps1 y ejecutado como script queda bloqueado por la política de ejecución Restricted, con un error de UnauthorizedAccess" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Mismo comando, dos caminos distintos</text>
+  <rect x="30" y="36" width="300" height="150" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="180" y="58" font-size="12.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">escrito a mano en la consola</text>
+  <text x="180" y="96" font-size="12" fill="#12324f" text-anchor="middle">Get-Date</text>
+  <text x="180" y="140" font-size="12.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">se ejecuta sin problema</text>
+  <rect x="400" y="36" width="300" height="150" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="550" y="58" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">guardado en revisar.ps1</text>
+  <text x="550" y="96" font-size="12" fill="#12324f" text-anchor="middle">.\revisar.ps1</text>
+  <text x="550" y="130" font-size="11.5" fill="#5b6876" text-anchor="middle">política Restricted por defecto</text>
+  <text x="550" y="150" font-size="12.5" font-weight="600" fill="#5b6876" text-anchor="middle">bloqueado: UnauthorizedAccess</text>
+  <text x="350" y="210" font-size="11.5" fill="#5b6876" text-anchor="middle">La política evalúa si el archivo puede correr como script, no lo que el script hace</text>
+</svg>
+
+:::
+
+## Comandos básicos de navegación y gestión de archivos
+
+Sea cual sea el shell, un puñado de operaciones se repiten todos los días, saber donde estás parado,
+ver que hay en una carpeta, moverte a otra, crear, copiar, mover y borrar archivos. MDN documenta estos
+comandos para Unix y macOS, y su equivalente en `cmd` y en PowerShell es fácil de ubicar porque
+Microsoft Learn documenta cada cmdlet por separado.
+
+| Acción | Unix, macOS, Linux | Windows (cmd) | Windows (PowerShell) |
+|---|---|---|---|
+| Ver directorio actual | `pwd` | `cd` sin argumentos | `Get-Location` |
+| Listar contenido | `ls`, `ls -l`, `ls -lah` | `dir` | `Get-ChildItem` |
+| Cambiar de directorio | `cd carpeta`, `cd ..` | `cd carpeta` | `Set-Location` |
+| Crear directorio | `mkdir nombre` | `mkdir nombre` | `New-Item -ItemType Directory` |
+| Crear archivo vacío | `touch archivo` | (no existe un equivalente directo) | `New-Item` |
+| Copiar | `cp origen destino` | `copy` | `Copy-Item` |
+| Mover o renombrar | `mv origen destino` | `move`, `ren` | `Move-Item`, `Rename-Item` |
+| Eliminar | `rm archivo`, `rm -r carpeta` | `del` | `Remove-Item` |
+| Ayuda de un comando | `man comando` | `comando /?` | `Get-Help comando` |
+
+La mayoría de estos comandos aceptan opciones con guion, también llamadas *flags*, que se pueden
+combinar, `ls -ltrh` en una sola invocación lista en formato largo, ordenado por fecha, del más antiguo
+al más reciente y con tamaños legibles para una persona en vez de en bytes crudos.
+
+Dos rutas te llevan al mismo archivo, y confundirlas es otra fuente común de errores. Una *ruta
+absoluta* empieza desde la raíz del sistema de archivos, con `/` en Unix o macOS o con la letra de la
+unidad en Windows, y funciona sin importar donde estés parado. Una *ruta relativa* no empieza con `/`
+y se interpreta a partir del directorio donde te encuentras en ese momento, así que la misma ruta
+relativa apunta a archivos distintos según donde la escribas.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol de carpetas desde la raíz hasta app-móvil con el archivo main.py; se resalta la carpeta proyectos como ubicación actual y se comparan la ruta absoluta desde la raíz con la ruta relativa desde esa ubicación" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="360" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Ruta absoluta contra ruta relativa</text>
+  <g font-size="11.5" text-anchor="middle" fill="#12324f">
+    <rect x="20" y="36" width="70" height="34" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><text x="55" y="57">/</text>
+    <rect x="120" y="36" width="90" height="34" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><text x="165" y="57">home</text>
+    <rect x="240" y="36" width="120" height="34" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><text x="300" y="57">estudiante</text>
+    <rect x="390" y="36" width="120" height="34" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/><text x="450" y="57">proyectos</text>
+    <rect x="540" y="36" width="130" height="34" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><text x="605" y="57">app-móvil</text>
+  </g>
+  <g stroke="#8fb3d1" stroke-width="1.4"><line x1="90" y1="53" x2="120" y2="53"/><line x1="210" y1="53" x2="240" y2="53"/><line x1="360" y1="53" x2="390" y2="53"/><line x1="510" y1="53" x2="540" y2="53"/></g>
+  <text x="450" y="24" font-size="11" fill="#0e6f6c" text-anchor="middle">estás aquí</text>
+  <rect x="270" y="96" width="360" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="290" y="120" font-size="12" fill="#12324f">main.py vive dentro de app-móvil</text>
+  <rect x="40" y="156" width="620" height="46" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="60" y="184" font-size="12.5" fill="#12324f">absoluta: /home/estudiante/proyectos/app-móvil/main.py</text>
+  <rect x="40" y="210" width="620" height="46" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="60" y="238" font-size="12.5" fill="#0e6f6c">relativa, parado en proyectos: app-móvil/main.py</text>
+</svg>
+
+:::
+
+```bash
+cd /home/estudiante/proyectos
+ls -la
+mkdir app-móvil
+cd app-móvil
+touch main.py
+mv main.py principal.py
+cp principal.py respaldo.py
+rm respaldo.py
+```
+
+El separador de ruta también cambia entre sistemas, `/` en Unix, macOS y Linux, y `\` en Windows. MDN
+señala esa diferencia sintáctica como parte de lo que cambia entre plataformas, y en la práctica es una
+causa real de que un script de shell escrito y probado en un sistema falle o se comporte distinto al
+copiarlo a otro. Es una explicación razonable de por qué las instrucciones de instalación de un mismo
+tutorial a veces funcionan para un compañero de clase y para otro no, aunque ambos hayan copiado
+exactamente el mismo comando.
+
+::: {.callout-tip}
+## Reto 1. Predice antes de ejecutar
+
+Un compañero de laboratorio está a punto de correr `rm -r reportes/` para borrar una carpeta con
+archivos que ya no necesita. Antes de que lo hagas tú mismo, marca lo que crees que va a pasar.
+
+<label><input type="checkbox"> La carpeta y su contenido pasan a la papelera de reciclaje, y se pueden
+recuperar desde ahí</label><br>
+<label><input type="checkbox"> La carpeta y su contenido se borran de forma permanente, sin pasar por
+ninguna papelera</label><br>
+<label><input type="checkbox"> El sistema pide confirmación antes de borrar, siempre, sin excepción</label>
+
+Antes de revisar la solución, escribe en una frase que harías distinto si de verdad tuvieras que borrar
+esa carpeta en un equipo de trabajo compartido.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La segunda opción es la correcta. MDN advierte de forma explícita que `rm` borra de manera permanente,
+sin pasar por ninguna papelera de reciclaje, a diferencia de borrar un archivo desde el explorador
+gráfico del sistema operativo, donde casi siempre hay una segunda oportunidad. `rm -r` sobre un
+directorio completo es, en palabras de la misma documentación, una operación peligrosa, porque borra
+recursivamente todo lo que hay adentro sin pedir confirmación por defecto en la mayoría de
+configuraciones. El error clásico es copiar y pegar un comando de internet con un `rm -r` mal dirigido,
+apuntando a una carpeta distinta de la que se quería borrar, sin ninguna forma de deshacerlo después.
+En un equipo de trabajo compartido, una práctica razonable es revisar el contenido con `ls` antes de
+borrar, o mover la carpeta a otro lugar y confirmar que nadie la necesita antes de eliminarla en firme.
+:::
+
+## Gestión de procesos: ver y detener lo que corre
+
+Cada programa que corre en tu equipo, desde el emulador de Android hasta el propio editor de código,
+es un *proceso*, y saber listarlos y detenerlos es tan básico como saber navegar carpetas. En sistemas
+Unix y Linux el comando `ps` reporta el estado de los procesos en ejecución, `ps aux` y `ps -ef` son las
+invocaciones más comunes, y `kill` envía una señal a un proceso. Esa última palabra importa, `kill` no
+significa necesariamente matar de un tajo, significa enviar una señal, y el proceso que la recibe puede
+reaccionar de formas distintas según cual sea.
+
+Por defecto, `kill` envía `SIGTERM`, la señal número 15, que le pide al proceso que termine mientras le
+da la oportunidad de hacer una limpieza ordenada antes, guardar un archivo a medio escribir, cerrar una
+conexión de red, liberar un recurso. `SIGKILL`, la señal número 9, es distinta de raíz, el proceso no
+puede interceptarla ni reaccionar a ella de ninguna forma, termina de inmediato sin ninguna oportunidad
+de limpieza. Preferir `TERM` sobre `KILL` como primer intento es una práctica ampliamente recomendada
+en la comunidad Unix por esta misma razón, aunque conviene verificar la redacción exacta antes de
+citar textualmente una versión puntual de la página de manual de `kill`.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 236" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un proceso guardando un archivo recibe una señal para terminar; con SIGTERM 15 el proceso puede hacer limpieza antes de cerrar, con SIGKILL 9 termina de inmediato sin ninguna oportunidad de limpiar, arriesgando el archivo a medio escribir" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Dos señales, dos finales distintos</text>
+  <rect x="260" y="34" width="180" height="42" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="350" y="60" font-size="12.5" fill="#12324f" text-anchor="middle">proceso guardando un archivo</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><path d="M300,76 C240,110 180,100 150,130"/><path d="M400,76 C460,110 520,100 550,130"/></g>
+  <rect x="40" y="130" width="240" height="90" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="160" y="152" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">SIGTERM (15), por defecto</text>
+  <text x="160" y="172" font-size="11.5" fill="#3c7d7a" text-anchor="middle">el proceso puede reaccionar</text>
+  <text x="160" y="190" font-size="11.5" fill="#3c7d7a" text-anchor="middle">cierra ordenado, guarda cambios</text>
+  <rect x="420" y="130" width="240" height="90" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="540" y="152" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">SIGKILL (9), forzado</text>
+  <text x="540" y="172" font-size="11.5" fill="#5b6876" text-anchor="middle">no se puede interceptar</text>
+  <text x="540" y="190" font-size="11.5" fill="#5b6876" text-anchor="middle">termina ya, sin aviso ni limpieza</text>
+</svg>
+
+:::
+
+```bash
+ps aux | grep java
+kill 4821
+kill -9 4821
+```
+
+En Windows, el equivalente en `cmd` es `tasklist`, que lista procesos locales o remotos con filtros por
+identificador, por nombre de imagen o por usuario, y `taskkill` para terminarlos; en PowerShell,
+`Get-Process` y `Stop-Process` cumplen exactamente el mismo rol con la sintaxis de cmdlet que ya viste
+antes.
+
+```powershell
+Get-Process | Where-Object { $_.ProcessName -like "*studio*" }
+Stop-Process -Name "studio64" -Force
+```
+
+### Caso de estudio: el emulador que se cierra a la fuerza
+
+Un estudiante deja el emulador de Android congelado, sin responder, mientras estaba a punto de guardar
+el estado de una prueba. Por costumbre, abre otra terminal y ejecuta `kill -9` contra el proceso del
+emulador porque en clases anteriores le funcionó para cerrar programas colgados. Antes de seguir,
+piensa qué diferencia real hay entre usar `kill` sin argumentos adicionales y usar `kill -9` en este
+caso concreto.
+
+La diferencia es justo la que explica la sección anterior. `SIGTERM`, la señal por defecto, le da al
+emulador la oportunidad de escribir a disco el estado que tenía pendiente antes de cerrar; `SIGKILL`
+elimina esa oportunidad por completo, el proceso desaparece en el instante exacto en que recibe la
+señal, sin importar que estuviera a mitad de escribir un archivo. Un estudiante que usa `-9` por
+costumbre, sin pensar en la diferencia, puede terminar con archivos de estado del emulador corruptos o
+a medio escribir, un problema silencioso que solo aparece la siguiente vez que intenta abrir ese mismo
+emulador. La recomendación práctica, ampliamente extendida entre quienes administran procesos Unix, es
+intentar primero sin `-9` y reservar `SIGKILL` para cuando el proceso de verdad no responde a nada más.
+
+::: {.callout-tip}
+## Reto 2. Elige la señal correcta
+
+Tienes un programa que está escribiendo un archivo de datos grande y deja de responder al teclado.
+Necesitas cerrarlo. Marca la opción que le da al programa la mejor oportunidad de no dejar el archivo
+corrupto.
+
+<label><input type="checkbox"> `kill -9 <pid>` porque es más rápido y no hay que esperar</label><br>
+<label><input type="checkbox"> `kill <pid>` sin argumentos adicionales, y esperar unos segundos antes
+de considerar `-9`</label><br>
+<label><input type="checkbox"> Apagar el equipo directamente para asegurarse de que el proceso
+termine</label>
+
+Escribe en una frase por qué la opción que elegiste es mejor que las otras dos para este caso concreto.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La segunda opción es la correcta. `kill` sin argumentos envía `SIGTERM`, que le da al programa la
+oportunidad de terminar de escribir lo que tenía pendiente o de cerrar el archivo de forma ordenada
+antes de salir, justo la señal que la comunidad Unix recomienda preferir como primer intento. `kill -9`
+fuerza `SIGKILL`, que el proceso no puede interceptar ni usar para hacer ninguna limpieza, así que si el
+programa estaba a mitad de escribir el archivo, ese archivo puede quedar corrupto o incompleto.
+Apagar el equipo es todavía peor, porque no solo termina ese proceso sin limpieza, sino todos los demás
+procesos que estuvieran corriendo en ese momento, con el mismo riesgo multiplicado.
+:::
+
+## Gestores de paquetes: instalar sin repetir el trabajo
+
+Un *gestor de paquetes* automatiza instalar, actualizar y eliminar software junto con las dependencias
+que ese software necesita, en vez de que cada persona busque, descargue y ubique manualmente cada
+librería por separado. El desarrollo móvil no tiene un único gestor, tiene varios, cada uno atado al
+ecosistema donde vive.
+
+`npm` es el gestor de paquetes de JavaScript, viene incluido con Node.js, y su repositorio oficial se
+presenta a sí mismo como el gestor de paquetes para JavaScript, aunque conviene confirmar la redacción
+exacta en `github.com/npm/cli` antes de citar esa frase palabra por palabra en un trabajo. Vale la pena
+aclarar un malentendido común, la sigla no significa "Node Package Manager", en español "gestor de
+paquetes de Node"; la propia documentación de npm aclara que npm no es una sigla de nada, sino un
+retroacrónimo recursivo que la comunidad adoptó como nombre propio en vez de como abreviatura de otra
+cosa. Esto importa en la práctica porque significa que no hay una expansión "oficial" que buscar o
+memorizar, npm es simplemente el nombre de la herramienta.
+
+Gradle es el sistema de build que usa Android Studio para compilar proyectos Android y gestionar sus
+dependencias. Según documenta `developer.android.com`, un proyecto nuevo de Android Studio configura
+por defecto tanto el repositorio de Google (`google()`) como Maven Central (`mavenCentral()`) en el
+archivo `settings.gradle.kts`; dependencias de AndroidX como `androidx.core:core-ktx`, la que aparece
+en el ejemplo más abajo, se resuelven principalmente contra el repositorio de Google, no contra Maven
+Central. Los archivos de configuración de un proyecto Gradle son `build.gradle.kts`, en Kotlin y es la
+forma recomendada hoy, o `build.gradle`, en Groovy, la forma anterior que todavía se encuentra en
+proyectos existentes.
+
+CocoaPods es el gestor de dependencias que usa la comunidad de iOS para proyectos Xcode en Swift o en
+Objective-C. Funciona a partir de un archivo llamado `Podfile`, donde se declaran las dependencias del
+proyecto, y del comando `pod install`, que las descarga e integra al proyecto. Esta descripción es
+conocimiento ampliamente asentado en el ecosistema iOS, y si vas a citar una redacción oficial
+palabra por palabra en un trabajo, confirma primero en `cocoapods.org` en vez de tomar esta guía como
+esa fuente.
+
+Homebrew es el gestor de paquetes de facto en macOS, ampliamente usado también en Linux, y su
+repositorio en GitHub lo describe como una herramienta para instalar paquetes que no vienen incluidos
+en el sistema operativo; conviene confirmar la redacción exacta en `github.com/Homebrew/brew` antes de
+citar cualquier frase suya palabra por palabra, en vez de tomar esta guía como esa fuente. `brew update`
+actualiza el índice de paquetes disponibles, y `brew doctor` diagnostica problemas de configuración del
+sistema, en la práctica su salida suele apuntar bastante cerca del problema real, así que vale la pena
+leerla con calma en vez de descartarla como ruido.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un gestor de paquetes genérico se ramifica en cuatro gestores concretos según el ecosistema: npm para JavaScript y Node, Gradle para Android vía Google y Maven Central, CocoaPods para iOS y Xcode con Podfile, Homebrew para macOS" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="leng2t1a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="350" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cada ecosistema móvil trae su propio gestor de paquetes</text>
+  <rect x="280" y="30" width="140" height="46" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="58" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">gestor de paquetes</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#leng2t1a)">
+    <path d="M310,76 C220,110 130,120 100,146"/>
+    <path d="M340,76 C300,110 270,120 260,146"/>
+    <path d="M360,76 C400,110 430,120 440,146"/>
+    <path d="M390,76 C480,110 570,120 600,146"/>
+  </g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="150" width="160" height="80" rx="10"/><rect x="200" y="150" width="160" height="80" rx="10"/><rect x="380" y="150" width="160" height="80" rx="10"/><rect x="540" y="150" width="140" height="80" rx="10"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="700" fill="#12324f"><text x="100" y="172">npm</text><text x="280" y="172">Gradle</text><text x="460" y="172">CocoaPods</text><text x="610" y="172">Homebrew</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876">
+    <text x="100" y="190">JavaScript</text><text x="100" y="204">y Node.js</text>
+    <text x="280" y="190">Android, vía</text><text x="280" y="204">Google y Maven</text>
+    <text x="460" y="190">iOS, Xcode,</text><text x="460" y="204">Podfile</text>
+    <text x="610" y="190">macOS,</text><text x="610" y="204">de facto</text>
+  </g>
+</svg>
+
+:::
+
+```bash
+npm install
+brew update
+brew doctor
+pod install
+```
+
+```kotlin
+// build.gradle.kts de un módulo de app Android
+dependencies {
+    implementation("androidx.core:core-ktx:1.13.1")
+    testImplementation("junit:junit:4.13.2")
+}
+```
+
+## Editores e IDE para desarrollo móvil
+
+Un editor de código y un *IDE*, entorno de desarrollo integrado por sus siglas en inglés, no son
+exactamente lo mismo. Un editor edita texto con ayudas para programar; un IDE integra además el
+compilador o intérprete, el depurador, el sistema de build y, en desarrollo móvil, el emulador o
+simulador del dispositivo, todo dentro de la misma aplicación.
+
+Android Studio es, según `developer.android.com`, el IDE oficial para el desarrollo de apps Android,
+construido sobre el editor de código y las herramientas de IntelliJ IDEA. Trae un editor con
+inspecciones de código y *lint*, el sistema de build basado en Gradle que ya viste arriba, el Android
+Emulator con soporte para múltiples configuraciones de dispositivo virtual conocidas como AVD, y
+herramientas de depuración y perfilado que incluyen el Layout Inspector, perfiladores de CPU y memoria,
+y Logcat, la vista donde aparecen en vivo los logs del dispositivo y la salida de `adb`.
+
+Xcode es el IDE oficial de Apple para desarrollar, probar y distribuir apps en iOS, iPadOS, macOS,
+tvOS, visionOS y watchOS, según `developer.apple.com`. Incluye un editor con autocompletado
+predictivo, el Simulator para prototipar y probar sin necesitar un dispositivo físico, Instruments para
+perfilar CPU, disco, memoria y GPU en tiempo real, los frameworks de pruebas Swift Testing y
+XCTest/XCUIAutomation, y Xcode Cloud para integración y entrega continua.
+
+Visual Studio Code, según su propia documentación oficial, combina la simplicidad de un editor de
+código fuente con herramientas de desarrollo potentes, como autocompletado IntelliSense y un depurador
+integrado. No es un IDE completo por sí mismo, es un editor extensible que se convierte en uno según
+las extensiones que instales, para C#, para Kotlin, para PowerShell o para lo que necesites. Corre en
+macOS, Linux y Windows, está construido sobre Electron, y trae soporte nativo para Git, lo que permite
+ver los cambios pendientes de un archivo sin salir del editor.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres columnas comparando Android Studio, Xcode y Visual Studio Code: los dos primeros traen emulador o simulador y perfilador integrados de fábrica, VS Code es un editor extensible que se vuelve IDE según las extensiones instaladas" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="360" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Tres entornos, tres niveles de integración</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="20" y="32" width="220" height="184" rx="12"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="250" y="32" width="220" height="184" rx="12"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="480" y="32" width="220" height="184" rx="12"/></g>
+  <text x="130" y="54" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Android Studio</text>
+  <text x="360" y="54" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Xcode</text>
+  <text x="590" y="54" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">VS Code</text>
+  <g font-size="11" fill="#3c7d7a" text-anchor="middle"><text x="130" y="76">build con Gradle</text><text x="130" y="94">Android Emulator (AVD)</text><text x="130" y="112">Logcat y profilers</text><text x="130" y="130">Layout Inspector</text></g>
+  <g font-size="11" fill="#3c7d7a" text-anchor="middle"><text x="360" y="76">Simulator integrado</text><text x="360" y="94">Instruments</text><text x="360" y="112">XCTest / Swift Testing</text><text x="360" y="130">Xcode Cloud</text></g>
+  <g font-size="11" fill="#5b6876" text-anchor="middle"><text x="590" y="76">editor + IntelliSense</text><text x="590" y="94">depurador integrado</text><text x="590" y="112">Git nativo</text><text x="590" y="130">emulador: vía extensión</text></g>
+  <text x="130" y="196" font-size="11" fill="#5b6876" text-anchor="middle">IDE completo de fábrica</text>
+  <text x="360" y="196" font-size="11" fill="#5b6876" text-anchor="middle">IDE completo de fábrica</text>
+  <text x="590" y="196" font-size="11" fill="#5b6876" text-anchor="middle">se vuelve IDE según extensiones</text>
+  <text x="360" y="236" font-size="11.5" fill="#5b6876" text-anchor="middle">Ninguno de los tres es mejor en abstracto; cada uno resuelve un ecosistema distinto</text>
+</svg>
+
+:::
+
+## Caso de estudio: un día de trabajo con adb
+
+*Android Debug Bridge*, conocido por su forma corta `adb`, es la herramienta de línea de comandos
+incluida en el Android SDK Platform Tools que conecta tu terminal con un emulador o con un dispositivo
+Android físico. Según `developer.android.com`, es una herramienta versátil que permite comunicarse con
+un dispositivo para instalar y depurar apps, y que además da acceso a un shell Unix corriendo dentro
+del propio dispositivo.
+
+`adb` no es un solo programa, es una arquitectura de tres piezas. El cliente se invoca desde la
+terminal de tu máquina de desarrollo cada vez que escribes un comando `adb`. El daemon, `adbd`, corre en
+segundo plano en cada dispositivo o emulador conectado. Entre los dos media el servidor, que corre en
+tu máquina de desarrollo, escucha en el puerto TCP local 5037, y localiza emuladores escaneando puertos
+impares entre el 5555 y el 5585.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arquitectura de tres piezas de adb: el cliente en la terminal habla con el servidor local en el puerto TCP 5037, y el servidor habla con el daemon adbd en el dispositivo o emulador, localizado escaneando puertos impares entre 5555 y 5585" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="leng2t1b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="360" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cliente, servidor y daemon: las tres piezas de adb</text>
+  <rect x="20" y="60" width="180" height="80" rx="12" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="110" y="90" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">cliente adb</text>
+  <text x="110" y="110" font-size="11" fill="#5b6876" text-anchor="middle">terminal de desarrollo</text>
+  <rect x="270" y="60" width="180" height="80" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="360" y="90" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">servidor adb</text>
+  <text x="360" y="110" font-size="11" fill="#3c7d7a" text-anchor="middle">puerto TCP local 5037</text>
+  <rect x="520" y="60" width="180" height="80" rx="12" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="610" y="90" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">daemon adbd</text>
+  <text x="610" y="110" font-size="11" fill="#5b6876" text-anchor="middle">en el dispositivo o emulador</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#leng2t1b)"><path d="M200,100 L268,100"/><path d="M450,100 L518,100"/></g>
+  <text x="485" y="150" font-size="11" fill="#5b6876" text-anchor="middle">escanea puertos impares entre 5555 y 5585</text>
+  <text x="360" y="186" font-size="11.5" fill="#5b6876" text-anchor="middle">adb devices, adb install, adb shell, adb logcat viajan por este mismo camino</text>
+</svg>
+
+:::
+
+```bash
+adb devices -l
+adb install app-debug.apk
+adb shell
+adb shell pm list packages
+adb pull /sdcard/DCIM/foto.jpg .
+adb push config.json /sdcard/
+adb logcat
+```
+
+`adb devices -l` lista los dispositivos y emuladores conectados. `adb install` instala un APK.
+`adb shell` abre un shell interactivo dentro del dispositivo, y `adb shell comando` ejecuta un único
+comando ahí sin quedarte dentro. `adb pull` y `adb push` copian archivos entre tu máquina y el
+dispositivo, en ambos sentidos. `adb logcat` muestra en vivo los logs del sistema y de tu app, la
+herramienta que más vas a usar para depurar un comportamiento que no entiendes.
+
+### El emulador que no aparece
+
+Un estudiante tiene dos emuladores de Android abiertos al mismo tiempo, uno para probar en una versión
+antigua de Android y otro en la más reciente, además de un dispositivo físico conectado por cable.
+Ejecuta `adb devices` y ve que uno de los emuladores no aparece en la lista, o aparece marcado como
+`offline`. Antes de reiniciar todo el equipo, que en teoría arreglaría el problema pero cuesta varios
+minutos, vale la pena preguntarse por qué pasa esto justamente cuando hay varios emuladores abiertos a
+la vez y no cuando hay uno solo.
+
+La explicación está en cómo el servidor de `adb` localiza emuladores, escaneando puertos impares en
+pares secuenciados dentro del rango 5555 a 5585. Con un solo emulador abierto, ese escaneo casi nunca
+falla. Con varios emuladores abiertos a la vez, o con otra herramienta de terceros usando ese mismo
+rango de puertos, el servidor puede perder la pista de cuál daemon corresponde a cuál emulador, y el
+resultado es exactamente lo que el estudiante ve, un dispositivo que no aparece o que aparece
+`offline` sin que nada esté roto de verdad. Es un problema real y documentado en la práctica de
+laboratorio, no un fallo aleatorio del emulador.
+
+::: {.callout-tip}
+## Reto 3. Diagnostica el emulador que no aparece
+
+Retomando el caso anterior, marca la causa más probable de que `adb devices` no muestre uno de los dos
+emuladores abiertos.
+
+<label><input type="checkbox"> El emulador está apagado, aunque su ventana siga abierta en
+pantalla</label><br>
+<label><input type="checkbox"> El servidor de adb tuvo un conflicto al escanear el rango de puertos
+5555 a 5585 con varios emuladores abiertos a la vez</label><br>
+<label><input type="checkbox"> El cable USB del dispositivo físico está desconectado</label>
+
+Escribe en una frase que harías antes de reiniciar todo el equipo, pensando en lo que acabas de leer
+sobre el servidor de adb.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+La segunda opción es la correcta. El cable USB del dispositivo físico no tiene nada que ver con que
+un emulador aparezca o no, y una ventana de emulador abierta no garantiza que el emulador siga
+respondiendo. La causa documentada es el escaneo de puertos, el servidor de `adb` busca emuladores
+recorriendo puertos impares entre 5555 y 5585, y con varios emuladores abiertos a la vez ese escaneo
+puede perder la pista de cuál daemon corresponde a cuál instancia. Antes de reiniciar todo el equipo,
+una alternativa más rápida es cerrar los emuladores sobrantes y volver a ejecutar `adb devices`, o
+reiniciar únicamente el servidor de adb con `adb kill-server` seguido de `adb start-server`, que
+reinicia el escaneo sin tocar el resto del sistema.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] La diferencia entre terminal, shell y línea de comandos, y por qué confundirlas genera confusión
+- [ ] Por qué PowerShell trabaja con cmdlets Verbo-Sustantivo y qué hace su política de ejecución
+- [ ] Los comandos básicos de navegación y gestión de archivos, en Unix, en cmd y en PowerShell
+- [ ] La diferencia entre una ruta absoluta y una ruta relativa
+- [ ] Por qué `kill` envía una señal en vez de matar directamente, y la diferencia entre SIGTERM y
+      SIGKILL
+- [ ] Qué gestor de paquetes corresponde a cada ecosistema móvil, npm, Gradle, CocoaPods y Homebrew
+- [ ] Qué trae de fábrica Android Studio y Xcode, y por qué VS Code es un editor extensible en vez de
+      un IDE completo
+- [ ] La arquitectura de tres piezas de adb, cliente, servidor y daemon, y por qué varios emuladores
+      abiertos pueden causar conflictos de puertos
+:::
+
+## Antes del Tema 2
+
+1. Abre una terminal en tu equipo, identifica qué shell estás usando, y navega hasta una carpeta de
+   proyecto usando tanto una ruta absoluta como una ruta relativa.
+2. Si tienes Android Studio o Xcode instalado, abre un emulador o el Simulator, conéctalo y, si tienes
+   Android Studio, ejecuta `adb devices -l` para confirmar que lo detecta.
+3. Instala o confirma que tienes instalado el gestor de paquetes de tu sistema operativo, npm, Homebrew
+   o el que corresponda, y ejecuta el comando que lista las versiones instaladas.
+
+Con la terminal, los comandos básicos y las herramientas de este tema ya en tu caja, el Tema 2 entra al
+control de versiones con Git y GitHub, el sistema que va a guardar el historial completo de cada
+cambio que hagas en tu código, y el que vas a usar para compartir ese código con tus compañeros a
+través de un repositorio remoto.
+
+## Recursos
+
+- Mozilla Contributors. "Command line basics". MDN Web Docs, Learn web development, Getting started,
+  Environment setup. Disponible en:
+  [developer.mozilla.org, Command line](https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Environment_setup/Command_line)
+- Microsoft. "Getting Started with PowerShell" (PowerShell 101, capítulo 1). Microsoft Learn.
+  Disponible en:
+  [learn.microsoft.com, 01 getting started](https://learn.microsoft.com/en-us/powershell/scripting/learn/ps101/01-getting-started)
+- Microsoft. "tasklist". Windows Commands reference, Windows Server docs. Microsoft Learn. Disponible
+  en:
+  [learn.microsoft.com, tasklist](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/tasklist)
+- `kill(1)`, Linux man-pages project. Disponible en:
+  [man7.org, kill.1](https://man7.org/linux/man-pages/man1/kill.1.html)
+- npm, Inc. / OpenJS Foundation. README oficial de npm CLI. GitHub. Disponible en:
+  [github.com, cli](https://github.com/npm/cli)
+- Homebrew. README oficial del proyecto. GitHub. Disponible en:
+  [github.com, brew](https://github.com/Homebrew/brew)
+- Google. "Meet Android Studio". Android Developers. Disponible en:
+  [developer.android.com, intro](https://developer.android.com/studio/intro)
+- Google. "Configure your build". Android Developers. Disponible en:
+  [developer.android.com, build](https://developer.android.com/build)
+- Google. "Android Debug Bridge (adb)". Android Developers. Disponible en:
+  [developer.android.com, adb](https://developer.android.com/studio/command-line/adb)
+- Apple Inc. "Xcode". Apple Developer. Disponible en:
+  [developer.apple.com, xcode](https://developer.apple.com/xcode/)
+- Microsoft. "Why Visual Studio Code?". Visual Studio Code Docs. Disponible en:
+  [code.visualstudio.com, whyvscode](https://code.visualstudio.com/docs/editor/whyvscode)
+- CocoaPods. Sitio oficial del proyecto (verificar redacción exacta antes de citar texto literal).
+  Disponible en: [cocoapods.org](https://cocoapods.org/)
+- Gradle. Sitio oficial del proyecto (verificar redacción exacta antes de citar texto literal).
+  Disponible en: [gradle.org](https://gradle.org/)
+
+::: {.pie-doc}
+Lenguajes de computación para móviles. Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redaccion de esta guia conto con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

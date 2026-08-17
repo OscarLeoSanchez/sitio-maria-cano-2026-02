@@ -1,0 +1,592 @@
+---
+title: "Tema 1. Las piezas con las que se dibuja la realidad"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                            |
+|--------|----------------------------------------------------------------------------|
+| Unidad | Unidad 2. Modelo entidad relación                                          |
+| Tema   | Tema 1. Componentes del modelo: entidades, atributos, relaciones y claves  |
+:::
+
+La Unidad 1 cerró con el caso de Ana Ruiz, la clienta de la cafetería cuyo teléfono quedaba escrito
+por separado en tres hojas distintas y terminaba desactualizado en dos de ellas apenas ella lo
+cambiaba. Ese caso mostró qué sale mal cuando no existe un modelo compartido de la realidad antes de
+guardar un dato, pero se quedó ahí, en el diagnóstico del problema, sin decir cómo se dibuja ese
+modelo compartido. Esta unidad trae la herramienta que resuelve justo eso, el modelo entidad
+relación, un lenguaje con el que alguien dibuja primero cómo es el negocio, cliente, pedido,
+producto, y solo después decide en qué tablas queda guardado. Hoy aprendes las cuatro piezas con las
+que se arma ese dibujo, la entidad, el atributo, la relación y la clave, y las vas a ver aplicadas de
+principio a fin sobre la misma cafetería que ya conoces.
+
+## Qué es una entidad y qué es un conjunto de entidades
+
+Una *entidad* es un objeto que existe y que se puede distinguir de cualquier otro objeto, como
+Silberschatz, Korth y Sudarshan la definen en el capítulo dedicado al diseño con el modelo entidad
+relación de *Fundamentos de bases de datos*. Ana Ruiz es una entidad, Luis Pena es otra, y aunque las
+dos sean clientas de la misma cafetería, cada una es distinguible de la otra porque cada una es una
+persona real distinta. Un *conjunto de entidades* agrupa entidades del mismo tipo que comparten las
+mismas propiedades, como el conjunto de todos los clientes de la cafetería, sin que eso implique que
+dos clientes cualesquiera tengan que parecerse en sus valores, solo que ambos se describen con los
+mismos campos.
+
+En el diagrama de un modelo entidad relación, un rectángulo representa un conjunto de entidades, y el
+nombre que va dentro nombra al tipo, no a una persona concreta. Esa distinción entre el conjunto y
+cada miembro suyo es la misma que separa una clase de un objeto en programación orientada a objetos,
+solo que aquí el vocabulario cambia, entidad en vez de objeto y conjunto de entidades en vez de clase.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El conjunto de entidades Cliente arriba, con tres entidades individuales debajo, cada una distinguible por sus propios valores de id_cliente y nombre, conectadas al conjunto por una flecha de instancia de" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="base21a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="360" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Un conjunto de entidades agrupa objetos distinguibles del mismo tipo</text>
+  <rect x="230" y="26" width="260" height="50" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="360" y="56" font-size="14.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">conjunto de entidades Cliente</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="150" width="210" height="80" rx="10"/><rect x="255" y="150" width="210" height="80" rx="10"/><rect x="490" y="150" width="210" height="80" rx="10"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#base21a)"><path d="M300,76 C260,104 180,124 125,148"/><path d="M360,76 L360,148"/><path d="M420,76 C460,104 540,124 595,148"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="125" y="174">entidad cliente 1</text><text x="360" y="174">entidad cliente 2</text><text x="595" y="174">entidad cliente 3</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="125" y="194">id_cliente = 1</text><text x="125" y="208">nombre = Ana Ruiz</text><text x="360" y="194">id_cliente = 2</text><text x="360" y="208">nombre = Luis Pena</text><text x="595" y="194">id_cliente = 3</text><text x="595" y="208">nombre = Karen Diaz</text></g>
+  <text x="360" y="228" font-size="11" fill="#0e6f6c" text-anchor="middle">cada entidad se distingue de las demas, aunque pertenezca al mismo conjunto</text>
+</svg>
+
+:::
+
+De aquí en adelante, todo el tema se apoya en el mismo negocio, la cafetería que ya conoces, así que
+antes de seguir conviene plantearse una pregunta de análisis. Si tuvieras que rediseñar esa cafetería
+para que el teléfono de un cliente viviera en un único lugar, sin que las tres áreas del Tema 1 de la
+Unidad 1 volvieran a escribirlo cada una por su cuenta, cuáles serían las piezas mínimas necesarias y
+cómo se conectarían entre sí. La respuesta se construye pieza por pieza en el resto de este tema, y
+empieza por identificar los conjuntos de entidades que hacen falta, Cliente, Pedido y Producto.
+
+## Entidades fuertes y débiles
+
+Un conjunto de entidades es *fuerte* cuando tiene suficientes atributos propios para identificar sin
+ambigüedad a cada una de sus entidades, sin depender de ningún otro conjunto de entidades para
+lograrlo. Cliente, Pedido y Producto son fuertes en la cafetería, ya que cada uno trae su propio
+identificador, id_cliente, numero_pedido o codigo_producto, que basta por sí solo para distinguir
+cualquier entidad de ese conjunto.
+
+Un conjunto de entidades es *débil* cuando su existencia depende de otro conjunto de entidades, al
+que Silberschatz, Korth y Sudarshan llaman el conjunto identificador o propietario. Una entidad débil
+no tiene atributos propios suficientes para identificarse sola, así que toma prestada la clave del
+propietario y le agrega un atributo propio llamado *discriminador*, que solo necesita ser único dentro
+del propietario, no en toda la base de datos. El ejemplo verificado del propio libro es la entidad
+`section`, que depende de `course` porque una sección de un curso no existe sin el curso al que
+pertenece, y que se identifica con la clave de `course` más un discriminador propio de la sección.
+
+En la cafetería, cada línea de un pedido, el renglón que dice qué producto se pidió y en qué cantidad,
+solo tiene sentido dentro del pedido al que pertenece. Un `DetallePedido` no existe suelto, nace
+cuando nace un `Pedido` y muere si ese pedido se elimina, así que es una entidad débil cuyo propietario
+es `Pedido`, identificada por el `numero_pedido` del propietario más un discriminador propio, el
+`numero_linea` dentro de ese pedido.
+
+En la notación del diagrama, un conjunto de entidades débil se dibuja con un rectángulo de doble
+borde, la relación que lo conecta con su propietario se dibuja con un rombo de doble borde porque es
+una *relación identificadora*, y el discriminador se subraya con una línea punteada en vez de la línea
+continua que marca la clave primaria de una entidad fuerte.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pedido es una entidad fuerte con numero_pedido subrayado como clave primaria; DetallePedido es una entidad debil dibujada con doble rectangulo, conectada a Pedido por la relacion identificadora tiene en doble rombo; el discriminador numero_linea se subraya con linea discontinua, y la clave primaria completa de DetallePedido combina numero_pedido mas numero_linea" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Entidad fuerte a la izquierda, entidad debil a la derecha</text>
+  <rect x="20" y="70" width="190" height="120" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="115" y="94" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="115" y="120" font-size="12" fill="#12324f" text-anchor="middle" text-decoration="underline">numero_pedido</text>
+  <text x="115" y="140" font-size="12" fill="#12324f" text-anchor="middle">fecha</text>
+  <text x="115" y="172" font-size="11" fill="#0e6f6c" text-anchor="middle">entidad fuerte</text>
+  <polygon points="330,75 400,130 330,185 260,130" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <polygon points="330,87 388,130 330,173 272,130" fill="none" stroke="#8fc9c5"/>
+  <text x="330" y="126" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">tiene</text>
+  <text x="330" y="142" font-size="11" fill="#0e6f6c" text-anchor="middle">identificadora</text>
+  <line x1="210" y1="130" x2="260" y2="130" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="400" y1="130" x2="555" y2="130" stroke="#8fb3d1" stroke-width="1.8"/>
+  <rect x="555" y="55" width="185" height="150" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="562" y="62" width="171" height="136" rx="6" fill="none" stroke="#c7d6e6"/>
+  <text x="647" y="84" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">DetallePedido</text>
+  <text x="647" y="108" font-size="12" fill="#12324f" text-anchor="middle">numero_linea</text>
+  <line x1="610" y1="112" x2="684" y2="112" stroke="#12324f" stroke-width="1.2" stroke-dasharray="3 2"/>
+  <text x="647" y="130" font-size="12" fill="#12324f" text-anchor="middle">cantidad</text>
+  <text x="647" y="150" font-size="12" fill="#12324f" text-anchor="middle">precio_unitario</text>
+  <text x="647" y="180" font-size="11" fill="#0e6f6c" text-anchor="middle">entidad debil, discriminador punteado</text>
+  <text x="380" y="230" font-size="12" fill="#12324f" text-anchor="middle">clave primaria de DetallePedido = numero_pedido (heredado de Pedido) + numero_linea</text>
+  <text x="380" y="252" font-size="11" fill="#5b6876" text-anchor="middle">DetallePedido no puede existir sin un Pedido al cual pertenecer</text>
+</svg>
+
+:::
+
+Así se ve, en un esquema simplificado, lo que ese diagrama termina produciendo cuando el modelo se
+traduce a tablas. La flecha de la unidad siguiente todavía no llega, pero conviene adelantar el
+resultado para que la idea de entidad débil no se quede solo en la forma del dibujo:
+
+```
+Pedido(numero_pedido, fecha)
+DetallePedido(numero_pedido, numero_linea, cantidad, precio_unitario)
+```
+
+Fíjate en que `numero_pedido` aparece dentro de `DetallePedido`, aunque en el diagrama ese atributo
+vive en `Pedido` y no se repite explícitamente dentro del rectángulo doble. Ese detalle sorprende la
+primera vez que se ve, porque parece una contradicción, se supone que la entidad débil no tenía ese
+atributo propio y sin embargo termina en su tabla. Lo que pasa es que la relación identificadora es la
+que aporta ese atributo al pasar a tablas, ya que sin él ninguna fila de `DetallePedido` sabría a qué
+pedido pertenece. La Unidad 3 formaliza ese paso completo de diagrama a tablas, así que por ahora basta
+con quedarse con la idea de que toda entidad débil termina cargando, en su clave primaria, la clave
+completa de su propietario.
+
+::: {.callout-tip}
+## Reto 1. Diseña la entidad débil Ejemplar
+
+Una biblioteca universitaria guarda un conjunto de entidades `Libro`, identificado por su propio
+`isbn`. Cada libro puede tener varios ejemplares físicos en el estante, y cada ejemplar se presta y se
+devuelve por separado, con su propio estado, disponible o prestado. Ningún ejemplar tiene sentido sin
+el libro al que pertenece.
+
+Diseña el conjunto de entidades `Ejemplar` como entidad débil, siguiendo el mismo patrón que
+`DetallePedido`. Decide qué atributo propio usarías como discriminador dentro de cada libro, y escribe
+cuál sería la clave primaria completa de `Ejemplar` una vez combinada con la clave de `Libro`. No hace
+falta que dibujes el diagrama completo, con la clave primaria y una frase que justifique por qué
+`Ejemplar` no puede ser una entidad fuerte es suficiente.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+`Ejemplar` es una entidad débil porque ningún atributo propio del ejemplar alcanza para distinguirlo
+sin apoyarse en el libro al que pertenece, ya que dos ejemplares del mismo libro no tienen, por sí
+solos, nada que los diferencie entre sí. El discriminador puede ser `numero_ejemplar`, un consecutivo
+que solo necesita ser único dentro de cada libro, así que el primer ejemplar de un `isbn` concreto
+lleva `numero_ejemplar = 1`, el segundo `numero_ejemplar = 2`, y así sucesivamente, sin que ese número
+tenga que ser distinto frente a los ejemplares de otro libro.
+
+La clave primaria completa de `Ejemplar` combina la clave del propietario con el discriminador propio,
+así que queda formada por `isbn`, heredado de `Libro`, más `numero_ejemplar`. `Ejemplar` no puede ser
+una entidad fuerte porque, sin el `isbn` del libro al que pertenece, dos ejemplares con el mismo
+`numero_ejemplar` de libros distintos serían indistinguibles entre sí.
+:::
+
+## Cómo se describe una entidad con atributos
+
+Un *atributo* es una propiedad descriptiva que poseen todos los miembros de un conjunto de entidades,
+y el conjunto de valores permitidos para ese atributo es su *dominio*. El capítulo 6 de
+*Fundamentos de bases de datos* clasifica los atributos en cuatro formas que no se excluyen entre sí,
+un mismo atributo puede ser compuesto y además derivado, por ejemplo, aunque en la práctica la mayoría
+de los atributos de un modelo caen limpiamente en una sola categoría.
+
+Un atributo es *simple* cuando no se puede subdividir en partes más pequeñas con significado propio,
+como `id_cliente`. Un atributo es *compuesto* cuando sí admite esa subdivisión, como el `nombre` de un
+cliente, que se separa en `primer_nombre` y `apellido`, cada uno con sentido propio incluso por
+separado. Un atributo es *monovaluado* cuando cada entidad guarda un solo valor para él, como
+`fecha_registro`, y es *multivaluado* cuando una misma entidad puede tener varios valores válidos al
+mismo tiempo, como `telefono`, porque Ana Ruiz puede tener un celular personal y un número fijo de su
+casa, los dos vigentes a la vez. Un atributo es *derivado* cuando su valor se calcula a partir de otros
+atributos en vez de guardarse directamente, como `antiguedad`, que se obtiene restando `fecha_registro`
+de la fecha de hoy y que cambia solo porque el tiempo pasa, no porque alguien lo edite.
+
+En la notación de Chen, cada atributo se dibuja como un óvalo conectado a su entidad. Un atributo
+compuesto se dibuja con óvalos más pequeños colgando del óvalo principal, uno por cada subparte. Un
+atributo multivaluado se dibuja con un óvalo de doble borde. Un atributo derivado se dibuja con un
+óvalo de borde punteado. La clave primaria de la entidad se subraya, igual que en los rectángulos de
+las entidades.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 365" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La entidad Cliente en el centro conectada a cinco atributos: id_cliente simple y subrayado como clave primaria a la izquierda, nombre compuesto arriba que se divide en primer_nombre y apellido, telefono multivaluado a la derecha dibujado con ovalo doble, fecha_registro simple abajo a la izquierda y antiguedad derivada abajo a la derecha dibujada con ovalo punteado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="14" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro formas de atributo alrededor de una misma entidad</text>
+  <line x1="290" y1="78" x2="358" y2="102" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="470" y1="78" x2="402" y2="102" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="380" y1="144" x2="380" y2="192" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="163" y1="219" x2="305" y2="219" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="597" y1="219" x2="455" y2="219" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="205" y1="292" x2="330" y2="248" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="555" y1="292" x2="430" y2="248" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <ellipse cx="290" cy="56" rx="62" ry="24" fill="#eef4fa" stroke="#c7d6e6"/>
+  <ellipse cx="470" cy="56" rx="58" ry="24" fill="#eef4fa" stroke="#c7d6e6"/>
+  <ellipse cx="380" cy="120" rx="56" ry="24" fill="#eef4fa" stroke="#c7d6e6"/>
+  <ellipse cx="95" cy="219" rx="68" ry="26" fill="#eef4fa" stroke="#c7d6e6"/>
+  <ellipse cx="665" cy="219" rx="68" ry="28" fill="#eef4fa" stroke="#c7d6e6"/>
+  <ellipse cx="665" cy="219" rx="56" ry="20" fill="none" stroke="#c7d6e6"/>
+  <ellipse cx="140" cy="308" rx="80" ry="26" fill="#eef4fa" stroke="#c7d6e6"/>
+  <ellipse cx="620" cy="308" rx="78" ry="26" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"/>
+  <rect x="305" y="192" width="150" height="54" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="224" font-size="14.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Cliente</text>
+  <text x="290" y="60" font-size="11.5" fill="#12324f" text-anchor="middle">primer_nombre</text>
+  <text x="470" y="60" font-size="11.5" fill="#12324f" text-anchor="middle">apellido</text>
+  <text x="380" y="124" font-size="12" fill="#12324f" text-anchor="middle">nombre</text>
+  <text x="380" y="170" font-size="11" fill="#5b6876" text-anchor="middle">compuesto</text>
+  <text x="95" y="223" font-size="12" fill="#12324f" text-anchor="middle" text-decoration="underline">id_cliente</text>
+  <text x="95" y="263" font-size="11" fill="#0e6f6c" text-anchor="middle">simple, clave primaria</text>
+  <text x="665" y="223" font-size="12" fill="#12324f" text-anchor="middle">telefono</text>
+  <text x="665" y="263" font-size="11" fill="#5b6876" text-anchor="middle">multivaluado, ovalo doble</text>
+  <text x="140" y="312" font-size="12" fill="#12324f" text-anchor="middle">fecha_registro</text>
+  <text x="140" y="350" font-size="11" fill="#5b6876" text-anchor="middle">simple</text>
+  <text x="620" y="312" font-size="12" fill="#12324f" text-anchor="middle">antiguedad</text>
+  <text x="620" y="350" font-size="11" fill="#5b6876" text-anchor="middle">derivado, ovalo punteado</text>
+</svg>
+
+:::
+
+Al pasar del diagrama a tablas, un atributo compuesto se aplana en columnas separadas, `primer_nombre`
+y `apellido` en vez de un único `nombre`. Un atributo derivado casi siempre se descarta de la tabla, ya
+que guardarlo obligaría a mantenerlo sincronizado cada vez que cambie el atributo del que depende, así
+que lo normal es calcularlo con una consulta cuando se necesite, un tema que retomas en la Unidad 4. El
+atributo multivaluado es el que exige más cuidado, porque no cabe en una sola columna sin romper la
+idea misma de lo que es una columna, y de eso trata la siguiente sección.
+
+## Cuando el atributo multivaluado se maltrata
+
+Imagina que quien diseña la base de datos de la cafetería no conoce todavía la regla anterior y
+decide guardar los teléfonos de cada cliente como un solo texto separado por comas dentro de una única
+columna `telefono`, porque a primera vista parece la salida más rápida. Antes de ver qué falla conviene
+plantearse cómo se busca a un cliente por su segundo número de teléfono si ese número vive enterrado
+dentro de un texto más largo, y qué pasa el día que ese cliente pide que se elimine solo uno de sus dos
+números.
+
+La respuesta es que ninguna de las dos operaciones es directa. Buscar exige comparar subcadenas dentro
+de un texto en vez de comparar un valor completo contra otro, lo cual es más lento y más frágil, ya
+que un espacio de más o un orden distinto de los números rompe la comparación. Borrar un solo número
+exige leer el texto completo, encontrar el fragmento correcto y reescribir toda la columna sin el
+fragmento borrado, en vez de simplemente eliminar una fila. Silberschatz, Korth y Sudarshan resuelven
+este mismo problema, con el atributo multivaluado `phone_number` de la entidad `instructor`, moviendo
+ese atributo a un esquema aparte, uno con la clave primaria de la entidad más el atributo multivaluado,
+de modo que cada valor ocupa su propia fila.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda una tabla Cliente con telefono aplanado en una sola columna con dos numeros separados por coma; a la derecha el esquema correcto con dos tablas, Cliente sin telefono y Cliente_Telefono con una fila por cada numero" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Un atributo multivaluado no cabe en una sola columna</text>
+  <rect x="20" y="40" width="330" height="30" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="185" y="60" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Cliente, telefono aplanado (mal disenado)</text>
+  <rect x="20" y="72" width="330" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="36" y="96" font-size="11.5" fill="#12324f">id_cliente = 1</text>
+  <text x="36" y="114" font-size="11.5" fill="#12324f">nombre = Ana Ruiz</text>
+  <text x="36" y="132" font-size="11.5" fill="#0e6f6c">telefono = "3001112233,3001119999"</text>
+  <text x="36" y="150" font-size="11" fill="#5b6876">un solo texto con dos numeros adentro</text>
+  <rect x="400" y="40" width="150" height="30" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="475" y="60" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <rect x="400" y="72" width="150" height="60" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="414" y="96" font-size="11.5" fill="#12324f">id_cliente = 1</text>
+  <text x="414" y="114" font-size="11.5" fill="#12324f">nombre = Ana Ruiz</text>
+  <rect x="565" y="40" width="175" height="30" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="652" y="60" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Cliente_Telefono</text>
+  <rect x="565" y="72" width="175" height="90" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="579" y="96" font-size="11" fill="#12324f">id=1, telefono=3001112233</text>
+  <text x="579" y="114" font-size="11" fill="#12324f">id=1, telefono=3001119999</text>
+  <text x="579" y="140" font-size="11" fill="#0e6f6c">una fila por cada numero, misma clave id_cliente</text>
+  <line x1="20" y1="180" x2="740" y2="180" stroke="#cfd8e3" stroke-width="1.2"/>
+  <text x="185" y="204" font-size="11.5" fill="#5b6876" text-anchor="middle">buscar el segundo numero exige leer y partir el texto completo</text>
+  <text x="580" y="204" font-size="11.5" fill="#5b6876" text-anchor="middle">buscar el segundo numero es una fila mas en Cliente_Telefono</text>
+  <text x="380" y="234" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">borrar un telefono en la version aplanada obliga a reescribir todo el texto de la columna</text>
+</svg>
+
+:::
+
+Vale la pena conectar este error con lo que ya viste en la Unidad 1, porque no es el mismo problema
+pero nace de la misma familia. El teléfono repetido de Ana Ruiz en tres archivos distintos era
+redundancia entre archivos separados, mientras que el teléfono aplanado en una sola columna es un
+error dentro de una única tabla, pero los dos comparten la misma raíz, que es tratar como un valor
+atómico algo que en realidad tiene una estructura interna, varios teléfonos en vez de uno, y esa
+estructura se pierde apenas se aplana. La Unidad 3 retoma esta misma idea con nombre propio cuando
+hable de la primera forma normal.
+
+::: {.callout-tip}
+## Reto 2. Clasifica los atributos de Cliente
+
+Para cada atributo de la entidad `Cliente` que aparece en el diagrama de esta sección, marca en cuál
+de las cuatro categorías encaja mejor antes de seguir leyendo.
+
+<label><input type="checkbox"> nombre, dividido en primer_nombre y apellido</label><br>
+<label><input type="checkbox"> telefono, con uno o varios números vigentes a la vez</label><br>
+<label><input type="checkbox"> fecha_registro, un único valor por cliente</label><br>
+<label><input type="checkbox"> antiguedad, calculada a partir de fecha_registro</label>
+
+Escribe junto a cada atributo si es simple, compuesto, monovaluado, multivaluado o derivado, y ten en
+cuenta que un atributo puede pertenecer a más de una categoría a la vez.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+`nombre` es compuesto, porque se divide en `primer_nombre` y `apellido`, cada uno con significado
+propio. Además, cada una de esas dos subpartes es a su vez simple y monovaluada, porque no se dividen
+más y cada cliente tiene un solo valor vigente para cada una.
+
+`telefono` es multivaluado, porque un mismo cliente puede tener más de un número vigente al mismo
+tiempo, y también es simple, porque cada número individual no se subdivide en partes con significado
+propio.
+
+`fecha_registro` es simple y monovaluado, porque no se subdivide y cada cliente tiene exactamente un
+valor para él, el día en que quedó registrado.
+
+`antiguedad` es derivado, porque no se guarda directamente sino que se calcula restando
+`fecha_registro` de la fecha de hoy, y también es simple y monovaluado, ya que un cliente solo tiene
+una antigüedad vigente en cada momento.
+:::
+
+### Cuándo pasar un atributo a entidad propia
+
+No siempre está claro si algo debe modelarse como atributo o como entidad propia, y el propio capítulo
+6 de Silberschatz, Korth y Sudarshan dedica una sección a este tipo de decisiones de diseño. El
+criterio que proponen es preguntarse si ese dato necesita información adicional propia o si admite
+varios valores que conviene consultar por separado. En la cafetería, `telefono` funciona bien como
+atributo multivaluado de `Cliente` mientras solo interese guardar el número. Pero si mañana la
+cafetería necesitara saber, además, el operador de cada línea o si un número es el preferido para
+avisos de pedido listo, `telefono` dejaría de alcanzar como atributo y convendría ascenderlo a un
+conjunto de entidades propio, con sus propios atributos, `numero`, `operador` y `es_preferido`,
+relacionado con `Cliente`. La misma pregunta, necesita este dato cargar información propia que ya no
+cabe en un solo valor, es la que vas a usar cada vez que dudes entre dejar algo como atributo o subirlo
+a entidad.
+
+## Relaciones entre entidades
+
+Una *relación* es una asociación entre entidades, y un *conjunto de relaciones* es el conjunto
+matemático de esas asociaciones entre dos o más conjuntos de entidades. En el diagrama, un rombo
+representa el conjunto de relaciones, y una línea conecta el rombo con cada conjunto de entidades que
+participa. En la cafetería, `Cliente` y `Pedido` se conectan mediante la relación `realiza`, ya que
+cada cliente realiza uno o varios pedidos.
+
+El *grado* de una relación es el número de conjuntos de entidades que participan en ella. La mayoría
+de las relaciones que vas a modelar en este curso son binarias, con dos conjuntos de entidades, como
+`realiza`. Las relaciones también pueden ser ternarias o de mayor grado, y el propio texto guía trae un
+ejemplo verificado, `proj_guide`, que conecta a la vez `instructor`, `student` y `project` en un
+proyecto de investigación. Una relación, además de conectar entidades, puede tener sus propios
+atributos, información que no pertenece a ninguna de las entidades por separado sino a la asociación
+entre ellas. En la cafetería, el canal por el que llegó un pedido concreto de un cliente concreto, si
+fue en el mostrador o a domicilio, es un dato de esa asociación puntual, no un dato permanente del
+cliente ni del pedido en abstracto, así que se modela como atributo de la relación `realiza`.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La entidad Cliente y la entidad Pedido conectadas por la relacion realiza dibujada como un rombo; el rombo tiene su propio atributo canal_pedido dibujado como un ovalo colgando debajo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Una relacion tambien puede tener su propio atributo</text>
+  <rect x="20" y="70" width="150" height="70" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="95" y="96" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <text x="95" y="118" font-size="11.5" fill="#12324f" text-anchor="middle" text-decoration="underline">id_cliente</text>
+  <rect x="530" y="70" width="150" height="70" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="605" y="96" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="605" y="118" font-size="11.5" fill="#12324f" text-anchor="middle" text-decoration="underline">numero_pedido</text>
+  <polygon points="350,65 420,105 350,145 280,105" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="110" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">realiza</text>
+  <line x1="170" y1="105" x2="280" y2="105" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="420" y1="105" x2="530" y2="105" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="350" y1="145" x2="350" y2="168" stroke="#8fb3d1" stroke-width="1.6"/>
+  <ellipse cx="350" cy="192" rx="72" ry="24" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="350" y="196" font-size="12" fill="#12324f" text-anchor="middle">canal_pedido</text>
+  <text x="350" y="222" font-size="11" fill="#5b6876" text-anchor="middle">valores: mostrador o domicilio, propio de cada pedido concreto de cada cliente</text>
+</svg>
+
+:::
+
+Una relación también puede conectar un conjunto de entidades consigo mismo, lo que se llama una
+*relación recursiva*, y ahí hace falta distinguir el papel que juega cada participación con un
+*rol*, porque el nombre del conjunto de entidades ya no basta para saber cuál es cuál. El propio texto
+guía lo ilustra con `course_id` y `prereq_id` en una relación de prerrequisitos entre cursos consigo
+mismos. Este mismo programa académico tiene un ejemplo real de esa idea, sin necesidad de
+inventarlo, la asignatura Base de datos que estás cursando tiene como prerrequisito a Estructura de
+datos, según la ficha de este mismo curso.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La entidad Asignatura relacionada consigo misma mediante la relacion recursiva es_prerrequisito_de; dos lineas distintas salen del mismo rombo hacia la misma entidad, una con el rol asignatura y otra con el rol prerrequisito, ilustrado con el caso real de que Base de datos tiene como prerrequisito a Estructura de datos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Una relacion recursiva conecta una entidad consigo misma</text>
+  <polygon points="370,30 435,68 370,106 305,68" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="370" y="72" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">es prerrequisito de</text>
+  <rect x="270" y="160" width="200" height="66" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="370" y="188" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Asignatura</text>
+  <text x="370" y="208" font-size="11.5" fill="#12324f" text-anchor="middle" text-decoration="underline">codigo_asignatura</text>
+  <path d="M305,68 C240,100 260,140 300,160" fill="none" stroke="#8fb3d1" stroke-width="1.7"/>
+  <path d="M435,68 C500,100 470,140 440,160" fill="none" stroke="#8fb3d1" stroke-width="1.7"/>
+  <text x="210" y="118" font-size="11" fill="#12324f" text-anchor="middle">rol: asignatura</text>
+  <text x="530" y="118" font-size="11" fill="#12324f" text-anchor="middle">rol: prerrequisito</text>
+  <text x="370" y="244" font-size="11.5" fill="#5b6876" text-anchor="middle">caso real de este programa: Base de datos tiene como prerrequisito a Estructura de datos</text>
+</svg>
+
+:::
+
+Vale la pena cerrar esta sección con una advertencia que el propio texto guía hace explícita. Cualquier
+relación de grado mayor que dos se puede reescribir como varias relaciones binarias, creando una
+entidad artificial que conecte a cada participante por separado, pero el mismo texto advierte que esa
+conversión no siempre logra traducir todas las restricciones de la relación original, así que pueden
+aparecer, en el esquema convertido, combinaciones que no correspondían a ninguna instancia válida de la
+relación de partida. No es una regla mecánica libre de riesgo, es una decisión de diseño que hay que
+revisar caso por caso, y por eso el propio libro prefiere, para relaciones de grado mayor que dos,
+permitir una sola flecha de cardinalidad hacia como mucho un participante, precisamente para no
+introducir ambigüedades de lectura, un detalle de notación que la Unidad retoma en el Tema 2.
+
+## Cómo se identifica una entidad sin ambigüedad con una clave
+
+Una *superclave* es un conjunto de atributos cuyos valores identifican, sin ambigüedad, a cada entidad
+de un conjunto, para cualquier estado posible de esa base de datos, no solo para los datos que hay hoy
+cargados. Esa última condición es la que más sorprende, porque un atributo puede parecer único con los
+datos actuales y aun así no servir como clave, si nada garantiza que seguirá siendo único después. Una
+*clave candidata* es una superclave mínima, es decir que ninguno de sus subconjuntos propios sigue
+siendo superclave, así que quitarle cualquier atributo la rompe. Cuando un conjunto de entidades tiene
+más de una clave candidata, el diseñador elige una de ellas como *clave primaria*, la que de ahí en
+adelante se usa para identificar entidades en el resto del modelo.
+
+Toma la entidad `Cliente` con tres atributos, `id_cliente`, `nombre` y `telefono`, y estos tres
+registros de ejemplo.
+
+| id_cliente | nombre | telefono |
+|---|---|---|
+| 1 | Ana Ruiz | 3001112233 |
+| 2 | Luis Pena | 3014445566 |
+| 3 | Ana Ruiz | 3007778899 |
+
+`id_cliente` es superclave, porque ningún cliente puede compartir su número con otro, y además es
+mínima, un solo atributo no se puede reducir más, así que es clave candidata y también la clave
+primaria elegida. `nombre` no es superclave, porque el registro 1 y el registro 3 comparten el mismo
+valor, Ana Ruiz, sin ser el mismo cliente. `telefono` sí es único en esta muestra concreta de tres
+filas, pero eso no lo convierte en clave, porque nada en el negocio garantiza que dos clientes nunca
+vayan a compartir el mismo número, ni que un cliente no vaya a cambiar su número más adelante, así que
+un buen diseño no lo declara clave aunque hoy no se repita. `{id_cliente, nombre}` sí es superclave,
+porque incluye a `id_cliente`, pero no es mínima, ya que quitarle `nombre` deja intacta la unicidad, así
+que no es clave candidata.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 740 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama anidado: el rectangulo mas grande agrupa las superclaves de Cliente, dentro un rectangulo mas chico marca la unica clave candidata, y dentro de esta el rectangulo mas interno marca la clave primaria elegida, id_cliente; a la derecha, fuera de las superclaves, se marcan nombre y telefono como combinaciones que no sirven de clave" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="370" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">De superclave a clave candidata a clave primaria</text>
+  <rect x="30" y="34" width="440" height="200" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="50" y="54" font-size="12" font-weight="700" fill="#12324f">superclaves de Cliente</text>
+  <rect x="60" y="70" width="200" height="130" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="80" y="88" font-size="11.5" font-weight="700" fill="#0e6f6c">clave candidata</text>
+  <text x="80" y="104" font-size="11" fill="#5b6876">superclave minima</text>
+  <rect x="80" y="114" width="150" height="46" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="155" y="134" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">id_cliente</text>
+  <text x="155" y="150" font-size="11" fill="#0e6f6c" text-anchor="middle">clave primaria elegida</text>
+  <g font-size="11" fill="#12324f"><text x="285" y="90">id_cliente, nombre</text><text x="285" y="112">id_cliente, telefono</text><text x="285" y="134">id_cliente, nombre, telefono</text></g>
+  <text x="285" y="156" font-size="11" fill="#5b6876">superclaves validas, pero no minimas</text>
+  <rect x="500" y="60" width="220" height="150" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="610" y="80" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">esto no sirve de clave</text>
+  <text x="514" y="106" font-size="11" fill="#12324f">nombre</text>
+  <text x="514" y="122" font-size="11" fill="#5b6876">se repite: dos Ana Ruiz distintas</text>
+  <text x="514" y="150" font-size="11" fill="#12324f">telefono</text>
+  <text x="514" y="166" font-size="11" fill="#5b6876">unico hoy, pero no garantizado</text>
+  <text x="514" y="180" font-size="11" fill="#5b6876">para siempre en cualquier estado</text>
+</svg>
+
+:::
+
+Este mismo vocabulario resuelve, con precisión, dos preguntas que ya rondaban las secciones
+anteriores. La clave primaria de una entidad débil es la clave primaria de su propietario más el
+discriminador propio, exactamente lo que ya viste con `DetallePedido`, cuya clave completa es
+`numero_pedido` más `numero_linea`. Y la clave primaria de un conjunto de relaciones depende de cómo
+participen las entidades, si ambos lados pueden repetirse en la relación hace falta la unión completa
+de las dos claves, pero si un lado participa como mucho una vez, con su clave sola basta, una regla
+que se entiende del todo solo después de ver cardinalidad en el Tema 2, así que por ahora basta con
+saber que existe y que depende de cómo se conectan las entidades, no solo de cuáles son.
+
+Conviene una última precisión bibliográfica, útil para cuando compares este tema con otros libros de
+la bibliografía del curso. Silberschatz, Korth y Sudarshan formalizan superclave y clave candidata en
+el capítulo del modelo relacional, y los retoman de forma más simple, casi siempre solo como clave
+primaria, cuando llegan al capítulo del modelo entidad relación. Otros textos de la misma bibliografía,
+como el de Elmasri y Navathe, suelen introducir clave candidata ya dentro del propio capítulo de
+modelado entidad relación. Ninguna de las dos formas está mal, es una diferencia de organización entre
+libros, no de definición.
+
+::: {.callout-tip}
+## Reto 3. Identifica las claves candidatas
+
+Vuelve a la tabla de `Cliente` de esta sección, con `id_cliente`, `nombre` y `telefono`. Para cada una
+de estas combinaciones de atributos, marca si es superclave, y si además es clave candidata, antes de
+seguir leyendo.
+
+<label><input type="checkbox"> {id_cliente}</label><br>
+<label><input type="checkbox"> {nombre}</label><br>
+<label><input type="checkbox"> {telefono}</label><br>
+<label><input type="checkbox"> {id_cliente, nombre}</label><br>
+<label><input type="checkbox"> {nombre, telefono}</label>
+
+Para la última combinación, {nombre, telefono}, justifica tu respuesta pensando en la fila 1 y la fila
+3 de la tabla de ejemplo.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+`{id_cliente}` es superclave y también clave candidata, porque un solo atributo ya garantiza unicidad
+y no se puede reducir más.
+
+`{nombre}` no es superclave, porque la fila 1 y la fila 3 comparten el mismo nombre, Ana Ruiz, sin ser
+el mismo cliente.
+
+`{telefono}` no se declara superclave, aunque en esta muestra de tres filas no se repite ningún
+número, porque nada en el negocio garantiza esa unicidad para cualquier estado futuro de la tabla.
+
+`{id_cliente, nombre}` sí es superclave, ya que incluye a `id_cliente`, pero no es clave candidata,
+porque quitarle `nombre` y quedarse solo con `id_cliente` sigue siendo superclave, así que no es
+mínima.
+
+`{nombre, telefono}` sí distingue a la fila 1 de la fila 3 en esta muestra concreta, porque aunque
+comparten el nombre, tienen teléfonos distintos, 3001112233 contra 3007778899. Pero, igual que pasaba
+con `telefono` solo, esa combinación depende de que dos clientes con el mismo nombre nunca terminen
+compartiendo también el mismo teléfono, algo que el negocio no puede prometer para siempre, así que
+tampoco se declara clave.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía, los siguientes puntos:
+
+- [ ] La diferencia entre una entidad y un conjunto de entidades
+- [ ] Qué distingue a una entidad fuerte de una entidad débil, y qué es un discriminador
+- [ ] Las cuatro formas de atributo, simple, compuesto, multivaluado y derivado, con un ejemplo
+      propio de cada una
+- [ ] Por qué un atributo multivaluado no se puede guardar como texto aplanado en una sola columna
+- [ ] Qué es una relación, su grado, un rol y un atributo propio de la relación
+- [ ] La diferencia entre superclave, clave candidata y clave primaria, y por qué un valor único hoy
+      no siempre alcanza para ser clave
+- [ ] Cómo se arma la clave primaria de una entidad débil a partir de la clave de su propietario
+:::
+
+## Antes del Tema 2
+
+1. Resuelve el Reto 1 si todavía no lo hiciste, diseñando la entidad débil `Ejemplar` de la
+   biblioteca con su clave primaria completa.
+2. Dibuja, en una hoja o en cualquier editor, las tres entidades fuertes de la cafetería, `Cliente`,
+   `Pedido` y `Producto`, con al menos dos atributos cada una, y la entidad débil `DetallePedido` con
+   su discriminador.
+3. Piensa en un sistema que uses a diario, una app de mensajería, una plataforma de streaming, un
+   sistema de matrícula, e identifica al menos una entidad fuerte, una relación con un atributo
+   propio y, si la hay, una entidad débil.
+
+Hoy quedaron listas las piezas sueltas, la entidad, el atributo, la relación y la clave, pero
+todavía falta una parte central del modelo, cuántas entidades de un lado se pueden asociar con
+cuántas del otro. El Tema 2 de esta unidad retoma exactamente la misma cafetería, con las mismas
+entidades que acabas de conocer, y le agrega la notación completa de Chen y la notación de pata de
+gallo, la cardinalidad uno a uno, uno a muchos y muchos a muchos, y la participación total y parcial,
+hasta cerrar con el diagrama entidad relación completo de la cafetería, la primera pieza terminada de
+principio a fin de todo el curso.
+
+## Recursos
+
+- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Fundamentos de bases de datos.* Capítulo 6, diseño
+  de bases de datos usando el modelo entidad relación. Material de apoyo oficial de los autores en
+  [db-book.com](https://www.db-book.com).
+- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Fundamentos de bases de datos.* Capítulo 2,
+  introducción al modelo relacional, sección de claves, superclave, clave candidata y clave primaria.
+- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Fundamentos de bases de datos.* Capítulo 7, diseño
+  de bases de datos relacionales, definición formal de superclave y clave candidata mediante
+  dependencias funcionales.
+- Elmasri, R. y Navathe, S. B. *Fundamentals of Database Systems.* Capítulo de modelado con el
+  modelo entidad relación, entidades, atributos, relaciones y claves.
+- Connolly, T. M. y Begg, C. E. *Database Systems: A Practical Approach to Design, Implementation,
+  and Management.* Capítulo de modelado entidad relación.
+- Chen, P. P.-S. (1976). *The Entity-Relationship Model, Toward a Unified View of Data.* ACM
+  Transactions on Database Systems, 1(1), 9 a 36. DOI: 10.1145/320434.320440. Artículo original que
+  introdujo el modelo entidad relación y su notación.
+- [Diapositivas oficiales del capítulo 6, db-book.com](https://www.db-book.com/slides-dir/PDF-dir/ch6.pdf)
+- [Diapositivas oficiales del capítulo 2, db-book.com](https://www.db-book.com/slides-dir/PDF-dir/ch2.pdf)
+- [Diapositivas oficiales del capítulo 7, db-book.com](https://www.db-book.com/slides-dir/PDF-dir/ch7.pdf)
+- [Sitio oficial del libro, db-book.com](https://www.db-book.com/)
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

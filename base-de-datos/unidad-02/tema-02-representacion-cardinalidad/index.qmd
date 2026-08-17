@@ -1,0 +1,642 @@
+---
+title: "Tema 2. El dibujo que decide la llave foránea"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                |
+|--------|----------------------------------------------------------------|
+| Unidad | Unidad 2. Modelo entidad relación                              |
+| Tema   | Tema 2. Representación gráfica, cardinalidad y participación   |
+:::
+
+El Tema 1 de esta unidad dio el vocabulario para nombrar las piezas de un modelo entidad relación,
+que entidad fuerte y entidad débil, que atributo simple, compuesto, multivaluado o derivado, que
+relación entre entidades y que clave candidata y clave primaria. Hoy esas piezas se dibujan con una
+notación estándar, para que el modelo se pueda discutir con alguien que conoce el negocio y no sabe
+nada de bases de datos, y para que cada relación quede marcada con dos datos que van a decidir
+directamente cómo se construye la tabla en la Unidad 3, cuántas instancias de una entidad se asocian
+con cuántas de la otra, que es la cardinalidad, y si una entidad puede existir sin participar en la
+relación, que es la participación. Cierras el tema retomando el caso de la cafetería del Tema 1 de la
+Unidad 1, esa tabla única de pedidos donde el teléfono de un cliente se repetía en varias filas y se
+desactualizaba en unas mientras quedaba correcto en otras, para modelarla esta vez como un diagrama
+entidad relación completo, con sus entidades separadas, su relación y las llaves foráneas que evitan
+exactamente esa anomalía.
+
+## Para qué se dibuja un modelo antes de programarlo
+
+Peter Chen publicó en 1976, en la revista ACM Transactions on Database Systems, el artículo que le dio
+nombre al modelo entidad relación, con un objetivo explícito en el propio título, ofrecer una vista
+unificada de los datos que sirviera tanto para el diseño lógico como para el diseño conceptual de una
+base de datos. La idea que sostiene ese objetivo es que un diagrama, a diferencia de un párrafo de
+requisitos o de un conjunto de tablas SQL, lo puede leer y corregir alguien que no programa, porque el
+dibujo usa cajas y líneas en vez de sintaxis, y eso convierte el modelo en un punto de encuentro entre
+quien conoce el negocio y quien va a construir la base de datos. Silberschatz, Korth y Sudarshan, en el
+capítulo dedicado al diseño de bases de datos con el modelo entidad relación de su libro *Database
+System Concepts*, presentan justamente el diagrama entidad relación como la forma de expresar la
+estructura lógica completa de una base de datos de manera gráfica.
+
+Existen varias notaciones para dibujar ese mismo modelo, y este tema cubre las dos que vas a encontrar
+con más frecuencia, la notación original de Chen, que separa con cuidado cada concepto en un símbolo
+distinto, y la notación de pata de gallo, que hoy usan la mayoría de las herramientas de modelado
+porque combina cardinalidad y participación en un solo símbolo compuesto. Las dos representan
+exactamente la misma información, así que aprender a traducir de una a la otra es parte del objetivo
+de hoy.
+
+## La notación de Chen
+
+En la notación de Chen, cada concepto del Tema 1 tiene un símbolo geométrico propio. Un rectángulo
+representa un conjunto de entidades. Un óvalo representa un atributo, conectado por una línea a la
+entidad o a la relación a la que pertenece, y cuando el atributo es compuesto se dibuja como un
+pequeño árbol de óvalos, el óvalo del atributo compuesto conectado a los óvalos de sus componentes. El
+atributo o los atributos que forman la clave primaria se subrayan. Un rombo, o diamante, representa un
+conjunto de relaciones, y se conecta con líneas a cada uno de los rectángulos que participan en ella.
+Una entidad débil se dibuja con un rectángulo de borde doble, su discriminador se subraya con una línea
+punteada en vez de una línea continua, porque por sí solo no identifica de forma única a la entidad, y
+la relación identificadora que la conecta con su entidad fuerte se dibuja con un rombo de borde doble.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Simbolos de la notacion de Chen: rectangulo para entidad fuerte, ovalo para atributo con la clave primaria subrayada, rombo para relacion; abajo el mismo trio con borde doble para entidad debil, ovalo punteado para discriminador y rombo doble para relacion identificadora" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro simbolos, cuatro conceptos del Tema 1</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="176" y1="70" x2="222" y2="70"/><line x1="330" y1="70" x2="380" y2="70"/><line x1="486" y1="70" x2="540" y2="70"/></g>
+  <rect x="30" y="46" width="146" height="48" rx="4" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="103" y="74" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Cliente</text>
+  <ellipse cx="276" cy="70" rx="54" ry="26" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="276" y="66" font-size="11.5" fill="#12324f" text-anchor="middle" text-decoration="underline">id_cliente</text>
+  <text x="276" y="80" font-size="11.5" fill="#5b6876" text-anchor="middle">(clave primaria)</text>
+  <polygon points="382,70 434,44 486,70 434,96" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="434" y="74" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Realiza</text>
+  <rect x="542" y="46" width="146" height="48" rx="4" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="615" y="74" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Pedido</text>
+  <g font-size="11" fill="#5b6876" text-anchor="middle"><text x="103" y="110">entidad</text><text x="276" y="118">atributo</text><text x="434" y="122">relacion</text><text x="615" y="110">entidad</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="200" y1="220" x2="238" y2="220"/><line x1="336" y1="220" x2="378" y2="220"/><line x1="486" y1="220" x2="528" y2="220"/></g>
+  <rect x="30" y="196" width="164" height="48" rx="4" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="36" y="202" width="152" height="36" rx="3" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="112" y="224" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Detalle_Pedido</text>
+  <ellipse cx="280" cy="220" rx="58" ry="26" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="3 3"/>
+  <text x="280" y="224" font-size="11" fill="#12324f" text-anchor="middle">discriminador</text>
+  <polygon points="382,220 432,196 482,220 432,244" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <polygon points="390,220 432,202 474,220 432,238" fill="none" stroke="#cfd8e3"/>
+  <text x="432" y="224" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Identifica</text>
+  <rect x="530" y="196" width="146" height="48" rx="4" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="603" y="224" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Pedido</text>
+  <g font-size="11" fill="#5b6876" text-anchor="middle"><text x="112" y="260">entidad debil</text><text x="280" y="266">discriminador</text><text x="432" y="270">relacion identificadora</text><text x="603" y="260">entidad dueña</text></g>
+  <text x="380" y="290" font-size="11" fill="#5b6876" text-anchor="middle">Borde doble = depende de otra entidad para existir; linea punteada = no identifica por si sola</text>
+</svg>
+
+:::
+
+La mayoría de relaciones que vas a modelar en este curso son binarias, es decir que conectan
+exactamente dos conjuntos de entidades, y el resto de este tema trabaja solo con ese caso. El propio
+Silberschatz, Korth y Sudarshan documentan que existen relaciones ternarias, de tres entidades, o de
+grado todavía mayor, y ponen como ejemplo una relación entre instructor, estudiante y proyecto para
+mostrar que a veces tres entidades participan a la vez en una sola asociación que no se puede partir
+limpiamente en dos relaciones binarias. Cuando eso ocurre, la misma fuente documenta una regla de
+seguridad para el dibujo, que como máximo una de las líneas que salen del rombo puede llevar flecha,
+porque con dos o más flechas a la vez el diagrama admite más de una lectura posible y deja de ser
+inequívoco. Ese caso queda fuera del alcance de este curso, pero conviene saber que existe, para no
+sorprenderte si lo encuentras en un modelo más adelante en la carrera.
+
+## Cardinalidad de mapeo: cuántos con cuántos
+
+La *cardinalidad de mapeo* expresa el número de entidades a las que otra entidad puede estar asociada
+a través de una relación. Para relaciones binarias existen cuatro combinaciones posibles, uno a uno,
+uno a muchos, muchos a uno y muchos a muchos, y las dos últimas son en realidad la misma idea vista
+desde cada lado. La notación de Chen dibuja esa cardinalidad con líneas dirigidas o no dirigidas sobre
+cada extremo de la relación, y Silberschatz, Korth y Sudarshan explican la regla de lectura así, una
+línea dirigida, con flecha, significa que cada instancia del otro lado se asocia como máximo con una
+instancia de la entidad hacia la que apunta la flecha, y una línea no dirigida, sin flecha, significa
+que se puede asociar con varias.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres filas mostrando la cardinalidad de mapeo entre Cliente y Tarjeta de fidelidad como uno a uno con flecha en ambos extremos, entre Cliente y Pedido como uno a muchos con flecha solo hacia Cliente, y entre Pedido y Producto como muchos a muchos sin flechas" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="base22a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">La flecha va sobre el lado "uno"; la linea sin flecha va sobre el lado "muchos"</text>
+  <g font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle"><text x="700" y="55">1 a 1</text><text x="700" y="165">1 a N</text><text x="700" y="275">M a N</text></g>
+  <rect x="40" y="34" width="150" height="46" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="115" y="62" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Cliente</text>
+  <polygon points="260,57 310,34 360,57 310,80" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="310" y="61" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Tiene</text>
+  <rect x="430" y="34" width="180" height="46" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="520" y="62" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">TarjetaFidelidad</text>
+  <path d="M195,57 L255,57" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#base22a)"/>
+  <path d="M425,57 L365,57" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#base22a)"/>
+  <text x="380" y="98" font-size="11.5" fill="#5b6876" text-anchor="middle">cada tarjeta es de un cliente, y cada cliente tiene a lo sumo una tarjeta</text>
+  <rect x="40" y="144" width="150" height="46" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="115" y="172" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Cliente</text>
+  <polygon points="260,167 310,144 360,167 310,190" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="310" y="171" font-size="11.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">Realiza</text>
+  <rect x="430" y="144" width="180" height="46" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="520" y="172" font-size="12.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">Pedido</text>
+  <path d="M195,167 L255,167" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#base22a)"/>
+  <path d="M425,167 L365,167" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <text x="380" y="208" font-size="11.5" fill="#5b6876" text-anchor="middle">cada pedido es de un cliente (flecha), pero un cliente hace varios pedidos (sin flecha)</text>
+  <rect x="40" y="254" width="150" height="46" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="115" y="282" font-size="12.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">Pedido</text>
+  <polygon points="260,277 310,254 360,277 310,300" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="310" y="281" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Contiene</text>
+  <rect x="430" y="254" width="180" height="46" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="520" y="282" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Producto</text>
+  <path d="M195,277 L255,277" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <path d="M425,277 L365,277" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+</svg>
+
+:::
+
+Fíjate en algo que va a importar mucho en la Unidad 3, la flecha apunta hacia el lado que en la tabla
+final va a recibir la llave foránea, es decir hacia el lado uno, exactamente en la misma dirección en
+que después va a apuntar esa llave. Un pedido pertenece a un cliente, así que la tabla `Pedido` va a
+guardar el identificador de ese cliente, nunca al revés. Un producto que aparece en varios pedidos y un
+pedido que contiene varios productos no dejan que ninguna de las dos tablas guarde una sola llave
+foránea hacia la otra, y ese es justo el caso muchos a muchos que vas a resolver más adelante con una
+tabla propia para la relación.
+
+## Participación total y parcial
+
+La *participación* de una entidad en una relación dice si toda instancia de esa entidad tiene que
+aparecer en al menos una ocurrencia de la relación, o si puede quedar sin participar. Silberschatz,
+Korth y Sudarshan la definen así, la participación es *total* cuando todas las entidades del conjunto
+participan en al menos una relación del conjunto de relaciones, y es *parcial* cuando algunas entidades
+pueden no participar en ninguna. En la notación de Chen, la participación total se dibuja con una línea
+doble entre la entidad y el rombo, y la parcial con una línea simple.
+
+El ejemplo que la propia fuente usa para ilustrar la diferencia conviene conocerlo tal cual, porque es
+el que mejor separa los dos conceptos. Entre un instructor y un estudiante existe una relación de
+asesoría, un `advisor`. La participación del estudiante en esa relación es total, ya que todo
+estudiante del programa debe tener un instructor asesor asignado, sin excepción. La participación del
+instructor, en cambio, es parcial, porque un instructor puede no estar asesorando a nadie en un momento
+dado. Nota que esa asimetría no tiene nada que ver con la cardinalidad, ya que la relación sigue siendo
+uno a uno de todas formas, cardinalidad y participación son dos preguntas distintas sobre la misma
+relación, una pregunta por cuántos y la otra por si es obligatorio.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Instructor y estudiante conectados por la relacion advisor; el lado estudiante tiene linea doble porque su participacion es total, el lado instructor tiene linea simple porque su participacion es parcial; abajo la traduccion a tabla muestra que estudiante recibe una columna instructor_id NOT NULL mientras que instructor no recibe ninguna columna nueva" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <rect x="40" y="30" width="170" height="50" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="125" y="60" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Instructor</text>
+  <polygon points="300,55 356,30 412,55 356,80" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="356" y="59" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">advisor</text>
+  <rect x="500" y="30" width="170" height="50" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="585" y="60" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Estudiante</text>
+  <line x1="215" y1="55" x2="295" y2="55" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="418" y1="52" x2="495" y2="52" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="418" y1="58" x2="495" y2="58" stroke="#8fb3d1" stroke-width="1.6"/>
+  <text x="255" y="42" font-size="11" fill="#5b6876" text-anchor="middle">parcial</text>
+  <text x="456" y="42" font-size="11" fill="#0e6f6c" text-anchor="middle">total</text>
+  <rect x="80" y="120" width="270" height="66" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="215" y="140" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">tabla Instructor</text>
+  <text x="215" y="158" font-size="11.5" fill="#5b6876" text-anchor="middle">no recibe ninguna columna nueva</text>
+  <text x="215" y="174" font-size="11.5" fill="#5b6876" text-anchor="middle">de esta relacion</text>
+  <rect x="410" y="120" width="270" height="66" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="545" y="140" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">tabla Estudiante</text>
+  <text x="545" y="158" font-size="11.5" fill="#12324f" text-anchor="middle">instructor_id NOT NULL</text>
+  <text x="545" y="174" font-size="11.5" fill="#5b6876" text-anchor="middle">(porque su participacion es total)</text>
+  <text x="380" y="222" font-size="11.5" fill="#5b6876" text-anchor="middle">Que instructor sea parcial no genera ninguna columna: la llave foranea solo existe del lado</text>
+  <text x="380" y="238" font-size="11.5" fill="#5b6876" text-anchor="middle">"muchos", asi que garantizar que todo instructor tenga estudiante exige una regla aparte</text>
+</svg>
+
+:::
+
+Esa traducción a tabla es exactamente la regla que vas a formalizar en la Unidad 3, cuando una relación
+uno a muchos es total del lado muchos, el atributo extra que representa la relación, la llave foránea,
+se agrega directamente al esquema del lado muchos sin necesitar una tabla propia para la relación. Si
+la participación del lado muchos fuera parcial, esa misma columna admitiría valores nulos, para las
+instancias que en ese momento no participan de ninguna relación. Fíjate en el límite real de esta
+traducción, que la participación del lado uno, la del instructor en este ejemplo, no se refleja en
+ninguna columna nueva, porque la llave foránea solo vive en la tabla del lado muchos. Garantizar que
+todo instructor tenga al menos un estudiante asignado no es algo que este esquema relacional simple
+garantice por sí solo, hace falta una restricción aparte, o una revisión periódica, o una regla de
+negocio en la aplicación. Es un caso donde la receta de traducir participación a nulidad se queda
+corta, y conviene saberlo antes de asumir que basta con mirar el diagrama para blindar cualquier regla
+de negocio.
+
+## La notación de pata de gallo
+
+La notación de pata de gallo, en inglés *crow's foot*, es la que hoy usan de forma prácticamente
+universal las herramientas de modelado, porque en vez de separar cardinalidad y participación en dos
+decisiones distintas, como hace Chen con la flecha y la línea doble, combina las dos en un único par de
+símbolos junto a cada extremo de la relación. Debe su documentación y estandarización más conocida al
+método de modelado que Richard Barker publicó en 1990 en el libro *CASE\*Method: Entity Relationship
+Modelling*, que las herramientas CASE comerciales adoptaron después como estándar de facto, y que es la
+razón por la que hoy la reconoces en prácticamente cualquier herramienta de modelado que abras.
+
+Cuatro símbolos, combinados de dos en dos, cubren los mismos cuatro casos que ya viste con Chen. Un
+círculo junto a la entidad significa cero, el mínimo permitido es que no participe en absoluto. Un
+trazo corto, una rayita perpendicular a la línea, significa uno, ya sea de mínimo o de máximo. Y la
+pata de gallo propiamente dicha, tres líneas que se abren en abanico, significa muchos, sin límite
+superior fijo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro combinaciones de la notacion pata de gallo: circulo y trazo junto a la entidad da cero o uno, trazo y trazo da exactamente uno, circulo y pata de gallo da cero o muchos, trazo y pata de gallo da uno o muchos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Circulo = cero, trazo = uno, pata de gallo = muchos</text>
+  <g font-size="12" font-weight="600" fill="#12324f">
+    <circle cx="60" cy="52" r="7" fill="none" stroke="#8fb3d1" stroke-width="1.8"/>
+    <line x1="72" y1="44" x2="72" y2="60" stroke="#8fb3d1" stroke-width="1.8"/>
+    <text x="100" y="57">0..1  opcional, a lo sumo uno</text>
+    <line x1="52" y1="102" x2="52" y2="118" stroke="#8fb3d1" stroke-width="1.8"/>
+    <line x1="64" y1="102" x2="64" y2="118" stroke="#8fb3d1" stroke-width="1.8"/>
+    <text x="100" y="115">1..1  obligatorio, exactamente uno</text>
+    <circle cx="55" cy="152" r="7" fill="none" stroke="#8fb3d1" stroke-width="1.8"/>
+    <path d="M67,144 L90,152 L67,160 M67,152 L90,152" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+    <text x="100" y="157">0..N  opcional, muchos</text>
+    <line x1="46" y1="194" x2="46" y2="210" stroke="#8fb3d1" stroke-width="1.8"/>
+    <path d="M58,194 L81,202 L58,210 M58,202 L81,202" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+    <text x="100" y="207">1..N  obligatorio, muchos</text>
+  </g>
+  <rect x="400" y="30" width="270" height="196" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="535" y="52" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Equivalencia con Chen</text>
+  <g font-size="11" fill="#12324f"><text x="418" y="76">0..1 = linea simple + flecha</text><text x="418" y="98">1..1 = linea doble + flecha</text><text x="418" y="120">0..N = linea simple, sin flecha</text><text x="418" y="142">1..N = linea doble, sin flecha</text></g>
+  <text x="418" y="172" font-size="11.5" fill="#5b6876">El primer numero (min) es</text>
+  <text x="418" y="186" font-size="11.5" fill="#5b6876">participacion; el segundo (max)</text>
+  <text x="418" y="200" font-size="11.5" fill="#5b6876">es cardinalidad de mapeo.</text>
+</svg>
+
+:::
+
+Esa tabla de equivalencias es la clave para pasar de una notación a la otra sin memorizar dos sistemas
+distintos, ya que el número mínimo de cada par corresponde exactamente a la participación, un mínimo de
+uno equivale a la línea doble de Chen y un mínimo de cero a la línea simple, y el número máximo
+corresponde a la cardinalidad de mapeo, un máximo de uno equivale a la flecha de Chen y un máximo sin
+límite a la línea sin flecha. Vale la pena precisar algo que confunde a quien empieza a leer diagramas
+de otras fuentes, la propia Database System Concepts documenta esta misma idea de mínimo y máximo como
+una notación adicional que puede combinarse con Chen, escrita como una etiqueta `l..h` junto a cada
+línea, así que encontrar `0..1` o `1..*` escrito junto a una línea de Chen sin flecha ni doble línea es
+perfectamente válido, es la misma información que la pata de gallo, expresada con números en vez de con
+figuras.
+
+## El caso de estudio: la cafetería, esta vez completa
+
+Vuelve a la tabla del Tema 1 de la Unidad 1, la que juntaba pedido, cliente, teléfono, producto y
+valor en una sola fila por línea de venta.
+
+::: {.tabla-ancha}
+| Pedido | Cliente | Teléfono | Producto | Valor |
+|---|---|---|---|---|
+| 1001 | Ana Ruiz | 300 111 2233 | Café | 4500 |
+| 1002 | Ana Ruiz | 300 111 2233 | Torta | 23400 |
+| 1003 | Luis Pena | 301 444 5566 | Café | 4500 |
+| 1004 | Ana Ruiz | 300 111 2233 | Jugo | 6800 |
+:::
+
+Antes de seguir, conviene plantearse una pregunta de análisis. Si tuvieras que dibujar esta misma
+información como un modelo entidad relación, cuántas entidades separarías, y en cuál de ellas dejarías
+el teléfono, sabiendo que el problema original no era el teléfono en sí, sino que vivía repetido en una
+tabla que en realidad mezclaba dos cosas distintas, el pedido y el cliente que lo hizo.
+
+La respuesta que ya adelantaba la investigación del Tema 1 de la Unidad 1 es que el teléfono nunca
+debió vivir en la fila del pedido, porque conceptualmente es un dato del cliente, no del pedido, y
+un cliente puede hacer varios pedidos sin que su teléfono cambie de un pedido a otro. El modelo separa
+tres entidades, `Cliente`, con su nombre y su teléfono, `Pedido`, con su fecha, y `Producto`, con su
+nombre y su precio, conectadas por dos relaciones, `Realiza` entre `Cliente` y `Pedido`, y `Contiene`
+entre `Pedido` y `Producto`.
+
+`Realiza` es uno a muchos, un cliente puede hacer varios pedidos, pero un pedido pertenece a un solo
+cliente, y en el alcance de este caso, donde todo cliente que aparece en la tabla ya hizo al menos un
+pedido, la participación es total en los dos lados. `Contiene` es muchos a muchos, un pedido puede
+incluir varios productos y un mismo producto aparece en varios pedidos, con un atributo propio de la
+relación, la cantidad de unidades de ese producto en ese pedido. Aquí la participación es asimétrica,
+todo pedido tiene que contener al menos un producto, así que `Pedido` participa de forma total en
+`Contiene`, pero el catálogo de productos de la cafetería puede tener un producto nuevo que todavía
+nadie ha pedido, así que `Producto` participa de forma parcial.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama entidad relacion completo en notacion de Chen: Cliente conectado con linea doble a la relacion Realiza y esta con linea doble a Pedido, cardinalidad uno a muchos con flecha hacia Cliente; Pedido conectado con linea doble a la relacion Contiene, Contiene conectada con linea simple a Producto, cardinalidad muchos a muchos, con el atributo cantidad colgando de la relacion Contiene" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="base22b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El modelo completo de la cafeteria, en notacion de Chen</text>
+  <rect x="30" y="120" width="150" height="52" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="105" y="142" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Cliente</text>
+  <text x="105" y="160" font-size="11" fill="#5b6876" text-anchor="middle">nombre, telefono</text>
+  <polygon points="230,146 280,120 330,146 280,172" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="280" y="150" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Realiza</text>
+  <rect x="330" y="120" width="150" height="52" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="405" y="142" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="405" y="160" font-size="11" fill="#5b6876" text-anchor="middle">fecha</text>
+  <line x1="184" y1="143" x2="222" y2="143" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="184" y1="149" x2="222" y2="149" stroke="#8fb3d1" stroke-width="1.6"/>
+  <path d="M336,143 L296,143" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#base22b)"/>
+  <line x1="296" y1="149" x2="336" y2="149" stroke="#8fb3d1" stroke-width="1.6"/>
+  <text x="205" y="182" font-size="11" fill="#0e6f6c" text-anchor="middle">total</text>
+  <text x="355" y="182" font-size="11" fill="#0e6f6c" text-anchor="middle">total, 1 a N</text>
+  <polygon points="230,266 280,240 330,266 280,292" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="280" y="270" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Contiene</text>
+  <ellipse cx="280" cy="330" rx="46" ry="1" fill="none"/>
+  <rect x="530" y="240" width="150" height="52" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="605" y="262" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Producto</text>
+  <text x="605" y="280" font-size="11" fill="#5b6876" text-anchor="middle">nombre, precio</text>
+  <line x1="405" y1="172" x2="405" y2="238" stroke="#8fb3d1" stroke-width="1.6" transform="translate(-4,0)"/>
+  <line x1="405" y1="172" x2="405" y2="238" stroke="#8fb3d1" stroke-width="1.6" transform="translate(4,0)"/>
+  <line x1="334" y1="266" x2="524" y2="266" stroke="#8fb3d1" stroke-width="1.6"/>
+  <text x="465" y="256" font-size="11" fill="#5b6876" text-anchor="middle">parcial, N a M</text>
+  <text x="380" y="222" font-size="11" fill="#0e6f6c" text-anchor="middle">total</text>
+  <ellipse cx="280" cy="318" rx="52" ry="24" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="280" y="322" font-size="11.5" fill="#12324f" text-anchor="middle">cantidad</text>
+  <line x1="280" y1="294" x2="280" y2="296" stroke="#8fb3d1" stroke-width="1.6"/>
+</svg>
+
+:::
+
+Con este diagrama, la anomalía que abrió el caso en la Unidad 1 desaparece por diseño, no por
+disciplina. El teléfono vive una sola vez, como atributo de `Cliente`, así que cuando Ana cambie de
+número, se corrige un solo registro, y sus tres pedidos anteriores siguen apuntando al mismo cliente
+sin que el teléfono tenga que repetirse ni una sola vez.
+
+## El mismo modelo en pata de gallo
+
+Trasladar el diagrama anterior a la notación de pata de gallo cambia la forma de los símbolos, pero no
+cambia ni una sola decisión de diseño, sigue siendo un cliente con muchos pedidos y una relación muchos
+a muchos entre pedido y producto. La diferencia visible es que la mayoría de herramientas que usan pata
+de gallo, a diferencia de Chen, ya dibujan la relación muchos a muchos resuelta como una entidad propia,
+la que en la Unidad 3 vas a construir como tabla, en vez de dejarla como un rombo abstracto todavía sin
+resolver.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El mismo modelo de la cafeteria en notacion pata de gallo: Cliente con trazo doble hacia si mismo y pata de gallo hacia Pedido para representar uno obligatorio a muchos; Pedido conectado a una entidad asociativa Detalle_Pedido con trazo y pata de gallo en ambos extremos; Detalle_Pedido conectado a Producto con circulo y pata de gallo del lado Detalle_Pedido, porque un producto puede aparecer en ninguna o en varias filas de detalle, y con trazo doble del lado Producto, porque cada fila de detalle exige exactamente un producto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El mismo modelo, en notacion pata de gallo</text>
+  <rect x="20" y="80" width="150" height="52" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="95" y="102" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Cliente</text>
+  <text x="95" y="120" font-size="11" fill="#5b6876" text-anchor="middle">nombre, telefono</text>
+  <rect x="300" y="80" width="150" height="52" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="375" y="102" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="375" y="120" font-size="11" fill="#5b6876" text-anchor="middle">fecha</text>
+  <line x1="176" y1="106" x2="180" y2="106" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="183" y1="98" x2="183" y2="114" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="192" y1="98" x2="192" y2="114" stroke="#8fb3d1" stroke-width="1.8"/>
+  <path d="M280,106 L292,98 M280,106 L292,114 M280,106 L296,106" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <text x="235" y="88" font-size="11" fill="#5b6876" text-anchor="middle">1 obligatorio</text>
+  <text x="260" y="128" font-size="11" fill="#5b6876" text-anchor="middle">muchos</text>
+  <rect x="300" y="180" width="150" height="52" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="375" y="202" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Detalle_Pedido</text>
+  <text x="375" y="220" font-size="11" fill="#5b6876" text-anchor="middle">cantidad</text>
+  <line x1="375" y1="134" x2="375" y2="140" stroke="#8fb3d1" stroke-width="1.8"/>
+  <path d="M375,150 L367,158 M375,150 L383,158 M375,150 L375,164" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <text x="398" y="150" font-size="11" fill="#5b6876">1 obligatorio a muchos</text>
+  <rect x="580" y="180" width="150" height="52" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="655" y="202" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Producto</text>
+  <text x="655" y="220" font-size="11" fill="#5b6876" text-anchor="middle">nombre, precio</text>
+  <circle cx="466" cy="206" r="6" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <path d="M478,206 L500,198 M478,206 L500,214 M478,206 L504,206" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <path d="M450,206 L458,206" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="576" y1="199" x2="576" y2="213" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="560" y1="199" x2="560" y2="213" stroke="#8fb3d1" stroke-width="1.8"/>
+  <text x="520" y="240" font-size="11" fill="#5b6876" text-anchor="middle">0 opcional a muchos (Detalle_Pedido); 1 obligatorio, exactamente uno (Producto)</text>
+</svg>
+
+:::
+
+## Traducir el diagrama a tablas
+
+La Unidad 3 va a formalizar el procedimiento completo, pero con este modelo ya puedes anticipar cómo
+quedan las tablas, porque cada decisión de cardinalidad y de participación que acabas de dibujar tiene
+una consecuencia directa en el esquema.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro tablas del esquema final: Cliente sin llaves foraneas, Pedido con cliente_id NOT NULL apuntando a Cliente, Producto sin llaves foraneas, y Detalle_Pedido con pedido_id y producto_id NOT NULL formando la clave primaria compuesta y apuntando a Pedido y a Producto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="base22c" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">De la cardinalidad y la participacion a las llaves foraneas</text>
+  <rect x="20" y="40" width="180" height="66" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="110" y="60" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <text x="110" y="78" font-size="11.5" fill="#5b6876" text-anchor="middle">id_cliente (PK)</text>
+  <text x="110" y="94" font-size="11.5" fill="#5b6876" text-anchor="middle">nombre, telefono</text>
+  <rect x="290" y="40" width="190" height="66" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="385" y="60" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Pedido</text>
+  <text x="385" y="78" font-size="11.5" fill="#3c7d7a" text-anchor="middle">id_pedido (PK), fecha</text>
+  <text x="385" y="94" font-size="11.5" fill="#3c7d7a" text-anchor="middle">cliente_id NOT NULL (FK)</text>
+  <path d="M290,73 L200,73" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#base22c)"/>
+  <rect x="580" y="40" width="160" height="66" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="660" y="60" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Producto</text>
+  <text x="660" y="78" font-size="11.5" fill="#5b6876" text-anchor="middle">id_producto (PK)</text>
+  <text x="660" y="94" font-size="11.5" fill="#5b6876" text-anchor="middle">nombre, precio</text>
+  <rect x="240" y="180" width="290" height="80" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="385" y="200" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Detalle_Pedido</text>
+  <text x="385" y="218" font-size="11.5" fill="#5b6876" text-anchor="middle">pedido_id NOT NULL, producto_id NOT NULL</text>
+  <text x="385" y="234" font-size="11.5" fill="#5b6876" text-anchor="middle">cantidad NOT NULL</text>
+  <text x="385" y="250" font-size="11" fill="#0e6f6c" text-anchor="middle">clave primaria compuesta</text>
+  <path d="M385,178 L385,110" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#base22c)"/>
+  <path d="M530,205 C600,205 650,140 660,108" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#base22c)"/>
+</svg>
+
+:::
+
+```sql
+CREATE TABLE Cliente (
+    id_cliente  INT PRIMARY KEY,
+    nombre      VARCHAR(80) NOT NULL,
+    telefono    VARCHAR(20)
+);
+
+CREATE TABLE Pedido (
+    id_pedido   INT PRIMARY KEY,
+    fecha       DATE NOT NULL,
+    cliente_id  INT NOT NULL REFERENCES Cliente(id_cliente)
+);
+
+CREATE TABLE Producto (
+    id_producto INT PRIMARY KEY,
+    nombre      VARCHAR(80) NOT NULL,
+    precio      DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE Detalle_Pedido (
+    pedido_id   INT NOT NULL REFERENCES Pedido(id_pedido),
+    producto_id INT NOT NULL REFERENCES Producto(id_producto),
+    cantidad    INT NOT NULL,
+    PRIMARY KEY (pedido_id, producto_id)
+);
+```
+
+Fíjate en el detalle que ya adelantó la sección anterior, la participación parcial de `Producto` en
+`Contiene` no produjo ninguna columna que admita nulos en ninguna tabla, porque las relaciones muchos a
+muchos nunca ponen una llave foránea directamente en las tablas originales, la ponen en su propia tabla
+intermedia. Un producto que todavía nadie ha pedido simplemente no tiene ninguna fila en
+`Detalle_Pedido`, sin que haga falta ningún valor nulo en ningún lado para representar esa ausencia.
+Esa es una diferencia real entre cómo la participación parcial se traduce en una relación uno a muchos,
+con una columna que admite nulos, y cómo se traduce en una relación muchos a muchos, sin ninguna
+columna nula, solo con menos filas en la tabla intermedia.
+
+## Dos errores frecuentes al pasar del dibujo a la tabla
+
+Silberschatz, Korth y Sudarshan dedican una sección de su capítulo a errores comunes al construir un
+diagrama entidad relación, y dos de ellos aparecen una y otra vez en trabajos de estudiantes que recién
+empiezan.
+
+El primero es confundir un atributo con una entidad, o al revés. El teléfono de este mismo caso es un
+buen ejemplo de los dos lados del error, guardarlo como atributo de `Pedido` en vez de `Cliente` fue el
+error original de la Unidad 1, pero convertirlo en una entidad propia también sería un error, en este
+caso por exceso, porque cada cliente de la cafetería tiene un solo teléfono y ninguna metadata adicional
+sobre él. La fuente señala que la señal correcta para preferir una entidad sobre un atributo aparece
+cuando el negocio necesita guardar varios valores del mismo tipo por instancia, o información adicional
+sobre cada uno de esos valores, por ejemplo si la cafetería quisiera guardar el celular y el fijo de
+cada cliente, con una etiqueta que diga cuál es cuál. Mientras eso no ocurra, el atributo simple
+`telefono` dentro de `Cliente` es la representación correcta, ni de más ni de menos.
+
+El segundo error, que igualmente conviene evitar, es intentar resolver una relación muchos a muchos
+poniendo una llave foránea en cada una de las dos tablas originales, en vez de crear la tabla
+intermedia. Es imposible expresar correctamente una relación muchos a muchos así, porque una columna
+`producto_id` dentro de `Pedido` solo puede guardar un valor a la vez, y un pedido con varios productos
+necesitaría varias columnas o varias filas repetidas del pedido, que es exactamente la misma anomalía
+de redundancia que abrió el Tema 1 de la Unidad 1, solo que aplicada ahora al producto en vez de al
+teléfono.
+
+::: {.callout-tip}
+## Reto 1. Cardinalidad y participación a ojo
+
+Para cada situación, marca la cardinalidad que corresponde antes de seguir leyendo.
+
+<label><input type="checkbox"> Un país tiene una sola capital, y una ciudad es capital de un solo país</label><br>
+<label><input type="checkbox"> Un curso de este programa lo dicta un solo docente por semestre, pero un docente dicta varios cursos</label><br>
+<label><input type="checkbox"> Un estudiante se matricula en varias asignaturas, y cada asignatura tiene varios estudiantes matriculados</label>
+
+Escribe junto a cada situación si es uno a uno, uno a muchos o muchos a muchos, y para la segunda
+situación indica además de qué lado pondrías la flecha si la dibujaras en notación de Chen.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La primera situación es uno a uno, porque cada país tiene exactamente una capital y cada ciudad capital
+pertenece a exactamente un país, así que la flecha en notación de Chen iría en los dos extremos de la
+relación.
+
+La segunda situación es uno a muchos. Un docente dicta varios cursos, pero cada curso, en un semestre
+dado, lo dicta un solo docente, así que la flecha va del lado del rombo hacia `Docente`, porque cada
+curso se asocia como máximo con un docente, y la línea sin flecha va hacia `Curso`, porque un docente se
+asocia con varios.
+
+La tercera situación es muchos a muchos, porque un estudiante toma varias asignaturas a la vez y una
+misma asignatura reúne a varios estudiantes matriculados, así que ninguno de los dos extremos lleva
+flecha, y en la traducción a tablas de la Unidad 3 esta relación va a necesitar su propia tabla
+intermedia, del mismo tipo que `Detalle_Pedido` en el caso de la cafetería.
+:::
+
+::: {.callout-tip}
+## Reto 2. Encuentra el error de este diseño
+
+Un compañero de curso propone esta forma de guardar los pedidos de la cafetería, sin tabla intermedia:
+
+```sql
+CREATE TABLE Pedido (
+    id_pedido    INT PRIMARY KEY,
+    cliente_id   INT NOT NULL REFERENCES Cliente(id_cliente),
+    producto_id  INT NOT NULL REFERENCES Producto(id_producto),
+    cantidad     INT NOT NULL
+);
+```
+
+Antes de leer la solución, responde en un párrafo corto, qué pasa si el pedido 1002 de Ana incluyó a la
+vez una torta y un jugo, con esta estructura de tabla, y qué anomalía del Tema 1 de la Unidad 1 vuelve a
+aparecer aquí, solo que en otro campo.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+Con esta tabla, un pedido que incluye dos productos distintos no cabe en una sola fila, porque la
+columna `producto_id` solo admite un valor. La única forma de registrar que el pedido 1002 llevó torta
+y jugo es repetir la fila completa del pedido 1002 dos veces, una por cada producto, con el mismo
+`id_pedido`, el mismo `cliente_id` y la misma fecha implícita, cambiando solo `producto_id` y
+`cantidad`. Eso es la misma anomalía de redundancia que el teléfono de Ana en la tabla original del Tema
+1 de la Unidad 1, solo que ahora el dato que se repite y se puede desincronizar no es el teléfono, es
+el propio pedido.
+
+La corrección es la tabla `Detalle_Pedido` que ya viste en este tema, con clave primaria compuesta por
+`pedido_id` y `producto_id`, que separa la relación muchos a muchos en su propia tabla en vez de forzarla
+dentro de `Pedido`.
+:::
+
+::: {.callout-tip}
+## Reto 3. El programa de fidelización
+
+Imagina que la cafetería lanza una tarjeta de fidelidad, y ahora se puede registrar como cliente a
+alguien que todavía no ha hecho ningún pedido, con solo su nombre y su teléfono, porque quiere empezar a
+acumular puntos antes de su primera compra.
+
+Responde en un párrafo, qué cambia en la participación de `Cliente` en la relación `Realiza` con esta
+nueva regla de negocio, y si ese cambio obliga a modificar la columna `cliente_id` de la tabla `Pedido`
+que ya construiste en este tema.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+La participación de `Cliente` en `Realiza` deja de ser total y pasa a ser parcial, porque ahora puede
+existir un cliente registrado por la tarjeta de fidelidad que todavía no aparece en ninguna fila de
+`Pedido`. En la notación de Chen, la línea entre `Cliente` y el rombo `Realiza` pasaría de doble a
+simple, y en pata de gallo el extremo de `Cliente` pasaría de trazo a círculo.
+
+Ese cambio no obliga a modificar la columna `cliente_id` de `Pedido` para nada, porque esa columna
+representa la participación de `Pedido` en la relación, que sigue siendo total, todo pedido sigue
+necesitando un cliente. La participación de `Cliente` no se refleja en ninguna columna de `Pedido` ni de
+`Cliente`, exactamente el mismo límite de la traducción que ya viste con el ejemplo de instructor y
+estudiante, la participación del lado uno de una relación uno a muchos no aparece como ninguna columna
+nueva en ningún esquema.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía, los siguientes puntos:
+
+- [ ] Los símbolos de la notación de Chen, rectángulo, óvalo, rombo, y sus variantes de borde doble
+      para entidad débil y relación identificadora
+- [ ] La diferencia entre cardinalidad de mapeo, uno a uno, uno a muchos y muchos a muchos, y
+      participación, total o parcial, sobre la misma relación
+- [ ] Cómo leer la flecha y la línea doble de Chen, y su equivalente en la pata de gallo, círculo,
+      trazo y pata de gallo
+- [ ] Por qué la flecha de cardinalidad apunta hacia el mismo lado donde después va la llave foránea
+- [ ] Por qué una relación uno a muchos total en el lado muchos produce una columna NOT NULL, y por
+      qué la participación del lado uno no se refleja en ninguna columna
+- [ ] Por qué una relación muchos a muchos siempre necesita una tabla propia, y por qué su
+      participación parcial no genera columnas nulas
+- [ ] Cómo el modelo entidad relación completo de la cafetería elimina, por diseño, la anomalía del
+      teléfono repetido del Tema 1 de la Unidad 1
+:::
+
+## Cierre de la Unidad 2
+
+Con este tema se cierra la Unidad 2. Empezaste nombrando las piezas sueltas del modelo entidad
+relación, entidades, atributos, relaciones y claves, y terminaste dibujándolas con una notación
+estándar, marcando cuántas instancias se asocian entre sí y si esa asociación es obligatoria. La
+cafetería, que en la Unidad 1 era apenas una tabla con un problema, ahora es un diagrama completo con
+tres entidades, dos relaciones y una tabla intermedia, listo para el siguiente paso.
+
+La Unidad 3 toma exactamente este diagrama y lo convierte en el vocabulario formal del modelo
+relacional, cada entidad con su llave primaria, cada relación resuelta con llaves foráneas o con una
+tabla propia, tal como ya empezaste a anticipar en este tema. Después vienen las formas de
+normalización, primera, segunda, tercera y cuarta, que son el procedimiento con reglas explícitas para
+confirmar que un diseño como el de hoy de verdad eliminó la redundancia, y no solo la escondió mejor.
+
+## Recursos
+
+- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Database System Concepts* (7.a ed.). Capítulo 6,
+  "Database Design Using the E-R Model". Material de apoyo oficial de los autores en
+  [db-book.com](https://www.db-book.com), diapositivas del capítulo consultadas en
+  [db-book.com/slides-dir/PDF-dir/ch6.pdf](https://www.db-book.com/slides-dir/PDF-dir/ch6.pdf).
+- Chen, P. P. (1976). *The Entity-Relationship Model, Toward a Unified View of Data.* ACM Transactions
+  on Database Systems, 1(1), 9 a 36. DOI:
+  [10.1145/320434.320440](https://doi.org/10.1145/320434.320440).
+- Barker, R. (1990). *CASE\*Method: Entity Relationship Modelling.* Addison-Wesley. Fuente donde se
+  documentó y estandarizó la notación de pata de gallo tal como la usan hoy las herramientas CASE.
+- Elmasri, R. y Navathe, S. B. *Fundamentals of Database Systems.* Capítulo sobre modelado entidad
+  relación, notación gráfica y cardinalidad.
+- Connolly, T. M. y Begg, C. E. *Database Systems: A Practical Approach to Design, Implementation, and
+  Management.* Capítulo sobre el modelo entidad relación y sus restricciones de cardinalidad y
+  participación.
+- Thalheim, B. (2000). *Entity-Relationship Modeling: Foundations of Database Technology.* Springer.
+  Tratamiento formal de cardinalidad y restricciones de participación, para quien quiera profundizar
+  más allá del nivel de pregrado.
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

@@ -1,0 +1,426 @@
+---
+title: "Tema 2. La calidad en cada fase del ciclo de vida"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                  |
+|--------|------------------------------------------------------------------|
+| Unidad | Unidad 2. Procesos de calidad del software. Modelos y métricas   |
+| Tema   | Tema 2. La calidad en el ciclo de vida del software               |
+:::
+
+El Tema 1 dejó establecida una distinción que hoy vas a poner en movimiento, ya que el aseguramiento
+de la calidad del software, SQA por su sigla en inglés, es un proceso preventivo que vigila cómo se
+construye el software, mientras que el control de calidad es un conjunto de técnicas correctivas que
+revisa lo que ya se construyó. Hoy esa distinción deja de ser abstracta, porque vas a ver exactamente
+en qué momento del desarrollo entra cada actividad de SQA, quién la ejecuta dentro de un equipo real
+y qué habilidades le exige el oficio a esa persona. También vas a ver, con dos casos documentados en
+fuentes técnicas y en investigaciones oficiales, qué pasa cuando esas actividades faltan.
+
+## El modelo en V: la prueba se diseña junto con la fase, no después
+
+La intuición más común de quien empieza en desarrollo de software es que las pruebas vienen al final,
+después de que el código ya existe. Esa intuición es exactamente lo que la norma IEEE Std 730-2014,
+*IEEE Standard for Software Quality Assurance Processes*, busca corregir, ya que establece los
+requisitos para iniciar, planificar, controlar y ejecutar los procesos de aseguramiento de calidad
+desde el arranque del proyecto, no como una fase que se agrega al cierre. El modelo en V es la forma
+más citada de mostrar esa idea, porque conecta cada fase de construcción con una fase de verificación
+o validación que se diseña en el mismo momento, no después.
+
+Cuando se define el análisis de requisitos, se definen también los criterios de las pruebas de
+aceptación que van a confirmar, más adelante, que el sistema hace lo que el usuario necesita. Cuando
+se diseña el sistema completo, se diseñan también las pruebas de sistema que van a verificar que las
+piezas funcionan juntas como un todo. Cuando se diseña la arquitectura, se diseñan las pruebas de
+integración que van a confirmar que los módulos se comunican correctamente entre sí. Y cuando se llega
+al diseño de cada módulo y a su codificación, se escriben junto con él las pruebas unitarias que van a
+confirmar que ese módulo, por sí solo, hace lo que debía hacer.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 740 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Modelo en V: cuatro fases de diseño a la izquierda bajando hacia la codificacion en el vertice, y cuatro tipos de prueba a la derecha subiendo desde pruebas unitarias hasta pruebas de aceptacion; una linea punteada conecta cada fase de diseño con el tipo de prueba que se planifica junto con ella" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="cali22a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+<text x="370" y="14" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El modelo en V: cada prueba se disena junto con su fase de desarrollo</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="34" width="170" height="38" rx="8"/><rect x="60" y="104" width="170" height="38" rx="8"/><rect x="110" y="174" width="170" height="38" rx="8"/></g>
+<g fill="#e4f2f1" stroke="#8fc9c5"><rect x="160" y="244" width="170" height="38" rx="8"/><rect x="400" y="244" width="170" height="38" rx="8"/></g>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="450" y="174" width="170" height="38" rx="8"/><rect x="500" y="104" width="170" height="38" rx="8"/><rect x="550" y="34" width="170" height="38" rx="8"/></g>
+<g fill="none" stroke="#8fb3d1" stroke-width="1.8"><path d="M95,72 L145,104"/><path d="M145,142 L195,174"/><path d="M195,212 L245,244"/></g>
+<g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cali22a)"><path d="M485,244 L535,212"/><path d="M535,174 L585,142"/><path d="M585,104 L635,72"/></g>
+<g stroke="#cfd8e3" stroke-width="1.2" stroke-dasharray="4 4"><line x1="180" y1="53" x2="550" y2="53"/><line x1="230" y1="123" x2="500" y2="123"/><line x1="280" y1="193" x2="450" y2="193"/><line x1="330" y1="263" x2="400" y2="263"/></g>
+<g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="95" y="57">Analisis de requisitos</text><text x="145" y="127">Diseno del sistema</text><text x="195" y="197">Diseno de arquitectura</text></g>
+<g text-anchor="middle" font-size="11" fill="#0e6f6c" font-weight="600"><text x="245" y="267">Diseno de modulo / codificacion</text><text x="485" y="267">Pruebas unitarias</text></g>
+<g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="535" y="197">Pruebas de integracion</text><text x="585" y="127">Pruebas de sistema</text><text x="635" y="57">Pruebas de aceptacion</text></g>
+<text x="370" y="304" font-size="11" fill="#5b6876" text-anchor="middle">La linea punteada horizontal marca el par: cada fase de diseno define, en ese mismo momento, el criterio de la prueba que la va a verificar</text>
+</svg>
+
+:::
+
+Vale la pena detenerse en un matiz que la propia IEEE 730-2014 hace explícito, ya que la norma
+distingue entre software crítico, donde una falla puede causar pérdidas humanas o económicas
+significativas, y software no crítico, para el cual basta con aplicar un subconjunto de sus
+requisitos. Esa distinción importa porque el nivel de rigor del modelo en V no es el mismo para las
+dos categorías, así que un sistema de facturación interno no exige la misma profundidad de pruebas de
+integración que un sistema de control de una máquina de radioterapia. Vas a ver por qué esa diferencia
+no es solo teórica más adelante en esta guía.
+
+El modelo en V también tiene un punto donde falla en la práctica, y conviene conocerlo antes de
+idealizarlo. La crítica más documentada es que, cuando las fases de análisis y diseño se retrasan
+frente al cronograma original, la presión de la fecha de entrega termina comprimiendo las pruebas
+hacia el final del proyecto, exactamente lo que el modelo pretendía evitar al planificarlas desde el
+principio. El resultado es una cobertura real de verificación y validación mucho más pobre que la que
+el plan original prometía, no porque el modelo esté mal pensado, sino porque nada en un diagrama
+obliga a que el cronograma real lo respete.
+
+## ISO/IEC/IEEE 12207 y las actividades de SQA por fase
+
+El modelo en V explica la idea, pero la norma ISO/IEC/IEEE 12207:2017, *Systems and software
+engineering, Software life cycle processes*, es la que formaliza esa idea a nivel de todo un marco de
+procesos organizacional. Su alcance cubre la adquisición, el suministro, el desarrollo, la operación,
+el mantenimiento y la disposición del software, y uno de sus principios centrales es que la
+verificación y la validación son procesos de soporte transversales a todo el ciclo de vida, no una
+fase aislada que se ejecuta solo al cierre del proyecto. Eso significa que, en la práctica, un
+programa de SQA tiene actividades concretas asociadas a cada fase, no una única actividad genérica
+llamada "hacer pruebas" al final.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 740 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco fases del ciclo de vida del software en fila, requisitos, diseno, codificacion, pruebas y liberacion y mantenimiento, conectadas por flechas; debajo de cada fase una caja lista la actividad de aseguramiento de calidad que corre en esa fase, y una linea superior indica que verificacion y validacion son transversales a todo el ciclo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="cali22b" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+<text x="370" y="14" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">ISO/IEC/IEEE 12207: la calidad corre junto a cada fase, no al final</text>
+<line x1="20" y1="30" x2="710" y2="30" stroke="#8fc9c5" stroke-width="1.4" stroke-dasharray="3 3"/>
+<text x="370" y="26" font-size="11" fill="#0e6f6c" text-anchor="middle">verificacion y validacion: procesos transversales a todo el ciclo</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="46" width="130" height="42" rx="8"/><rect x="160" y="46" width="130" height="42" rx="8"/><rect x="300" y="46" width="130" height="42" rx="8"/><rect x="440" y="46" width="130" height="42" rx="8"/><rect x="580" y="46" width="130" height="42" rx="8"/></g>
+<g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cali22b)"><path d="M150,67 L160,67"/><path d="M290,67 L300,67"/><path d="M430,67 L440,67"/><path d="M570,67 L580,67"/></g>
+<g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="85" y="71">Requisitos</text><text x="225" y="71">Diseno</text><text x="365" y="71">Codificacion</text><text x="505" y="71">Pruebas</text><text x="645" y="63">Liberacion y</text><text x="645" y="77">mantenimiento</text></g>
+<g fill="#f5f7fa" stroke="#cfd8e3"><rect x="20" y="102" width="130" height="76" rx="8"/><rect x="160" y="102" width="130" height="76" rx="8"/><rect x="300" y="102" width="130" height="76" rx="8"/><rect x="440" y="102" width="130" height="76" rx="8"/><rect x="580" y="102" width="130" height="76" rx="8"/></g>
+<g text-anchor="middle" font-size="11" fill="#12324f"><text x="85" y="122">Revision de</text><text x="85" y="136">completitud y</text><text x="85" y="150">trazabilidad</text><text x="225" y="122">Revisiones</text><text x="225" y="136">tecnicas</text><text x="225" y="150">formales</text><text x="365" y="122">Estandares de</text><text x="365" y="136">codificacion y</text><text x="365" y="150">revision de pares</text><text x="505" y="122">Gestion de</text><text x="505" y="136">defectos y</text><text x="505" y="150">regresion</text><text x="645" y="122">Comites de</text><text x="645" y="136">control de</text><text x="645" y="150">cambios</text></g>
+<text x="370" y="230" font-size="11" fill="#5b6876" text-anchor="middle">Estas son actividades tipicas de un programa de SQA por fase; el Tema 3 profundiza en cada una</text>
+</svg>
+
+:::
+
+Detente en cada caja de la fila inferior, porque cada una responde a un riesgo distinto que aparece en
+ese momento del proyecto. En requisitos, el riesgo es construir algo completo y correcto pero que no
+es lo que el usuario pidió, así que la actividad de SQA revisa completitud, consistencia y
+trazabilidad de cada requisito. En diseño, el riesgo es que una decisión de arquitectura no cumpla lo
+que los requisitos exigen, así que la actividad son las revisiones técnicas formales, también
+llamadas walkthroughs o inspecciones, donde el equipo revisa el diseño antes de que nadie escriba una
+sola línea de código sobre él. En codificación, el riesgo es que cada desarrollador resuelva el mismo
+problema de una forma distinta y que nadie más entienda ese código después, así que la actividad son
+los estándares de codificación y la revisión de pares, junto con la gestión de configuración del
+código fuente para que todos trabajen sobre versiones controladas. En pruebas, el riesgo es que un
+defecto corregido reaparezca sin que nadie lo note, así que la actividad central es la gestión de
+defectos junto con las pruebas de regresión. Y en liberación y mantenimiento, el riesgo es que un
+cambio aparentemente pequeño rompa algo que funcionaba, así que la actividad son los comités de
+control de cambios, que evalúan el impacto de cada modificación sobre el alcance, la arquitectura y el
+desempeño antes de aprobarla, en vez de dejar que cualquier cambio entre a producción sin revisión.
+
+## Roles: quién hace SQA dentro de un equipo
+
+Las actividades de la sección anterior no se ejecutan solas, y en la práctica profesional que
+documentan Pressman y Sommerville, ambos parte de la bibliografía de este curso, ese trabajo se reparte
+entre dos roles con alcances distintos, uno a nivel de proyecto y otro a nivel de toda la organización.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de roles: el lider de calidad define politicas y estandares a nivel organizacional arriba, y una flecha baja hacia el ingeniero de SQA que las aplica dentro de un proyecto concreto abajo, cada caja con su lista de responsabilidades" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="cali22c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Dos roles, dos niveles de alcance</text>
+<rect x="230" y="32" width="300" height="118" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+<text x="380" y="54" font-size="14" font-weight="700" fill="#0e6f6c" text-anchor="middle">Lider de calidad</text>
+<text x="380" y="70" font-size="11" fill="#3c7d7a" text-anchor="middle">nivel organizacional</text>
+<g font-size="11" fill="#12324f"><text x="248" y="90">- Define politicas y estandares de calidad</text><text x="248" y="106">- Coordina auditorias y evaluaciones de madurez</text><text x="248" y="122">- Reporta indicadores a la direccion</text><text x="248" y="138">- Preside el comite de control de cambios</text></g>
+<path d="M380,150 L380,192" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cali22c)"/>
+<text x="400" y="175" font-size="11" fill="#5b6876">las define y el proyecto las aplica</text>
+<rect x="230" y="192" width="300" height="118" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+<text x="380" y="214" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Ingeniero de SQA</text>
+<text x="380" y="230" font-size="11" fill="#5b6876" text-anchor="middle">nivel de proyecto</text>
+<g font-size="11" fill="#12324f"><text x="248" y="250">- Ejecuta el plan de SQA del proyecto</text><text x="248" y="266">- Participa en revisiones tecnicas formales</text><text x="248" y="282">- Disena y ejecuta casos de prueba</text><text x="248" y="298">- Registra y da seguimiento a defectos</text></g>
+</svg>
+
+:::
+
+El ingeniero o analista de SQA trabaja dentro de un proyecto concreto. Ejecuta el plan de
+aseguramiento de calidad de ese proyecto, participa en las revisiones técnicas formales de requisitos
+y diseño, diseña y ejecuta los casos de prueba, registra cada defecto que encuentra y le da
+seguimiento hasta que se cierra, verifica que el código cumpla los estándares de codificación
+acordados y que la gestión de configuración se respete, y recopila las métricas de calidad de proceso
+y de producto que va a usar en el Tema 3. Es, en otras palabras, quien pone en práctica todas las
+cajas inferiores del diagrama de la sección anterior, proyecto por proyecto.
+
+El líder de calidad, a veces llamado gerente de calidad, trabaja un nivel más arriba, a escala de toda
+la organización. Define las políticas y los estándares de calidad que todos los proyectos de la
+empresa deben seguir, coordina auditorías de proceso y evaluaciones formales de madurez, gestiona las
+iniciativas de mejora de procesos que surgen de esas auditorías, y reporta los indicadores de calidad
+a la dirección de la empresa. También es responsable de que el plan de calidad de cada proyecto esté
+alineado con la política organizacional, y suele presidir o participar en los comités de control de
+cambios que aprueban modificaciones de alto impacto. En una organización pequeña, una sola persona
+puede cumplir los dos roles en distintos momentos, pero la distinción entre ejecutar dentro de un
+proyecto y definir política para toda la organización se mantiene, sin importar cuántas personas la
+cubran.
+
+## Habilidades que exige el oficio de SQA
+
+Ejercer cualquiera de los dos roles anteriores exige tres tipos de habilidades, y ninguna sobra.
+
+- **Técnicas.** Dominio de técnicas de prueba, tanto de caja negra como de caja blanca, manejo de
+  herramientas de automatización de pruebas y de análisis estático de código, conocimiento práctico de
+  gestión de configuración, y familiaridad con los estándares de proceso del ciclo de vida como
+  ISO/IEC/IEEE 12207, además de los modelos de referencia que va a cubrir el Tema 3.
+- **Analíticas.** Pensamiento crítico para distinguir un síntoma de una causa raíz, atención al
+  detalle para no dejar pasar una inconsistencia pequeña, y capacidad de trazar cada requisito hasta
+  la prueba concreta que lo verifica, sin perder ese hilo en medio de un proyecto grande.
+- **Blandas.** Comunicación efectiva para negociar hallazgos de calidad con un equipo de desarrollo
+  sin generar una cultura de señalamiento, ya que la literatura de gestión de calidad insiste en que
+  encontrar un defecto debe tratarse como información útil para el proyecto, no como un motivo para
+  culpar a quien lo escribió. También hace falta independencia de criterio frente a la presión del
+  cronograma, porque quien hace SQA a veces tiene que decir que algo no está listo aunque la fecha de
+  entrega diga lo contrario, y en sistemas críticos para la seguridad esa independencia deja de ser
+  una preferencia y se vuelve una responsabilidad ética.
+
+Las dos secciones que siguen muestran, con dos casos documentados, qué pasa exactamente cuando esa
+independencia de criterio no existe o no se ejerce a tiempo.
+
+## Cuando falta la revisión independiente: el caso Therac-25
+
+Entre 1985 y 1987, el Therac-25, una máquina de radioterapia controlada por computador fabricada por
+Atomic Energy of Canada Limited, causó al menos seis sobredosis documentadas de radiación, muy por
+encima de la dosis prevista, con muertes y lesiones graves entre los pacientes tratados. Antes de ver
+qué falló, vale la pena plantear la misma pregunta que hace el análisis académico de referencia sobre
+este caso, es decir si el problema fue un error de codificación puntual que un programador más
+cuidadoso hubiera evitado, o si fue un problema del proceso que debía haber atrapado ese error antes
+de que llegara a un paciente.
+
+El artículo de Nancy Leveson y Clark Turner, publicado en 1993 en la revista *IEEE Computer*, respondió
+esa pregunta con una investigación detallada de los seis incidentes, y su conclusión apunta al proceso,
+no solo al código. Encontraron cuatro fallas que se combinaron para producir el desastre. Primero,
+condiciones de carrera en el software, es decir errores de concurrencia donde dos partes del programa
+competían por el mismo recurso sin la sincronización adecuada, que no se detectaron porque nadie
+diseñó pruebas específicas de concurrencia para atraparlas. Segundo, los modelos anteriores de la
+máquina, el Therac-6 y el Therac-20, tenían salvaguardas de hardware, mecanismos físicos independientes
+del software que impedían una sobredosis aunque el programa fallara. Tercero, esas salvaguardas de
+hardware se eliminaron en el Therac-25 y se reemplazaron por controles que dependían únicamente del
+software, violando el principio de tener más de una capa de protección independiente. Cuarto, y el que
+más importa para esta guía, el software no pasó por ninguna auditoría de calidad independiente del
+equipo que lo desarrolló, así que nadie externo al propio equipo revisó si el diseño era seguro antes
+de instalar la máquina en hospitales.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cadena causal del Therac-25: reutilizacion de codigo sin volver a probarlo, enclavamientos de hardware eliminados, y ausencia de revision independiente de SQA destacada en el centro, llevan a condiciones de carrera no detectadas y a sobredosis de radiacion documentadas entre 1985 y 1987" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="cali22d" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Therac-25 (1985-1987): la cadena que llevo a la sobredosis</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="15" y="50" width="130" height="80" rx="8"/><rect x="165" y="50" width="130" height="80" rx="8"/></g>
+<rect x="315" y="50" width="130" height="80" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+<rect x="465" y="50" width="130" height="80" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+<rect x="615" y="50" width="130" height="80" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+<g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cali22d)"><path d="M145,90 L165,90"/><path d="M295,90 L315,90"/><path d="M445,90 L465,90"/><path d="M595,90 L615,90"/></g>
+<g text-anchor="middle" font-size="11" fill="#12324f"><text x="80" y="78">Codigo de modelos</text><text x="80" y="92">anteriores reutilizado</text><text x="80" y="106">sin volver a probarlo</text><text x="230" y="78">Enclavamientos de</text><text x="230" y="92">hardware eliminados,</text><text x="230" y="106">solo quedo el software</text></g>
+<g text-anchor="middle" font-size="11" fill="#0e6f6c" font-weight="600"><text x="380" y="78">Sin auditoria ni</text><text x="380" y="92">revision independiente</text><text x="380" y="106">de SQA externa</text></g>
+<g text-anchor="middle" font-size="11" fill="#12324f"><text x="530" y="78">Condiciones de carrera</text><text x="530" y="92">no detectadas por falta</text><text x="530" y="106">de pruebas de concurrencia</text></g>
+<g text-anchor="middle" font-size="11" fill="#12324f" font-weight="600"><text x="680" y="78">Al menos seis</text><text x="680" y="92">sobredosis de</text><text x="680" y="106">radiacion documentadas</text></g>
+<text x="380" y="160" font-size="11" fill="#5b6876" text-anchor="middle">Leveson y Turner (1993) atribuyen el desastre a fallas de proceso, no solo a errores de codigo puntuales</text>
+</svg>
+
+:::
+
+El detalle que más debería quedarte de este caso es la reutilización de código. El software de los
+modelos anteriores había funcionado durante años sin causar sobredosis, precisamente porque el
+hardware compensaba sus fallas, así que ese mismo código, al perder el respaldo del hardware, pasó de
+ser seguro a ser peligroso sin que una sola línea suya cambiara. Es la prueba concreta de que "ya
+funcionó antes" no es evidencia de que algo sea seguro en un contexto nuevo, y de que evaluar ese
+riesgo es exactamente el trabajo que le corresponde a una revisión de SQA independiente del equipo que
+escribió el código, no a la confianza de que si no falló ayer no va a fallar hoy.
+
+## Cuando falla la gobernanza: MCAS y el Boeing 737 MAX
+
+El segundo caso ocurre casi tres décadas después y en un dominio distinto, la aviación comercial, y
+sirve para mostrar que una falla de SQA no siempre es un problema de código, a veces es un problema de
+cómo la organización gobierna sus decisiones de diseño. El sistema MCAS, instalado en el Boeing 737
+MAX y relacionado con los accidentes de 2018 y 2019, dependía de un único sensor de ángulo de ataque,
+sin ningún sensor redundante que lo respaldara, aunque las versiones posteriores del sistema sí exigen
+dos sensores. Vale la pena preguntarse, antes de ver el desenlace, si el riesgo de un sistema con
+autoridad para mover automáticamente el estabilizador horizontal del avión, basado en un único sensor
+sin redundancia, debería haber pasado por un nivel de revisión independiente más alto que el que en
+efecto recibió.
+
+Documentación pública, incluido el informe final del Comité de Transporte e Infraestructura de la
+Cámara de Representantes de Estados Unidos, publicado en septiembre de 2020, describe que la aprobación
+de un rediseño del sistema, y la posterior eliminación de referencias a MCAS del manual de vuelo,
+ocurrieron en cuestión de horas, sin el nivel de revisión independiente que un sistema con ese grado
+de autoridad automática debería requerir según las propias prácticas de certificación aeronáutica. La
+propia autoridad reguladora había estimado internamente el riesgo de accidentes antes de que el
+sistema fuera rediseñado, lo que indica que la información sobre el riesgo existía dentro del proceso,
+pero no se tradujo en una revisión a la altura de ese riesgo antes de que el sistema entrara en
+operación.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cadena de gobernanza del MCAS en el Boeing 737 MAX: un unico sensor de angulo de ataque sin redundancia, un rediseno aprobado con revision en cuestion de horas destacado en el centro, la eliminacion de referencias a MCAS del manual de vuelo, y una certificacion otorgada sin el nivel de revision independiente que el sistema exigia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="cali22e" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">MCAS en el Boeing 737 MAX: cuando falla la gobernanza del proceso</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="40" width="170" height="90" rx="8"/></g>
+<rect x="200" y="40" width="170" height="90" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="390" y="40" width="170" height="90" rx="8"/></g>
+<rect x="580" y="40" width="170" height="90" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+<g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cali22e)"><path d="M180,85 L200,85"/><path d="M370,85 L390,85"/><path d="M560,85 L580,85"/></g>
+<g text-anchor="middle" font-size="11" fill="#12324f"><text x="95" y="62">Un unico sensor de</text><text x="95" y="76">angulo de ataque,</text><text x="95" y="90">sin redundancia</text></g>
+<g text-anchor="middle" font-size="11" fill="#0e6f6c" font-weight="600"><text x="285" y="62">Rediseno del sistema</text><text x="285" y="76">aprobado en cuestion</text><text x="285" y="90">de horas</text></g>
+<g text-anchor="middle" font-size="11" fill="#12324f"><text x="475" y="62">Referencias a MCAS</text><text x="475" y="76">retiradas del manual</text><text x="475" y="90">de vuelo</text></g>
+<g text-anchor="middle" font-size="11" fill="#12324f" font-weight="600"><text x="665" y="62">Certificacion otorgada</text><text x="665" y="76">sin la revision independiente</text><text x="665" y="90">que el sistema exigia</text></g>
+<text x="380" y="160" font-size="11" fill="#5b6876" text-anchor="middle">Aqui el SQA que fallo no fue tecnico sino de proceso: gestion de riesgos y trazabilidad de decisiones de diseno</text>
+</svg>
+
+:::
+
+Compara este caso con el del Therac-25 antes de seguir. En el Therac-25 faltó una revisión técnica
+independiente del código durante la fase de codificación y pruebas. Aquí falta algo un nivel más
+arriba, la gobernanza del proceso de certificación, es decir la gestión de riesgos, la trazabilidad de
+las decisiones de diseño y la honestidad en la comunicación con los organismos reguladores, todas ellas
+actividades de proceso que, según lo que viste en la sección de roles, le corresponde supervisar
+justamente al líder de calidad, no solo al ingeniero de SQA de un proyecto puntual. El aseguramiento de
+calidad, en sistemas de este tamaño, excede la revisión de una función o un módulo, incluye también
+si la organización completa dejó suficiente rastro documentado de por qué aprobó lo que aprobó.
+
+::: {.callout-tip}
+## Reto 1. Quién revisa qué
+
+Antes de leer la solución, marca para cada tarea quién la ejecuta típicamente: el ingeniero de SQA, el
+líder de calidad, o cualquiera de los dos según el tamaño de la organización.
+
+1. **Auditar que un proyecto siga el estándar de codificación acordado**
+
+   <label><input type="checkbox"> Ingeniero de SQA</label>
+   <label><input type="checkbox"> Líder de calidad</label>
+   <label><input type="checkbox"> Cualquiera de los dos, según el tamaño de la organización</label>
+
+2. **Presidir el comité de control de cambios de toda la organización**
+
+   <label><input type="checkbox"> Ingeniero de SQA</label>
+   <label><input type="checkbox"> Líder de calidad</label>
+   <label><input type="checkbox"> Cualquiera de los dos, según el tamaño de la organización</label>
+
+3. **Diseñar y ejecutar los casos de prueba de un módulo específico**
+
+   <label><input type="checkbox"> Ingeniero de SQA</label>
+   <label><input type="checkbox"> Líder de calidad</label>
+   <label><input type="checkbox"> Cualquiera de los dos, según el tamaño de la organización</label>
+
+4. **Coordinar una evaluación formal de madurez de procesos**
+
+   <label><input type="checkbox"> Ingeniero de SQA</label>
+   <label><input type="checkbox"> Líder de calidad</label>
+   <label><input type="checkbox"> Cualquiera de los dos, según el tamaño de la organización</label>
+
+5. **Registrar y dar seguimiento a un defecto encontrado en una revisión técnica formal**
+
+   <label><input type="checkbox"> Ingeniero de SQA</label>
+   <label><input type="checkbox"> Líder de calidad</label>
+   <label><input type="checkbox"> Cualquiera de los dos, según el tamaño de la organización</label>
+
+Cuando termines de marcar, compara tu predicción con la solución de abajo.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+Tres de las cinco tareas son propias del ingeniero de SQA, porque ocurren dentro de un proyecto
+concreto y sobre un artefacto específico. Auditar el estándar de codificación de un proyecto, diseñar
+y ejecutar casos de prueba de un módulo, y registrar y dar seguimiento a un defecto son trabajo del
+día a día del proyecto, y es ahí donde el ingeniero de SQA opera.
+
+Las otras dos tareas son propias del líder de calidad, porque cruzan la frontera de un solo proyecto y
+hablan a nombre de toda la organización. Presidir el comité de control de cambios de la organización y
+coordinar una evaluación formal de madurez de procesos son decisiones que afectan a todos los
+proyectos de la empresa, no solo a uno, y por eso le corresponden al rol con esa mirada más amplia.
+
+En una organización pequeña, la misma persona puede terminar haciendo las cinco tareas en distintos
+momentos, pero la lógica que separa cuál tarea es cuál no cambia, solo cambia cuántas personas la
+reparten.
+:::
+
+::: {.callout-tip}
+## Reto 2. Aplica la lección del Therac-25
+
+Imagina que eres el ingeniero de SQA asignado a un proyecto que va a controlar el software de un
+dispositivo médico nuevo, y el equipo de desarrollo propone reutilizar varios módulos de un producto
+anterior de la empresa que llevan años funcionando sin ningún reporte de falla.
+
+Con lo que aprendiste del caso Therac-25, responde en un párrafo: ¿qué actividad de SQA de las que
+viste en la sección de ISO/IEC/IEEE 12207 deberías insistir en aplicar antes de aprobar esa
+reutilización, y por qué el hecho de que ese código ya haya funcionado bien durante años en el
+producto anterior no es, por sí solo, evidencia suficiente de que es seguro en el producto nuevo?
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La actividad que corresponde aplicar es una revisión técnica formal del diseño, seguida de pruebas de
+integración específicas para el nuevo contexto de hardware, exactamente lo que faltó en el Therac-25.
+El código reutilizado del Therac-6 y el Therac-20 nunca causó una sobredosis mientras estuvo
+acompañado de salvaguardas físicas de hardware que impedían el error aunque el software fallara. Al
+quitar esas salvaguardas en el Therac-25 y dejar que el software fuera el único control, el mismo
+código pasó de seguro a peligroso sin que una sola línea suya cambiara, porque lo que cambió no fue el
+código, fue el entorno en el que ese código tenía que operar.
+
+Por eso "ya funcionó antes" solo es evidencia de que el código funcionó bien en su entorno anterior,
+no en el nuevo. La responsabilidad del ingeniero de SQA es tratar cada reutilización de código en un
+contexto de hardware o de riesgo distinto como si fuera código nuevo, sometiéndolo a la misma revisión
+técnica formal y a las mismas pruebas de integración que se le exigirían a un módulo escrito desde
+cero, en vez de aprobarlo por confianza en su historial.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Por qué el modelo en V diseña cada prueba junto con su fase de desarrollo, y no después
+- [ ] Qué significa que verificación y validación sean procesos transversales, según ISO/IEC/IEEE 12207
+- [ ] Las actividades de SQA típicas de cada fase del ciclo de vida, de requisitos a mantenimiento
+- [ ] La diferencia de alcance entre el ingeniero de SQA y el líder de calidad
+- [ ] Las tres categorías de habilidades que necesita el personal de SQA
+- [ ] Por qué el Therac-25 fue una falla de proceso además de una falla de código
+- [ ] Por qué el caso MCAS muestra que el SQA también cubre la gobernanza de las decisiones de diseño
+:::
+
+## Antes del Tema 3
+
+1. Elige una de las cinco fases del ciclo de vida que viste hoy, y escribe en un párrafo qué pasaría
+   si esa fase se saltara por completo su actividad de SQA asociada.
+2. Repasa el caso Therac-25 y anota, en tus propias palabras, cuál de las cuatro fallas identificadas
+   por Leveson y Turner te parece más fácil de prevenir con un cambio de proceso, y por qué.
+3. Piensa en un proyecto de software en el que hayas participado, en clase o fuera de ella, y describe
+   qué actividad de SQA de las que viste hoy faltó, y qué riesgo concreto quedó sin cubrir por esa
+   ausencia.
+
+Hoy viste dónde entra la calidad en el ciclo de vida, quién la ejecuta y qué habilidades necesita. El
+Tema 3 completa la Unidad 2 con las actividades concretas de un programa de SQA, revisiones,
+auditorías y gestión de configuración, con las métricas que permiten medir la calidad de un proceso y
+de un producto, y con las herramientas que la industria usa hoy para gestionar todo eso.
+
+## Recursos
+
+- Pressman, R. S. *Ingeniería de software: un enfoque práctico.* Capítulo dedicado al aseguramiento
+  de la calidad del software, bibliografía oficial del curso.
+- Sommerville, I. *Software Engineering* (10a ed.). Pearson. Capítulo de gestión de calidad,
+  bibliografía oficial del curso.
+- Leveson, N. G. y Turner, C. S. (1993). "An Investigation of the Therac-25 Accidents." *IEEE
+  Computer*, 26(7), pp. 18-41. DOI: 10.1109/MC.1993.274940.
+- [IEEE Std 730-2014, IEEE Standard for Software Quality Assurance Processes](https://standards.ieee.org/standard/730-2014.html)
+- [ISO/IEC/IEEE 12207:2017, Systems and software engineering, Software life cycle processes](https://standards.ieee.org/standard/12207-2017.html)
+- Committee on Transportation and Infrastructure, U.S. House of Representatives (septiembre de 2020).
+  *The Boeing 737 MAX Aircraft: Costs, Consequences, and Lessons from its Design, Development, and
+  Certification*, Final Committee Report. Consulta el sitio oficial del comite
+  (transportation.house.gov) para ubicar el documento vigente; el enlace directo no se incluye aqui
+  porque no se pudo verificar contra el original al momento de escribir esta guia.
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

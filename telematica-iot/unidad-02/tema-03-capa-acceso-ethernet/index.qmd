@@ -1,0 +1,567 @@
+---
+title: "Tema 3. El cartero de la red local"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                          |
+|--------|----------------------------------------------------------|
+| Unidad | Unidad 2. Modelo OSI y arquitectura TCP/IP                |
+| Tema   | Tema 3. Capa de acceso: tecnologías Ethernet               |
+:::
+
+El Tema 2 bajó el modelo OSI de siete capas a las cuatro de TCP/IP, y mostró que la capa de acceso a
+la red, la más baja de las cuatro, es la que de verdad mueve los bits entre dos máquinas conectadas al
+mismo cable o al mismo aire, todavía sin hablar de direcciones IP ni de rutas entre redes distintas.
+Hoy bajas a esa capa y la haces concreta con la tecnología que domina las redes cableadas desde hace
+décadas, Ethernet. Vas a ver cómo cada tarjeta de red trae su propia dirección física de fábrica, cómo
+esa dirección viaja dentro de una trama con un formato exacto y obligatorio, y cómo un aparato tan
+común como un switch decide, trama por trama, por dónde reenviar cada una sin que nadie se lo programe
+a mano.
+
+Para que las ideas queden claras desde el primer párrafo, esta guía usa la portería de un edificio de
+apartamentos como hilo conductor. Cada apartamento tiene una dirección fija grabada en la puerta, cada
+carta que llega viaja dentro de un sobre con esa dirección escrita por fuera, y el portero, con el
+tiempo, aprende qué timbre corresponde a qué apartamento sin que nadie le entregue una lista completa
+desde el primer día. Esas tres piezas, la dirección, el sobre y el portero que aprende, son exactamente
+el direccionamiento MAC, la trama Ethernet y el switch, en ese orden es como los vas a estudiar hoy.
+
+## La dirección grabada en la tarjeta, direccionamiento MAC
+
+Toda interfaz Ethernet trae de fábrica una dirección física de 48 bits, formalizada como EUI-48
+(Extended Unique Identifier de 48 bits) según describe el RFC 7042. La mitad más significativa, los
+primeros 24 bits, se llama *OUI* (Organizationally Unique Identifier) y la asigna el IEEE Registration
+Authority a cada fabricante que la solicita; la otra mitad, los 24 bits restantes, el fabricante los
+reparte libremente entre las tarjetas que produce. Por eso una dirección MAC identifica, al menos en
+teoría, tanto al fabricante como al dispositivo exacto, algo que una dirección IP no hace, porque una
+IP describe dónde está conectado un dispositivo en este momento, no quién lo fabricó.
+
+Dentro del primer octeto de la dirección hay dos bits con significado especial, y vale la pena aprender
+a leerlos porque explican comportamientos que de otro modo parecen magia. El bit menos significativo
+del primer octeto es el bit *I/G* (Individual/Group), y su valor determina el alcance de la dirección,
+ya que si vale cero la dirección es unicast y apunta a una sola tarjeta, mientras que si vale uno es
+multicast o broadcast y apunta a un grupo. La dirección de broadcast completa, FF:FF:FF:FF:FF:FF, tiene
+ese bit en uno junto con todos los demás, y por convención significa entregar la trama a cualquier
+tarjeta que la esté escuchando. El segundo bit menos significativo es el bit *U/L* (Universal/Local),
+y de la misma forma su valor cambia el origen de la dirección, porque si vale cero la dirección salió
+grabada de fábrica, universalmente administrada, y si vale uno alguien la reasignó por software, algo
+común en máquinas virtuales o en interfaces que alguien reconfiguró a mano.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 264" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Direccion MAC de 48 bits dividida en OUI de 24 bits asignado por el fabricante y un identificador de dispositivo de 24 bits; el primer octeto se expande en sus 8 bits para mostrar el bit I/G que distingue unicast de multicast y el bit U/L que distingue direccion universal de direccion administrada localmente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="tiot23a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+<text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Una direccion MAC tiene 48 bits: 24 de fabricante y 24 de dispositivo</text>
+<text x="187" y="34" font-size="11.5" fill="#5b6876" text-anchor="middle">OUI, lo asigna el IEEE Registration Authority</text>
+<text x="571" y="34" font-size="11.5" fill="#5b6876" text-anchor="middle">identificador de dispositivo, lo asigna el fabricante</text>
+<g fill="#e4f2f1" stroke="#8fc9c5"><rect x="40" y="42" width="90" height="50" rx="8"/><rect x="138" y="42" width="90" height="50" rx="8"/><rect x="236" y="42" width="90" height="50" rx="8"/></g>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="334" y="42" width="90" height="50" rx="8"/><rect x="432" y="42" width="90" height="50" rx="8"/><rect x="530" y="42" width="90" height="50" rx="8"/></g>
+<g text-anchor="middle" font-size="14" font-weight="600" fill="#12324f"><text x="85" y="72">02</text><text x="183" y="72">1A</text><text x="281" y="72">2B</text><text x="379" y="72">3C</text><text x="477" y="72">4D</text><text x="575" y="72">5E</text></g>
+<text x="380" y="112" font-size="11" fill="#5b6876" text-anchor="middle" font-style="italic">ejemplo ilustrativo, no corresponde a un fabricante real</text>
+<path d="M85,92 L85,120 L400,120 L400,144" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#tiot23a)"/>
+<text x="400" y="134" font-size="11" fill="#5b6876" text-anchor="middle">se expande el primer octeto</text>
+<rect x="110" y="150" width="540" height="96" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="140" y="162" width="52" height="40" rx="4"/><rect x="200" y="162" width="52" height="40" rx="4"/><rect x="260" y="162" width="52" height="40" rx="4"/><rect x="320" y="162" width="52" height="40" rx="4"/><rect x="380" y="162" width="52" height="40" rx="4"/><rect x="440" y="162" width="52" height="40" rx="4"/></g>
+<g fill="#e4f2f1" stroke="#8fc9c5"><rect x="500" y="162" width="52" height="40" rx="4"/><rect x="560" y="162" width="52" height="40" rx="4"/></g>
+<g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="166" y="188">0</text><text x="226" y="188">0</text><text x="286" y="188">0</text><text x="346" y="188">0</text><text x="406" y="188">0</text><text x="466" y="188">0</text><text x="526" y="188">1</text><text x="586" y="188">0</text></g>
+<g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="166" y="216">b7</text><text x="226" y="216">b6</text><text x="286" y="216">b5</text><text x="346" y="216">b4</text><text x="406" y="216">b3</text><text x="466" y="216">b2</text><text x="526" y="216">b1 = U/L</text><text x="586" y="216">b0 = I/G</text></g>
+<text x="380" y="238" font-size="11.5" fill="#0e6f6c" text-anchor="middle" font-weight="600">b0 = 0: unicast. b1 = 1: administrada localmente</text>
+</svg>
+
+:::
+
+Puedes ver la dirección MAC real de tu propio equipo sin instalar nada. En Windows, el comando
+`getmac /v /fo list` la muestra; en Linux, `ip link show` hace lo mismo. El formato que devuelve
+cualquiera de los dos es siempre seis pares de dígitos hexadecimales separados por guiones o dos
+puntos, como en el ejemplo de abajo, y el valor exacto que veas en tu máquina depende del fabricante de
+tu tarjeta de red, así que no tiene por qué parecerse a este:
+
+```text
+> getmac /v /fo list
+
+Nombre de conexion:    Ethernet
+Direccion fisica:      02-1A-2B-3C-4D-5E
+Transporte:            Habilitado
+```
+
+Los primeros tres pares de este ejemplo, 02-1A-2B, serían el OUI si la dirección fuera universalmente
+administrada, pero en este caso el bit U/L del primer octeto está en uno (02 en binario es 00000010),
+así que en realidad es una dirección administrada localmente, típica de una máquina virtual o de una
+interfaz que alguien reconfiguró a mano, y esos tres pares no corresponden a ningún fabricante real
+registrado. Cuando corras el comando en tu propio equipo, puedes consultar el registro público de
+bloques OUI asignados a cada fabricante en el sitio del IEEE Registration Authority, enlazado en
+Recursos, y confirmar a qué empresa pertenece tu tarjeta.
+
+## El sobre que envuelve los datos, el formato de la trama Ethernet
+
+Antes de que los datos de una trama lleguen a nadie viajan envueltos en una estructura de campos fija,
+y la variante que domina las redes reales de hoy, Ethernet II, quedó documentada originalmente en el
+RFC 894. Conviene ver primero el orden completo de los campos, y solo después entrar en el detalle de
+cada uno.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Formato de la trama Ethernet II: preambulo de 7 bytes, delimitador de inicio de 1 byte, direccion MAC destino y origen de 6 bytes cada una, EtherType de 2 bytes, datos entre 46 y 1500 bytes, y verificacion FCS de 4 bytes; una llave inferior marca que el minimo de 64 bytes se cuenta desde la MAC destino hasta el FCS, sin incluir preambulo ni SFD" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Formato de la trama Ethernet II</text>
+<g fill="#f5f7fa" stroke="#cfd8e3"><rect x="20" y="42" width="70" height="56" rx="6"/><rect x="96" y="42" width="40" height="56" rx="6"/></g>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="142" y="42" width="90" height="56" rx="6"/><rect x="238" y="42" width="90" height="56" rx="6"/></g>
+<rect x="334" y="42" width="60" height="56" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/>
+<rect x="400" y="42" width="200" height="56" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+<rect x="606" y="42" width="60" height="56" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+<g text-anchor="middle" font-size="11" font-weight="600" fill="#12324f"><text x="55" y="66">Preambulo</text><text x="116" y="66">SFD</text><text x="187" y="66">MAC destino</text><text x="283" y="66">MAC origen</text><text x="364" y="60">EtherType</text><text x="364" y="74">/ Length</text><text x="500" y="66">Datos</text><text x="636" y="66">FCS</text></g>
+<g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="55" y="84">7 bytes</text><text x="116" y="84">1 byte</text><text x="187" y="84">6 bytes</text><text x="283" y="84">6 bytes</text><text x="364" y="90">2 bytes</text><text x="500" y="84">46 a 1500 bytes</text><text x="636" y="84">4 bytes</text></g>
+<path d="M142,112 L142,124 L666,124 L666,112" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="404" y="140" font-size="11.5" fill="#0e6f6c" text-anchor="middle" font-weight="600">minimo 64 bytes: desde la MAC destino hasta el FCS</text>
+<path d="M20,166 L20,178 L666,178 L666,166" fill="none" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="343" y="196" font-size="11" fill="#5b6876" text-anchor="middle">preambulo y SFD no cuentan en ese minimo: son sincronizacion, no datos de la trama</text>
+</svg>
+
+:::
+
+| Campo | Tamaño | Para qué sirve |
+|---|---|---|
+| Preámbulo | 7 bytes | Patrón repetido `10101010` que sincroniza el reloj del receptor antes de que llegue la trama real |
+| SFD (Start Frame Delimiter) | 1 byte | Marca exactamente dónde empieza la trama, con el patrón `10101011` |
+| MAC destino | 6 bytes | La dirección física del receptor, o la de broadcast si va para todos |
+| MAC origen | 6 bytes | La dirección física de quien envía |
+| EtherType (o Length) | 2 bytes | Identifica el protocolo que viaja adentro, o el tamaño de los datos, según el valor |
+| Datos | 46 a 1500 bytes | El contenido real, casi siempre un datagrama IP |
+| FCS (Frame Check Sequence) | 4 bytes | Un CRC-32 que permite detectar si la trama llegó corrupta |
+
+El campo de dos bytes que va justo después de las direcciones MAC tiene un significado ambiguo por
+convención, y entender esa ambigüedad evita confusiones más adelante. Si su valor es mayor o igual a
+1536 (0x0600), se interpreta como *EtherType*, un número que identifica el protocolo de capa superior
+que viaja adentro, como 0x0800 para IPv4, según documenta el RFC 894. Si su valor es menor o igual a
+1500, se interpreta en cambio como la longitud en bytes del campo de datos, el formato original de
+IEEE 802.3, que exige una cabecera adicional de 8 bytes, LLC más SNAP, para poder llevar el tipo de
+protocolo por otro lado, tal como describe el RFC 1042. Esa diferencia explica por qué el tamaño máximo
+efectivo de datos IP es 1500 bytes en Ethernet II, pero baja a 1492 bytes en 802.3 puro con LLC/SNAP,
+ya que la diferencia son justamente esos 8 bytes de cabecera adicional que le restan espacio a los
+datos.
+
+El tamaño mínimo de una trama, 64 bytes contados desde la MAC destino hasta el FCS, no es un número
+arbitrario. Si los datos que hay que enviar son menores a 46 bytes, se les agrega relleno, *padding*,
+hasta completar ese mínimo, y ese relleno no forma parte del datagrama IP ni se cuenta en el campo de
+longitud total que ese datagrama trae por su cuenta, según aclara el RFC 894; el receptor simplemente
+ignora los bytes sobrantes. Entre trama y trama, además, el estándar exige un intervalo mínimo de
+inactividad de 96 bits de tiempo, el *interframe gap*, para que el receptor tenga margen de distinguir
+dónde termina una trama y empieza la siguiente. El tamaño máximo de una trama estándar es 1518 bytes, y
+sube a 1522 si lleva una etiqueta de VLAN según IEEE 802.1Q, que agrega 4 bytes entre la MAC origen y el
+EtherType.
+
+Por qué el mínimo tiene que ser justo 64 bytes es algo que solo se entiende del todo con la siguiente
+sección, porque esa cifra está calculada para que una estación, transmitiendo en un medio compartido,
+alcance a enterarse de una colisión antes de terminar de enviar su propia trama.
+
+Un último dato que conviene tener presente, aunque este tema no entra en su funcionamiento a fondo:
+0x0806 es el valor de EtherType reservado para ARP, el protocolo que resuelve qué dirección MAC
+corresponde a una dirección IP dentro de la misma red local, documentado en el RFC 826. Cada vez que tu
+equipo necesita enviar una trama y solo conoce la IP del destino, ARP es lo que le consigue la MAC que
+va en el campo de destino de la trama; ese protocolo merece su propia explicación más adelante en el
+curso.
+
+::: {.callout-tip}
+## Reto 1. Predice si hace falta relleno
+
+Un datagrama IP mide 30 bytes en total y va a viajar dentro de una trama Ethernet II, sin etiqueta de
+VLAN. Antes de calcular nada, marca la afirmación que crees correcta.
+
+<label><input type="checkbox"> La trama no necesita relleno porque 30 bytes ya es un tamaño válido de datos</label>
+<label><input type="checkbox"> La trama necesita relleno porque 30 bytes es menor que el mínimo de 46 bytes de datos</label>
+<label><input type="checkbox"> La trama es inválida y Ethernet la rechaza porque no acepta datagramas menores a 46 bytes</label>
+
+Después de marcar tu respuesta, calcula el tamaño total de la trama completa, contando desde la MAC
+destino hasta el FCS inclusive, y compáralo con el mínimo de 64 bytes.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La segunda opción es la correcta. El campo de datos de Ethernet exige un mínimo de 46 bytes, y 30 bytes
+es menor que eso, así que hacen falta 16 bytes de relleno para llegar al mínimo. El relleno no forma
+parte del datagrama IP, porque el propio datagrama trae su campo de longitud total, que sigue diciendo
+30, y el equipo receptor usa ese campo para saber dónde termina el dato real y descartar los 16 bytes
+de relleno sin confundirlos con información.
+
+El cálculo del tamaño total de la trama queda así:
+
+```text
+MAC destino          6 bytes
+MAC origen            6 bytes
+EtherType             2 bytes
+Datos (con relleno)  46 bytes   (30 bytes reales + 16 bytes de relleno)
+FCS                   4 bytes
+-----------------------------
+Total                64 bytes
+```
+
+Exactamente el mínimo permitido. La tercera opción es falsa porque Ethernet nunca rechaza un datagrama
+pequeño, lo rellena en silencio; y la primera opción es falsa porque 30 bytes sí es menor que el mínimo
+de 46, aunque a simple vista no lo parezca si no se compara contra la cifra exacta del estándar.
+:::
+
+## CSMA/CD, cómo se compartía el medio antes de los switches
+
+Antes de que los switches se volvieran baratos y comunes, muchas redes Ethernet compartían un mismo
+medio físico entre varias estaciones, por ejemplo a través de un hub, un simple repetidor que copia
+cualquier señal que recibe hacia todos sus demás puertos. En ese escenario hace falta una regla para
+decidir quién transmite en cada momento, y esa regla es *CSMA/CD*, Carrier Sense Multiple Access with
+Collision Detection, definida dentro del estándar IEEE 802.3 para el modo half-duplex.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de flujo de CSMA con deteccion de colisiones: escuchar el medio, transmitir y seguir escuchando, verificar si hubo colision; si no hubo colision la trama se envio con exito, si hubo colision se envia una señal de jam y despues un tiempo de espera aleatorio que crece con cada colision antes de reintentar desde el paso uno" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="tiot23b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+<text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">CSMA/CD en un medio compartido (Ethernet half duplex)</text>
+<rect x="30" y="40" width="180" height="56" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+<rect x="250" y="40" width="180" height="56" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+<rect x="470" y="40" width="220" height="56" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+<rect x="470" y="130" width="220" height="56" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+<rect x="200" y="130" width="220" height="56" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+<rect x="110" y="220" width="400" height="56" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+<g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="120" y="64">1. escuchar el medio</text><text x="120" y="80">(carrier sense)</text><text x="340" y="64">2. transmitir y</text><text x="340" y="80">seguir escuchando</text><text x="580" y="72">3. hubo colision?</text></g>
+<g text-anchor="middle" font-size="11.5" font-weight="600" fill="#0e6f6c"><text x="580" y="154">4a. trama enviada</text><text x="580" y="170">con exito</text></g>
+<g text-anchor="middle" font-size="11.5" font-weight="600" fill="#12324f"><text x="310" y="154">4b. señal de jam</text><text x="310" y="170">(32 bits)</text></g>
+<text x="310" y="252" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">5. backoff aleatorio: el rango de espera crece con cada colision consecutiva</text>
+<path d="M210,68 L246,68" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#tiot23b)"/>
+<path d="M430,68 L466,68" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#tiot23b)"/>
+<path d="M580,96 L580,126" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#tiot23b)"/>
+<text x="600" y="114" font-size="11" fill="#5b6876">no</text>
+<path d="M500,96 L370,126" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#tiot23b)"/>
+<text x="470" y="114" font-size="11" fill="#5b6876">si</text>
+<path d="M310,186 L310,216" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#tiot23b)"/>
+<path d="M110,248 C40,248 40,120 90,86 L26,68" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#tiot23b)"/>
+<text x="40" y="200" font-size="11" fill="#5b6876" transform="rotate(-90 40 200)">reintenta desde el paso 1</text>
+</svg>
+
+:::
+
+El proceso completo tiene cinco pasos. Primero, la estación escucha el medio, *carrier sense*, y si lo
+encuentra ocupado espera. Segundo, transmite su trama, y mientras lo hace sigue escuchando el mismo
+medio. Tercero, si la señal que detecta mientras transmite no coincide con lo que ella misma está
+enviando, concluye que hubo una colisión, porque otra estación empezó a transmitir casi al mismo
+tiempo. Si no hubo colisión, la trama quedó enviada y el proceso termina ahí. Si sí la hubo, la
+estación deja de enviar datos útiles y en su lugar envía una señal de *jam* de 32 bits, cuyo único
+propósito es forzar a que todas las demás estaciones descarten la trama corrupta, típicamente porque
+esa señal arruina el CRC. Después del jam, la estación espera un intervalo aleatorio, el *backoff*, y
+ese intervalo crece de forma exponencial con cada colisión consecutiva que la misma trama sufre, hasta
+un tope, un mecanismo llamado backoff exponencial truncado, cuyo objetivo es que dos estaciones que
+acaban de chocar no vuelvan a chocar de inmediato al reintentar al mismo tiempo.
+
+Ahora sí se entiende por qué la trama mínima mide 64 bytes. Ese número está calculado a partir del
+diámetro máximo permitido de la red y de la velocidad de propagación de la señal, de forma que una
+estación que empieza a transmitir siga todavía transmitiendo en el instante en que, en el peor caso,
+le llegaría el aviso de una colisión ocurrida en el extremo más lejano del cable. Si la trama fuera más
+corta que eso, la estación podría terminar de enviarla completa y pasar a otra cosa antes de enterarse
+de que hubo un choque, y entonces jamás sabría que su trama se perdió. El mínimo de 64 bytes es, en
+otras palabras, la garantía de que ninguna colisión pasa inadvertida para quien transmitió.
+
+Hoy en día, casi ninguna red usa CSMA/CD de verdad. Cuando un switch conecta un solo dispositivo por
+puerto, en un enlace full-duplex, cada extremo tiene su propio canal de transmisión y su propio canal
+de recepción, así que no existe contención por el medio ni posibilidad física de colisión, y CSMA/CD
+queda deshabilitado de hecho. El estándar IEEE 802.3 lo sigue definiendo, sin embargo, porque el modo
+half-duplex, aunque poco usado hoy, sigue siendo parte formal de Ethernet, y porque entender CSMA/CD es
+lo que explica de dónde salen reglas que se mantienen aunque ya casi nadie choque tramas, como el
+tamaño mínimo de 64 bytes que sigue vigente en todo Ethernet, incluso en las redes conmutadas de hoy.
+
+## Conmutación, el portero de la red local aprende direcciones
+
+Un switch Ethernet funciona como un puente transparente con muchos puertos, un concepto que el IEEE
+formalizó originalmente en el estándar 802.1D y que hoy vive dentro de IEEE 802.1Q, la edición vigente
+tras la retirada de 802.1D como documento independiente. Vuelve al portero del edificio. El primer día,
+el portero no sabe qué timbre corresponde a qué apartamento, así que si llega una carta y no sabe a
+dónde llevarla, la única opción segura es tocar en todas las puertas hasta que alguien la reciba. Con
+el tiempo, cada vez que un apartamento envía algo, el portero anota de qué timbre salió, y así va
+armando su propia lista. Un switch hace exactamente lo mismo con las direcciones MAC.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un switch aprendio que MAC-A esta en el puerto P1 y MAC-B en el puerto P2; una trama que entra por el puerto de subida dirigida a MAC-A conocida sale solo por P1, mientras que una trama dirigida a MAC-C todavia no aprendida se inunda por P1, P2 y P3" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="tiot23c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#0e6f6c"/></marker><marker id="tiot23d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+<text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Aprendizaje y reenvio en un switch</text>
+<rect x="270" y="30" width="220" height="46" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+<text x="380" y="48" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">tabla MAC aprendida</text>
+<text x="380" y="64" font-size="10.5" fill="#5b6876" text-anchor="middle">MAC-A en P1      MAC-B en P2</text>
+<rect x="300" y="90" width="160" height="56" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+<text x="380" y="122" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">switch</text>
+<text x="380" y="90" font-size="10.5" fill="#5b6876" text-anchor="middle">entra por el puerto de subida</text>
+<path d="M380,76 L380,86" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#tiot23d)"/>
+<rect x="80" y="220" width="120" height="46" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+<rect x="320" y="220" width="120" height="46" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+<rect x="560" y="220" width="120" height="46" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+<g text-anchor="middle" font-size="11" font-weight="600" fill="#12324f"><text x="140" y="240">PC-A</text><text x="380" y="240">PC-B</text><text x="620" y="240">PC-C</text></g>
+<g text-anchor="middle" font-size="10" fill="#5b6876"><text x="140" y="256">MAC-A, puerto P1</text><text x="380" y="256">MAC-B, puerto P2</text><text x="620" y="256">MAC-C, no aprendida</text></g>
+<path d="M310,146 L145,216" fill="none" stroke="#0e6f6c" stroke-width="2" marker-end="url(#tiot23c)"/>
+<path d="M340,146 L155,216" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#tiot23d)"/>
+<path d="M400,146 L385,216" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#tiot23d)"/>
+<path d="M440,146 L610,216" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#tiot23d)"/>
+<text x="150" y="196" font-size="11" fill="#0e6f6c" font-weight="600">a MAC-A (conocida): solo P1</text>
+<text x="560" y="196" font-size="11" fill="#5b6876" font-weight="600">a MAC-C (desconocida): inunda P1, P2 y P3</text>
+</svg>
+
+:::
+
+El algoritmo tiene tres partes. La primera es el *aprendizaje* (*learning*), que consiste en que por
+cada trama que entra al switch, el switch anota en su tabla de direcciones qué dirección MAC origen
+entró por cuál puerto, igual que el portero anota de qué timbre salió cada carta. Esa tabla se
+implementa por lo general con memoria de contenido direccionable (CAM), pensada justo para buscar por
+dirección a alta velocidad. La segunda parte es el *reenvío y filtrado* (*forwarding/filtering*), que
+ocurre cuando la dirección MAC destino de la trama que llega ya está en la tabla, porque entonces el
+switch la envía únicamente por ese puerto, sin molestar a nadie más, igual que el portero que ya conoce
+el apartamento correcto no va a tocar puerta por puerta. La tercera parte es la *inundación*
+(*flooding*), que pasa cuando la dirección MAC destino todavía no está en la tabla porque nadie con esa
+dirección ha enviado nada todavía, así que el switch envía la trama por todos sus puertos menos el de
+entrada, exactamente como el portero que, ante una carta con un destinatario que todavía no reconoce,
+no tiene más remedio que tocar en todas las puertas.
+
+Este mecanismo tiene una consecuencia práctica que conviene notar, y es que el switch nunca necesita
+que nadie le configure la tabla a mano. Basta con que cada dispositivo envíe al menos una trama para
+que el switch aprenda automáticamente por qué puerto contestarle la próxima vez, y esa tabla se sigue
+actualizando sola durante toda la vida de la red.
+
+### Store-and-forward, cut-through y fragment-free
+
+No todos los switches procesan las tramas de la misma manera antes de reenviarlas, y la diferencia
+importa porque afecta tanto la latencia como la capacidad de detectar errores. En el modo
+*store-and-forward*, el switch recibe la trama completa, valida su FCS, y solo después de confirmar que
+llegó sin corrupción la reenvía; es el modo más lento, porque hay que esperar toda la trama, pero
+también el más confiable, porque nunca reenvía basura. En el modo *cut-through*, el switch empieza a
+reenviar la trama en cuanto termina de leer la dirección MAC destino, sin esperar a que llegue el
+resto; gana en latencia, porque no espera nada más, pero puede terminar reenviando una trama que
+resulte corrupta, porque el error solo se sabría al final, cuando ya es tarde para frenarla. Existe
+además una variante intermedia, *fragment-free*, que espera a recibir los primeros 64 bytes antes de
+reenviar, justo el tamaño mínimo de trama visto arriba, con la idea de descartar los fragmentos cortos
+que suele dejar una colisión antes de propagarlos innecesariamente.
+
+## Dominios de colisión y de broadcast
+
+Dos conceptos se confunden con frecuencia entre quien recién aprende switching, y separarlos bien evita
+errores de diseño costosos más adelante. Un *dominio de colisión* es el conjunto de dispositivos que
+comparten el mismo medio físico, de forma que dos transmisiones simultáneas dentro de ese conjunto
+producen una colisión. Un hub crea un único dominio de colisión para todos los puertos que conecta,
+porque todos comparten literalmente el mismo cable eléctrico por dentro. Un switch, en cambio, crea un
+dominio de colisión independiente por cada puerto, y en un enlace full-duplex las colisiones
+desaparecen del todo, porque no hay contención posible cuando cada extremo tiene su propio canal.
+
+Un *dominio de broadcast* es distinto, porque es el conjunto de dispositivos que reciben las tramas de
+broadcast, las que van dirigidas a FF:FF:FF:FF:FF:FF, enviadas por cualquier miembro de ese conjunto.
+Aquí está el punto que más sorprende, un switch de capa 2 no segmenta el dominio de broadcast, porque
+sigue el mismo algoritmo de inundación que ya viste, y una trama de broadcast por definición no tiene
+una entrada de destino que buscar en la tabla, así que siempre se inunda por todos los puertos. Solo un
+router, en capa 3, o la segmentación en VLANs separa dominios de broadcast distintos.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un switch de 4 puertos: el puerto 1 tiene un hub con 3 PC que comparten un unico dominio de colision, y los puertos 2, 3 y 4 tienen cada uno un PC conectado directo con su propio dominio de colision; una linea punteada exterior marca que las cuatro zonas comparten un unico dominio de broadcast porque el switch no lo separa" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<rect x="10" y="8" width="740" height="300" rx="14" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="6 4"/>
+<rect x="280" y="20" width="200" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+<text x="380" y="50" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">switch de 4 puertos</text>
+<rect x="120" y="90" width="280" height="140" rx="10" fill="none" stroke="#8fc9c5" stroke-width="1.4" stroke-dasharray="4 4"/>
+<path d="M320,70 L310,110" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<rect x="260" y="110" width="100" height="40" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/>
+<text x="310" y="134" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">hub (P1)</text>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="140" y="170" width="70" height="40" rx="6"/><rect x="240" y="170" width="70" height="40" rx="6"/><rect x="340" y="170" width="70" height="40" rx="6"/></g>
+<g text-anchor="middle" font-size="11" fill="#12324f"><text x="175" y="194">PC1</text><text x="275" y="194">PC2</text><text x="375" y="194">PC3</text></g>
+<path d="M280,150 L175,168" fill="none" stroke="#8fb3d1" stroke-width="1.2"/>
+<path d="M310,150 L275,168" fill="none" stroke="#8fb3d1" stroke-width="1.2"/>
+<path d="M340,150 L375,168" fill="none" stroke="#8fb3d1" stroke-width="1.2"/>
+<text x="260" y="222" font-size="11" fill="#3c7d7a" text-anchor="middle" font-weight="600">dominio de colision 1: PC1, PC2, PC3 y el hub lo comparten</text>
+<path d="M460,70 L495,138" fill="none" stroke="#8fb3d1" stroke-width="1.2"/>
+<path d="M460,70 L595,138" fill="none" stroke="#8fb3d1" stroke-width="1.2"/>
+<path d="M460,70 L695,138" fill="none" stroke="#8fb3d1" stroke-width="1.2"/>
+<g fill="none" stroke="#8fc9c5" stroke-width="1.4" stroke-dasharray="4 4"><rect x="450" y="140" width="90" height="100" rx="8"/><rect x="550" y="140" width="90" height="100" rx="8"/><rect x="650" y="140" width="90" height="100" rx="8"/></g>
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="465" y="170" width="60" height="36" rx="6"/><rect x="565" y="170" width="60" height="36" rx="6"/><rect x="665" y="170" width="60" height="36" rx="6"/></g>
+<g text-anchor="middle" font-size="11" fill="#12324f"><text x="495" y="192">PC4</text><text x="595" y="192">PC5</text><text x="695" y="192">PC6</text></g>
+<g text-anchor="middle" font-size="10" fill="#3c7d7a" font-weight="600"><text x="495" y="228">colision 2</text><text x="595" y="228">colision 3</text><text x="695" y="228">colision 4</text></g>
+<text x="380" y="264" font-size="11.5" fill="#5b6876" text-anchor="middle">P2, P3 y P4: un PC conectado directo a cada puerto, sin hub de por medio</text>
+<text x="380" y="320" font-size="12" fill="#12324f" text-anchor="middle" font-weight="700">las cuatro zonas comparten un unico dominio de broadcast: el switch no lo separa</text>
+</svg>
+
+:::
+
+Que los switches resuelvan el problema de las colisiones no significa que resuelvan el de la
+saturación por tráfico de broadcast, y ahí aparece uno de los fallos más conocidos de una red Ethernet
+mal diseñada.
+
+Plantea la situación siguiente. Dos switches están conectados entre sí, no por un cable sino por dos,
+tendidos como redundancia, con la idea de que si uno falla el otro siga sirviendo. Nadie configuró
+ningún protocolo que controle esos enlaces redundantes. ¿Qué pasa la primera vez que cualquier equipo
+de la red envía una trama de broadcast, por ejemplo una petición ARP corriente?
+
+Ethernet conmutada no tiene ningún mecanismo de tiempo de vida, TTL, a nivel de capa 2, a diferencia de
+lo que sí tiene un paquete IP en capa 3. Si existe más de una ruta física entre dos switches, la trama
+de broadcast que uno le manda al otro por el primer enlace llega, se inunda de vuelta por el segundo
+enlace, vuelve a llegar al primer switch, que la vuelve a inundar, y así sucesivamente sin que nada la
+detenga ni la reduzca. Cada vuelta multiplica copias de la misma trama, consumiendo cada vez más ancho
+de banda disponible y saturando las tablas MAC de ambos switches, hasta dejar la red completa
+inutilizable, un fenómeno conocido como *tormenta de broadcast* (broadcast storm).
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos switches unidos por dos enlaces redundantes sin proteccion de bucles: una trama de broadcast que entra por un PC se inunda por ambos enlaces hacia el otro switch, y ese otro switch la vuelve a inundar de regreso por los dos enlaces, multiplicando copias de la misma trama sin limite hasta saturar la red" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="tiot23e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+<text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Tormenta de broadcast: dos enlaces redundantes sin control de bucles</text>
+<rect x="20" y="150" width="110" height="44" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+<text x="75" y="176" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">PC origina el broadcast</text>
+<path d="M130,172 L156,152" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#tiot23e)"/>
+<rect x="160" y="100" width="140" height="60" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+<text x="230" y="134" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">switch A</text>
+<rect x="460" y="100" width="140" height="60" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+<text x="530" y="134" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">switch B</text>
+<path d="M300,108 C380,70 420,70 460,108" fill="none" stroke="#8fc9c5" stroke-width="2" marker-end="url(#tiot23e)"/>
+<path d="M460,120 C420,150 380,150 300,120" fill="none" stroke="#8fc9c5" stroke-width="2" marker-end="url(#tiot23e)"/>
+<path d="M300,140 C380,178 420,178 460,140" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#tiot23e)"/>
+<path d="M460,152 C420,200 380,200 300,152" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#tiot23e)"/>
+<text x="380" y="60" font-size="11" fill="#0e6f6c" text-anchor="middle" font-weight="600">enlace 1: la copia viaja en los dos sentidos</text>
+<text x="380" y="220" font-size="11" fill="#0e6f6c" text-anchor="middle" font-weight="600">enlace 2: la misma trama tambien viaja en los dos sentidos</text>
+<text x="380" y="240" font-size="12" fill="#12324f" text-anchor="middle" font-weight="700">sin spanning tree, cada vuelta duplica copias y la red se satura</text>
+</svg>
+
+:::
+
+La solución a este problema exacto es el Spanning Tree Protocol, un mecanismo que hace que los switches
+se pongan de acuerdo automáticamente para bloquear de forma lógica los enlaces redundantes, dejando
+activa una única ruta entre cualquier par de switches y garantizando así una topología libre de bucles
+en capa 2, sin que eso obligue a desconectar físicamente el cable de repuesto. El protocolo se definió
+originalmente en el estándar IEEE 802.1D, aunque el IEEE lo retiró como documento independiente y desde
+la edición 802.1Q-2014 el bridging transparente y el Spanning Tree Protocol quedan formalizados dentro
+de IEEE 802.1Q, la edición vigente hoy. Cablear redundancia física sin esa protección no da tolerancia
+a fallos, como se esperaría de manera intuitiva, sino que tumba la red completa, y esa es precisamente
+la sorpresa que este caso deja para quien recién aprende switching.
+
+::: {.callout-tip}
+## Reto 2. Cuenta los dominios
+
+Un switch de 4 puertos tiene, en el puerto 1, un hub viejo con 3 computadores conectados; en los
+puertos 2, 3 y 4 hay un computador conectado directamente a cada uno, cable a cable, sin nada más de
+por medio. Antes de contar nada, marca la combinación que crees correcta.
+
+<label><input type="checkbox"> 4 dominios de colisión y 1 dominio de broadcast</label>
+<label><input type="checkbox"> 1 dominio de colisión y 1 dominio de broadcast</label>
+<label><input type="checkbox"> 4 dominios de colisión y 4 dominios de broadcast</label>
+
+Justifica tu elección en un párrafo antes de revisar la solución.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La primera opción es la correcta, 4 dominios de colisión y 1 dominio de broadcast.
+
+Cada puerto del switch crea su propio dominio de colisión, sin importar qué haya conectado detrás. El
+puerto 1 tiene detrás un hub con 3 computadores, así que esos 3 computadores y el propio puerto 1
+comparten un único dominio de colisión, porque el hub los une a todos en el mismo medio físico. Los
+puertos 2, 3 y 4 tienen cada uno un solo computador conectado directamente, así que cada uno forma su
+propio dominio de colisión, independiente de los demás. En total son 4 dominios de colisión, uno por
+cada puerto del switch, aunque el del puerto 1 tenga más de un dispositivo adentro.
+
+El dominio de broadcast, en cambio, es uno solo para toda la red, porque el switch nunca segmenta el
+broadcast, sin importar cuántos puertos tenga ni qué haya conectado detrás de cada uno. Una trama de
+broadcast que entra por cualquiera de los 4 puertos se inunda hacia los otros 3, así que los 6
+computadores de este ejemplo (los 3 detrás del hub más los 3 conectados directo) están todos en el
+mismo dominio de broadcast. Solo agregar un router, o dividir el switch en VLANs, cambiaría ese
+resultado.
+:::
+
+## Caso de uso real, Ethernet que también alimenta dispositivos IoT
+
+Hasta aquí Ethernet resolvió cómo direccionar, empaquetar y reenviar datos. Falta un problema práctico
+que aparece todo el tiempo en despliegues de sensores para IoT, cámaras o puntos de acceso, y es que
+alimentar eléctricamente cada dispositivo resulta caro o directamente imposible por dónde está
+instalado, cuando hay que tenderle un cable eléctrico aparte además del de red.
+
+Plantea la situación. Una empresa quiere instalar veinte cámaras IP distribuidas por techos y pasillos
+de un edificio, y cada una necesita tanto conexión de red como energía eléctrica. ¿Es obligatorio pasar
+un cable eléctrico independiente hasta cada cámara, además del cable de red?
+
+La respuesta es que no, gracias a *Power over Ethernet* (PoE), un conjunto de amendments al estándar
+IEEE 802.3 que permite transportar datos y energía por el mismo cable de par trenzado, usando
+señalización en modo común sobre los pares diferenciales, sin interferir con la señal de datos. El
+estándar IEEE 802.3af, conocido como Type 1, entrega hasta 15.4 vatios en el origen, de los cuales unos
+12.95 vatios llegan garantizados al dispositivo tras las pérdidas del cable; su sucesor, IEEE 802.3at,
+Type 2 o PoE+, sube ese límite hasta 25.5 vatios. Existe también una versión más reciente, IEEE
+802.3bt o PoE++, con potencias todavía más altas para equipos exigentes; las cifras exactas de esa
+variante conviene confirmarlas contra el texto oficial del estándar o una hoja de datos de fabricante
+antes de tomarlas como definitivas para un diseño real, porque las fuentes secundarias consultadas para
+esta guía no coinciden con precisión suficiente como para citarlas aquí como un dato cerrado.
+
+Con PoE, las veinte cámaras del ejemplo se alimentan y se conectan con un único cable Ethernet cada
+una, sin cableado eléctrico adicional, algo que en telemática para IoT aparece una y otra vez, en
+cámaras de seguridad, puntos de acceso Wi-Fi, controladores de iluminación y sensores industriales
+distribuidos por espacios grandes.
+
+## Actividad práctica, pendiente de definir la herramienta
+
+Los dos retos de esta guía se resuelven con lápiz, papel y las reglas que acabas de leer, sin necesitar
+ningún software. La práctica guiada de armar una topología real con switches, observar en vivo cómo se
+llena la tabla MAC de un equipo, o provocar y resolver a propósito una tormenta de broadcast, requiere
+una herramienta de simulación de redes, del estilo de Cisco Packet Tracer o GNS3, y esa herramienta
+todavía no la ha decidido el docente. Esta sección queda marcada explícitamente como pendiente: en
+cuanto se defina qué simulador se va a usar en el curso, se agregará aquí la guía paso a paso para
+construir la topología de los dos retos anteriores y comprobar en pantalla lo que hoy resolviste solo
+con cálculo.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] Qué es el OUI de una dirección MAC, quién lo asigna, y qué significan los bits I/G y U/L
+- [ ] Los siete campos de una trama Ethernet II, en orden, con su tamaño en bytes
+- [ ] Por qué existe la ambigüedad entre EtherType y Length, y por qué el MTU de datos IP baja de 1500
+      a 1492 bytes cuando se usa LLC/SNAP
+- [ ] Por qué el mínimo de una trama es 64 bytes, y qué relación tiene ese número con CSMA/CD
+- [ ] Los cinco pasos de CSMA/CD, y por qué casi no se usa en redes conmutadas full-duplex de hoy
+- [ ] Cómo aprende, filtra e inunda un switch, y la diferencia entre store-and-forward y cut-through
+- [ ] La diferencia entre un dominio de colisión y un dominio de broadcast, y por qué un switch
+      segmenta el primero pero no el segundo
+- [ ] Por qué dos enlaces redundantes sin Spanning Tree provocan una tormenta de broadcast en vez de
+      dar tolerancia a fallos
+
+:::
+
+## Cierre de la Unidad 2
+
+Con este tema se cierra la Unidad 2. El recorrido empezó en el Tema 1 con las siete capas del modelo
+OSI y el principio de encapsulamiento entre ellas, siguió en el Tema 2 con las cuatro capas de la
+arquitectura TCP/IP y por qué esa arquitectura, más simple, terminó ganando la adopción práctica de
+internet, y hoy terminó bajando hasta el nivel más concreto de todos, la capa de acceso, con Ethernet
+como el ejemplo real de cómo se direccionan, empaquetan y reenvían los bits dentro de una red local. Ya
+tienes el vocabulario completo para leer, de aquí en adelante, cualquier diagrama de red que combine
+capas, protocolos y dispositivos físicos sin perderte en ninguno de los tres niveles.
+
+## Recursos
+
+- Institute of Electrical and Electronics Engineers (IEEE). IEEE 802.3-2022, "IEEE Standard for
+  Ethernet". [standards.ieee.org, 10422](https://standards.ieee.org/ieee/802.3/10422/)
+- Institute of Electrical and Electronics Engineers (IEEE). IEEE Registration Authority (asignación
+  de bloques OUI a fabricantes). [standards.ieee.org, regauth](https://standards.ieee.org/products-programs/regauth/)
+- Institute of Electrical and Electronics Engineers (IEEE). IEEE 802.1Q (bridging transparente y
+  Spanning Tree Protocol; incorpora el contenido del retirado IEEE 802.1D).
+- Internet Engineering Task Force (IETF). RFC 894, "A Standard for the Transmission of IP Datagrams
+  over Ethernet Networks". C. Hornig, abril de 1984. [rfc-editor.org, rfc894](https://www.rfc-editor.org/rfc/rfc894)
+- Internet Engineering Task Force (IETF). RFC 1042, "A Standard for the Transmission of IP Datagrams
+  over IEEE 802 Networks". J. Postel y J. Reynolds, febrero de 1988.
+  [rfc-editor.org, rfc1042](https://www.rfc-editor.org/rfc/rfc1042)
+- Internet Engineering Task Force (IETF). RFC 826, "An Ethernet Address Resolution Protocol (ARP)".
+  D. Plummer, noviembre de 1982. [rfc-editor.org, rfc826](https://www.rfc-editor.org/rfc/rfc826)
+- Internet Engineering Task Force (IETF). RFC 7042, "IANA Considerations and IETF Protocol and
+  Documentation Usage for IEEE 802 Parameters". D. Eastlake y J. Abley, octubre de 2013.
+  [rfc-editor.org, rfc7042](https://www.rfc-editor.org/rfc/rfc7042)
+- Tanenbaum, A. S. y Wetherall, D. J. *Redes de computadoras*. Capítulo de la subcapa de control de
+  acceso al medio, sección de Ethernet.
+- Kurose, J. F. y Ross, K. W. *Computer Networking: A Top-Down Approach*. Capítulo de la capa de
+  enlace y las LAN, secciones sobre Ethernet y switches.
+- Forouzan, B. A. *Transmisión de datos y redes de comunicaciones*. Capítulo sobre Ethernet cableada.
+- Stallings, W. *Comunicaciones y redes de computadores*. Capítulo sobre redes de área local y
+  Ethernet.
+
+::: {.pie-doc}
+Telemática para IoT (TPI01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

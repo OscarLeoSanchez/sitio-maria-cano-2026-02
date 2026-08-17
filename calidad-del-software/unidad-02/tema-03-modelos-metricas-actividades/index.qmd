@@ -1,0 +1,604 @@
+---
+title: "Tema 3. La caja de herramientas del SQA"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                |
+|--------|----------------------------------------------------------------|
+| Unidad | Unidad 2. Procesos de calidad del software. Modelos y métricas |
+| Tema   | Tema 3. Modelos, métricas, actividades y herramientas de SQA   |
+:::
+
+El Tema 2 mostró que la calidad no se revisa solo al final, sino que un ingeniero de SQA acompaña
+cada fase del ciclo de vida, desde los requisitos hasta el mantenimiento, y que ese acompañamiento
+necesita habilidades concretas de análisis y de comunicación. Hoy vas a ver con qué actividades
+concretas se llena ese acompañamiento día a día, con qué modelos la industria organiza esas
+actividades en un programa coherente, con qué métricas se mide si el programa funciona, y con qué
+herramientas se sostiene todo eso en un proyecto real. Es el tema más operativo de la unidad, así
+que vas a encontrar menos definiciones y más pasos, fórmulas y ejemplos que puedes calcular a mano.
+
+## Un programa de SQA tiene tres pilares operativos
+
+Un programa de SQA no es un documento ni una promesa, es un conjunto de actividades que se repiten
+a lo largo del proyecto. La literatura de la disciplina agrupa esas actividades en tres pilares que
+se apoyan entre sí, las revisiones, que examinan un producto de trabajo concreto, las auditorías,
+que verifican desde afuera que el equipo cumple los estándares y contratos que dijo que iba a
+cumplir, y la gestión de configuración, que controla cómo cambia el software para que ningún cambio
+se pierda ni se aplique sin registro. Ninguna de las tres funciona sola, porque una auditoría
+necesita los registros que deja la gestión de configuración para poder verificar algo, y una
+revisión que no se documenta no le sirve de evidencia a ninguna auditoría posterior.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Los tres pilares de un programa de SQA, revisiones, auditorias y gestion de configuracion, alimentan un programa central que produce metricas del programa, y esas metricas retroalimentan la siguiente ronda de revisiones y auditorias" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds23a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Tres pilares operativos de un programa de SQA</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="40" width="210" height="66" rx="10"/><rect x="275" y="40" width="210" height="66" rx="10"/><rect x="520" y="40" width="210" height="66" rx="10"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="135" y="68">Revisiones</text><text x="380" y="68">Auditorías</text><text x="625" y="68">Gestión de configuración</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="135" y="88">examinan un producto</text><text x="380" y="88">verifican desde afuera</text><text x="625" y="88">controlan el cambio</text></g>
+  <rect x="255" y="150" width="250" height="52" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="172" font-size="14" font-weight="700" fill="#0e6f6c" text-anchor="middle">Programa de SQA</text>
+  <text x="380" y="190" font-size="11" fill="#3c7d7a" text-anchor="middle">las tres actividades documentadas</text>
+  <rect x="215" y="230" width="330" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="255" font-size="12" fill="#12324f" text-anchor="middle">métricas del programa de SQA</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds23a)"><path d="M135,106 C180,124 260,138 300,150"/><path d="M380,106 L380,148"/><path d="M625,106 C560,124 480,138 460,150"/><path d="M380,202 L380,228"/></g>
+  <path d="M215,250 C80,250 60,140 130,108" fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="5 5" marker-end="url(#cds23a)"/>
+  <text x="70" y="180" font-size="10.5" fill="#5b6876" transform="rotate(-88 70 180)">retroalimentan la siguiente ronda</text>
+</svg>
+
+:::
+
+Las tres secciones que siguen desarrollan cada pilar por separado, y después la guía pasa a los
+modelos que organizan esos pilares en un sistema completo, a las métricas que salen de ese sistema,
+y a las herramientas que la industria usa para no llevar todo esto en papel.
+
+## Revisiones: examinar un producto de trabajo antes de que avance
+
+Una *revisión* es un proceso estructurado en el que un grupo de personas del proyecto examina un
+producto de trabajo, un requisito, un diseño, un fragmento de código o un plan de pruebas, con el
+fin de encontrarle defectos antes de que ese producto avance a la siguiente fase. El estándar
+IEEE 1028, *IEEE Standard for Software Reviews and Audits*, agrupa las revisiones en tres
+familias según quién revisa y con qué propósito, las revisiones de pares, que hacen los propios
+compañeros de equipo sobre el trabajo técnico de otro compañero, las revisiones de gestión, que
+evalúan el estado general del proyecto para orientar decisiones, y las auditorías, que hace
+personal externo al equipo para verificar cumplimiento de estándares y contratos, y que por su peso
+propio se desarrollan en la sección siguiente de esta guía.
+
+Dentro de las revisiones de pares hay dos técnicas que conviene distinguir con cuidado, porque se
+confunden con frecuencia y no cumplen el mismo papel. La *inspección* es un proceso formal, con
+roles fijos, moderador, lector, autor y registrador, con reglas de entrada y salida y con una lista
+de verificación que guía la búsqueda de defectos, orientado a encontrarlos de forma sistemática. El
+*walkthrough*, en cambio, lo lidera el propio autor del producto de trabajo, es más informal, y su
+dinámica es que el autor explica el producto paso a paso mientras los demás participantes hacen
+preguntas y señalan posibles problemas sobre la marcha.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Taxonomia de revisiones segun IEEE 1028, tres familias, revisiones de pares que se dividen en inspeccion formal y walkthrough informal, revisiones de gestion, y auditorias hechas por personal externo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds23b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="350" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Taxonomía de revisiones según IEEE 1028</text>
+  <rect x="270" y="30" width="160" height="42" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="55" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Revisiones de software</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="106" width="200" height="42" rx="8"/><rect x="250" y="106" width="200" height="42" rx="8"/><rect x="480" y="106" width="200" height="42" rx="8"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="120" y="132">Revisiones de pares</text><text x="350" y="132">Revisiones de gestión</text><text x="580" y="132">Auditorías</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds23b)"><path d="M320,72 C260,86 180,96 130,104"/><path d="M350,72 L350,104"/><path d="M390,72 C460,86 540,96 580,104"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="20" y="176" width="200" height="52" rx="8"/></g>
+  <text x="120" y="196" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">inspección: formal,</text>
+  <text x="120" y="212" font-size="11.5" fill="#5b6876" text-anchor="middle">roles fijos, checklist</text>
+  <rect x="230" y="176" width="200" height="52" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="330" y="196" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">walkthrough: informal,</text>
+  <text x="330" y="212" font-size="11.5" fill="#5b6876" text-anchor="middle">lo lidera el autor</text>
+  <path d="M80,148 L80,174" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#cds23b)"/>
+  <path d="M170,148 L330,174" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#cds23b)"/>
+  <text x="580" y="150" font-size="10.5" fill="#5b6876" text-anchor="middle">personal externo al equipo</text>
+</svg>
+
+:::
+
+El proceso formal de inspección tiene su origen documentado en Michael Fagan, quien lo desarrolló
+en IBM en 1976, y el propio IEEE 1028 formaliza ocho fases para ejecutarlo de forma repetible, la
+evaluación de entrada donde el líder confirma que existen las condiciones necesarias para que la
+revisión tenga sentido, la preparación de gestión, la planificación de la inspección concreta, una
+reunión de overview donde el equipo se pone en contexto, la preparación individual donde cada
+participante revisa el producto por su cuenta antes de reunirse, el examen grupal donde se listan
+los defectos encontrados, el retrabajo y seguimiento donde el autor corrige lo señalado y se
+confirma que las correcciones quedaron bien hechas, y la evaluación de salida donde se confirma que
+se completaron todas las actividades requeridas antes de dar por cerrada la inspección.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las ocho fases del proceso de inspeccion formal segun IEEE 1028, evaluacion de entrada, preparacion de gestion, planificacion, overview, preparacion individual, examen grupal, retrabajo y seguimiento, y evaluacion de salida, en secuencia de izquierda a derecha" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds23c" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Las ocho fases de una inspección formal (IEEE 1028)</text>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="10" y="60" width="85" height="56" rx="8"/><rect x="101" y="60" width="85" height="56" rx="8"/><rect x="192" y="60" width="85" height="56" rx="8"/><rect x="283" y="60" width="85" height="56" rx="8"/><rect x="374" y="60" width="85" height="56" rx="8"/><rect x="465" y="60" width="85" height="56" rx="8"/><rect x="556" y="60" width="85" height="56" rx="8"/><rect x="647" y="60" width="85" height="56" rx="8"/>
+  </g>
+  <g text-anchor="middle" font-size="9.5" font-weight="600" fill="#12324f">
+    <text x="52.5" y="82">1. Evaluación</text><text x="52.5" y="96">de entrada</text>
+    <text x="143.5" y="82">2. Preparación</text><text x="143.5" y="96">de gestión</text>
+    <text x="234.5" y="82">3. Planifi-</text><text x="234.5" y="96">cación</text>
+    <text x="325.5" y="90">4. Overview</text>
+    <text x="416.5" y="82">5. Preparación</text><text x="416.5" y="96">individual</text>
+    <text x="507.5" y="82">6. Examen</text><text x="507.5" y="96">grupal</text>
+    <text x="598.5" y="82">7. Retrabajo y</text><text x="598.5" y="96">seguimiento</text>
+    <text x="689.5" y="82">8. Evaluación</text><text x="689.5" y="96">de salida</text>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds23c)"><path d="M95,88 L99,88"/><path d="M186,88 L190,88"/><path d="M277,88 L281,88"/><path d="M368,88 L372,88"/><path d="M459,88 L463,88"/><path d="M550,88 L554,88"/><path d="M641,88 L645,88"/></g>
+  <text x="507.5" y="150" font-size="11.5" fill="#0e6f6c" text-anchor="middle">roles fijos durante el examen grupal:</text>
+  <text x="507.5" y="168" font-size="11" fill="#5b6876" text-anchor="middle">moderador, lector, autor, registrador</text>
+  <text x="598.5" y="150" font-size="10.8" fill="#5b6876" text-anchor="middle">el registrador documenta cada</text>
+  <text x="598.5" y="168" font-size="10.8" fill="#5b6876" text-anchor="middle">defecto para el seguimiento posterior</text>
+</svg>
+
+:::
+
+El valor de una revisión, y en particular de una inspección formal, es que detecta defectos más
+temprano y a menor costo que las pruebas, porque examina el producto de trabajo antes de que el
+defecto se propague a fases posteriores, y de paso transfiere conocimiento entre quienes participan
+y deja evidencia escrita que sirve más adelante como insumo de auditoría.
+
+## Auditorías: verificar desde afuera lo que el equipo dice que hace
+
+Una *auditoría* la hace personal ajeno al equipo de desarrollo, con el fin de verificar que los
+productos de trabajo y los procesos cumplen los estándares, procedimientos y contratos que la
+organización o el cliente establecieron, sin depender de que el propio equipo se autoevalúe. Dentro
+de la gestión de configuración existe una variante específica, la *auditoría de configuración*, que
+verifica que el conjunto de elementos que forman una versión del software coincide exactamente con
+lo que dicen los requisitos, el diseño, la arquitectura y la documentación de usuario, de modo que
+nadie pueda entregar una versión con piezas que nadie documentó.
+
+La diferencia entre una revisión de pares y una auditoría no está en qué se examina, sino en quién
+lo hace y con qué autoridad. Un compañero de equipo en una inspección busca defectos técnicos y
+puede discutir su criterio con el autor; un auditor externo verifica cumplimiento contra un
+estándar o un contrato, y su hallazgo no se negocia de la misma forma, porque su función es dar
+evidencia objetiva de que el proceso se siguió, no opinar sobre el diseño.
+
+## Gestión de configuración: controlar el cambio sin perder el rumbo
+
+La *gestión de configuración del software*, conocida por su sigla en inglés SCM, es la disciplina
+que rastrea y controla los cambios en un sistema de software a lo largo de su vida. El estándar
+IEEE 828-2012, *IEEE Standard for Configuration Management in Systems and Software Engineering*,
+organiza esta disciplina en actividades que trabajan juntas. Esta guía desarrolla las cuatro
+actividades centrales que suele citar la literatura del campo.
+
+- **Identificación de configuración.** Consiste en decidir qué piezas del proyecto son *elementos de
+  configuración*, un módulo de código, un documento de requisitos, un archivo de configuración de
+  despliegue, y en fijar puntos de referencia llamados *líneas base*, versiones acordadas de esos
+  elementos que sirven como punto de partida estable para cualquier cambio futuro.
+- **Control de configuración.** Es el proceso gestionado por el que se aprueba o se rechaza un
+  cambio propuesto sobre una línea base. Típicamente lo hace un *comité de control de cambios*,
+  conocido por su sigla en inglés CCB, que evalúa cada solicitud antes de que el cambio se aplique,
+  en lugar de dejar que cualquier persona modifique la línea base por su cuenta.
+- **Contabilidad del estado de configuración.** Documenta y comunica en qué estado está cada
+  elemento de configuración y cómo ha ido avanzando el proceso de desarrollo, de modo que en
+  cualquier momento se pueda responder con precisión qué versión de qué pieza existe y qué cambios
+  tiene pendientes.
+- **Auditoría de configuración.** Verifica, como se explicó arriba, que lo que realmente se
+  construyó coincide con lo que la documentación dice que se debía construir.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las cuatro actividades de la gestion de configuracion, identificacion que fija una linea base, un comite de control de cambios que aprueba o rechaza cada solicitud antes de aplicarla, contabilidad del estado que documenta el avance, y auditoria de configuracion que verifica coherencia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds23d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="360" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Ciclo de gestión de configuración (IEEE 828)</text>
+  <rect x="20" y="40" width="170" height="58" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="105" y="62" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Identificación</text>
+  <text x="105" y="80" font-size="10.5" fill="#3c7d7a" text-anchor="middle">fija la línea base</text>
+  <rect x="220" y="40" width="180" height="58" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="310" y="60" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Solicitud de cambio</text>
+  <text x="310" y="78" font-size="10.5" fill="#5b6876" text-anchor="middle">alguien pide modificar</text>
+  <rect x="440" y="40" width="180" height="58" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="530" y="60" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Comité de control (CCB)</text>
+  <text x="530" y="78" font-size="10.5" fill="#5b6876" text-anchor="middle">aprueba o rechaza</text>
+  <rect x="440" y="140" width="180" height="58" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="530" y="160" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Contabilidad del estado</text>
+  <text x="530" y="178" font-size="10.5" fill="#5b6876" text-anchor="middle">registra el nuevo estado</text>
+  <rect x="220" y="140" width="180" height="58" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="310" y="160" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Auditoría de configuración</text>
+  <text x="310" y="178" font-size="10.5" fill="#3c7d7a" text-anchor="middle">verifica coherencia final</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds23d)"><path d="M190,69 L218,69"/><path d="M400,69 L438,69"/><path d="M530,98 L530,138"/><path d="M440,169 L400,169"/></g>
+  <text x="310" y="230" font-size="11.5" fill="#5b6876" text-anchor="middle">nadie modifica la línea base sin pasar por el comité de control</text>
+</svg>
+
+:::
+
+Sin control de configuración, cualquier persona del equipo podría modificar una línea base sin que
+nadie más se entere, y sin contabilidad del estado nadie sabría, en un momento dado, qué versión
+exacta del software se entregó en cada corte del proyecto. Las dos secciones anteriores dependen de
+esta, porque una revisión y una auditoría solo tienen sentido sobre productos de trabajo cuyo
+historial de cambios está registrado con claridad.
+
+## Modelos de calidad: ISO/IEC 25010 y CMMI
+
+Las actividades de arriba se ejecutan dentro de un marco más amplio, un *modelo de calidad*, que
+define qué características hacen que un producto o un proceso se considere de calidad y cómo se
+evalúan. Esta guía desarrolla dos modelos que la industria usa con frecuencia y que cubren ángulos
+distintos, uno describe la calidad del producto, el otro describe la madurez del proceso con el que
+la organización lo construye.
+
+ISO/IEC 25010, parte de la familia de normas conocida como SQuaRE, *Software Product Quality
+Requirements and Evaluation*, y sucesora de la norma ISO/IEC 9126, define en su edición del año
+2011 ocho características de calidad de producto, con 31 subcaracterísticas que las detallan. Esta
+guía presenta la lista de la edición 2011 porque es la que se pudo verificar con detalle; existe una
+edición posterior de 2023 que actualiza el modelo, y si tu proyecto necesita el detalle exacto de
+esa edición conviene consultar directamente el catálogo de ISO antes de citarla.
+
+- **Adecuación funcional.** Que el software haga lo que promete hacer, de forma completa y correcta.
+- **Eficiencia de desempeño.** Comportamiento en el tiempo, uso de recursos y capacidad bajo carga.
+- **Compatibilidad.** Que coexista con otros sistemas y que pueda interoperar con ellos.
+- **Usabilidad.** Que se reconozca, se aprenda, se opere y se proteja al usuario de sus propios
+  errores, además de la estética y la accesibilidad.
+- **Fiabilidad.** Madurez frente a fallos, tolerancia a ellos, capacidad de recuperación y
+  disponibilidad.
+- **Seguridad.** Confidencialidad, integridad, no repudio, responsabilidad y autenticidad.
+- **Mantenibilidad.** Qué tan modular, reusable, analizable y modificable es, y qué tan fácil es
+  probarlo.
+- **Portabilidad.** Qué tan fácil es adaptarlo, instalarlo o reemplazarlo por otra versión.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las ocho caracteristicas de calidad de producto de ISO/IEC 25010 edicion 2011 alrededor de un nucleo central que representa la calidad del producto de software" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">ISO/IEC 25010:2011, ocho características de calidad de producto</text>
+  <circle cx="350" cy="175" r="70" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="170" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Calidad del</text>
+  <text x="350" y="188" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">producto</text>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="20" y="40" width="150" height="42" rx="8"/><rect x="20" y="270" width="150" height="42" rx="8"/><rect x="530" y="40" width="150" height="42" rx="8"/><rect x="530" y="270" width="150" height="42" rx="8"/><rect x="275" y="10" width="150" height="42" rx="8"/><rect x="275" y="300" width="150" height="42" rx="8"/><rect x="10" y="155" width="150" height="42" rx="8"/><rect x="540" y="155" width="150" height="42" rx="8"/>
+  </g>
+  <g text-anchor="middle" font-size="11.5" font-weight="600" fill="#12324f">
+    <text x="95" y="65">Adecuación funcional</text><text x="95" y="295">Fiabilidad</text><text x="605" y="65">Eficiencia</text><text x="605" y="295">Mantenibilidad</text><text x="350" y="35">Compatibilidad</text><text x="350" y="325">Portabilidad</text><text x="85" y="180">Usabilidad</text><text x="615" y="180">Seguridad</text>
+  </g>
+</svg>
+
+:::
+
+CMMI, *Capability Maturity Model Integration*, es un marco de mejora de procesos originado en la
+Universidad Carnegie Mellon y en el Software Engineering Institute, hoy operado bajo ISACA, que
+adquirió CMMI Institute en 2016. En lugar de evaluar el producto, evalúa qué tan madura es la forma
+en que la organización gestiona su proceso, en cinco niveles crecientes.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 620 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Los cinco niveles de madurez de CMMI en forma de escalera, inicial, gestionado, definido, gestionado cuantitativamente y optimizacion, del mas bajo al mas alto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="310" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Los cinco niveles de madurez de CMMI</text>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="20" y="220" width="560" height="42" rx="6"/><rect x="60" y="176" width="480" height="42" rx="6"/><rect x="100" y="132" width="400" height="42" rx="6"/><rect x="140" y="88" width="320" height="42" rx="6"/>
+  </g>
+  <rect x="180" y="44" width="240" height="42" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f">
+    <text x="300" y="246">1. Inicial: impredecible, ad hoc</text>
+    <text x="300" y="202">2. Gestionado: procesos básicos por proyecto</text>
+    <text x="300" y="158">3. Definido: procesos estándar en la organización</text>
+    <text x="300" y="114">4. Gestionado cuantitativamente: medido con datos</text>
+  </g>
+  <text x="300" y="70" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">5. Optimización: mejora continua</text>
+</svg>
+
+:::
+
+Las áreas de proceso que comparten las tres constelaciones de CMMI, Desarrollo, Adquisición y
+Servicios, suman diecisiete en la versión 1.3 y se agrupan en tres categorías, gestión de procesos,
+con la definición organizacional de procesos y el entrenamiento del personal, gestión de proyectos,
+con la planificación, el monitoreo y la gestión de riesgos, y soporte, donde entran justamente la
+gestión de configuración y el aseguramiento de calidad de proceso y producto que viste arriba. La
+constelación de Desarrollo, CMMI-DEV, que es la que aplica directamente a un equipo de software,
+añade una cuarta categoría propia, ingeniería, con áreas de proceso como el desarrollo y la gestión
+de requisitos, la solución técnica, la integración del producto, la verificación y la validación,
+con lo que el total de áreas de proceso para CMMI-DEV sube a veintidós. Una organización no se
+certifica en CMMI, se somete a una *apreciación*, un proceso de evaluación formal que confirma en
+qué nivel opera realmente. CMMI se usa con frecuencia como requisito contractual en proyectos de
+software para el sector gobierno, en particular en contratos de defensa de Estados Unidos,
+precisamente porque le da al cliente evidencia auditable de que el proceso del contratista es
+predecible y repetible, no solo que el producto final funcionó esta vez.
+
+Vale la pena mencionar un tercer marco que conecta estos modelos con las herramientas automáticas
+de la última sección de esta guía, el CISQ, *Consortium for IT Software Quality*, que a partir de
+los modelos ISO definió cinco características estructurales que se pueden medir de forma automática
+sobre el código fuente, confiabilidad, eficiencia, seguridad, mantenibilidad y un tamaño adecuado, y
+que sirve de base a buena parte del análisis estático que usan las herramientas de calidad en la
+industria hoy.
+
+## Métricas: cómo se mide lo que el modelo describe
+
+Un modelo de calidad describe qué características importan; una *métrica* es la medida concreta que
+dice si esas características se están cumpliendo. La literatura del campo distingue tres categorías
+de métricas según qué observan.
+
+- **Métricas de proceso.** Miden la metodología de desarrollo en sí, la duración de los ciclos, el
+  esfuerzo invertido, el tiempo medio de resolución de un defecto o la tasa de reapertura de
+  defectos ya cerrados.
+- **Métricas de producto.** Evalúan propiedades del entregable, la densidad de defectos, la
+  mantenibilidad del código o su cobertura de pruebas.
+- **Métricas de proyecto.** Siguen la salud general del proyecto, el cumplimiento del presupuesto,
+  el avance del cronograma y la asignación de recursos.
+
+Dos ejemplos concretos de métricas de producto merecen desarrollo aparte porque aparecen en casi
+cualquier proyecto real. La *densidad de defectos* cuenta cuántos defectos aparecen por unidad de
+tamaño del software, por ejemplo por cada mil líneas de código o por cada punto de función, y sirve
+para comparar módulos entre sí o para ver si un módulo mejora de una versión a otra. La *cobertura
+de código* mide qué porcentaje del código llega a ejecutarse durante las pruebas automatizadas, y
+avisa sobre partes del sistema que ninguna prueba toca todavía. Ninguna de las dos, por sí sola, dice
+si el software es bueno, porque un módulo puede tener cobertura alta y aun así estar mal probado si
+las aserciones de esas pruebas son débiles; son señales que hay que leer junto con las demás, no
+verdades absolutas.
+
+## Complejidad ciclomática: una métrica que se puede calcular a mano
+
+La *complejidad ciclomática* mide cuántos caminos linealmente independientes tiene el flujo de
+control de un programa, y la definió Thomas McCabe en un artículo de 1976 publicado en IEEE
+Transactions on Software Engineering. Cuantos más caminos distintos puede tomar la ejecución de una
+función, más casos hacen falta para probarla a fondo, y más difícil es para una persona sostener
+todos esos caminos en la cabeza al leer el código. La fórmula que propuso McCabe se calcula sobre el
+grafo de flujo de control del programa.
+
+Antes de ver la fórmula en un ejemplo, conviene mirar qué es ese grafo. Cada bloque de código que se
+ejecuta sin bifurcarse es un *nodo*, y cada posible salto de un bloque a otro, ya sea porque el flujo
+sigue en línea recta o porque una condición se cumple o no se cumple, es una *arista*. La fórmula de
+McCabe es `M = E - N + 2P`, donde E es el número de aristas, N el número de nodos y P el número de
+componentes conectados del grafo, que para una sola función vale 1, así que la fórmula queda
+`M = E - N + 2`. Para que el grafo tenga un único componente conectado, todos los caminos de salida
+de la función deben converger en un mismo nodo de fin, así que el grafo siempre incluye ese nodo
+además del nodo de inicio.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 700 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafo de flujo de control del metodo clasificarEdad con nueve nodos y once aristas, tres decisiones anidadas tipo si-sino cuyos cuatro caminos de retorno convergen en un nodo de fin, y el calculo de la complejidad ciclomatica M igual a E menos N mas dos igual a cuatro" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds23e" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="350" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Grafo de flujo de clasificarEdad y su complejidad ciclomática</text>
+  <g fill="#eef4fa" stroke="#c7d6e6" text-anchor="middle">
+    <rect x="290" y="30" width="120" height="34" rx="6"/><text x="350" y="52" font-size="11" fill="#12324f">inicio</text>
+    <rect x="270" y="86" width="160" height="34" rx="6"/><text x="350" y="108" font-size="11" fill="#12324f">edad menor que 0</text>
+    <rect x="30" y="142" width="140" height="34" rx="6"/><text x="100" y="164" font-size="10.5" fill="#12324f">retorna invalida</text>
+    <rect x="270" y="142" width="160" height="34" rx="6"/><text x="350" y="164" font-size="11" fill="#12324f">edad menor que 13</text>
+    <rect x="30" y="198" width="140" height="34" rx="6"/><text x="100" y="220" font-size="10.5" fill="#12324f">retorna nino</text>
+    <rect x="270" y="198" width="160" height="34" rx="6"/><text x="350" y="220" font-size="11" fill="#12324f">edad menor que 18</text>
+    <rect x="510" y="198" width="150" height="34" rx="6"/><text x="585" y="220" font-size="10.5" fill="#12324f">retorna adolescente</text>
+    <rect x="270" y="254" width="160" height="34" rx="6"/><text x="350" y="276" font-size="10.5" fill="#12324f">retorna adulto</text>
+    <rect x="270" y="310" width="160" height="34" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/><text x="350" y="332" font-size="11" fill="#12324f">fin</text>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#cds23e)">
+    <path d="M350,64 L350,84"/>
+    <path d="M270,110 C200,122 140,132 105,140"/>
+    <path d="M350,120 L350,140"/>
+    <path d="M270,166 C200,178 140,188 105,196"/>
+    <path d="M350,176 L350,196"/>
+    <path d="M270,222 C480,236 560,232 585,196"/>
+    <path d="M350,232 L350,252"/>
+    <path d="M100,176 C60,250 180,320 268,323"/>
+    <path d="M100,232 C60,280 180,332 268,335"/>
+    <path d="M585,232 C585,300 480,328 432,320"/>
+    <path d="M350,288 L350,308"/>
+  </g>
+  <text x="600" y="60" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">E = 11, N = 9</text>
+  <text x="600" y="80" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">M = 11 - 9 + 2 = 4</text>
+</svg>
+
+:::
+
+```java
+public String clasificarEdad(int edad) {
+    if (edad < 0) {
+        return "invalida";
+    } else if (edad < 13) {
+        return "nino";
+    } else if (edad < 18) {
+        return "adolescente";
+    } else {
+        return "adulto";
+    }
+}
+```
+
+Contar nodos y aristas sobre un grafo funciona, pero es lento para un método largo. En la práctica
+casi nadie dibuja el grafo, porque McCabe demostró una regla equivalente y mucho más rápida para
+programas estructurados, sin saltos incontrolados, la complejidad ciclomática es igual al número de
+puntos de decisión del código más uno. En `clasificarEdad` hay tres puntos de decisión, las tres
+condiciones del `if` y de los dos `else if`, así que `M = 3 + 1 = 4`, el mismo resultado que da
+contar aristas y nodos sobre el grafo.
+
+El propio McCabe recomendaba dividir cualquier módulo que superara una complejidad de 10, y el NIST,
+en su metodología de *Structured Testing* publicada como *Special Publication 500-235*, adoptó ese
+mismo umbral, con excepciones documentadas hasta 15 en casos justificados. Esa metodología clasifica
+el riesgo del módulo según su complejidad, entre 1 y 10 es un riesgo bajo, entre 11 y 20 moderado,
+entre 21 y 50 alto, y por encima de 50 el código se considera prácticamente imposible de probar a
+fondo. La misma fuente conecta la métrica con las pruebas, porque el número de casos de prueba
+recomendado para cubrir todos los caminos básicos de un método coincide con su complejidad
+ciclomática, cuatro casos de prueba distintos harían falta para ejercitar por completo
+`clasificarEdad`.
+
+## Herramientas que usa la industria
+
+Ningún equipo lleva revisiones, auditorías y métricas en papel durante mucho tiempo, así que un
+programa de SQA real se apoya en herramientas. Vale la pena nombrar las categorías más comunes, sin
+entrar en características o cifras específicas de un producto, porque esas cambian de versión en
+versión y conviene verificarlas siempre contra la documentación oficial del fabricante antes de
+tomar una decisión de equipo.
+
+- **Control de versiones y gestión de configuración.** Sistemas como Git, casi siempre combinados
+  con una plataforma de alojamiento de repositorios, son hoy el mecanismo más común para llevar el
+  historial de cambios y aplicar el control de configuración que viste arriba, incluyendo revisiones
+  de código antes de aceptar un cambio.
+- **Seguimiento de incidencias y gestión de cambios.** Herramientas como Jira registran solicitudes
+  de cambio, defectos encontrados en revisiones y su estado, y sirven de insumo directo para la
+  contabilidad del estado de configuración.
+- **Integración continua.** Automatizan la construcción y las pruebas cada vez que alguien propone
+  un cambio, de modo que ciertas métricas, como la cobertura de pruebas, se recalculan en cada
+  cambio en lugar de revisarse manualmente cada tanto.
+- **Análisis estático de código.** Herramientas como SonarQube examinan el código fuente sin
+  ejecutarlo y reportan métricas de mantenibilidad, complejidad y posibles vulnerabilidades,
+  apoyándose en modelos como el de CISQ mencionado arriba. Antes de fijar un umbral concreto para tu
+  proyecto conviene revisar la documentación oficial de la herramienta que uses, porque los nombres
+  exactos de cada métrica varían de una versión a otra.
+
+## Cuando el programa de SQA se vuelve teatro
+
+Caso de estudio. Una organización de desarrollo de software decide perseguir la apreciación de
+CMMI nivel 3 porque un cliente grande lo exige como condición del contrato. Para lograrlo, cada
+equipo empieza a producir actas de revisión, formularios de control de cambios y reportes de
+métricas en cantidades cada vez mayores, y toda esa documentación se archiva con cuidado para el día
+de la apreciación. Seis meses después, el equipo de mantenimiento sigue recibiendo la misma cantidad
+de defectos reportados por los usuarios que antes de empezar el programa, y la moral del equipo bajó
+porque cada tarea ahora exige llenar tres formularios adicionales. ¿Qué falló, el modelo CMMI en sí
+mismo, o la forma en que la organización lo aplicó?
+
+La distinción entre SQA como proceso y SQC como producto, que abrió esta unidad en el Tema 1, es la
+que explica el problema. Un programa de SQA mal implementado puede auditar que un proceso se siguió
+al pie de la letra, actas firmadas, formularios completos, sin verificar en ningún momento si ese
+proceso de verdad está previniendo defectos en el producto final. Cuando eso pasa, revisiones y
+auditorías se convierten en burocracia que se cumple para pasar la evaluación, no en un mecanismo
+que mejora la calidad real del software, y este patrón de organizaciones que persiguen la
+certificación como fin en sí mismo, en lugar de como consecuencia de un proceso que efectivamente
+funciona, está ampliamente documentado en la literatura de mejora de procesos, aunque las cifras
+concretas de cada caso varíen de una organización a otra y conviene no generalizarlas sin revisar la
+fuente original de cada estudio.
+
+Un segundo caso, más pequeño pero igual de instructivo, ocurre con la complejidad ciclomática. El
+umbral de 10 que recomienda McCabe es una señal de riesgo, no una meta a perseguir por sí misma, y
+un mal uso frecuente en la industria consiste en fragmentar funciones de forma artificial solo para
+bajar el número, extrayendo un pedazo de lógica a un método nuevo sin que ese método tenga sentido
+por sí solo, con lo que la complejidad reportada baja pero la legibilidad real del código no mejora
+en nada, y a veces hasta empeora porque ahora hay que saltar entre dos métodos para entender uno
+solo. En los dos casos el error de fondo es el mismo, optimizar la métrica en lugar de optimizar
+aquello que la métrica trataba de representar.
+
+::: {.callout-tip}
+## Reto 1. Calcula la complejidad ciclomática
+
+Antes de mirar la solución, calcula a mano la complejidad ciclomática del siguiente método,
+contando sus puntos de decisión y aplicando la fórmula `M = decisiones + 1`.
+
+```java
+public int contarPositivosPares(int[] numeros) {
+    int contador = 0;
+    for (int n : numeros) {
+        if (n > 0) {
+            if (n % 2 == 0) {
+                contador++;
+            }
+        }
+    }
+    return contador;
+}
+```
+
+<label><input type="checkbox"> M = 2</label><br>
+<label><input type="checkbox"> M = 3</label><br>
+<label><input type="checkbox"> M = 4</label><br>
+<label><input type="checkbox"> M = 5</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+El método tiene tres puntos de decisión, el `for` que recorre el arreglo, el `if (n > 0)` y el
+`if (n % 2 == 0)` anidado dentro de él, así que `M = 3 + 1 = 4`. La opción correcta es la tercera.
+
+Fíjate en que la complejidad no depende de cuántas veces se ejecuta el ciclo en tiempo de ejecución,
+sino de cuántos caminos distintos existen en el código fuente, así que da igual que el arreglo
+`numeros` tenga tres elementos o tres mil, la complejidad del método es 4 de todas formas. Con
+`M = 4`, la metodología de McCabe recomendaría cuatro casos de prueba para cubrir los caminos
+básicos, por ejemplo un arreglo vacío, uno con un número negativo, uno con un positivo impar y uno
+con un positivo par.
+:::
+
+::: {.callout-tip}
+## Reto 2. Encuentra las fallas de gestión de configuración
+
+Lee esta situación con calma antes de responder. El equipo de un proyecto guarda el código en un
+repositorio compartido. Cualquier integrante hace commit directo a la rama principal sin que nadie
+más lo revise. Nadie lleva un registro de qué versión exacta del software se entregó al cliente en
+cada corte del proyecto. Cuando aparece un error en producción, el equipo tarda horas en saber qué
+cambio reciente pudo haberlo causado, porque no existe una lista clara de qué se modificó, quién lo
+modificó y por qué. Además, dos integrantes distintos, sin saberlo, corrigen el mismo defecto por
+separado, y terminan con código duplicado que entra en conflicto.
+
+Identifica al menos tres de las cuatro actividades de gestión de configuración que esta guía
+desarrolló arriba, identificación, control de cambios, contabilidad del estado y auditoría de
+configuración, que están fallando en este equipo, y para cada una señala qué frase del párrafo
+anterior es la evidencia de la falla.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+- **Falla el control de cambios.** No existe un comité de control de cambios ni ningún proceso de
+  aprobación antes de aplicar una modificación, cualquier integrante hace commit directo a la rama
+  principal, así que no hay ningún punto donde se evalúe un cambio antes de que afecte a los demás.
+- **Falla la contabilidad del estado.** Nadie lleva un registro de qué versión exacta del software
+  se entregó al cliente en cada corte, así que en cualquier momento sería imposible responder con
+  precisión qué contiene la versión que el cliente tiene instalada ahora mismo.
+- **Falla la identificación de configuración, aplicada a la coordinación del trabajo.** Que dos
+  integrantes corrijan el mismo defecto por separado sin saberlo muestra que no hay un registro
+  visible de qué elemento de configuración está siendo modificado y por quién en cada momento, así
+  que nadie puede consultar ese estado antes de empezar su propio cambio.
+- **Como consecuencia, tampoco podría hacerse una auditoría de configuración confiable.** Una
+  auditoría necesita justamente los registros que las tres actividades anteriores deberían haber
+  dejado, y aquí no existen. Este es el mismo motivo por el que la sección de gestión de
+  configuración de esta guía insiste en que los cuatro pilares se sostienen entre sí, si fallan los
+  primeros tres, el cuarto no tiene sobre qué apoyarse.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía
+
+- [ ] La diferencia entre una inspección formal y un walkthrough, y las ocho fases de una
+      inspección según IEEE 1028
+- [ ] Qué verifica una auditoría de configuración y en qué se diferencia de una revisión de pares
+- [ ] Las cuatro actividades de la gestión de configuración según IEEE 828 y para qué sirve un
+      comité de control de cambios
+- [ ] Las ocho características de calidad de producto de ISO/IEC 25010 y los cinco niveles de
+      madurez de CMMI
+- [ ] Cómo se calcula la complejidad ciclomática de un método, tanto sobre el grafo de flujo como
+      contando puntos de decisión
+- [ ] Por qué perseguir una métrica o una certificación como fin en sí mismo puede volver el
+      programa de SQA un ejercicio de burocracia vacía
+:::
+
+## Cierre de la Unidad 2
+
+Con este tema termina la Unidad 2. El Tema 1 distinguió el SQA, que audita el proceso, del control
+de calidad, que verifica el producto. El Tema 2 mostró cómo ese acompañamiento se reparte a lo largo
+de todo el ciclo de vida del software, con roles y habilidades concretas para cada etapa. Hoy viste
+las actividades con las que ese acompañamiento se ejecuta en la práctica, revisiones, auditorías y
+gestión de configuración, los modelos con los que la industria organiza esas actividades en un
+sistema completo, ISO/IEC 25010 y CMMI, y las métricas y herramientas con las que se mide y se
+sostiene todo eso en un proyecto real. Guarda especial atención al caso de la complejidad
+ciclomática y al de CMMI como teatro de cumplimiento, porque la misma lección se repite en cualquier
+programa de calidad que dependa de números y certificaciones, medir bien una señal es útil, pero
+perseguir la señal en lugar de lo que representa termina produciendo el efecto contrario al que se
+buscaba.
+
+## Recursos
+
+- Pressman, R. S. *Ingeniería de software: un enfoque práctico.* Capítulo sobre gestión de calidad
+  del software y aseguramiento de calidad.
+- Galin, D. *Software Quality: Concepts and Practice.* Capítulos sobre la función de SQA, sus
+  actividades y su organización.
+- Sommerville, I. *Ingeniería de software.* Capítulo sobre gestión de calidad.
+- Fenton, N. E. y Bieman, J. (2014). *Software Metrics: A Rigorous and Practical Approach* (3.a
+  ed.). CRC Press.
+- McCabe, T. J. (1976). "A Complexity Measure." *IEEE Transactions on Software Engineering*, 2(4),
+  308-320. [doi.org, tse.1976.233837](https://doi.org/10.1109/tse.1976.233837)
+- Watson, A. H. y McCabe, T. J. (1996). *Structured Testing: A Testing Methodology Using the
+  Cyclomatic Complexity Metric.* NIST Special Publication 500-235.
+  [nvlpubs.nist.gov, nistspecialpublication500 235](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication500-235.pdf)
+- [IEEE Std 828-2012, Configuration Management in Systems and Software Engineering](https://ieeexplore.ieee.org/document/6170935/)
+- [Wikipedia: Software review](https://en.wikipedia.org/wiki/Software_review). Resume el proceso de
+  IEEE 1028 con referencia a la norma primaria.
+- [Wikipedia: ISO/IEC 25010](https://en.wikipedia.org/wiki/ISO/IEC_25010). Ficha del documento
+  primario en el catálogo de ISO: [iso.org, 35733](https://www.iso.org/standard/35733.html)
+- [Wikipedia: Capability Maturity Model Integration](https://en.wikipedia.org/wiki/Capability_Maturity_Model_Integration)
+- [CISQ, Consortium for IT Software Quality, estándares de calidad de código](https://www.it-cisq.org/standards/code-quality-standards/)
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

@@ -1,0 +1,486 @@
+---
+title: "Tema 3. El navegador como taller de trabajo"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                                     |
+|--------|-------------------------------------------------------------------------------------|
+| Unidad | Unidad 2. Herramientas de trabajo en desarrollo de aplicaciones para dispositivos móviles |
+| Tema   | Tema 3. Herramientas avanzadas de desarrollo y la web desde el prisma del desarrollo móvil |
+:::
+
+El Tema 2 dejó resuelto cómo un equipo guarda y comparte el historial de un proyecto, con Git en la
+terminal y GitHub como servicio web alrededor de ese historial. Hoy el terreno cambia de la línea de
+comandos al propio navegador, porque ahí es donde vas a pasar buena parte de tu tiempo cuando el
+código que escribas sea código web, y un navegador moderno trae herramientas de inspección tan
+completas que muchas veces reemplazan a un depurador aparte. Vas a ver cuatro cosas que están más
+conectadas entre sí de lo que parece a primera vista, cómo inspeccionar y depurar una página con las
+herramientas que ya trae Chrome, qué hace por dentro un *bundler* cuando empaqueta un proyecto para
+producción, qué significa diseñar pensando primero en la pantalla más pequeña, y un panorama de las
+formas en que la web y el desarrollo móvil se cruzan hoy, sin comprometernos todavía con un framework
+concreto para construir esas interfaces, porque esa decisión sigue abierta hasta que el diagnóstico
+del curso la resuelva.
+
+## Un panel de instrumentos dentro del navegador
+
+Chrome DevTools es, según lo describe la propia documentación de Chrome for Developers, un conjunto
+de herramientas de desarrollo web integradas directamente en el navegador Google Chrome que permite
+editar páginas sobre la marcha y diagnosticar problemas rápidamente. La idea central que conviene
+fijar desde ya es que no es un programa aparte que instalas, sino una función del navegador que
+abres con la tecla F12 o clic derecho, inspeccionar, y que mira exactamente la misma página que
+tienes abierta en esa pestaña en ese instante, no una copia ni una simulación externa.
+
+DevTools no es un solo panel, es una fila de paneles, y cada uno responde una pregunta distinta sobre
+la página. El panel *Elements* muestra y deja modificar en vivo la estructura del DOM y los estilos
+CSS aplicados. El panel *Console* ejecuta JavaScript directamente contra la página y muestra los
+mensajes que el código haya registrado con `console.log`, además de errores y advertencias. El panel
+*Sources* deja inspeccionar los archivos que carga la página y depurar JavaScript paso a paso, con
+puntos de interrupción que congelan la ejecución en una línea concreta. El panel *Network* registra
+cada petición HTTP que la página hace y su respuesta, útil para ver cuánto pesa cada archivo y cuánto
+tarda en llegar. El panel *Performance* mide la velocidad de carga y la eficiencia de la página
+mientras corre. El panel *Memory* ayuda a encontrar fugas de memoria y problemas de rendimiento
+asociados. El panel *Application* muestra el almacenamiento local de la página, los service workers y
+las capacidades relacionadas con aplicaciones web progresivas.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Los siete paneles principales de Chrome DevTools en una fila, como Elements, Console, Sources, Network, Performance, Memory y Application, con una flecha que baja desde el panel Network hacia el boton Toggle device toolbar que abre Device Mode" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov2t3a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">DevTools: un panel distinto para cada pregunta</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="40" width="94" height="42" rx="8"/><rect x="120" y="40" width="94" height="42" rx="8"/><rect x="220" y="40" width="94" height="42" rx="8"/><rect x="320" y="40" width="94" height="42" rx="8"/><rect x="420" y="40" width="94" height="42" rx="8"/><rect x="520" y="40" width="94" height="42" rx="8"/><rect x="620" y="40" width="94" height="42" rx="8"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="67" y="65">Elements</text><text x="167" y="65">Console</text><text x="267" y="65">Sources</text><text x="367" y="65">Network</text><text x="467" y="65">Performance</text><text x="567" y="65">Memory</text><text x="667" y="65">Application</text></g>
+  <path d="M367,82 C367,110 380,110 380,140" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov2t3a)"/>
+  <rect x="290" y="140" width="180" height="62" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="165" font-size="14" font-weight="700" fill="#0e6f6c" text-anchor="middle">Device Mode</text>
+  <text x="380" y="184" font-size="11" fill="#3c7d7a" text-anchor="middle">Ctrl+Shift+M / Cmd+Shift+M</text>
+  <text x="380" y="216" font-size="11" fill="#5b6876" text-anchor="middle">simula viewport, CPU y red; no reemplaza un telefono real</text>
+</svg>
+
+:::
+
+Para el trabajo en desarrollo móvil, los paneles Network y Performance son los que más vas a abrir,
+porque una página que carga rápido en tu computador con conexión de fibra puede tardar varios segundos
+en un teléfono con datos móviles, y ninguno de los dos paneles necesita que tengas ese teléfono en la
+mano para empezar a sospechar del problema.
+
+## Simular un móvil sin tener uno en la mano
+
+El botón resaltado en el diagrama anterior abre *Device Mode*, que la documentación oficial de Chrome
+describe como una colección de funciones de DevTools que ayudan a simular dispositivos móviles dentro
+del propio navegador de escritorio. Device Mode no es una sola función, sino un conjunto de
+simulaciones independientes que se activan por separado. Estas son las principales:
+
+- El tamaño de la pantalla o *viewport*, con valores predefinidos como Mobile S, Mobile M, Mobile L o
+  Tablet.
+- La densidad de píxeles del dispositivo o *DPR*.
+- La limitación de la velocidad del procesador o *CPU throttling*, con niveles como 4x, 6x o 20x más
+  lento que el procesador real de la máquina.
+- La limitación de la velocidad de red o *network throttling*, que simula una conexión 3G rápida o
+  lenta.
+- Los eventos táctiles en vez de clics de mouse.
+- El identificador de user agent que la página recibe.
+- Sensores como geolocalización y orientación del dispositivo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Device Mode en el centro conectado a seis simulaciones independientes, como viewport, DPR, CPU throttling, network throttling, eventos tactiles y sensores; debajo una advertencia oficial de Chrome sobre los limites de esta simulacion y la recomendacion de usar Remote Debugging" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov2t3b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <rect x="300" y="14" width="160" height="38" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="38" font-size="13.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Device Mode</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#lenmov2t3b)"><path d="M340,52 C300,68 200,72 75,88"/><path d="M355,52 C330,68 260,74 197,88"/><path d="M368,52 C360,68 335,76 319,88"/><path d="M392,52 C400,68 425,76 441,88"/><path d="M405,52 C440,68 500,74 563,88"/><path d="M420,52 C480,68 600,72 685,88"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="18" y="88" width="115" height="56" rx="8"/><rect x="140" y="88" width="115" height="56" rx="8"/><rect x="262" y="88" width="115" height="56" rx="8"/><rect x="384" y="88" width="115" height="56" rx="8"/><rect x="506" y="88" width="115" height="56" rx="8"/><rect x="628" y="88" width="115" height="56" rx="8"/></g>
+  <g text-anchor="middle" font-size="11" font-weight="600" fill="#12324f"><text x="75" y="108">Viewport</text><text x="197" y="108">DPR</text><text x="319" y="108">CPU throttling</text><text x="441" y="108">Network throttling</text><text x="563" y="108">Eventos tactiles</text><text x="685" y="108">Sensores / UA</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="75" y="124">Mobile S/M/L</text><text x="75" y="138">Tablet</text><text x="319" y="124">4x, 6x, 20x</text><text x="441" y="124">3G rapida/lenta</text><text x="563" y="124">tap, swipe</text><text x="685" y="124">geolocalizacion</text><text x="685" y="138">orientacion</text></g>
+  <rect x="40" y="170" width="680" height="72" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="192" font-size="12" fill="#12324f" text-anchor="middle">Chrome documenta Device Mode como una aproximacion de primer orden: el codigo sigue</text>
+  <text x="380" y="210" font-size="12" fill="#12324f" text-anchor="middle">corriendo sobre la CPU de escritorio, con una arquitectura distinta a la de un movil real.</text>
+  <text x="380" y="230" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Recomendacion oficial: complementar con Remote Debugging sobre hardware real.</text>
+</svg>
+
+:::
+
+El matiz importante es el que aparece en el recuadro de abajo del diagrama, y viene de la propia
+documentación de Chrome, ya que Device Mode es una aproximación de primer orden, no una emulación
+real de hardware móvil. El código que corre dentro de Device Mode sigue ejecutándose sobre el
+procesador del computador de escritorio, cuya arquitectura es distinta a la de un procesador móvil,
+así que el número que ves en CPU throttling escala el tiempo pero no reproduce las limitaciones
+térmicas ni arquitectónicas reales de un teléfono. Por eso Chrome recomienda de forma explícita
+complementar Device Mode con depuración remota sobre un dispositivo físico conectado, en vez de
+confiar únicamente en la simulación del navegador.
+
+### Caso de estudio: el equipo de la app de viajes
+
+Un equipo construye la versión web de una app de reserva de vuelos siguiendo un enfoque
+mobile-first, con el CSS base pensado para pantalla angosta y reglas que amplían el diseño en
+pantallas más anchas. Durante el desarrollo abren Device Mode, activan el preset de un teléfono
+mediano, suben el CPU throttling a 4x y el network throttling a 3G lenta, y ajustan el layout hasta
+que la página carga y responde de forma fluida bajo esas condiciones simuladas. Antes de publicar, la
+pregunta que vale la pena hacerse es si esa fluidez simulada es prueba suficiente de que la app
+funcionará igual de bien en un teléfono real de gama baja.
+
+La respuesta, según la propia documentación de Chrome citada arriba, es que no lo es del todo. El
+throttling de CPU escala tiempos sobre un procesador de escritorio, no reproduce el comportamiento
+térmico ni la arquitectura de un procesador móvil real, así que un equipo que valida rendimiento
+únicamente con Device Mode puede llevarse una sorpresa negativa al probar en hardware físico de gama
+baja. El resultado exacto en cada teléfono varía según el equipo, la batería restante y la carga que
+tenga el sistema operativo en ese momento, por lo que ningún número de Device Mode sustituye una
+prueba sobre un dispositivo real antes de dar por cerrado el trabajo.
+
+## Lighthouse audita la página antes de publicarla
+
+Lighthouse es, según Chrome for Developers, una herramienta automatizada y de código abierto para
+ayudar a mejorar la calidad de las páginas web. Se ejecuta desde la pestaña Lighthouse dentro de
+DevTools, o desde la línea de comandos, y produce un informe con puntuación en varias categorías,
+como rendimiento, accesibilidad, buenas prácticas, SEO y *Agentic browsing*, esta última pensada para
+evaluar qué tan preparada está una página para que un agente de inteligencia artificial la recorra y
+complete tareas en ella. Dentro de las auditorías de SEO, Lighthouse incluye chequeos pensados
+específicamente para uso móvil, como que los objetivos táctiles o *tap targets* tengan un tamaño
+apropiado para tocarlos con un dedo, y que el documento use tamaños de fuente legibles sin necesidad
+de hacer zoom. Correr Lighthouse sobre una página construida mobile-first, con el preset de teléfono
+activo en Device Mode, es una forma concreta de comprobar si el diseño cumple esos criterios antes de
+que un usuario real lo abra en su teléfono.
+
+Conviene tener presente dónde esta auditoría puede sorprender. Lighthouse audita la versión exacta de
+la página que carga en ese momento, con la conexión simulada y el dispositivo virtual que tengas
+configurados, así que una puntuación alta hoy no es una garantía permanente, si mañana se agrega una
+imagen pesada o un anuncio de un tercero, la puntuación baja sin que el código propio del sitio haya
+cambiado. Tampoco sustituye una prueba con un lector de pantalla real, porque las auditorías
+automáticas de accesibilidad detectan una parte de los problemas, no todos, y un sitio puede aprobar
+Lighthouse en accesibilidad y aun así ser difícil de usar para una persona que navega con teclado o
+con un lector de pantalla.
+
+::: {.callout-tip}
+## Reto 1. Lo que Device Mode sí y no te garantiza
+
+Un compañero de equipo prueba su sitio únicamente en Device Mode, con el preset de teléfono mediano
+y CPU throttling en 4x, y el resultado se ve fluido en su computador. Antes de que anuncie que el
+sitio ya funciona bien en móvil, marca cuáles de estas afirmaciones son correctas según lo que
+documenta Chrome:
+
+<label><input type="checkbox"> Device Mode reproduce fielmente la arquitectura de un procesador móvil real</label>
+
+<label><input type="checkbox"> El código sigue ejecutándose sobre la CPU del computador de escritorio</label>
+
+<label><input type="checkbox"> Chrome recomienda complementar la prueba con Remote Debugging sobre un dispositivo físico</label>
+
+<label><input type="checkbox"> Si el sitio se ve fluido en Device Mode, se verá igual de fluido en cualquier teléfono real</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+Solo la segunda y la tercera afirmación son correctas. Chrome describe Device Mode como una
+aproximación de primer orden, no como una emulación real de hardware, y aclara explícitamente que el
+código de la página sigue corriendo sobre la CPU de escritorio, que tiene una arquitectura distinta a
+la de un procesador móvil. Por esa misma razón, la propia documentación recomienda usar Remote
+Debugging sobre un dispositivo físico conectado antes de confiar en el resultado.
+
+La primera afirmación es falsa porque es justo lo contrario de lo que Chrome documenta, y la cuarta
+también es falsa, porque un resultado fluido en la simulación no garantiza el mismo resultado en un
+teléfono real, ya que el rendimiento final varía según el equipo concreto, su batería y su carga en
+ese momento.
+:::
+
+## Por qué hace falta empaquetar el código
+
+Un proyecto web real rara vez es un solo archivo. A medida que crece, se divide en decenas o cientos
+de módulos JavaScript, hojas de estilo y otros recursos, con dependencias cruzadas entre ellos, y el
+navegador no está pensado para cargar de forma eficiente cientos de archivos separados con esa
+cantidad de dependencias. Un *bundler* o empaquetador de módulos resuelve ese problema. Según la
+documentación oficial de webpack, uno de los bundlers de referencia de la industria, webpack es un
+empaquetador de módulos estático para aplicaciones JavaScript modernas, que construye un grafo de
+dependencias a partir de uno o más puntos de entrada, combina cada módulo que el proyecto necesita en
+uno o más *bundles*, y produce archivos estáticos listos para servir.
+
+Cuatro conceptos, documentados oficialmente por webpack, resumen cómo funciona un bundler por dentro
+sin necesidad de comprometerse todavía con una herramienta concreta. El *entry* o punto de entrada es
+el módulo donde el bundler empieza a construir el grafo de dependencias, por convención
+`./src/index.js`. El *output* es dónde y cómo se escriben los bundles resultantes, por convención
+`./dist/main.js`. Los *loaders* existen porque webpack solo entiende JavaScript y JSON de forma
+nativa, así que un loader transforma otros tipos de archivo, CSS, imágenes, TypeScript, en módulos
+válidos antes de sumarlos al bundle. Los *plugins* hacen tareas más amplias que un loader, como
+optimizar el bundle final, gestionar los assets o inyectar variables de entorno. El *mode*, que puede
+ser `development`, `production` o `none`, activa un conjunto distinto de optimizaciones integradas
+según el entorno para el que se está empaquetando.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El codigo fuente con index.js, app.js, utils.js y styles.css entra al bundler, que resuelve el grafo de dependencias con entry, loaders, plugins y mode, y produce como salida bundle.js y bundle.css en la carpeta dist" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov2t3c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Un bundler convierte muchos archivos en pocos archivos listos para el navegador</text>
+  <rect x="20" y="50" width="190" height="130" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="115" y="72" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">codigo fuente</text>
+  <g font-size="11.5" fill="#3c7d7a"><text x="38" y="94">index.js</text><text x="38" y="114">app.js</text><text x="38" y="134">utils.js</text><text x="38" y="154">styles.css</text></g>
+  <path d="M210,115 L280,115" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov2t3c)"/>
+  <rect x="280" y="40" width="200" height="150" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="62" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">bundler</text>
+  <g font-size="11" fill="#12324f"><text x="298" y="86">entry: index.js</text><text x="298" y="106">loaders: css, imagenes</text><text x="298" y="126">plugins: optimiza, inyecta</text><text x="298" y="146">mode: development / production</text></g>
+  <text x="380" y="170" font-size="11" fill="#5b6876" text-anchor="middle">grafo de dependencias resuelto aqui</text>
+  <path d="M480,115 L550,115" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov2t3c)"/>
+  <rect x="550" y="60" width="190" height="110" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="645" y="82" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">salida: dist/</text>
+  <g font-size="11.5" fill="#3c7d7a"><text x="568" y="104">bundle.js</text><text x="568" y="124">bundle.css</text></g>
+  <text x="645" y="150" font-size="11" fill="#5b6876" text-anchor="middle">listos para el navegador</text>
+</svg>
+
+:::
+
+```js
+// webpack.config.js (ejemplo conceptual, no es codigo para copiar y pegar)
+module.exports = {
+  mode: "development",
+  entry: "./src/index.js",
+  output: {
+    filename: "bundle.js",
+    path: __dirname + "/dist"
+  },
+  module: {
+    rules: [
+      { test: /\.css$/, use: ["style-loader", "css-loader"] }
+    ]
+  }
+};
+```
+
+Fíjate en que cada uno de los cuatro conceptos de la sección anterior aparece en este archivo, `mode`
+como cadena de texto, `entry` como la ruta al primer archivo, `output` como el nombre y la carpeta de
+salida, y la regla dentro de `module.rules` como el loader que le enseña al bundler qué hacer con los
+archivos `.css`, que de otra forma no sabría interpretar. Este curso no entra en configurar un
+bundler concreto en detalle, porque la carta descriptiva de esta unidad pide la idea conceptual, no
+una herramienta específica, y esa elección puede quedar para más adelante en la carrera según el
+framework que termine usando cada proyecto.
+
+Conviene saber también dónde este modelo puede sorprender. Un bundler que procesa todo el grafo de
+dependencias del proyecto antes de servir la primera página puede tardar en arrancar su servidor de
+desarrollo a medida que el proyecto crece, porque tiene que resolver y transformar cada archivo antes
+de mostrar algo en el navegador. Esa es justamente la motivación detrás de herramientas de build más
+recientes que evitan reprocesar todo el proyecto en cada arranque, aunque los detalles concretos de
+cómo lo logra cada herramienta quedan fuera del alcance de este curso, porque son un tema en evolución
+constante y ninguna comparación de tiempos exactos entre herramientas concretas se puede citar aquí
+sin arriesgarse a quedar desactualizada o mal atribuida.
+
+## El diseño mobile-first empieza por la pantalla pequeña
+
+MDN define *mobile first* como un enfoque de desarrollo y diseño web que prioriza el diseño y
+desarrollo para tamaños de pantalla móviles por sobre el diseño y desarrollo para tamaños de pantalla
+de escritorio. Es una forma de *progressive enhancement*, ya que primero se construye una experiencia
+funcional y completa para pantallas pequeñas, y luego se enriquece de forma progresiva a medida que
+aumenta el tamaño de pantalla y las capacidades del dispositivo lo permiten. Es lo contrario del
+enfoque más viejo de diseñar primero para escritorio y agregar después un soporte limitado para
+pantallas pequeñas, un enfoque que suele terminar en una versión móvil recortada y de segunda
+categoría en vez de una experiencia pensada desde el principio para ese tamaño de pantalla.
+
+La justificación no es solo técnica. MDN lo explica en su guía de responsive design con un ejemplo
+que vale la pena traducir completo, porque resume por qué mobile-first obliga a priorizar el
+contenido esencial, un usuario móvil de un sitio de viajes probablemente solo quiera consultar
+horarios de vuelo e información de retrasos, y no que se le presente un globo tridimensional animado
+mostrando rutas de vuelo y la historia de la compañía. Empezar por la pantalla pequeña fuerza esa
+pregunta desde el primer día, qué es lo mínimo indispensable que este usuario necesita ver, y las
+restricciones reales de batería y ancho de banda de un teléfono siguen aplicando incluso cuando el
+usuario tiene un dispositivo potente.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 246" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda el CSS base sin media query muestra el wrapper en una sola columna para movil; a la derecha, dentro de una media query min-width 600px, el mismo wrapper pasa a mostrarse en fila con flex; una flecha indica que la complejidad se agrega hacia pantallas mas anchas" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov2t3d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Mobile-first: la complejidad se agrega, nunca se quita</text>
+  <rect x="30" y="40" width="290" height="180" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="175" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">estilos base (sin media query)</text>
+  <rect x="120" y="78" width="110" height="24" rx="4" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="120" y="108" width="110" height="24" rx="4" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="120" y="138" width="110" height="24" rx="4" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="175" y="180" font-size="11" fill="#5b6876" text-anchor="middle">.wrapper: una columna</text>
+  <text x="175" y="198" font-size="11" fill="#5b6876" text-anchor="middle">valido para cualquier pantalla</text>
+  <path d="M320,130 L440,130" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov2t3d)"/>
+  <text x="380" y="118" font-size="11" fill="#0e6f6c" text-anchor="middle">min-width: 600px</text>
+  <rect x="440" y="40" width="290" height="180" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="585" y="62" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">dentro de la media query</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="460" y="90" width="76" height="70" rx="4"/><rect x="546" y="90" width="76" height="70" rx="4"/><rect x="632" y="90" width="76" height="70" rx="4"/></g>
+  <text x="585" y="180" font-size="11" fill="#5b6876" text-anchor="middle">.wrapper: display flex</text>
+  <text x="585" y="198" font-size="11" fill="#5b6876" text-anchor="middle">solo desde 600px hacia arriba</text>
+</svg>
+
+:::
+
+En código, esto se traduce en escribir primero el estilo base sin ninguna media query, pensado para
+la pantalla más angosta, y agregar después reglas con `min-width` que solo se aplican desde cierto
+ancho hacia arriba:
+
+```css
+/* Estilos base: una sola columna, para movil */
+.wrapper {
+  max-width: 960px;
+  margin: 2em auto;
+}
+
+/* Se agrega complejidad en pantallas mas anchas */
+@media (min-width: 600px) {
+  .wrapper {
+    display: flex;
+  }
+}
+```
+
+MDN documenta esta misma regla también con una sintaxis de rango más moderna,
+`@media screen and (width >= 600px)`, que en los navegadores que la soportan significa exactamente lo
+mismo que `min-width: 600px`, con anchos iguales o mayores a 600 píxeles. Esta guía usa la forma
+`min-width` porque es la que vas a encontrar en la enorme mayoría del código existente. Una buena
+práctica que MDN recomienda es definir los *breakpoints*, los anchos donde cambia el diseño, con
+unidades relativas como `em` o `rem` en lugar de tamaños fijos en píxeles atados a modelos concretos
+de teléfono, porque el catálogo de dispositivos disponibles en el mercado cambia todo el tiempo y un
+breakpoint pensado para un modelo exacto envejece mal.
+
+Vale la pena advertir en qué punto esta disciplina no alcanza por sí sola. Mobile-first ordena bien el
+CSS, pero no controla por sí mismo el peso del JavaScript que la página descarga, si el bundle final
+incluye código pensado solo para pantallas anchas y ese bundle no se separa por partes, el teléfono
+igual se descarga y ejecuta ese código de más aunque nunca lo use, así que mobile-first en el CSS no
+resuelve por sí solo el problema de peso que resuelve un bundler bien configurado con la técnica
+adecuada de división de código.
+
+::: {.callout-tip}
+## Reto 2. Predice el resultado de la media query
+
+Con el CSS de arriba cargado en una página, marca en qué anchos de pantalla `.wrapper` termina con
+`display: flex` aplicado:
+
+<label><input type="checkbox"> Un teléfono con 375px de ancho de viewport</label>
+
+<label><input type="checkbox"> Una tableta con 800px de ancho de viewport</label>
+
+<label><input type="checkbox"> Un monitor de escritorio con 1440px de ancho de viewport</label>
+
+<label><input type="checkbox"> Una ventana de navegador redimensionada a exactamente 600px</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+Solo la segunda, la tercera y la cuarta opción activan `display: flex`. La media query
+`@media (min-width: 600px)` se cumple para cualquier ancho igual o mayor a 600 píxeles, así que 800px,
+1440px y exactamente 600px entran los tres dentro de esa regla y sobrescriben el `.wrapper` de una
+columna por uno con `display: flex`.
+
+Los 375px del teléfono quedan por debajo de 600px, así que esa media query nunca se evalúa como
+verdadera en ese ancho, y `.wrapper` se queda con el estilo base, una sola columna sin `display: flex`.
+Esa es exactamente la idea de mobile-first, el estilo que corre en el teléfono es el más simple de
+los dos, el que no necesita ninguna condición para aplicarse.
+:::
+
+## Un panorama de opciones para construir aplicaciones móviles desde la web
+
+Con DevTools, un bundler conceptual y mobile-first ya en la mesa, la última pieza de hoy es un mapa
+de las formas en que ese conocimiento se convierte en una aplicación que alguien instala o usa desde
+su teléfono. MDN define una *Progressive Web App* o PWA como una app construida usando tecnologías de
+la plataforma web, pero que ofrece una experiencia de usuario parecida a la de una app nativa de esa
+plataforma. Una PWA se comporta como un sitio web en que corre en múltiples plataformas y
+dispositivos desde una única base de código y se accede a través del navegador, y se comporta como
+una app nativa en que puede instalarse en el dispositivo, operar sin conexión, ejecutarse en segundo
+plano, e integrarse con el sistema operativo con su propio ícono, notificaciones y atajos.
+
+Entre el sitio web tradicional y la app nativa hay entonces un terreno con varios puntos posibles.
+Un sitio web responsivo construido mobile-first ya cubre buena parte del camino, porque se adapta a
+cualquier tamaño de pantalla, aunque no se instala ni funciona sin conexión. Una PWA suma justamente
+eso, instalación y funcionamiento sin conexión, sobre la misma base de HTML, CSS y JavaScript. Una
+app híbrida empaqueta una vista web dentro de un contenedor nativo, de forma que el código sigue
+siendo mayoritariamente web pero corre dentro de una app instalable desde la tienda de aplicaciones de
+la plataforma. Una app nativa, por último, se programa directamente con las herramientas propias de
+cada plataforma, sin pasar por el navegador en ningún punto.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Espectro de opciones para construir software para movil desde sitio web responsivo hasta app nativa, pasando por PWA y app hibrida; una llave marca que las primeras tres se construyen con tecnologias web y que el framework de interfaz sigue pendiente de la pregunta 32 del diagnostico" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">De la web al dispositivo: un espectro, no una unica opcion</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="40" width="170" height="70" rx="10"/><rect x="210" y="40" width="170" height="70" rx="10"/><rect x="400" y="40" width="170" height="70" rx="10"/></g>
+  <rect x="590" y="40" width="150" height="70" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#12324f"><text x="105" y="66">Sitio web</text><text x="295" y="66">PWA</text><text x="485" y="66">App hibrida</text><text x="665" y="66">App nativa</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="105" y="84">responsivo, mobile-first</text><text x="295" y="84">instalable, sin conexion</text><text x="485" y="84">vista web en contenedor nativo</text><text x="665" y="84">herramientas propias de la plataforma</text></g>
+  <path d="M20,128 L570,128 L570,140 M20,128 L20,140 M295,128 L295,140" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+  <text x="295" y="156" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">se construyen con HTML, CSS y JavaScript</text>
+  <text x="295" y="176" font-size="11" fill="#5b6876" text-anchor="middle">el framework de interfaz (Angular, React u otro) sigue pendiente</text>
+  <text x="295" y="192" font-size="11" fill="#5b6876" text-anchor="middle">lo resuelve la pregunta 32 del diagnostico del curso</text>
+</svg>
+
+:::
+
+Conviene además no perder de vista que la promesa de una PWA no es pareja entre plataformas. El
+soporte de capacidades como notificaciones push o el funcionamiento completo sin conexión ha sido,
+históricamente, más limitado en iOS que en Android, y esas limitaciones cambian con cada versión del
+sistema operativo, así que antes de prometerle a un usuario una función concreta de una PWA conviene
+revisar el soporte vigente en la plataforma donde la va a usar.
+
+Vale la pena ser explícito sobre lo que este panorama deja abierto a propósito. No se puede decidir
+todavía si el curso construye estas interfaces con Angular, con React o con algún otro framework de
+interfaz, porque esa decisión depende de la pregunta 32 del diagnóstico, que el docente aún no ha
+resuelto. Lo que sí queda fijo desde hoy es el terreno común a cualquiera de esas opciones, DevTools
+para depurar, un bundler para empaquetar, y mobile-first para diseñar, porque esas tres herramientas
+se usan sin importar qué framework termine eligiéndose.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Qué son los paneles Elements, Console, Sources, Network, Performance, Memory y Application de
+      Chrome DevTools, y para qué sirve cada uno
+- [ ] Qué simula Device Mode, viewport, DPR, CPU throttling, network throttling, eventos táctiles y
+      sensores, y por qué es una aproximación de primer orden y no un dispositivo real
+- [ ] Qué categorías audita Lighthouse y por qué los tap targets y el tamaño de fuente importan
+      específicamente para móvil
+- [ ] Qué hace un bundler por dentro, entry, output, loaders, plugins y mode, sin necesitar todavía
+      una herramienta concreta
+- [ ] Qué significa diseñar mobile-first, por qué es una forma de progressive enhancement, y cómo se
+      escribe con `min-width` en vez de `max-width`
+- [ ] El espectro entre sitio web responsivo, PWA, app híbrida y app nativa, y qué tienen en común las
+      tres primeras
+- [ ] Por qué la elección de framework de interfaz sigue pendiente y qué la va a resolver
+:::
+
+## Cierre de la Unidad 2
+
+Con este tema se cierra la Unidad 2. El recorrido empezó en el Tema 1 con la terminal, los gestores de
+paquetes y los editores como herramientas de trabajo diario, siguió en el Tema 2 con Git y GitHub como
+la forma de guardar y compartir el historial de un proyecto, y termina hoy con el navegador convertido
+en un taller completo de depuración, un concepto claro de para qué sirve empaquetar código, y un
+criterio de diseño, mobile-first, que vas a aplicar sin importar qué framework termine usando el
+curso. Esa última decisión, Angular o React, queda para cuando el diagnóstico la resuelva, pero el
+terreno común que construiste en estas tres semanas no cambia sin importar cuál sea la respuesta.
+
+Antes de seguir adelante, tres tareas para dejar esto asentado:
+
+1. Abre DevTools en cualquier sitio que uses a diario, activa Device Mode con el preset de un teléfono
+   mediano, y corre una auditoría de Lighthouse sobre esa vista móvil. Anota qué categoría obtuvo la
+   puntuación más baja y por qué, según el propio informe.
+2. Toma una página HTML y CSS que hayas escrito antes para escritorio, y reescribe su CSS siguiendo
+   mobile-first, estilos base para una columna angosta, y una sola media query con `min-width` que
+   agregue una segunda columna en pantallas más anchas.
+3. Con el `webpack.config.js` conceptual de esta guía como referencia, identifica en tus propias
+   palabras qué archivo sería el entry, qué archivo terminaría en output, y qué tipo de archivo de tu
+   proyecto necesitaría un loader para que el bundler lo entienda.
+
+## Recursos
+
+- Chrome for Developers. *Overview of Chrome DevTools.*
+  [developer.chrome.com, devtools](https://developer.chrome.com/docs/devtools)
+- Chrome for Developers. *Simulate mobile devices with Device Mode.*
+  [developer.chrome.com, device mode](https://developer.chrome.com/docs/devtools/device-mode)
+- Chrome for Developers. *Lighthouse overview.*
+  [developer.chrome.com, overview](https://developer.chrome.com/docs/lighthouse/overview)
+- MDN Web Docs. *Responsive design.* Learn web development, Core, CSS layout.
+  [developer.mozilla.org, Responsive Design](https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Responsive_Design)
+- MDN Web Docs. Glosario, *Mobile First.*
+  [developer.mozilla.org, Mobile First](https://developer.mozilla.org/en-US/docs/Glossary/Mobile_First)
+- MDN Web Docs. *Progressive web apps.*
+  [developer.mozilla.org, Progressive web apps](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
+- webpack. *Concepts.* Documentación oficial.
+  [webpack.js.org, concepts](https://webpack.js.org/concepts/)
+
+::: {.pie-doc}
+Lenguajes de computación para móviles. Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::
