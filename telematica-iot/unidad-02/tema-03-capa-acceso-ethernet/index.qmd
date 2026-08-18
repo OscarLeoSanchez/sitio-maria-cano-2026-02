@@ -12,7 +12,9 @@ date-format: "D [de] MMMM [de] YYYY"
 | Tema   | Tema 3. Capa de acceso: tecnologías Ethernet               |
 :::
 
-El Tema 2 bajó el modelo OSI de siete capas a las cuatro de TCP/IP, y mostró que la capa de acceso a
+El Tema 2 bajó el modelo OSI (interconexión de sistemas abiertos, en inglés *Open Systems
+Interconnection*) de siete capas a las cuatro de la arquitectura TCP/IP (protocolo de control de
+transmisión sobre protocolo de internet, en inglés *Transmission Control Protocol*/*Internet Protocol*), y mostró que la capa de acceso a
 la red, la más baja de las cuatro, es la que de verdad mueve los bits entre dos máquinas conectadas al
 mismo cable o al mismo aire, todavía sin hablar de direcciones IP ni de rutas entre redes distintas.
 Hoy bajas a esa capa y la haces concreta con la tecnología que domina las redes cableadas desde hace
@@ -26,17 +28,22 @@ apartamentos como hilo conductor. Cada apartamento tiene una dirección fija gra
 carta que llega viaja dentro de un sobre con esa dirección escrita por fuera, y el portero, con el
 tiempo, aprende qué timbre corresponde a qué apartamento sin que nadie le entregue una lista completa
 desde el primer día. Esas tres piezas, la dirección, el sobre y el portero que aprende, son exactamente
-el direccionamiento MAC, la trama Ethernet y el switch, en ese orden es como los vas a estudiar hoy.
+el direccionamiento MAC (*Media Access Control*, control de acceso al medio), la trama Ethernet y el
+switch, en ese orden es como los vas a estudiar hoy.
 
 ## La dirección grabada en la tarjeta, direccionamiento MAC
 
 Toda interfaz Ethernet trae de fábrica una dirección física de 48 bits, formalizada como EUI-48
-(Extended Unique Identifier de 48 bits) según describe el RFC 7042. La mitad más significativa, los
-primeros 24 bits, se llama *OUI* (Organizationally Unique Identifier) y la asigna el IEEE Registration
-Authority a cada fabricante que la solicita; la otra mitad, los 24 bits restantes, el fabricante los
+(*Extended Unique Identifier* de 48 bits, identificador único extendido de 48 bits) según describe el
+RFC 7042 (*Request for Comments* 7042, documento de estándares de Internet). La mitad más
+significativa, los primeros 24 bits, se llama *OUI* (*Organizationally Unique Identifier*,
+identificador único de organización) y la asigna el *Institute of Electrical and Electronics
+Engineers* (IEEE, en español Instituto de Ingenieros Eléctricos y Electrónicos) Registration Authority
+a cada fabricante que la solicita; la otra mitad, los 24 bits restantes, el fabricante los
 reparte libremente entre las tarjetas que produce. Por eso una dirección MAC identifica, al menos en
-teoría, tanto al fabricante como al dispositivo exacto, algo que una dirección IP no hace, porque una
-IP describe dónde está conectado un dispositivo en este momento, no quién lo fabricó.
+teoría, tanto al fabricante como al dispositivo exacto, algo que una dirección IP (*Internet
+Protocol*, protocolo de internet) no hace, porque una IP describe dónde está conectado un dispositivo
+en este momento, no quién lo fabricó.
 
 Dentro del primer octeto de la dirección hay dos bits con significado especial, y vale la pena aprender
 a leerlos porque explican comportamientos que de otro modo parecen magia. El bit menos significativo
@@ -113,9 +120,9 @@ cada uno.
 <g text-anchor="middle" font-size="11" font-weight="600" fill="#12324f"><text x="55" y="66">Preambulo</text><text x="116" y="66">SFD</text><text x="187" y="66">MAC destino</text><text x="283" y="66">MAC origen</text><text x="364" y="60">EtherType</text><text x="364" y="74">/ Length</text><text x="500" y="66">Datos</text><text x="636" y="66">FCS</text></g>
 <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="55" y="84">7 bytes</text><text x="116" y="84">1 byte</text><text x="187" y="84">6 bytes</text><text x="283" y="84">6 bytes</text><text x="364" y="90">2 bytes</text><text x="500" y="84">46 a 1500 bytes</text><text x="636" y="84">4 bytes</text></g>
 <path d="M142,112 L142,124 L666,124 L666,112" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
-<text x="404" y="140" font-size="11.5" fill="#0e6f6c" text-anchor="middle" font-weight="600">minimo 64 bytes: desde la MAC destino hasta el FCS</text>
+<text x="404" y="140" font-size="11.5" fill="#0e6f6c" text-anchor="middle" font-weight="600">mínimo 64 bytes: desde la MAC destino hasta el FCS</text>
 <path d="M20,166 L20,178 L666,178 L666,166" fill="none" stroke="#cfd8e3" stroke-width="1.4"/>
-<text x="343" y="196" font-size="11" fill="#5b6876" text-anchor="middle">preambulo y SFD no cuentan en ese minimo: son sincronizacion, no datos de la trama</text>
+<text x="343" y="196" font-size="11" fill="#5b6876" text-anchor="middle">preambulo y SFD no cuentan en ese mínimo: son sincronización, no datos de la trama</text>
 </svg>
 
 :::
@@ -128,18 +135,20 @@ cada uno.
 | MAC origen | 6 bytes | La dirección física de quien envía |
 | EtherType (o Length) | 2 bytes | Identifica el protocolo que viaja adentro, o el tamaño de los datos, según el valor |
 | Datos | 46 a 1500 bytes | El contenido real, casi siempre un datagrama IP |
-| FCS (Frame Check Sequence) | 4 bytes | Un CRC-32 que permite detectar si la trama llegó corrupta |
+| FCS (Frame Check Sequence) | 4 bytes | Un CRC-32 (*Cyclic Redundancy Check*, verificación de redundancia cíclica, de 32 bits) que permite detectar si la trama llegó corrupta |
 
 El campo de dos bytes que va justo después de las direcciones MAC tiene un significado ambiguo por
 convención, y entender esa ambigüedad evita confusiones más adelante. Si su valor es mayor o igual a
 1536 (0x0600), se interpreta como *EtherType*, un número que identifica el protocolo de capa superior
-que viaja adentro, como 0x0800 para IPv4, según documenta el RFC 894. Si su valor es menor o igual a
-1500, se interpreta en cambio como la longitud en bytes del campo de datos, el formato original de
-IEEE 802.3, que exige una cabecera adicional de 8 bytes, LLC más SNAP, para poder llevar el tipo de
-protocolo por otro lado, tal como describe el RFC 1042. Esa diferencia explica por qué el tamaño máximo
-efectivo de datos IP es 1500 bytes en Ethernet II, pero baja a 1492 bytes en 802.3 puro con LLC/SNAP,
-ya que la diferencia son justamente esos 8 bytes de cabecera adicional que le restan espacio a los
-datos.
+que viaja adentro, como 0x0800 para IPv4 (la versión 4 del protocolo IP), según documenta el RFC 894.
+Si su valor es menor o igual a 1500, se interpreta en cambio como la longitud en bytes del campo de
+datos, el formato original de IEEE 802.3, que exige una cabecera adicional de 8 bytes, LLC (*Logical
+Link Control*, control de enlace lógico) más SNAP (*Subnetwork Access Protocol*, protocolo de acceso a
+subred), para poder llevar el tipo de protocolo por otro lado, tal como describe el RFC 1042. Esa
+diferencia explica por qué el tamaño máximo efectivo de datos IP, o MTU (*Maximum Transmission Unit*,
+unidad máxima de transmisión), es 1500 bytes en Ethernet II, pero baja a 1492 bytes en 802.3 puro con
+LLC/SNAP, ya que la diferencia son justamente esos 8 bytes de cabecera adicional que le restan espacio
+a los datos.
 
 El tamaño mínimo de una trama, 64 bytes contados desde la MAC destino hasta el FCS, no es un número
 arbitrario. Si los datos que hay que enviar son menores a 46 bytes, se les agrega relleno, *padding*,
@@ -148,15 +157,16 @@ longitud total que ese datagrama trae por su cuenta, según aclara el RFC 894; e
 ignora los bytes sobrantes. Entre trama y trama, además, el estándar exige un intervalo mínimo de
 inactividad de 96 bits de tiempo, el *interframe gap*, para que el receptor tenga margen de distinguir
 dónde termina una trama y empieza la siguiente. El tamaño máximo de una trama estándar es 1518 bytes, y
-sube a 1522 si lleva una etiqueta de VLAN según IEEE 802.1Q, que agrega 4 bytes entre la MAC origen y el
-EtherType.
+sube a 1522 si lleva una etiqueta de VLAN (*Virtual Local Area Network*, red de área local virtual)
+según IEEE 802.1Q, que agrega 4 bytes entre la MAC origen y el EtherType.
 
 Por qué el mínimo tiene que ser justo 64 bytes es algo que solo se entiende del todo con la siguiente
 sección, porque esa cifra está calculada para que una estación, transmitiendo en un medio compartido,
 alcance a enterarse de una colisión antes de terminar de enviar su propia trama.
 
 Un último dato que conviene tener presente, aunque este tema no entra en su funcionamiento a fondo:
-0x0806 es el valor de EtherType reservado para ARP, el protocolo que resuelve qué dirección MAC
+0x0806 es el valor de EtherType reservado para ARP (*Address Resolution Protocol*, protocolo de
+resolución de direcciones), el protocolo que resuelve qué dirección MAC
 corresponde a una dirección IP dentro de la misma red local, documentado en el RFC 826. Cada vez que tu
 equipo necesita enviar una trama y solo conoce la IP del destino, ARP es lo que le consigue la MAC que
 va en el campo de destino de la trama; ese protocolo merece su propia explicación más adelante en el
@@ -208,7 +218,8 @@ Antes de que los switches se volvieran baratos y comunes, muchas redes Ethernet 
 medio físico entre varias estaciones, por ejemplo a través de un hub, un simple repetidor que copia
 cualquier señal que recibe hacia todos sus demás puertos. En ese escenario hace falta una regla para
 decidir quién transmite en cada momento, y esa regla es *CSMA/CD*, Carrier Sense Multiple Access with
-Collision Detection, definida dentro del estándar IEEE 802.3 para el modo half-duplex.
+Collision Detection (detección de portadora con acceso múltiple y detección de colisiones), definida
+dentro del estándar IEEE 802.3 para el modo half-duplex.
 
 ::: {.diagrama}
 
@@ -306,7 +317,8 @@ armando su propia lista. Un switch hace exactamente lo mismo con las direcciones
 El algoritmo tiene tres partes. La primera es el *aprendizaje* (*learning*), que consiste en que por
 cada trama que entra al switch, el switch anota en su tabla de direcciones qué dirección MAC origen
 entró por cuál puerto, igual que el portero anota de qué timbre salió cada carta. Esa tabla se
-implementa por lo general con memoria de contenido direccionable (CAM), pensada justo para buscar por
+implementa por lo general con memoria de contenido direccionable, o CAM (*Content Addressable
+Memory*), pensada justo para buscar por
 dirección a alta velocidad. La segunda parte es el *reenvío y filtrado* (*forwarding/filtering*), que
 ocurre cuando la dirección MAC destino de la trama que llega ya está en la tabla, porque entonces el
 switch la envía únicamente por ese puerto, sin molestar a nadie más, igual que el portero que ya conoce
@@ -376,7 +388,7 @@ router, en capa 3, o la segmentación en VLANs separa dominios de broadcast dist
 <g text-anchor="middle" font-size="11" fill="#12324f"><text x="495" y="192">PC4</text><text x="595" y="192">PC5</text><text x="695" y="192">PC6</text></g>
 <g text-anchor="middle" font-size="10" fill="#3c7d7a" font-weight="600"><text x="495" y="228">colision 2</text><text x="595" y="228">colision 3</text><text x="695" y="228">colision 4</text></g>
 <text x="380" y="264" font-size="11.5" fill="#5b6876" text-anchor="middle">P2, P3 y P4: un PC conectado directo a cada puerto, sin hub de por medio</text>
-<text x="380" y="320" font-size="12" fill="#12324f" text-anchor="middle" font-weight="700">las cuatro zonas comparten un unico dominio de broadcast: el switch no lo separa</text>
+<text x="380" y="320" font-size="12" fill="#12324f" text-anchor="middle" font-weight="700">las cuatro zonas comparten un único dominio de broadcast: el switch no lo separa</text>
 </svg>
 
 :::
@@ -390,7 +402,7 @@ tendidos como redundancia, con la idea de que si uno falla el otro siga sirviend
 ningún protocolo que controle esos enlaces redundantes. ¿Qué pasa la primera vez que cualquier equipo
 de la red envía una trama de broadcast, por ejemplo una petición ARP corriente?
 
-Ethernet conmutada no tiene ningún mecanismo de tiempo de vida, TTL, a nivel de capa 2, a diferencia de
+Ethernet conmutada no tiene ningún mecanismo de tiempo de vida, TTL (*Time To Live*), a nivel de capa 2, a diferencia de
 lo que sí tiene un paquete IP en capa 3. Si existe más de una ruta física entre dos switches, la trama
 de broadcast que uno le manda al otro por el primer enlace llega, se inunda de vuelta por el segundo
 enlace, vuelve a llegar al primer switch, que la vuelve a inundar, y así sucesivamente sin que nada la
@@ -415,7 +427,7 @@ inutilizable, un fenómeno conocido como *tormenta de broadcast* (broadcast stor
 <path d="M300,140 C380,178 420,178 460,140" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#tiot23e)"/>
 <path d="M460,152 C420,200 380,200 300,152" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#tiot23e)"/>
 <text x="380" y="60" font-size="11" fill="#0e6f6c" text-anchor="middle" font-weight="600">enlace 1: la copia viaja en los dos sentidos</text>
-<text x="380" y="220" font-size="11" fill="#0e6f6c" text-anchor="middle" font-weight="600">enlace 2: la misma trama tambien viaja en los dos sentidos</text>
+<text x="380" y="220" font-size="11" fill="#0e6f6c" text-anchor="middle" font-weight="600">enlace 2: la misma trama también viaja en los dos sentidos</text>
 <text x="380" y="240" font-size="12" fill="#12324f" text-anchor="middle" font-weight="700">sin spanning tree, cada vuelta duplica copias y la red se satura</text>
 </svg>
 
@@ -468,7 +480,8 @@ resultado.
 ## Caso de uso real, Ethernet que también alimenta dispositivos IoT
 
 Hasta aquí Ethernet resolvió cómo direccionar, empaquetar y reenviar datos. Falta un problema práctico
-que aparece todo el tiempo en despliegues de sensores para IoT, cámaras o puntos de acceso, y es que
+que aparece todo el tiempo en despliegues de sensores para IoT (*Internet of Things*, internet de las
+cosas), cámaras o puntos de acceso, y es que
 alimentar eléctricamente cada dispositivo resulta caro o directamente imposible por dónde está
 instalado, cuando hay que tenderle un cable eléctrico aparte además del de red.
 
@@ -476,7 +489,8 @@ Plantea la situación. Una empresa quiere instalar veinte cámaras IP distribuid
 de un edificio, y cada una necesita tanto conexión de red como energía eléctrica. ¿Es obligatorio pasar
 un cable eléctrico independiente hasta cada cámara, además del cable de red?
 
-La respuesta es que no, gracias a *Power over Ethernet* (PoE), un conjunto de amendments al estándar
+La respuesta es que no, gracias a la *alimentación eléctrica a través de Ethernet* (en inglés *Power
+over Ethernet*, PoE), un conjunto de amendments al estándar
 IEEE 802.3 que permite transportar datos y energía por el mismo cable de par trenzado, usando
 señalización en modo común sobre los pares diferenciales, sin interferir con la señal de datos. El
 estándar IEEE 802.3af, conocido como Type 1, entrega hasta 15.4 vatios en el origen, de los cuales unos

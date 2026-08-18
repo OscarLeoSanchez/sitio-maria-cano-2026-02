@@ -13,9 +13,11 @@ date-format: "D [de] MMMM [de] YYYY"
 :::
 
 El Tema 1 recorrió la historia de las telecomunicaciones, los principios básicos de la comunicación y
-cómo la telefonía, la televisión y los datos terminaron convergiendo en una sola red de paquetes IP.
-Esa sesión cerró con una cadena de cinco eslabones, fuente, transmisor, canal, receptor y destino, pero
-dejó el eslabón del transmisor sin abrir. Hoy lo abres, porque antes de que un bit generado por un
+cómo la telefonía, la televisión y los datos terminaron convergiendo en una sola red de paquetes que
+usa el *protocolo de internet*, o IP (del inglés *Internet Protocol*), el protocolo que enruta cada
+paquete hasta su destino. Esa sesión cerró con una cadena de cinco eslabones, fuente, transmisor,
+canal, receptor y destino, pero dejó el eslabón del transmisor sin abrir. Hoy lo abres, porque antes
+de que un bit generado por un
 sensor de temperatura, un teclado o un micrófono llegue a otro extremo de la red, alguien tiene que
 decidir cómo convertir ese bit en algo que un cable de cobre, una fibra óptica o el aire libre puedan
 transportar de verdad. Esa conversión, y las reglas que la gobiernan, es el tema completo de esta guía.
@@ -26,8 +28,7 @@ En el lenguaje cotidiano, dato y señal se usan como sinónimos. En telemática 
 lleva a errores de diseño reales. Un *dato* es la entidad que transmite significado, la temperatura de
 un cuarto, un texto, un número. Una *señal* es la representación eléctrica o electromagnética de ese
 dato, la variación de voltaje en un cable, la variación de intensidad de luz en una fibra, la variación
-de amplitud de una onda de radio, que es lo que en verdad viaja por el medio. Stallings lo plantea así
-en el capítulo de transmisión de datos de *Data and Computer Communications*, y la distinción importa
+de amplitud de una onda de radio, que es lo que en verdad viaja por el medio. Esta distinción importa
 porque un dato puede ser *analógico*, con valores continuos en un rango, como el sonido o la
 temperatura, o *digital*, con valores discretos, como un texto o un entero.
 
@@ -85,10 +86,9 @@ el Tema 3 al hablar de medios de transmisión.
 
 Cuando el dato ya es digital y el medio también va a llevar una señal digital, como pasa dentro de una
 red local de cobre, hace falta una regla que diga qué patrón de voltaje representa un uno y cuál
-representa un cero. Esa regla se llama *codificación de línea*, y Forouzan la desarrolla en el capítulo
-de transmisión digital de *Data Communications and Networking*, la bibliografía asignada a este curso
-para el tema. Cuatro esquemas clásicos ilustran las decisiones de diseño que hay detrás, y antes de
-entrar en el detalle de cada uno conviene verlos comparados sobre la misma cadena de bits.
+representa un cero. Esa regla se llama *codificación de línea*. Cuatro esquemas clásicos ilustran las
+decisiones de diseño que hay detrás, y antes de entrar en el detalle de cada uno conviene verlos
+comparados sobre la misma cadena de bits.
 
 ::: {.diagrama}
 
@@ -96,16 +96,18 @@ entrar en el detalle de cada uno conviene verlos comparados sobre la misma caden
 
 :::
 
-NRZ-L, siglas de *Non-Return-to-Zero-Level*, asigna un nivel de voltaje fijo a cada valor, alto para
-uno, bajo para cero, y ese nivel se mantiene durante todo el intervalo del bit. Es el esquema más
-simple de entender, pero tiene un problema serio, si la cadena de bits trae una racha larga del mismo
+NRZ-L, *sin retorno a cero, por nivel* (del inglés *Non-Return-to-Zero-Level*), asigna un nivel de
+voltaje fijo a cada valor, alto para uno, bajo para cero, y ese nivel se mantiene durante todo el
+intervalo del bit. Es el esquema más simple de entender, pero tiene un problema serio, si la cadena
+de bits trae una racha larga del mismo
 valor, la señal se queda plana durante todo ese tramo, sin ninguna transición. Eso importa porque el
 receptor suele sincronizar su reloj interno con las transiciones de la señal, así que una racha larga
 sin transiciones es una racha larga sin forma de confirmar que el reloj del receptor sigue alineado con
 el del emisor.
 
-NRZ-I, *Non-Return-to-Zero-Invert*, cambia la regla, ya no importa el nivel sino la transición, un uno
-se representa con un cambio de nivel al inicio del bit, y un cero se representa con ausencia de cambio.
+NRZ-I, *sin retorno a cero, por inversión* (del inglés *Non-Return-to-Zero-Invert*), cambia la regla,
+ya no importa el nivel sino la transición, un uno se representa con un cambio de nivel al inicio del
+bit, y un cero se representa con ausencia de cambio.
 Esto resuelve el problema de las rachas de unos, porque cada uno fuerza una transición, pero traslada
 exactamente el mismo problema a las rachas de ceros, que siguen sin producir ninguna transición.
 
@@ -114,8 +116,7 @@ importar su valor, y esa transición sirve al mismo tiempo de reloj y de dato, a
 y bajo a alto para el otro según la convención que se use. El costo es que Manchester necesita el doble
 de cambios de señal por segundo que NRZ para transmitir la misma cantidad de bits, así que ocupa más
 ancho de banda a cambio de una sincronización que nunca falla. Históricamente fue el esquema usado en
-las primeras versiones de Ethernet sobre cable de cobre, 10BASE-T y 10BASE5, según documenta Forouzan
-en el mismo capítulo.
+las primeras versiones de Ethernet sobre cable de cobre, 10BASE-T y 10BASE5.
 
 Manchester diferencial completa el cuadro, combinando la idea de NRZ-I con la de Manchester, la
 transición de mitad de bit sigue existiendo siempre y sirve solo de reloj, mientras que el dato se
@@ -171,28 +172,33 @@ de sus constelaciones de fase.
 
 :::
 
-ASK, *Amplitude Shift Keying*, cambia la amplitud de la portadora. Su caso particular más usado es OOK,
-*On-Off Keying*, donde un uno se representa con la portadora presente y un cero con la portadora
+ASK, *modulación por desplazamiento de amplitud* (del inglés *Amplitude Shift Keying*), cambia la
+amplitud de la portadora. Su caso particular más usado es OOK, *encendido y apagado* (del inglés
+*On-Off Keying*), donde un uno se representa con la portadora presente y un cero con la portadora
 ausente. Es la técnica más simple de implementar, porque el receptor solo necesita detectar si hay
 energía o no la hay, pero es también la más sensible al ruido, porque cualquier interferencia que
 altere la amplitud puede hacer que un cero se lea como un uno o al revés.
 
-FSK, *Frequency Shift Keying*, cambia la frecuencia de la portadora, una frecuencia para representar
-uno y otra frecuencia distinta para representar cero. Es más robusta que ASK frente al ruido de
+FSK, *modulación por desplazamiento de frecuencia* (del inglés *Frequency Shift Keying*), cambia la
+frecuencia de la portadora, una frecuencia para representar uno y otra frecuencia distinta para
+representar cero. Es más robusta que ASK frente al ruido de
 amplitud, porque el receptor distingue los bits por cuál frecuencia detecta, no por cuánta energía hay,
 pero a cambio necesita más ancho de banda, porque las dos frecuencias usadas tienen que estar lo
 suficientemente separadas para que el receptor las distinga sin ambigüedad.
 
-PSK, *Phase Shift Keying*, cambia la fase de la portadora en vez de su amplitud o su frecuencia. La
-variante más simple es BPSK, con solo dos fases posibles, 0 y 180 grados, una para cada valor de bit.
-Con más fases disponibles, como en QPSK con cuatro fases, cada símbolo transmitido puede representar
-más de un bit, lo que aumenta la eficiencia sin necesidad de una tasa de símbolo más alta. PSK es más
-resistente al ruido que ASK y más eficiente en ancho de banda que ASK y FSK, pero su receptor es más
-complejo, porque necesita una referencia de fase precisa contra la cual comparar la señal recibida.
+PSK, *modulación por desplazamiento de fase* (del inglés *Phase Shift Keying*), cambia la fase de la
+portadora en vez de su amplitud o su frecuencia. La variante más simple es BPSK, *PSK binaria* (del
+inglés *Binary Phase Shift Keying*), con solo dos fases posibles, 0 y 180 grados, una para cada valor
+de bit. Con más fases disponibles, como en QPSK, *PSK en cuadratura* (del inglés *Quadrature Phase
+Shift Keying*), con cuatro fases, cada símbolo transmitido puede representar más de un bit, lo que
+aumenta la eficiencia sin necesidad de una tasa de símbolo más alta. PSK es más resistente al ruido
+que ASK y más eficiente en ancho de banda que ASK y FSK, pero su receptor es más complejo, porque
+necesita una referencia de fase precisa contra la cual comparar la señal recibida.
 
 Estas tres técnicas no son solo teoría de libro, conviven todos los días en sistemas que probablemente
-ya usaste. Piensa en el caso del GPS de cualquier teléfono. La señal civil L1 C/A del sistema GPS, la
-que usan los teléfonos y los navegadores comerciales, recorre más de veinte mil kilómetros desde el
+ya usaste. Piensa en el caso del GPS, el *sistema de posicionamiento global* (del inglés *Global
+Positioning System*), presente en cualquier teléfono. La señal civil L1 C/A de ese sistema, la que
+usan los teléfonos y los navegadores comerciales, recorre más de veinte mil kilómetros desde el
 satélite hasta la antena del teléfono, y llega a la Tierra extremadamente débil después de ese
 trayecto. La pregunta de análisis es por qué el diseño de esa señal eligió BPSK, la modulación más
 simple de las tres presentadas en esta guía, en vez de una técnica que aproveche más fases o más
@@ -212,11 +218,14 @@ susceptibles a interferencia y ruido ambiental, lo que en la práctica produce r
 Documentación de fabricantes de gama baja suele mencionar alcances del orden de 30 a 100 metros en
 espacio abierto para estos módulos, una cifra que varía mucho según el equipo concreto y el entorno, y
 que aquí se cita solo como orden de magnitud, no como un dato certificado de una hoja técnica
-específica. El estándar IEEE 802.15.4, que es la base de Zigbee y de Thread, resuelve el mismo problema
-usando O-QPSK, una variante de PSK con espectro ensanchado, en la banda de 2.4 GHz, precisamente para
-lograr mayor robustez frente a la interferencia que ASK/OOK no puede ofrecer, aunque el mismo estándar
-también admite BPSK o GFSK en las bandas sub-GHz según la región, según documenta la propia norma IEEE
-802.15.4-2020.
+específica. El estándar IEEE 802.15.4, publicado por el IEEE, el *Instituto de Ingenieros Eléctricos y
+Electrónicos* (del inglés *Institute of Electrical and Electronics Engineers*) y base de Zigbee y de
+Thread, resuelve el mismo problema usando O-QPSK, *PSK en cuadratura desfasada* (del inglés *Offset
+Quadrature Phase Shift Keying*), una variante de PSK con espectro ensanchado, en la banda de 2.4 GHz,
+precisamente para lograr mayor robustez frente a la interferencia que ASK/OOK no puede ofrecer, aunque
+el mismo estándar también admite BPSK o GFSK, *modulación por desplazamiento de frecuencia gaussiana*
+(del inglés *Gaussian Frequency Shift Keying*), en las bandas sub-GHz según la región (IEEE
+802.15.4-2020).
 
 ## El techo teórico que imponen los teoremas de Nyquist y Shannon
 
@@ -268,8 +277,9 @@ técnica exacto. La pregunta de análisis es por qué un canal de voz con apenas
 banda, que según la fórmula de Nyquist debería soportar una tasa mucho más alta si se usan suficientes
 niveles de señal, nunca llegó a los 56 kbps prometidos. La respuesta no está en el ancho de banda sino
 en el ruido, porque la conversión analógico-digital adicional que ocurría dentro de la central
-telefónica, cuando la señal del usuario se convertía a formato digital PCM, introducía ruido de
-cuantización que reducía la relación señal a ruido efectiva del enlace, y por la fórmula de Shannon,
+telefónica, cuando la señal del usuario se convertía a formato digital PCM, la *modulación por
+codificación de pulsos* (del inglés *Pulse Code Modulation*), introducía ruido de cuantización que
+reducía la relación señal a ruido efectiva del enlace, y por la fórmula de Shannon,
 esa reducción en la relación señal a ruido bajaba con ella la capacidad alcanzable. Es un ejemplo
 citado en charlas técnicas del IEEE precisamente porque conecta una fórmula de 1948 con una limitación
 comercial muy real.

@@ -19,7 +19,8 @@ ponerse de acuerdo en muchas otras decisiones, como se divide la información en
 se le pone una dirección a cada dispositivo, como se decide por dónde viaja un paquete cuando hay varias
 rutas posibles, como se recupera un dato que se perdió en el camino, y como el software de un extremo
 entiende el formato en el que llegó la información del otro extremo. La Unidad 2 empieza por poner esas
-decisiones en orden, con un modelo que lleva décadas usándose exactamente para eso, el modelo OSI.
+decisiones en orden, con un modelo que lleva décadas usándose exactamente para eso, el modelo OSI, sigla
+de *Open Systems Interconnection* (en español, Interconexión de Sistemas Abiertos).
 
 ## Por qué hace falta un modelo antes que un protocolo
 
@@ -35,21 +36,23 @@ que las demás capas se enteren, siempre que esa interfaz se mantenga igual.
 El estándar que formaliza esta idea para las redes de datos es la norma ISO/IEC 7498-1, "Information
 technology - Open Systems Interconnection - Basic Reference Model: The Basic Model", publicada por la
 Organización Internacional de Normalización, ISO, y adoptada como texto técnicamente equivalente por la
-Unión Internacional de Telecomunicaciones bajo la Recomendación UIT-T X.200. Vale la pena detenerse en
-un punto que se presta a confusión, OSI, sigla de Open Systems Interconnection, es un *modelo de
-referencia*, un marco conceptual de siete capas para describir funciones de comunicación, y no una
-implementación real ni un conjunto de protocolos que uses todos los días. La arquitectura que sí corre
-hoy en Internet es TCP/IP, y el Tema 2 de esta unidad la compara capa por capa contra OSI. Confundir el
-modelo con una implementación es el primer error que conviene evitar desde ya, porque ningún sistema
-operativo, ni Windows ni Linux ni el firmware de un sensor IoT, tiene literalmente siete módulos de
-software separados que se llamen "capa 1", "capa 2" y así sucesivamente.
+Unión Internacional de Telecomunicaciones, en inglés *International Telecommunication Union* (ITU), bajo
+la Recomendación UIT-T X.200. Vale la pena detenerse en un punto que se presta a confusión, OSI es un
+*modelo de referencia*, un marco conceptual de siete capas para describir funciones de comunicación, y no
+una implementación real ni un conjunto de protocolos que uses todos los días. La arquitectura que sí
+corre hoy en Internet es TCP/IP, sigla de *Transmission Control Protocol/Internet Protocol* (protocolo de
+control de transmisión y protocolo de Internet), y el Tema 2 de esta unidad la compara capa por capa
+contra OSI. Confundir el modelo con una implementación es el primer error que conviene evitar desde ya,
+porque ningún sistema operativo, ni Windows ni Linux ni el firmware de un sensor IoT, sigla de *Internet
+of Things* (Internet de las cosas), tiene literalmente siete módulos de software separados que se llamen
+"capa 1", "capa 2" y así sucesivamente.
 
 ## Las siete capas del modelo OSI
 
 La norma numera las capas de la 1, la más cercana al medio físico, a la 7, la más cercana al programa
 que usa la persona. Cada capa entrega su información a la capa de abajo, y esa información recibe un
-nombre distinto según en qué capa está viajando, lo que la norma llama la *unidad de datos de protocolo*
-o PDU. Así se ven las siete, con la función que cumple cada una y el nombre de su PDU:
+nombre distinto según en qué capa está viajando, lo que la norma llama la *unidad de datos de protocolo*,
+o PDU (del inglés *protocol data unit*). Así se ven las siete, con la función que cumple cada una y el nombre de su PDU:
 
 ::: {.diagrama}
 
@@ -71,16 +74,16 @@ La capa 4, transporte, queda resaltada aparte porque marca una frontera útil, d
 arriba las capas se ocupan de lo que necesita el software de aplicación, y de la 3 hacia abajo se ocupan
 de mover datos entre nodos de la red sin importarles qué aplicación los generó. A continuación va cada
 capa con más detalle, empezando por la más cercana al medio físico porque es la más fácil de tocar con
-las manos y la que ya conectaste con el Tema 3 de la Unidad 1.
+las manos, el cable, la fibra o el aire por donde viaja la señal.
 
 ### Capa 1, física
 
 La capa física resuelve un solo problema, pero es el problema del que ninguna otra capa puede
 prescindir, cómo convertir una secuencia de bits en algo que un medio de transmisión pueda llevar de un
 punto a otro, sea variación de voltaje en un cable de cobre, variación de intensidad de luz en una fibra
-óptica o variación de amplitud en una onda de radio. Esto ya lo viste en detalle en el Tema 2 y el Tema 3
-de la Unidad 1, la codificación de línea, la modulación y los seis medios de transmisión, guiados y no
-guiados, son contenido de esta capa. La capa física no sabe qué significan los bits que transporta, ni
+óptica o variación de amplitud en una onda de radio. La codificación de línea, la modulación y los seis
+medios de transmisión, guiados y no guiados, son contenido de esta capa. La capa física no sabe qué
+significan los bits que transporta, ni
 si forman parte de una trama válida o de basura, solo entrega bits crudos a la capa de arriba.
 
 ### Capa 2, enlace de datos
@@ -91,7 +94,8 @@ entre un sensor y su gateway. Dos tareas concretas caen aquí, decidir quién pu
 momento dado cuando varios dispositivos comparten el mismo medio, lo que se llama control de acceso al
 medio, y detectar, y en algunos casos corregir, errores que ocurrieron durante ese salto puntual. El
 Tema 3 de esta misma unidad profundiza en Ethernet, la tecnología más común de esta capa, con su
-direccionamiento MAC y su formato de trama.
+direccionamiento MAC, sigla de *Media Access Control* (control de acceso al medio), y su formato de
+trama.
 
 ### Capa 3, red
 
@@ -215,7 +219,7 @@ transporte es solo carga útil, datos que hay que transportar sin abrir ni inter
 El mecanismo que hace posible esa comunicación lógica par a par, mientras los datos en realidad solo
 bajan y suben por la pila local, es el *encapsulamiento*. La norma ISO/IEC 7498-1 lo describe así, la
 PDU que produce la capa N se entrega a la capa N menos uno, donde pasa a llamarse *unidad de datos de
-servicio*, SDU. La capa N menos uno toma esa SDU, le agrega su propio encabezado, y en algunos casos un
+servicio*, o SDU (del inglés *service data unit*). La capa N menos uno toma esa SDU, le agrega su propio encabezado, y en algunos casos un
 remolque al final, y el resultado se convierte en la PDU de la capa N menos uno. Este proceso se repite
 capa por capa, siempre hacia abajo, en el emisor, y se revierte exactamente al revés en el receptor,
 donde cada capa retira su propio encabezado y su propio remolque antes de entregar lo que queda a la
@@ -314,10 +318,13 @@ hacer su trabajo.
 
 El modelo describe una separación limpia, cada capa solo toca su propio encabezado y le entrega a la de
 arriba únicamente lo que le corresponde. En redes reales, sin embargo, hay dispositivos intermedios que
-violan esa separación de forma deliberada, y el IETF los documentó formalmente en la RFC 3234,
+violan esa separación de forma deliberada, y el IETF, sigla de *Internet Engineering Task Force* (Grupo
+de Trabajo de Ingeniería de Internet), los documentó formalmente en la RFC 3234, sigla de *Request for
+Comments* (petición de comentarios, el tipo de documento con el que el IETF publica sus estándares),
 "Middleboxes: Taxonomy and Issues". Un *middlebox* es cualquier dispositivo intermedio que hace algo más
-que reenviar un paquete sin tocarlo, un NAT que traduce direcciones, un firewall que filtra tráfico, un
-proxy que intercepta conexiones. Traducida al español, la RFC 3234 dice que ese tipo de desvío o
+que reenviar un paquete sin tocarlo, un NAT, sigla de *Network Address Translation* (traducción de
+direcciones de red), que traduce direcciones, un firewall que filtra tráfico, un proxy que intercepta
+conexiones. Traducida al español, la RFC 3234 dice que ese tipo de desvío o
 modificación viola la suposición arquitectónica básica de que los paquetes viajan del origen al destino
 esencialmente sin cambios, es decir, contradice la idea de que cada nodo intermedio solo debería mirar
 hasta la capa 3 para decidir por dónde reenviar un paquete, sin abrir ni tocar la capa 4.
@@ -337,7 +344,7 @@ campos reescribe exactamente.
 
 <svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un paquete que sale de un cliente con una direccion IP y un puerto privados pasa por un dispositivo NAT o firewall que lee y reescribe tanto la direccion de capa 3 como el puerto de capa 4 antes de reenviarlo al servidor, algo que un enrutador que solo respetara la capa 3 no deberia necesitar hacer" font-family="Segoe UI, Inter, system-ui, sans-serif">
 <defs><marker id="tpi2d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
-<text x="360" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un NAT lee y reescribe informacion de dos capas a la vez</text>
+<text x="360" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un NAT lee y reescribe información de dos capas a la vez</text>
 <rect x="40" y="90" width="140" height="56" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
 <text x="110" y="122" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">sensor IoT</text>
 <rect x="290" y="90" width="160" height="56" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
@@ -378,7 +385,8 @@ referencia de siete capas, ISO también intentó construir una pila completa de 
 implementaran esas siete capas. Esa pila de protocolos, distinta del modelo, terminó abandonada en la
 práctica. Las razones documentadas de forma cualitativa apuntan a que resultó demasiado compleja, con
 tantas variantes y opciones que las implementaciones de distintos fabricantes solían no interoperar bien
-entre sí, mientras que TCP/IP ya llevaba tiempo funcionando en redes reales como ARPANET cuando OSI
+entre sí, mientras que TCP/IP ya llevaba tiempo funcionando en redes reales como ARPANET, sigla de
+*Advanced Research Projects Agency Network*, la red experimental que dio origen a Internet, cuando OSI
 todavía se estaba terminando de definir. El modelo de referencia sobrevivió como herramienta didáctica y
 de diagnóstico precisamente porque describe funciones, no una implementación concreta que competir; la
 pila de protocolos OSI, en cambio, sí competía directamente contra TCP/IP y perdió esa competencia. El

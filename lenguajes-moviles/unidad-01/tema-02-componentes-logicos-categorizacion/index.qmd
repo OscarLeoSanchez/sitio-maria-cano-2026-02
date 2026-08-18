@@ -12,8 +12,9 @@ date-format: "D [de] MMMM [de] YYYY"
 | Tema   | Tema 2. Componentes lógicos, categorización y modos de operación    |
 :::
 
-El Tema 1 abrió el teléfono por fuera, con el SoC que empaqueta procesador, memoria y radios en un solo
-circuito, los sensores que miden inclinación y luz, y los transmisores que lo conectan a una red
+El Tema 1 abrió el teléfono por fuera, con el SoC, o sistema en un chip (en inglés, *system on a chip*),
+que empaqueta procesador, memoria y radios en un solo circuito, los sensores que miden inclinación y luz,
+y los transmisores que lo conectan a una red
 celular, a un WiFi o a otro dispositivo por Bluetooth. Todo eso es hardware, y el hardware por sí
 solo no ejecuta ninguna aplicación. Hoy cambias de capa. El tema de hoy explica el software que
 convierte ese hardware en una plataforma donde corren aplicaciones, cómo se organiza ese software en
@@ -24,23 +25,23 @@ usuario activa el modo avión antes de un vuelo.
 ## El sistema operativo como capa de software
 
 Un sistema operativo móvil es el software que administra el hardware del dispositivo (el procesador,
-la memoria, los sensores, las radios) y expone esas capacidades a las aplicaciones mediante interfaces
-de programación estandarizadas, conocidas como API. Sin esa capa intermedia, cada aplicación tendría
+la memoria, los sensores, las radios) y expone esas capacidades a las aplicaciones mediante una
+*interfaz de programación de aplicaciones*, o API (en inglés, *application programming interface*), un
+conjunto estandarizado de funciones de acceso. Sin esa capa intermedia, cada aplicación tendría
 que hablar directamente con el chip de la cámara o con el controlador del GPS de cada fabricante, lo
 que haría que una misma aplicación necesitara una versión distinta por cada modelo de teléfono.
 
 Android e iOS resuelven ese problema con la misma estrategia general, aunque con nombres distintos,
 ya que organizan su software en una pila de capas, cada una construida sobre la anterior, de modo que
 la capa de más abajo es la única que toca el hardware de verdad y todo lo que está encima son
-abstracciones sucesivas sobre esa capa base. Vale la pena fijar esa idea, la capa inferior toca el
-metal y las capas superiores solo hablan con la capa inmediatamente debajo, antes de ver los nombres
-propios de cada plataforma.
+abstracciones sucesivas sobre esa capa base. La capa inferior toca el metal y las capas superiores solo hablan con la capa inmediatamente debajo; los
+nombres propios de cada plataforma vienen a continuación.
 
 ## Las capas de Android, del kernel a las apps
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pila de capas de Android de arriba a abajo: apps del sistema y de terceros, framework de API de Java, bibliotecas nativas en C y C++ junto con Android Runtime en el mismo nivel, capa de abstraccion de hardware HAL, y kernel de Linux en la base como unica capa con acceso directo al hardware" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pila de capas de Android de arriba a abajo: apps del sistema y de terceros, framework de API de Java, bibliotecas nativas en C y C++ junto con Android Runtime en el mismo nivel, capa de abstracción de hardware HAL, y kernel de Linux en la base como única capa con acceso directo al hardware" font-family="Segoe UI, Inter, system-ui, sans-serif">
   <text x="350" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Android organiza su software en capas, cada una construida sobre la anterior</text>
   <rect x="40" y="28" width="620" height="42" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
   <rect x="40" y="80" width="620" height="42" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
@@ -63,21 +64,22 @@ propios de cada plataforma.
 
 :::
 
-La documentación oficial de Android describe cada capa con una responsabilidad concreta. El kernel de
-Linux es la base, provee gestión de memoria de bajo nivel, manejo de hilos y el modelo de seguridad
-de procesos, y además define la interfaz de drivers de hardware que usan los fabricantes para escribir
-sus controladores sin tocar las capas de arriba. Justo encima está la HAL (Hardware Abstraction
+Según la documentación oficial de Android, el kernel de Linux es la base, provee gestión de memoria de
+bajo nivel, manejo de hilos y el modelo de seguridad de procesos, y además define la interfaz de drivers
+de hardware que usan los fabricantes para escribir sus controladores sin tocar las capas de arriba. Justo encima está la HAL, o capa de abstracción de
+hardware (en inglés, Hardware Abstraction
 Layer), un conjunto de módulos de biblioteca donde cada módulo implementa la interfaz de un tipo de
 componente, la cámara, el Bluetooth, un sensor, de modo que Android puede hablar con cualquier
 fabricante sin conocer los detalles internos de su chip.
 
 El Android Runtime, ART, es la máquina que ejecuta cada aplicación. Desde Android 5.0 (API 21) cada
 app corre en su propio proceso con su propia instancia de ART, que ejecuta archivos en formato DEX
-(Dalvik Executable), un bytecode pensado para ocupar poca memoria, combinando compilación anticipada
-(AOT) con compilación justo a tiempo (JIT) y un recolector de basura propio. Al lado de ART, en el
-mismo nivel, viven las bibliotecas nativas en C y C++, que son las piezas centrales del sistema, el
-propio ART y la HAL están construidas ahí, y a las que un desarrollador puede llegar mediante el
-Android NDK, por ejemplo para gráficos con OpenGL ES.
+(Dalvik Executable), un bytecode pensado para ocupar poca memoria, combinando compilación anticipada, o
+AOT (en inglés, *ahead-of-time compilation*), con compilación justo a tiempo, o JIT (en inglés,
+*just-in-time compilation*), y un recolector de basura propio. Al lado de ART, en el mismo nivel, viven
+las bibliotecas nativas en C y C++, que son las piezas centrales del sistema, el propio ART y la HAL
+están construidas ahí, y a las que un desarrollador puede llegar mediante el Android NDK (*Native
+Development Kit*, o kit de desarrollo nativo), por ejemplo para gráficos con OpenGL ES.
 
 Encima de todo eso está el framework de API de Java, la capa que un desarrollador de Android toca con
 más frecuencia, porque expone el sistema de vistas, el gestor de recursos, el gestor de
@@ -91,8 +93,8 @@ implementación por defecto de las demás, por ejemplo instalando otro navegador
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pila de capas de iOS de arriba a abajo: Cocoa Touch con las APIs de interfaz, Media con graficos audio y video, Core Services con los servicios fundamentales, y Core OS en la base interactuando directamente con el hardware" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <text x="350" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">iOS organiza su software en capas, con la misma logica de Android</text>
+<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pila de capas de iOS de arriba a abajo: Cocoa Touch con las APIs de interfaz, Media con gráficos audio y video, Core Services con los servicios fundamentales, y Core OS en la base interactuando directamente con el hardware" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">iOS organiza su software en capas, con la misma lógica de Android</text>
   <rect x="40" y="28" width="620" height="48" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
   <rect x="40" y="84" width="620" height="48" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
   <rect x="40" y="140" width="620" height="48" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
@@ -112,9 +114,9 @@ implementación por defecto de las demás, por ejemplo instalando otro navegador
 
 :::
 
-La documentación técnica de Apple describe la misma lógica de capas con otros cuatro nombres. Core OS
-es la base, gestiona memoria, sistema de archivos, redes y otras tareas del sistema operativo, e
-interactúa directamente con el hardware. Encima está Core Services, que administra los servicios
+Apple usa la misma lógica de capas, con otros cuatro nombres. Core OS es la base, gestiona memoria,
+sistema de archivos, redes y otras tareas del sistema operativo, e interactúa directamente con el
+hardware. Encima está Core Services, que administra los servicios
 fundamentales que usan las aplicaciones nativas y ofrece una abstracción sobre lo que provee Core OS.
 La capa de Media agrupa gráficos, audio y video, con frameworks como Core Graphics, Metal (y antes
 OpenGL ES) y AV Foundation. Arriba del todo está Cocoa Touch, la capa que un desarrollador de iOS toca
@@ -130,7 +132,8 @@ intermedias hasta llegar al kernel o a Core OS.
 
 ## Cómo se agrupan los dispositivos móviles
 
-No existe una norma única, tipo ISO, que clasifique de forma oficial y universal un dispositivo como
+No existe una norma única, tipo ISO (de la Organización Internacional de Normalización, en inglés
+*International Organization for Standardization*), que clasifique de forma oficial y universal un dispositivo como
 smartphone, tablet o wearable. Lo que sí existe, y es lo que de verdad usan la industria y las dos
 plataformas dominantes, es una categorización funcional según la forma física del dispositivo (en
 inglés, *form factor*) y según el uso que se le da, no una clasificación regulatoria con número de
@@ -138,7 +141,7 @@ norma.
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos ecosistemas organizados por forma fisica del dispositivo: Android cubre telefonos y tablets con la misma base y perfiles distintos, mas Wear OS para wearables, Android TV y Android Auto; Apple separa iOS para iPhone, iPadOS para iPad y watchOS para Apple Watch, cada uno documentado como plataforma independiente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos ecosistemas organizados por forma física del dispositivo: Android cubre teléfonos y tablets con la misma base y perfiles distintos, más Wear OS para wearables, Android TV y Android Auto; Apple separa iOS para iPhone, iPadOS para iPad y watchOS para Apple Watch, cada uno documentado como plataforma independiente" font-family="Segoe UI, Inter, system-ui, sans-serif">
   <text x="360" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cada ecosistema agrupa sus dispositivos por forma física y por uso</text>
   <rect x="20" y="34" width="330" height="222" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
   <rect x="370" y="34" width="330" height="222" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
@@ -174,26 +177,27 @@ norma.
 
 :::
 
-Android trata la diferencia de forma como parte de su estrategia multidispositivo, con un SDK y unas
-guías de diseño propias para teléfonos y tablets, para Wear OS (los wearables), para Android TV y
-para Android Auto. Apple va un paso más allá y separa el sistema operativo mismo según el dispositivo:
+Android trata la diferencia de forma como parte de su estrategia multidispositivo, con un SDK (en inglés,
+*Software Development Kit*, o kit de desarrollo de software) y unas guías de diseño propias para
+teléfonos y tablets, para Wear OS (los wearables), para Android TV y para Android Auto. Apple va un paso más allá y separa el sistema operativo mismo según el dispositivo:
 iOS para el iPhone, iPadOS para el iPad y watchOS para el Apple Watch, cada uno documentado como una
 plataforma independiente en Apple Developer, aunque las tres compartan Core OS y buena parte de los
 frameworks base descritos en la sección anterior.
 
-Diferenciar teléfono de tablet dentro de Android tiene además una historia técnica concreta que vale
-la pena conocer. Durante años, el manifiesto de una app declaraba el atributo `<supports-screens>` y
+Diferenciar teléfono de tablet dentro de Android tiene además una historia técnica concreta. Durante
+años, el manifiesto de una app declaraba el atributo `<supports-screens>` y
 usaba el calificador `smallestWidth`, por ejemplo `sw600dp` para una tablet de 7 pulgadas o `sw720dp`
-para una de 10, para decidir que layout mostrar. El enfoque moderno, documentado por Android
-Developers, son las *window size classes* (compacta, media, expandida), y la propia documentación
-oficial aclara algo que sorprende a quien programa pensando en "si es tablet, hago esto", ya que esas
-clases de tamaño no están pensadas para preguntar si un dispositivo es una tablet, sino para adaptar el
-layout al espacio disponible en pantalla, que no es lo mismo. Un teléfono grande en modo horizontal
+para una de 10, para decidir que layout mostrar. El enfoque moderno, documentado por Android Developers, son las *window size classes* (compacta, media,
+expandida). Esas clases de tamaño no están pensadas para preguntar si un dispositivo es una tablet, sino
+para adaptar el layout al espacio disponible en pantalla, algo distinto de lo que asume quien programa
+pensando en "si es tablet, hago esto". Un teléfono grande en modo horizontal
 puede caer en la misma clase de tamaño que una tablet pequeña, así que decidir el layout por
 categoría de dispositivo es, cada vez más, la forma equivocada de resolver el problema.
 
 Para los wearables sí existe una referencia formal y citable, aunque acotada a esa categoría, la norma
-IEEE 360-2022, *IEEE Standard for Wearable Consumer Electronic Devices*, ya que define terminología y
+IEEE 360-2022 del IEEE (en inglés, *Institute of Electrical and Electronics Engineers*; en español,
+Instituto de Ingenieros Eléctricos y Electrónicos), *IEEE Standard for Wearable Consumer Electronic
+Devices*, ya que define terminología y
 arquitectura comunes y sirve de paraguas para especificaciones técnicas posteriores sobre seguridad,
 idoneidad de uso y áreas funcionales como salud, actividad física e infoentretenimiento. La literatura técnica
 sobre wearables también los clasifica por donde se llevan puestos: dispositivos de cabeza (gafas,
@@ -212,7 +216,7 @@ está en pantalla en ese momento.
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de alcance: a la izquierda un estado de app afecta solo a esa aplicacion mientras las demas siguen igual; a la derecha un modo de dispositivo como ahorro de energia o modo avion afecta a todas las apps y a todas las radios del telefono a la vez" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparación de alcance: a la izquierda un estado de app afecta solo a esa aplicación mientras las demás siguen igual; a la derecha un modo de dispositivo como ahorro de energía o modo avión afecta a todas las apps y a todas las radios del teléfono a la vez" font-family="Segoe UI, Inter, system-ui, sans-serif">
   <text x="350" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Un alcance distinto para la app y para el teléfono completo</text>
   <rect x="20" y="32" width="320" height="168" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
   <rect x="360" y="32" width="320" height="168" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
@@ -234,10 +238,9 @@ está en pantalla en ese momento.
 
 :::
 
-Las siguientes dos secciones cubren el primer nivel, el estado de la app, en Android y en iOS. Después
-de eso llega el segundo nivel, el modo avión y el ahorro de energía, que es donde aparecen los casos
-más interesantes de este tema, incluido uno donde el diseño de una aplicación choca de frente contra
-la política de ahorro de energía del sistema.
+Las siguientes dos secciones cubren el primer nivel, el estado de la app, en Android y en iOS. Después de
+eso llega el segundo nivel, el modo avión y el ahorro de energía, incluido un caso donde el diseño de una
+aplicación choca de frente contra la política de ahorro de energía del sistema.
 
 ## El ciclo de vida de una app en Android
 
@@ -275,8 +278,8 @@ El estado *Resumed*, el que se alcanza después de `onResume()`, es el único en
 en primer plano interactuando con el usuario; sale de ahí en cuanto algo le quita el foco, una llamada
 entrante, la navegación a otra actividad o que el usuario apague la pantalla.
 
-Ese detalle de la flecha punteada es justo el que sorprende a quien recién empieza. Cuando el usuario
-sale de una app con el botón de inicio y vuelve un rato después, Android no vuelve a llamar a
+La flecha punteada representa un comportamiento clave del ciclo de vida. Cuando el usuario sale de una
+app con el botón de inicio y vuelve un rato después, Android no vuelve a llamar a
 `onCreate()`, porque la actividad nunca llegó a `onDestroy()`, solo llegó hasta `onStop()`. El sistema
 retoma desde `onStart()`, así que cualquier inicialización pesada que solo debería correr una vez
 tiene que vivir en `onCreate()`, no en `onStart()`, o se repetirá cada vez que el usuario regrese.
@@ -289,7 +292,7 @@ cada momento.
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco estados de una app en iOS: Not running, Inactive de transicion, Active en primer plano, Background ejecutando trabajo pendiente y Suspended en memoria sin ejecutar codigo; el sistema puede terminar una app suspendida sin avisar" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco estados de una app en iOS: Not running, Inactive de transición, Active en primer plano, Background ejecutando trabajo pendiente y Suspended en memoria sin ejecutar código; el sistema puede terminar una app suspendida sin avisar" font-family="Segoe UI, Inter, system-ui, sans-serif">
   <defs><marker id="lenmov1t2b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
   <text x="360" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Los cinco estados de una app según Apple</text>
   <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="10" y="60" width="118" height="56" rx="9"/></g>
@@ -394,7 +397,7 @@ específica cuando el sistema determina que el usuario lleva un rato sin interac
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ciclo de Doze: el dispositivo desconectado, inmovil y con pantalla apagada entra en Doze, suspende red, ignora wake locks y difiere alarmas y trabajos; periodicamente abre una ventana de mantenimiento breve para completar ese trabajo pendiente y vuelve a dormir por un periodo mas largo; se mueve, enciende pantalla o se conecta al cargador y sale por completo de Doze" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ciclo de Doze: el dispositivo desconectado, inmóvil y con pantalla apagada entra en Doze, suspende red, ignora wake locks y difiere alarmas y trabajos; periódicamente abre una ventana de mantenimiento breve para completar ese trabajo pendiente y vuelve a dormir por un período más largo; se mueve, enciende pantalla o se conecta al cargador y sale por completo de Doze" font-family="Segoe UI, Inter, system-ui, sans-serif">
   <defs><marker id="lenmov1t2c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
   <text x="360" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Doze alterna entre reposo profundo y ventanas breves de mantenimiento</text>
   <rect x="20" y="36" width="230" height="82" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
@@ -468,8 +471,9 @@ resuelve el problema de fondo.
   normalidad.
 - **Sobre pedir la exención de optimización de batería**, la política de Google Play para
   `ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` solo permite pedirla cuando la función central de la
-  app se vería afectada de verdad sin ella, como una app VOIP que necesita audio en tiempo real, y no
-  la concede para casos como mensajería instantánea, que la propia política espera que resuelva con
+  app se vería afectada de verdad sin ella, como una app de VoIP (en inglés, *Voice over IP*; voz sobre
+  IP) que necesita audio en tiempo real, y no la concede para casos como mensajería instantánea, que la
+  propia política espera que resuelva con
   FCM de alta prioridad, exactamente como se explicó arriba. Pedirle al usuario esa exención desde la
   primera pantalla, además de no resolver Doze ni App Standby de forma confiable, es justo el tipo de
   petición que Play Store puede rechazar en revisión. La corrección real no es pelear con más
@@ -496,10 +500,10 @@ debería tratarse como un dato de fabricante, y esta guía tampoco lo inventa.
 
 Un estudiante está diseñando una app para Apple Watch que lee, cada pocos segundos, la frecuencia
 cardíaca de un sensor externo por Bluetooth, y quiere que esa lectura siga llegando incluso cuando el
-usuario sale de la app para revisar la hora o contestar un mensaje. Antes de que empiece a programar,
-vale la pena que se pregunte algo, si su app fuera para iPhone en lugar de para el reloj, ¿tendría
-margen para mantener esa misma conexión Bluetooth activa en segundo plano por más tiempo? Y si la
-respuesta es distinta entre las dos plataformas, ¿de dónde viene esa diferencia?
+usuario sale de la app para revisar la hora o contestar un mensaje. Antes de programar, si su app fuera
+para iPhone en lugar de para el reloj, ¿tendría margen para mantener esa misma conexión Bluetooth activa
+en segundo plano por más tiempo? Y si la respuesta es distinta entre las dos plataformas, ¿de dónde viene
+esa diferencia?
 
 La documentación de Apple para desarrolladores de watchOS es clara en este punto, ya que el reloj puede
 mantener una conexión Bluetooth con un accesorio solo mientras la app está en primer plano, o durante
@@ -553,9 +557,8 @@ alrededor de esa limitación, no en contra de ella.
 
 Con las capas de software, la categorización de dispositivos y los modos de operación ya vistos, el
 Tema 3 entra a lo que pasa cuando una persona real toca ese teléfono: los modelos de interacción
-táctil y por voz, los permisos que ya se mencionaron al hablar de la capa de apps, el sandboxing que
-aisla cada aplicación de las demás, y las amenazas de seguridad más comunes que enfrenta un
-dispositivo móvil.
+táctil y por voz, los permisos de una app, el sandboxing que aisla cada aplicación de las demás, y las
+amenazas de seguridad más comunes que enfrenta un dispositivo móvil.
 
 ## Recursos
 
@@ -575,6 +578,6 @@ dispositivo móvil.
 Lenguajes de computación para móviles. Fundación Universitaria María Cano. Facultad de Ingeniería.
 Semestre 2026-02.
 
-**Transparencia.** La redaccion de esta guia conto con el apoyo de inteligencia artificial,
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
 usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
 :::

@@ -1,0 +1,443 @@
+---
+title: "Tema 2. Una base de datos, toda la empresa"
+subtitle: "Base de datos (DBA03). Unidad 1"
+author: "Oscar Leonel Sánchez Conde"
+pagetitle: "Tema 2. Una base de datos, toda la empresa"
+title-prefix: ""
+format:
+  revealjs:
+    theme: [default, ../../../estilos/presentacion.scss]
+    slide-number: true
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Recorrido de la sesión {.center}
+
+::: {.tarjetas}
+::: {.clave}
+[1. Dónde vive]{.titulo}
+
+En qué áreas reales de una empresa aparece un SGBD.
+:::
+::: {.tarjeta}
+[2. Qué gana]{.titulo}
+
+Los beneficios concretos de integrar los datos en un solo sistema.
+:::
+::: {.tarjeta}
+[3. Qué arriesga]{.titulo}
+
+Las limitaciones, y dos brechas reales cuando algo falló.
+:::
+::: {.tarjeta}
+[4. Cuándo conviene]{.titulo}
+
+Una decisión de costo y beneficio, no una regla universal.
+:::
+:::
+
+::: {.neutro}
+Un SGBD (*database management system*, DBMS) es el software que crea, organiza y controla el
+acceso a una base de datos.
+:::
+
+## Dónde vive un SGBD {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 1
+:::
+
+Ocho sectores donde miles o millones de registros necesitan que muchas personas los lean y
+escriban a la vez, sin pisarse.
+
+## La base de datos como pieza compartida
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 306" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una base de datos central de la organizacion, rodeada de las areas que la usan a diario: banca, aerolineas, universidades, recursos humanos, manufactura, finanzas, ventas y comercio electronico" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="pbd2a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <circle cx="380" cy="150" r="78" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="144" font-size="15" font-weight="700" fill="#0e6f6c" text-anchor="middle">base de</text>
+  <text x="380" y="162" font-size="15" font-weight="700" fill="#0e6f6c" text-anchor="middle">datos</text>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="20" y="46" width="128" height="46" rx="9"/>
+    <rect x="20" y="124" width="128" height="46" rx="9"/>
+    <rect x="20" y="202" width="128" height="46" rx="9"/>
+    <rect x="612" y="46" width="128" height="46" rx="9"/>
+    <rect x="612" y="124" width="128" height="46" rx="9"/>
+    <rect x="612" y="202" width="128" height="46" rx="9"/>
+    <rect x="316" y="256" width="128" height="30" rx="9"/>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#pbd2a)">
+    <path d="M148,69 L306,116"/>
+    <path d="M148,147 L302,150"/>
+    <path d="M148,225 L306,184"/>
+    <path d="M612,69 L454,116"/>
+    <path d="M612,147 L458,150"/>
+    <path d="M612,225 L454,184"/>
+    <path d="M380,256 L380,228"/>
+  </g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f">
+    <text x="84" y="73">Banca</text>
+    <text x="84" y="151">Aerolineas</text>
+    <text x="84" y="229">Universidades</text>
+    <text x="676" y="73">Manufactura</text>
+    <text x="676" y="151">Finanzas</text>
+    <text x="676" y="229">Ventas</text>
+    <text x="380" y="275">Comercio electronico</text>
+  </g>
+  <text x="380" y="298" font-size="11" fill="#5b6876" text-anchor="middle">Recursos humanos y nomina tambien comparten la misma base, sin caja propia por espacio</text>
+</svg>
+
+:::
+
+## Reto {.center}
+
+::: {.destacado}
+Elige una aplicación que usaste hoy. ¿Qué área usa la misma base de datos que otra área
+distinta, y qué pasaría si cada una tuviera su propio archivo?
+:::
+
+Conversen en grupos de dos o tres antes de seguir.
+
+## Una agencia de crédito sin alternativa
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Cientos de millones]{.titulo}
+
+de personas evaluadas para que bancos y aseguradoras decidan un préstamo.
+:::
+::: {.tarjeta}
+[Múltiples fuentes]{.titulo}
+
+Datos que llegan de bancos, prestamistas y tribunales, integrados bajo un esquema común.
+:::
+::: {.clave}
+[Milisegundos]{.titulo}
+
+El optimizador de consultas del motor decide de antemano la ruta más rápida entre cientos de
+millones de registros.
+:::
+:::
+
+::: {.neutro}
+Ninguna combinación de archivos independientes en cada banco fuente podría ofrecer una respuesta
+única y casi instantánea.
+:::
+
+## Qué gana la organización {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 2
+:::
+
+Ocho beneficios concretos, cada uno resuelve un problema real de los archivos sueltos.
+
+## Los beneficios, de uno en uno
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Control de la redundancia]{.titulo}
+
+El SGBD evita copias descontroladas del mismo dato.
+:::
+::: {.tarjeta}
+[Restricción de acceso]{.titulo}
+
+Permisos por tabla, columna o fila.
+:::
+::: {.tarjeta}
+[Almacenamiento persistente]{.titulo}
+
+Con puntos de control y reversión ante una falla.
+:::
+::: {.tarjeta}
+[Procesamiento eficiente]{.titulo}
+
+Índices y optimizador eligen la ruta más rápida.
+:::
+:::
+
+## Los beneficios, continúan
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Copias de seguridad]{.titulo}
+
+Recuperan un estado consistente tras una falla.
+:::
+::: {.tarjeta}
+[Múltiples interfaces]{.titulo}
+
+Consultas, APIs, formularios e informes.
+:::
+::: {.tarjeta}
+[Relaciones complejas]{.titulo}
+
+El modelo relacional conecta entidades distintas.
+:::
+::: {.tarjeta}
+[Restricciones de integridad]{.titulo}
+
+Se declaran una sola vez en el esquema.
+:::
+:::
+
+## Independencia de datos
+
+::: {.destacado}
+Cambiar cómo está organizada la base sin reescribir los programas que la usan.
+:::
+
+::: {.columns}
+::: {.column width="48%"}
+::: {.neutro}
+**Independencia lógica**
+
+Cambiar el esquema conceptual sin tocar los programas de aplicación.
+:::
+:::
+
+::: {.column width="48%"}
+::: {.neutro}
+**Independencia física**
+
+Cambiar cómo se guardan los datos en disco sin tocar el esquema conceptual.
+:::
+:::
+:::
+
+## Los tres esquemas
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arquitectura de tres esquemas: externo arriba con tres vistas de aplicacion, conceptual en medio con el esquema completo de la organizacion, interno abajo con la organizacion fisica en disco; la independencia logica separa el nivel externo del conceptual y la independencia fisica separa el conceptual del interno" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="40" y="14" width="150" height="50" rx="9"/><rect x="275" y="14" width="150" height="50" rx="9"/><rect x="510" y="14" width="150" height="50" rx="9"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="115" y="36">vista nomina</text><text x="115" y="52">(RR. HH.)</text><text x="350" y="36">vista ventas</text><text x="350" y="52">(comercial)</text><text x="585" y="36">vista inventario</text><text x="585" y="52">(bodega)</text></g>
+  <text x="10" y="44" font-size="11" fill="#5b6876">externo</text>
+  <rect x="180" y="102" width="340" height="56" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="126" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">esquema conceptual</text>
+  <text x="350" y="144" font-size="11" fill="#5b6876" text-anchor="middle">toda la organizacion, sin detalles de almacenamiento</text>
+  <text x="10" y="134" font-size="11" fill="#5b6876">conceptual</text>
+  <rect x="230" y="196" width="240" height="50" rx="9" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="350" y="218" font-size="12.5" fill="#12324f" text-anchor="middle">archivos, indices, disco</text>
+  <text x="350" y="234" font-size="11" fill="#5b6876" text-anchor="middle">organizacion fisica real</text>
+  <text x="10" y="226" font-size="11" fill="#5b6876">interno</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><path d="M115,64 L200,104"/><path d="M350,64 L350,100"/><path d="M585,64 L500,104"/><path d="M350,158 L350,194"/></g>
+  <rect x="440" y="70" width="240" height="26" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="560" y="87" font-size="11" fill="#12324f" text-anchor="middle">independencia logica: cambia esto sin tocar arriba</text>
+  <rect x="440" y="162" width="240" height="26" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="560" y="179" font-size="11" fill="#12324f" text-anchor="middle">independencia fisica: cambia esto sin tocar arriba</text>
+</svg>
+
+:::
+
+## Concurrencia controlada y ACID
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 700 246" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos transacciones intentando tocar la misma cuenta al mismo tiempo; el gestor de concurrencia del SGBD las ordena una despues de la otra en vez de dejarlas chocar, y la cuenta termina en un estado consistente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="pbd2b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="40" width="180" height="46" rx="9"/><rect x="20" y="146" width="180" height="46" rx="9"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="110" y="59">transaccion A</text><text x="110" y="75">retira $200.000</text><text x="110" y="165">transaccion B</text><text x="110" y="181">retira $150.000</text></g>
+  <rect x="260" y="88" width="180" height="56" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="112" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">gestor de</text>
+  <text x="350" y="130" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">concurrencia</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#pbd2b)"><path d="M200,63 L256,102"/><path d="M200,169 L256,130"/></g>
+  <rect x="500" y="88" width="180" height="56" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="590" y="112" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">cuenta con</text>
+  <text x="590" y="130" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">saldo consistente</text>
+  <path d="M440,116 L496,116" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#pbd2b)"/>
+  <text x="350" y="184" font-size="11.5" fill="#5b6876" text-anchor="middle">A se ejecuta completa, despues B se ejecuta completa</text>
+  <text x="350" y="204" font-size="11.5" fill="#5b6876" text-anchor="middle">nunca las dos a medias sobre el mismo saldo al mismo tiempo</text>
+  <text x="350" y="226" font-size="11" fill="#0e6f6c" text-anchor="middle">esto es lo que garantizan las propiedades ACID</text>
+</svg>
+
+:::
+
+::: {.fuente}
+ACID: atomicidad, consistencia, aislamiento y durabilidad. Oracle, "Ensuring ACID Semantics".
+:::
+
+## Qué arriesga la organización {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 3
+:::
+
+Cinco limitaciones reales de un SGBD frente a archivos sueltos.
+
+## Las limitaciones
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Complejidad]{.titulo}
+
+Exige administradores de bases de datos, o DBA.
+:::
+::: {.tarjeta}
+[Costo]{.titulo}
+
+Licencias, hardware adicional y capacitación.
+:::
+::: {.tarjeta}
+[Sobrecarga]{.titulo}
+
+Verificación, seguridad y recuperación cuestan rendimiento.
+:::
+::: {.clave}
+[Mayor impacto de una falla]{.titulo}
+
+Una falla afecta a todas las aplicaciones a la vez, no a un solo archivo.
+:::
+::: {.clave}
+[Vulnerabilidad]{.titulo}
+
+La misma centralización que protege también concentra el riesgo.
+:::
+:::
+
+## El mismo diseño concentra el riesgo
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 700 232" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion del impacto de una falla: con archivos sueltos una falla afecta solo un archivo, con una base de datos centralizada una falla en la capa de seguridad expone todos los datos de la organizacion a la vez" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="175" y="24" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Archivos sueltos</text>
+  <text x="525" y="24" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Base de datos centralizada</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="40" width="80" height="40" rx="7"/><rect x="130" y="40" width="80" height="40" rx="7"/><rect x="230" y="40" width="80" height="40" rx="7"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="70" y="64">nomina</text><text x="170" y="64">ventas</text><text x="270" y="64">clientes</text></g>
+  <text x="170" y="102" font-size="11" fill="#5b6876" text-anchor="middle">si falla uno</text>
+  <text x="170" y="118" font-size="11" fill="#5b6876" text-anchor="middle">los otros dos siguen intactos</text>
+  <rect x="440" y="40" width="170" height="80" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="525" y="64" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">un solo SGBD</text>
+  <text x="525" y="82" font-size="11" fill="#12324f" text-anchor="middle">nomina, ventas y</text>
+  <text x="525" y="98" font-size="11" fill="#12324f" text-anchor="middle">clientes, todo junto</text>
+  <text x="525" y="142" font-size="11" fill="#5b6876" text-anchor="middle">una falla de seguridad expone</text>
+  <text x="525" y="158" font-size="11" fill="#5b6876" text-anchor="middle">las tres cosas al mismo tiempo</text>
+  <text x="350" y="200" font-size="11.5" fill="#5b6876" text-anchor="middle">el mismo diseno que evita la redundancia tambien concentra el impacto</text>
+</svg>
+
+:::
+
+## Cuando falla en la práctica {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 4
+:::
+
+Dos brechas reales y documentadas, con causas muy distintas.
+
+## La brecha de Equifax, 2017
+
+::: {.datos}
+::: {.dato}
+[145,5 M]{.cifra}[Consumidores expuestos]{.rotulo}
+:::
+::: {.dato}
+[4]{.cifra}[Categorías de falla, según el GAO]{.rotulo}
+:::
+::: {.dato}
+[Apache Struts]{.cifra}[Vulnerabilidad sin parchar]{.rotulo}
+:::
+:::
+
+::: {.destacado}
+El subsistema de seguridad de un SGBD ofrece el mecanismo, no la garantía. Equifax tenía la
+tecnología para segmentar el acceso, y no la aplicó con suficiente rigor.
+:::
+
+::: {.fuente}
+U.S. Government Accountability Office, informe GAO-18-559, septiembre de 2018.
+:::
+
+## La base expuesta de Novaestrat, 2019
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 700 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una base de datos Elasticsearch sin autenticacion, accesible directamente desde internet sin usuario ni contrasena, comparada con una base de datos con el subsistema de seguridad activo que exige autenticacion antes de responder" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="pbd2c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="175" y="24" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Novaestrat, 2019</text>
+  <text x="525" y="24" font-size="12.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">con seguridad activa</text>
+  <rect x="30" y="46" width="120" height="42" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="90" y="71" font-size="11.5" fill="#12324f" text-anchor="middle">cualquiera</text>
+  <path d="M150,67 L246,67" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#pbd2c)"/>
+  <text x="198" y="58" font-size="11" fill="#5b6876" text-anchor="middle">sin usuario</text>
+  <text x="198" y="86" font-size="11" fill="#5b6876" text-anchor="middle">ni contrasena</text>
+  <rect x="250" y="46" width="140" height="42" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="320" y="65" font-size="11.5" fill="#12324f" text-anchor="middle">18 GB expuestos</text>
+  <text x="320" y="81" font-size="11" fill="#5b6876" text-anchor="middle">unos 20 millones</text>
+  <rect x="30" y="130" width="120" height="42" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="90" y="155" font-size="11.5" fill="#12324f" text-anchor="middle">cualquiera</text>
+  <path d="M150,151 L246,151" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#pbd2c)"/>
+  <rect x="250" y="115" width="80" height="72" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="290" y="140" font-size="11" fill="#0e6f6c" text-anchor="middle">pide</text>
+  <text x="290" y="156" font-size="11" fill="#0e6f6c" text-anchor="middle">usuario y</text>
+  <text x="290" y="172" font-size="11" fill="#0e6f6c" text-anchor="middle">contrasena</text>
+  <text x="198" y="142" font-size="11" fill="#5b6876" text-anchor="middle">acceso</text>
+  <text x="198" y="197" font-size="11" fill="#5b6876" text-anchor="middle">bloqueado sin credenciales validas</text>
+  <path d="M330,151 L450,151" fill="none" stroke="#cfd8e3" stroke-width="1.6" stroke-dasharray="5 5"/>
+  <rect x="460" y="130" width="140" height="42" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="530" y="149" font-size="11" fill="#12324f" text-anchor="middle">datos protegidos</text>
+  <text x="530" y="165" font-size="11" fill="#5b6876" text-anchor="middle">solo si hay credenciales</text>
+</svg>
+
+:::
+
+::: {.letra-pequena}
+Nadie tuvo que robar una contraseña. La capa de seguridad nunca se activó, y un directivo de la
+empresa fue arrestado después.
+:::
+
+::: {.fuente}
+vpnMentor y SiliconANGLE, septiembre de 2019.
+:::
+
+## Cuándo conviene un SGBD {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 5
+:::
+
+Ni los beneficios ni las limitaciones son absolutos.
+
+## La decisión, en una tabla
+
+| Factor | Archivos sueltos | SGBD centralizado |
+|---|---|---|
+| Consistencia | Se desincroniza con el tiempo | Un solo dato, controlado por el motor |
+| Costo inicial | Bajo | Más alto, exige licencias y personal |
+| Impacto de una falla | Limitado al archivo | Puede alcanzar toda la organización |
+| Consulta compleja | Programada a mano | Resuelta por el optimizador |
+
+::: {.destacado}
+Un negocio pequeño con pocas cuentas no necesita un SGBD completo. Una agencia como Equifax no
+tiene alternativa real.
+:::
+
+## Lo que te llevas de hoy {.center}
+
+Al salir deberías poder explicar cada punto sin mirar la guía.
+
+::: {.recuento}
+- Cinco sectores reales donde un SGBD es parte normal de la operación
+- Los beneficios de integrar los datos, y qué anomalía resuelve cada uno
+- Independencia lógica y física, con un ejemplo propio de cada una
+- Qué garantizan las propiedades ACID
+- Las cinco limitaciones de un SGBD frente a archivos planos
+- Qué falló en Equifax y en Novaestrat, según las fuentes oficiales
+- Por qué integrar los datos es una decisión de costo y beneficio
+:::
+
+## Cierre de la Unidad 1 {.center}
+
+::: {.destacado}
+Ya sabes por qué surgió un SGBD, dónde aparece en una organización, y qué gana y qué arriesga al
+integrar sus datos ahí.
+:::
+
+La Unidad 2 mira la base de datos desde adentro, con el modelo entidad relación.
