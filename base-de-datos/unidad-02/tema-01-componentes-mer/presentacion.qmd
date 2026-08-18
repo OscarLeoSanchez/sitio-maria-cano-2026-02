@@ -1,0 +1,338 @@
+---
+title: "Tema 1. Las piezas con las que se dibuja la realidad"
+subtitle: "Base de datos (DBA03). Unidad 2"
+author: "Oscar Leonel Sánchez Conde"
+pagetitle: "Tema 1. Las piezas con las que se dibuja la realidad"
+title-prefix: ""
+format:
+  revealjs:
+    theme: [default, ../../../estilos/presentacion.scss]
+    slide-number: true
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Recorrido de la sesión {.center}
+
+::: {.tarjetas}
+::: {.clave}
+[1. Entidades]{.titulo}
+
+Qué es una entidad y un conjunto de entidades, fuertes y débiles.
+:::
+::: {.tarjeta}
+[2. Atributos]{.titulo}
+
+Las cuatro formas de describir una entidad.
+:::
+::: {.tarjeta}
+[3. Relaciones]{.titulo}
+
+Cómo se conectan las entidades entre sí.
+:::
+::: {.tarjeta}
+[4. Claves]{.titulo}
+
+Cómo se identifica sin ambigüedad cada entidad.
+:::
+:::
+
+::: {.neutro}
+El *modelo entidad relación* dibuja primero cómo es el negocio, antes de decidir en qué tablas
+queda guardado.
+:::
+
+## Qué es una entidad {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 1
+:::
+
+Un objeto distinguible de cualquier otro, y el conjunto que agrupa a todos los de su mismo tipo.
+
+## Entidad y conjunto de entidades {.center}
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El conjunto de entidades Cliente arriba, con tres entidades individuales debajo, cada una distinguible por sus propios valores de id_cliente y nombre" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u2t1a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <rect x="215" y="20" width="270" height="50" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="50" font-size="14.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">conjunto de entidades Cliente</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="140" width="210" height="66" rx="10"/><rect x="245" y="140" width="210" height="66" rx="10"/><rect x="480" y="140" width="210" height="66" rx="10"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#u2t1a)"><path d="M290,70 C250,98 170,118 115,138"/><path d="M350,70 L350,138"/><path d="M410,70 C450,98 530,118 585,138"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="115" y="164" font-weight="600">id_cliente = 1</text><text x="115" y="182">nombre = Ana Ruiz</text><text x="350" y="164" font-weight="600">id_cliente = 2</text><text x="350" y="182">nombre = Luis Pena</text><text x="585" y="164" font-weight="600">id_cliente = 3</text><text x="585" y="182">nombre = Karen Díaz</text></g>
+  <text x="350" y="212" font-size="11.5" fill="#0e6f6c" text-anchor="middle">tres entidades distinguibles del mismo conjunto</text>
+</svg>
+
+:::
+
+## Entidades fuertes y débiles {.center}
+
+::: {.columns}
+::: {.column width="48%"}
+::: {.neutro}
+**Entidad fuerte**
+
+Tiene atributos propios suficientes para identificarse sola. `Cliente`, `Pedido` y `Producto`.
+:::
+:::
+
+::: {.column width="48%"}
+::: {.destacado}
+**Entidad débil**
+
+Depende de otra para existir, y toma prestada su clave más un discriminador propio.
+`DetallePedido` depende de `Pedido`.
+:::
+:::
+:::
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 700 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pedido es entidad fuerte con numero_pedido subrayado; DetallePedido es entidad debil con doble rectangulo, conectada por la relacion identificadora tiene en doble rombo, con el discriminador numero_linea subrayado con linea punteada" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <rect x="10" y="50" width="170" height="100" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="95" y="76" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="95" y="102" font-size="12" fill="#12324f" text-anchor="middle" text-decoration="underline">numero_pedido</text>
+  <text x="95" y="122" font-size="12" fill="#12324f" text-anchor="middle">fecha</text>
+  <polygon points="285,55 350,100 285,145 220,100" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <polygon points="285,66 340,100 285,134 230,100" fill="none" stroke="#8fc9c5"/>
+  <text x="285" y="96" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">tiene</text>
+  <text x="285" y="112" font-size="10.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">identificadora</text>
+  <line x1="180" y1="100" x2="220" y2="100" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="350" y1="100" x2="490" y2="100" stroke="#8fb3d1" stroke-width="1.8"/>
+  <rect x="490" y="45" width="200" height="112" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="497" y="52" width="186" height="98" rx="7" fill="none" stroke="#c7d6e6"/>
+  <text x="590" y="76" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">DetallePedido</text>
+  <line x1="545" y1="93" x2="635" y2="93" stroke="#12324f" stroke-width="1.2" stroke-dasharray="3 2"/>
+  <text x="590" y="90" font-size="11.5" fill="#12324f" text-anchor="middle">numero_linea</text>
+  <text x="590" y="112" font-size="11.5" fill="#12324f" text-anchor="middle">cantidad</text>
+  <text x="590" y="132" font-size="11.5" fill="#12324f" text-anchor="middle">precio_unitario</text>
+  <text x="350" y="180" font-size="11.5" fill="#5b6876" text-anchor="middle">clave completa de DetallePedido = numero_pedido (heredado) + numero_linea</text>
+</svg>
+
+:::
+
+## Cómo se describe con atributos {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 2
+:::
+
+Cuatro formas de atributo, y cuándo un atributo se convierte en entidad propia.
+
+## Las cuatro formas de atributo {.center}
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Simple]{.titulo}
+
+No se subdivide. `id_cliente`.
+:::
+::: {.tarjeta}
+[Compuesto]{.titulo}
+
+Se divide en partes con sentido propio. `nombre` en `primer_nombre` y `apellido`.
+:::
+::: {.clave}
+[Multivaluado]{.titulo}
+
+Varios valores a la vez. `telefono`, celular y fijo.
+:::
+::: {.tarjeta}
+[Derivado]{.titulo}
+
+Se calcula, no se guarda. `antiguedad` desde `fecha_registro`.
+:::
+:::
+
+## Un atributo multivaluado no cabe en una columna {.center}
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda una tabla Cliente con telefono aplanado en una sola columna con dos numeros separados por coma; a la derecha el esquema correcto con dos tablas, Cliente sin telefono y Cliente_Telefono con una fila por cada numero" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <rect x="10" y="20" width="320" height="30" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="170" y="40" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Cliente, teléfono aplanado (mal diseñado)</text>
+  <rect x="10" y="52" width="320" height="66" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="26" y="76" font-size="11.5" fill="#12324f">id_cliente = 1, nombre = Ana Ruiz</text>
+  <text x="26" y="96" font-size="11.5" fill="#0e6f6c">telefono = "3001112233,3001119999"</text>
+  <text x="26" y="112" font-size="10.5" fill="#5b6876">un solo texto con dos números adentro</text>
+  <rect x="380" y="20" width="140" height="30" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="450" y="40" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <rect x="380" y="52" width="140" height="50" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="394" y="72" font-size="11" fill="#12324f">id_cliente = 1</text>
+  <text x="394" y="90" font-size="11" fill="#12324f">nombre = Ana Ruiz</text>
+  <rect x="545" y="20" width="155" height="30" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="622" y="40" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Cliente_Telefono</text>
+  <rect x="545" y="52" width="155" height="66" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="559" y="72" font-size="10.5" fill="#12324f">id=1, telefono=3001112233</text>
+  <text x="559" y="90" font-size="10.5" fill="#12324f">id=1, telefono=3001119999</text>
+  <text x="559" y="108" font-size="10" fill="#0e6f6c">una fila por número, misma clave</text>
+  <text x="350" y="150" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">borrar un teléfono en la versión aplanada obliga a reescribir toda la columna</text>
+  <text x="170" y="176" font-size="11" fill="#5b6876" text-anchor="middle">buscar exige leer y partir el texto completo</text>
+  <text x="600" y="176" font-size="11" fill="#5b6876" text-anchor="middle">buscar es una fila más en Cliente_Telefono</text>
+</svg>
+
+:::
+
+## Cuándo pasar un atributo a entidad {.center}
+
+::: {.destacado}
+¿El dato necesita información adicional propia, o admite varios valores que conviene consultar
+por separado? Si la respuesta es sí, asciende a entidad.
+:::
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Se queda como atributo]{.titulo}
+
+`telefono` de `Cliente`, mientras solo interese guardar el número.
+:::
+::: {.clave}
+[Asciende a entidad]{.titulo}
+
+Si además hace falta el operador de cada línea o cuál es el preferido, `Telefono(numero,
+operador, es_preferido)` relacionado con `Cliente`.
+:::
+:::
+
+## Relaciones entre entidades {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 3
+:::
+
+Una asociación entre entidades, con su propio grado, sus roles y sus atributos.
+
+## Una relación también tiene atributos propios {.center}
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 700 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La entidad Cliente y la entidad Pedido conectadas por la relacion realiza dibujada como un rombo, con su propio atributo canal_pedido colgando debajo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <rect x="10" y="55" width="150" height="70" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="85" y="82" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <text x="85" y="104" font-size="11.5" fill="#12324f" text-anchor="middle" text-decoration="underline">id_cliente</text>
+  <rect x="540" y="55" width="150" height="70" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="615" y="82" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="615" y="104" font-size="11.5" fill="#12324f" text-anchor="middle" text-decoration="underline">numero_pedido</text>
+  <polygon points="350,50 415,90 350,130 285,90" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="95" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">realiza</text>
+  <line x1="160" y1="90" x2="285" y2="90" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="415" y1="90" x2="540" y2="90" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="350" y1="130" x2="350" y2="153" stroke="#8fb3d1" stroke-width="1.6"/>
+  <ellipse cx="350" cy="177" rx="74" ry="24" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="350" y="181" font-size="12" fill="#12324f" text-anchor="middle">canal_pedido</text>
+  <text x="350" y="202" font-size="10.5" fill="#5b6876" text-anchor="middle">mostrador o domicilio, propio de cada pedido concreto</text>
+</svg>
+
+:::
+
+## Una relación recursiva {.center}
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La entidad Asignatura relacionada consigo misma mediante la relacion recursiva es_prerrequisito_de; dos lineas salen del mismo rombo hacia la misma entidad, una con el rol asignatura y otra con el rol prerrequisito" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <polygon points="350,25 415,63 350,101 285,63" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="350" y="67" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">es prerrequisito de</text>
+  <rect x="250" y="150" width="200" height="60" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="350" y="176" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Asignatura</text>
+  <text x="350" y="196" font-size="11.5" fill="#12324f" text-anchor="middle" text-decoration="underline">codigo_asignatura</text>
+  <path d="M285,63 C220,95 240,132 280,150" fill="none" stroke="#8fb3d1" stroke-width="1.7"/>
+  <path d="M415,63 C480,95 450,132 420,150" fill="none" stroke="#8fb3d1" stroke-width="1.7"/>
+  <text x="190" y="112" font-size="11" fill="#12324f" text-anchor="middle">rol: asignatura</text>
+  <text x="510" y="112" font-size="11" fill="#12324f" text-anchor="middle">rol: prerrequisito</text>
+</svg>
+
+:::
+
+::: {.fuente}
+Caso real de este programa: Base de datos tiene como prerrequisito a Estructura de datos.
+:::
+
+## El grado de una relación {.center}
+
+::: {.tarjetas}
+::: {.clave}
+[Binaria]{.titulo}
+
+Dos conjuntos de entidades. La mayoría de las relaciones del curso, como `realiza`.
+:::
+::: {.tarjeta}
+[Ternaria o mayor]{.titulo}
+
+Tres o más conjuntos a la vez, como `instructor`, `student` y `project` en un mismo proyecto.
+:::
+:::
+
+::: {.destacado}
+En una relación de grado mayor que dos, como máximo una línea puede llevar flecha de
+cardinalidad, para no dejar el diagrama con más de una lectura posible.
+:::
+
+## Cómo se identifica sin ambigüedad {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 4
+:::
+
+Superclave, clave candidata y clave primaria, tres niveles del mismo concepto.
+
+## De superclave a clave primaria {.center}
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El rectangulo mas grande agrupa las superclaves de Cliente, dentro un rectangulo mas chico marca la unica clave candidata, y dentro de este el rectangulo mas interno marca la clave primaria elegida, id_cliente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <rect x="10" y="20" width="420" height="180" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="26" y="42" font-size="12" font-weight="700" fill="#12324f">superclaves de Cliente</text>
+  <rect x="34" y="58" width="190" height="120" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="50" y="78" font-size="11.5" font-weight="700" fill="#0e6f6c">clave candidata</text>
+  <text x="50" y="94" font-size="10.5" fill="#5b6876">superclave mínima</text>
+  <rect x="50" y="104" width="145" height="46" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="122" y="124" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">id_cliente</text>
+  <text x="122" y="140" font-size="10.5" fill="#0e6f6c" text-anchor="middle">clave primaria elegida</text>
+  <g font-size="10.5" fill="#12324f"><text x="245" y="78">id_cliente, nombre</text><text x="245" y="98">id_cliente, telefono</text><text x="245" y="118">id_cliente, nombre, telefono</text></g>
+  <text x="245" y="140" font-size="10.5" fill="#5b6876">superclaves válidas, pero no mínimas</text>
+  <rect x="470" y="45" width="220" height="150" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="580" y="66" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">esto no sirve de clave</text>
+  <text x="484" y="94" font-size="11" fill="#12324f">nombre</text>
+  <text x="484" y="110" font-size="10.5" fill="#5b6876">se repite: dos Ana Ruiz distintas</text>
+  <text x="484" y="140" font-size="11" fill="#12324f">telefono</text>
+  <text x="484" y="156" font-size="10.5" fill="#5b6876">único hoy, pero no garantizado</text>
+</svg>
+
+:::
+
+## Un ejemplo con datos reales {.center}
+
+| id_cliente | nombre | telefono |
+|---|---|---|
+| 1 | Ana Ruiz | 3001112233 |
+| 2 | Luis Pena | 3014445566 |
+| 3 | Ana Ruiz | 3007778899 |
+
+::: {.destacado}
+`nombre` no sirve de clave, la fila 1 y la fila 3 comparten Ana Ruiz sin ser el mismo cliente.
+`telefono` es único hoy, pero nada en el negocio lo garantiza para siempre.
+:::
+
+## Lo que te llevas de hoy {.center}
+
+::: {.recuento}
+- La diferencia entre una entidad y un conjunto de entidades
+- Qué distingue una entidad fuerte de una débil, y qué es un discriminador
+- Las cuatro formas de atributo, con un ejemplo propio de cada una
+- Por qué un atributo multivaluado no cabe en una sola columna
+- Qué es una relación, su grado, un rol y un atributo propio
+- La diferencia entre superclave, clave candidata y clave primaria
+:::
+
+## Cierre {.center}
+
+::: {.destacado}
+Hoy quedaron listas las piezas sueltas, la entidad, el atributo, la relación y la clave.
+:::
+
+El Tema 2 de esta unidad les agrega la notación completa, la cardinalidad y la participación,
+hasta cerrar con el diagrama entidad relación de la cafetería, completo de principio a fin.

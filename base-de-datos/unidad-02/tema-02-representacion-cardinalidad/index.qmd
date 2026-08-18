@@ -12,6 +12,8 @@ date-format: "D [de] MMMM [de] YYYY"
 | Tema   | Tema 2. Representación gráfica, cardinalidad y participación   |
 :::
 
+[Diapositivas de la sesión](presentacion.qmd)
+
 El Tema 1 de esta unidad dio el vocabulario para nombrar las piezas de un modelo entidad relación,
 que entidad fuerte y entidad débil, que atributo simple, compuesto, multivaluado o derivado, que
 relación entre entidades y que clave candidata y clave primaria. Hoy esas piezas se dibujan con una
@@ -19,11 +21,10 @@ notación estándar, para que el modelo se pueda discutir con alguien que conoce
 nada de bases de datos, y para que cada relación quede marcada con dos datos que van a decidir
 directamente cómo se construye la tabla en la Unidad 3, cuántas instancias de una entidad se asocian
 con cuántas de la otra, que es la cardinalidad, y si una entidad puede existir sin participar en la
-relación, que es la participación. Cierras el tema retomando el caso de la cafetería del Tema 1 de la
-Unidad 1, esa tabla única de pedidos donde el teléfono de un cliente se repetía en varias filas y se
-desactualizaba en unas mientras quedaba correcto en otras, para modelarla esta vez como un diagrama
-entidad relación completo, con sus entidades separadas, su relación y las llaves foráneas que evitan
-exactamente esa anomalía.
+relación, que es la participación. Cierras el tema con un caso completo, una cafetería que guarda sus
+pedidos en una sola tabla plana con el teléfono del cliente repetido en cada línea, para modelarla como
+un diagrama entidad relación completo, con sus entidades separadas, su relación y las llaves foráneas
+que evitan esa redundancia por diseño.
 
 ## Para qué se dibuja un modelo antes de programarlo
 
@@ -267,10 +268,11 @@ y Sudarshan), y suele confundir a quien empieza a leer diagramas de otras fuente
 `1..*` escrito junto a una línea de Chen sin flecha ni doble línea es perfectamente válido, es la misma
 información que la pata de gallo, expresada con números en vez de con figuras.
 
-## El caso de estudio: la cafetería, esta vez completa
+## El caso de estudio: la cafetería, completa
 
-Vuelve a la tabla del Tema 1 de la Unidad 1, la que juntaba pedido, cliente, teléfono, producto y
-valor en una sola fila por línea de venta.
+Imagina que alguien registró los pedidos de la cafetería en una sola tabla plana, una fila por cada
+línea de venta, con el pedido, el cliente, su teléfono, el producto y el valor todos mezclados en las
+mismas columnas.
 
 ::: {.tabla-ancha}
 | Pedido | Cliente | Teléfono | Producto | Valor |
@@ -281,14 +283,16 @@ valor en una sola fila por línea de venta.
 | 1004 | Ana Ruiz | 300 111 2233 | Jugo | 6800 |
 :::
 
-Si tuvieras que dibujar esta misma
-información como un modelo entidad relación, cuántas entidades separarías, y en cuál de ellas dejarías
-el teléfono, sabiendo que el problema original no era el teléfono en sí, sino que vivía repetido en una
-tabla que en realidad mezclaba dos cosas distintas, el pedido y el cliente que lo hizo.
+Fíjate en el teléfono de Ana Ruiz, repetido tres veces de forma idéntica en las filas 1001, 1002 y
+1004: si Ana cambia de número, alguien tiene que corregirlo en las tres filas a la vez, y si se olvida
+una, la tabla queda con dos números distintos para la misma persona. Si tuvieras que dibujar esta
+misma información como un modelo entidad relación, cuántas entidades separarías, y en cuál de ellas
+dejarías el teléfono, sabiendo que el problema no es el teléfono en sí, sino que la tabla mezcla dos
+cosas distintas, el pedido y el cliente que lo hizo.
 
-La respuesta que ya adelantaba la investigación del Tema 1 de la Unidad 1 es que el teléfono nunca
-debió vivir en la fila del pedido, porque conceptualmente es un dato del cliente, no del pedido, y
-un cliente puede hacer varios pedidos sin que su teléfono cambie de un pedido a otro. El modelo separa
+El teléfono nunca debió vivir en la fila del pedido, porque conceptualmente es un dato del cliente, no
+del pedido, y un cliente puede hacer varios pedidos sin que su teléfono cambie de un pedido a otro. El
+modelo separa
 tres entidades, `Cliente`, con su nombre y su teléfono, `Pedido`, con su fecha, y `Producto`, con su
 nombre y su precio, conectadas por dos relaciones, `Realiza` entre `Cliente` y `Pedido`, y `Contiene`
 entre `Pedido` y `Producto`.
@@ -339,10 +343,10 @@ nadie ha pedido, así que `Producto` participa de forma parcial.
 
 :::
 
-Con este diagrama, la anomalía que abrió el caso en la Unidad 1 desaparece por diseño, no por
-disciplina. El teléfono vive una sola vez, como atributo de `Cliente`, así que cuando Ana cambie de
-número, se corrige un solo registro, y sus tres pedidos anteriores siguen apuntando al mismo cliente
-sin que el teléfono tenga que repetirse ni una sola vez.
+Con este diagrama, la redundancia de la tabla plana desaparece por diseño, no por disciplina. El
+teléfono vive una sola vez, como atributo de `Cliente`, así que cuando Ana cambie de número, se
+corrige un solo registro, y sus tres pedidos anteriores siguen apuntando al mismo cliente sin que el
+teléfono tenga que repetirse ni una sola vez.
 
 ## El mismo modelo en pata de gallo
 
@@ -466,9 +470,10 @@ aparecen una y otra vez en trabajos de estudiantes que recién empiezan.
 
 El primero es confundir un atributo con una entidad, o al revés. El teléfono de este mismo caso es un
 buen ejemplo de los dos lados del error, guardarlo como atributo de `Pedido` en vez de `Cliente` fue el
-error original de la Unidad 1, pero convertirlo en una entidad propia también sería un error, en este
-caso por exceso, porque cada cliente de la cafetería tiene un solo teléfono y ninguna metadata adicional
-sobre él. La señal correcta para preferir una entidad sobre un atributo aparece
+error de la tabla plana con la que abrió este caso, pero convertirlo en una entidad propia también
+sería un error, en este caso por exceso, porque cada cliente de la cafetería tiene un solo teléfono y
+ninguna metadata adicional sobre él. La señal correcta para preferir una entidad sobre un atributo
+aparece
 cuando el negocio necesita guardar varios valores del mismo tipo por instancia, o información adicional
 sobre cada uno de esos valores, por ejemplo si la cafetería quisiera guardar el celular y el fijo de
 cada cliente, con una etiqueta que diga cuál es cuál. Mientras eso no ocurra, el atributo simple
@@ -478,9 +483,8 @@ El segundo error, que igualmente conviene evitar, es intentar resolver una relac
 poniendo una llave foránea en cada una de las dos tablas originales, en vez de crear la tabla
 intermedia. Es imposible expresar correctamente una relación muchos a muchos así, porque una columna
 `producto_id` dentro de `Pedido` solo puede guardar un valor a la vez, y un pedido con varios productos
-necesitaría varias columnas o varias filas repetidas del pedido, que es exactamente la misma anomalía
-de redundancia que abrió el Tema 1 de la Unidad 1, solo que aplicada ahora al producto en vez de al
-teléfono.
+necesitaría varias columnas o varias filas repetidas del pedido, la misma anomalía de redundancia de la
+tabla plana con la que abrió este caso, solo que aplicada ahora al producto en vez de al teléfono.
 
 ::: {.callout-tip}
 ## Reto 1. Cardinalidad y participación a ojo
@@ -528,8 +532,8 @@ CREATE TABLE Pedido (
 ```
 
 Antes de leer la solución, responde en un párrafo corto, qué pasa si el pedido 1002 de Ana incluyó a la
-vez una torta y un jugo, con esta estructura de tabla, y qué anomalía del Tema 1 de la Unidad 1 vuelve a
-aparecer aquí, solo que en otro campo.
+vez una torta y un jugo, con esta estructura de tabla, y qué anomalía de la tabla plana original de este
+tema vuelve a aparecer aquí, solo que en otro campo.
 :::
 
 ::: {.callout-note collapse="true"}
@@ -539,8 +543,8 @@ Con esta tabla, un pedido que incluye dos productos distintos no cabe en una sol
 columna `producto_id` solo admite un valor. La única forma de registrar que el pedido 1002 llevó torta
 y jugo es repetir la fila completa del pedido 1002 dos veces, una por cada producto, con el mismo
 `id_pedido`, el mismo `cliente_id` y la misma fecha implícita, cambiando solo `producto_id` y
-`cantidad`. Eso es la misma anomalía de redundancia que el teléfono de Ana en la tabla original del Tema
-1 de la Unidad 1, solo que ahora el dato que se repite y se puede desincronizar no es el teléfono, es
+`cantidad`. Es la misma anomalía de redundancia que el teléfono de Ana en la tabla plana con la que
+abrió este caso, solo que ahora el dato que se repite y se puede desincronizar no es el teléfono, es
 el propio pedido.
 
 La corrección es la tabla `Detalle_Pedido` que ya viste en este tema, con clave primaria compuesta por
@@ -593,7 +597,7 @@ Al salir de este tema deberías poder explicar, sin mirar la guía, los siguient
 - [ ] Por qué una relación muchos a muchos siempre necesita una tabla propia, y por qué su
       participación parcial no genera columnas nulas
 - [ ] Cómo el modelo entidad relación completo de la cafetería elimina, por diseño, la anomalía del
-      teléfono repetido del Tema 1 de la Unidad 1
+      teléfono repetido de la tabla plana original
 :::
 
 ## Cierre de la Unidad 2
@@ -601,8 +605,9 @@ Al salir de este tema deberías poder explicar, sin mirar la guía, los siguient
 Con este tema se cierra la Unidad 2. Empezaste nombrando las piezas sueltas del modelo entidad
 relación, entidades, atributos, relaciones y claves, y terminaste dibujándolas con una notación
 estándar, marcando cuántas instancias se asocian entre sí y si esa asociación es obligatoria. La
-cafetería, que en la Unidad 1 era apenas una tabla con un problema, ahora es un diagrama completo con
-tres entidades, dos relaciones y una tabla intermedia, listo para el siguiente paso.
+cafetería, que abrió este tema como una tabla plana con un problema de redundancia, ahora es un
+diagrama completo con tres entidades, dos relaciones y una tabla intermedia, listo para el siguiente
+paso.
 
 La Unidad 3 toma exactamente este diagrama y lo convierte en el vocabulario formal del modelo
 relacional, cada entidad con su llave primaria, cada relación resuelta con llaves foráneas o con una
