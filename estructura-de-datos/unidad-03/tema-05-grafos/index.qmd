@@ -1,0 +1,918 @@
+---
+title: "Tema 5. Grafos"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                    |
+|--------|----------------------------------------------------|
+| Unidad | Unidad 3. Estructuras dinámicas                   |
+| Tema   | Tema 5. Grafos                                    |
+:::
+
+Los cuatro temas anteriores de esta unidad construyeron estructuras jerárquicas, cada nodo con un padre
+y como máximo dos hijos, una sola forma de bajar desde la raíz hasta cualquier otro nodo. Hoy esa
+jerarquía desaparece. Un grafo conecta nodos entre sí sin ninguna dirección obligada de arriba hacia
+abajo, un mismo nodo puede tener tantos vecinos como haga falta, y dos nodos pueden estar conectados por
+más de un camino a la vez o por ninguno. Sigue habiendo nodos y enlaces, el mismo vocabulario que abrió
+esta unidad en el Tema 1, pero la forma de organizarlos cambia por completo, y con ella cambian las
+preguntas que tiene sentido hacerle a la estructura, ya no "qué tan balanceado está" sino "qué tan lejos
+está un nodo de otro" o "existe siquiera un camino entre los dos". Este es también el último tema de la
+Unidad 3, y el que deja listo el terreno para la Unidad 4, donde Dijkstra, Prim y Kruskal trabajan
+directamente sobre el grafo ponderado que vas a construir al final de esta guía.
+
+## Qué es un grafo
+
+Un grafo se define formalmente como un par `G = (V, E)`, donde `V` es un conjunto de vértices, los
+nodos de la estructura, y `E` es un conjunto de aristas, cada una conectando un par de vértices de `V`.
+A diferencia de un árbol, un grafo no exige ninguna raíz ni ninguna relación de padre a hijo, cualquier
+vértice puede conectarse con cualquier otro, y nada impide que existan varios caminos distintos entre el
+mismo par de vértices. El grafo que acompaña el resto de esta guía tiene ocho vértices y dos
+componentes, un grupo de seis vértices conectados entre sí de varias formas, incluido un ciclo, y un
+segundo grupo de solo dos vértices sin ninguna conexión hacia el primero.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafo de ejemplo con dos componentes: la primera tiene seis vertices, 1 a 6, con un ciclo formado por las aristas 1-2, 1-3, 2-4 y 3-4, y una cola lineal 4-5-6; la segunda componente son los vertices 7 y 8 unidos por una sola arista, sin ninguna conexion hacia la primera componente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="22" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El grafo de ejemplo de esta guia: dos componentes, la primera con un ciclo</text>
+  <rect x="20" y="35" width="260" height="300" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="460" y="140" width="260" height="80" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="150" y="52" font-size="10.5" fill="#5b6876" text-anchor="middle">componente 1</text>
+  <text x="590" y="157" font-size="10.5" fill="#5b6876" text-anchor="middle">componente 2</text>
+  <g fill="none" stroke="#0e6f6c" stroke-width="1.8"><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="55" x2="225" y2="120"/><line x1="75" y1="120" x2="150" y2="185"/><line x1="225" y1="120" x2="150" y2="185"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8"><line x1="150" y1="185" x2="150" y2="250"/><line x1="150" y1="250" x2="150" y2="315"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8"><line x1="560" y1="180" x2="680" y2="180"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><circle cx="150" cy="55" r="18"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/><circle cx="150" cy="315" r="18"/><circle cx="560" cy="180" r="18"/><circle cx="680" cy="180" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text><text x="560" y="185">7</text><text x="680" y="185">8</text></g>
+  <text x="150" y="345" font-size="10" fill="#0e6f6c" text-anchor="middle">ciclo: 1-2-4-3-1, marcado en verde</text>
+</svg>
+
+:::
+
+Este grafo es no dirigido, cada arista se recorre en los dos sentidos, así que una arista entre 1 y 2
+significa que se puede ir de 1 a 2 y de 2 a 1 con el mismo enlace. También es no ponderado por ahora,
+todas las aristas cuentan lo mismo, sin ningún costo asociado, aunque eso cambia hacia el final de esta
+guía. La distinción entre estas cuatro parejas de propiedades, dirigido contra no dirigido, ponderado
+contra no ponderado, cíclico contra acíclico, y conexo contra no conexo, es la que decide cómo se
+representa un grafo en memoria y qué algoritmos tiene sentido correrle encima.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro distinciones que definen un grafo, cada una mostrada con dos grafos pequenos: dirigido, donde las aristas tienen flecha y solo se recorren en un sentido, contra no dirigido, donde la arista se recorre en los dos sentidos; ponderado, donde cada arista lleva un numero que representa su costo, contra no ponderado, donde las aristas no llevan numero; ciclico, donde existe un camino que vuelve al vertice de partida, contra aciclico, donde no existe ningun camino que se cierre sobre si mismo; y conexo, donde hay un camino entre cualquier par de vertices, contra no conexo, donde el grafo queda partido en mas de un grupo sin ninguna arista entre ellos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd35b" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <rect x="10" y="10" width="360" height="140" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="390" y="10" width="360" height="140" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="10" y="165" width="360" height="140" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="390" y="165" width="360" height="140" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="190" y="28" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Dirigido contra no dirigido</text>
+  <text x="570" y="28" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Ponderado contra no ponderado</text>
+  <text x="190" y="183" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Ciclico contra aciclico</text>
+  <text x="570" y="183" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Conexo contra no conexo</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="100" y1="65" x2="75" y2="115"/><line x1="100" y1="65" x2="125" y2="115"/><line x1="75" y1="115" x2="125" y2="115"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd35b)"><line x1="280" y1="65" x2="257" y2="112"/><line x1="253" y1="115" x2="303" y2="115"/><line x1="303" y1="112" x2="282" y2="68"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="100" cy="65" r="10"/><circle cx="75" cy="115" r="10"/><circle cx="125" cy="115" r="10"/><circle cx="280" cy="65" r="10"/><circle cx="255" cy="115" r="10"/><circle cx="305" cy="115" r="10"/></g>
+  <text x="100" y="138" font-size="10" fill="#0e6f6c" text-anchor="middle">no dirigido</text>
+  <text x="280" y="138" font-size="10" fill="#0e6f6c" text-anchor="middle">dirigido</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="470" y1="65" x2="445" y2="115"/><line x1="470" y1="65" x2="495" y2="115"/><line x1="445" y1="115" x2="495" y2="115"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="650" y1="65" x2="625" y2="115"/><line x1="650" y1="65" x2="675" y2="115"/><line x1="625" y1="115" x2="675" y2="115"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="470" cy="65" r="10"/><circle cx="445" cy="115" r="10"/><circle cx="495" cy="115" r="10"/><circle cx="650" cy="65" r="10"/><circle cx="625" cy="115" r="10"/><circle cx="675" cy="115" r="10"/></g>
+  <g font-size="9.5" fill="#0e6f6c" font-weight="700"><text x="645" y="88">4</text><text x="622" y="118">2</text><text x="668" y="118">3</text></g>
+  <text x="470" y="138" font-size="10" fill="#0e6f6c" text-anchor="middle">sin peso</text>
+  <text x="650" y="138" font-size="10" fill="#0e6f6c" text-anchor="middle">con peso</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="100" y1="220" x2="75" y2="270"/><line x1="100" y1="220" x2="125" y2="270"/><line x1="75" y1="270" x2="125" y2="270"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="255" y1="270" x2="280" y2="220"/><line x1="280" y1="220" x2="305" y2="270"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="100" cy="220" r="10"/><circle cx="75" cy="270" r="10"/><circle cx="125" cy="270" r="10"/><circle cx="255" cy="270" r="10"/><circle cx="280" cy="220" r="10"/><circle cx="305" cy="270" r="10"/></g>
+  <text x="100" y="293" font-size="10" fill="#0e6f6c" text-anchor="middle">ciclico</text>
+  <text x="280" y="293" font-size="10" fill="#0e6f6c" text-anchor="middle">aciclico</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="445" y1="225" x2="495" y2="225"/><line x1="445" y1="225" x2="445" y2="285"/><line x1="495" y1="225" x2="495" y2="285"/><line x1="445" y1="285" x2="495" y2="285"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="625" y1="225" x2="675" y2="225"/><line x1="625" y1="285" x2="675" y2="285"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="445" cy="225" r="10"/><circle cx="495" cy="225" r="10"/><circle cx="445" cy="285" r="10"/><circle cx="495" cy="285" r="10"/><circle cx="625" cy="225" r="10"/><circle cx="675" cy="225" r="10"/><circle cx="625" cy="285" r="10"/><circle cx="675" cy="285" r="10"/></g>
+  <text x="470" y="298" font-size="10" fill="#0e6f6c" text-anchor="middle">conexo</text>
+  <text x="650" y="298" font-size="10" fill="#0e6f6c" text-anchor="middle">no conexo</text>
+</svg>
+
+:::
+
+Un grafo dirigido restringe cada arista a un solo sentido, como una calle de un solo carril, y se
+dibuja con una flecha. Un grafo ponderado agrega un número a cada arista, su peso, que representa un
+costo, una distancia o un tiempo, y es exactamente lo que la Unidad 4 necesita para calcular caminos
+más cortos. Un grafo es cíclico si existe al menos un camino que sale de un vértice y regresa a él
+mismo sin repetir ninguna arista, como el 1-2-4-3-1 del grafo de ejemplo, y es acíclico si ningún camino
+se cierra así, un árbol, de hecho, es exactamente un grafo conexo y acíclico. Un grafo es conexo si hay
+un camino entre cualquier par de sus vértices, y no conexo si queda partido en dos o más grupos sin
+ninguna arista entre ellos, como las dos componentes del grafo de ejemplo.
+
+## Representaciones: matriz de adyacencia y lista de adyacencia
+
+Guardar un grafo en memoria significa decidir cómo registrar, para cada vértice, cuáles son sus
+vecinos. Hay dos formas estándar de hacerlo, y la elección entre las dos no es un detalle de
+implementación menor, cambia el costo de las operaciones más comunes por un factor que puede ser de
+miles de veces según qué tan denso o disperso sea el grafo.
+
+La matriz de adyacencia guarda una tabla de `V x V` casillas booleanas, una fila y una columna por cada
+vértice, donde la casilla `[i][j]` vale verdadero si existe una arista entre `i` y `j`. La lista de
+adyacencia guarda, para cada vértice, una lista solo con sus vecinos reales, sin ninguna casilla para
+los pares que no están conectados.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las dos representaciones de la componente 1 del grafo de ejemplo, vertices 1 a 6. A la izquierda, la matriz de adyacencia, una tabla de 6 por 6 con un 1 en cada casilla donde existe arista entre esa fila y esa columna, y vacio en el resto, incluida la diagonal. A la derecha, la lista de adyacencia, cada vertice seguido solo de sus vecinos reales: 1 apunta a 2 y 3, 2 apunta a 1 y 4, 3 apunta a 1 y 4, 4 apunta a 2, 3 y 5, 5 apunta a 4 y 6, 6 apunta solo a 5" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="150" y="22" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Matriz de adyacencia</text>
+  <text x="590" y="22" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Lista de adyacencia</text>
+  <g fill="none" stroke="#c7d6e6" stroke-width="1"><line x1="60" y1="60" x2="240" y2="60"/><line x1="60" y1="90" x2="240" y2="90"/><line x1="60" y1="120" x2="240" y2="120"/><line x1="60" y1="150" x2="240" y2="150"/><line x1="60" y1="180" x2="240" y2="180"/><line x1="60" y1="210" x2="240" y2="210"/><line x1="60" y1="240" x2="240" y2="240"/><line x1="60" y1="60" x2="60" y2="240"/><line x1="90" y1="60" x2="90" y2="240"/><line x1="120" y1="60" x2="120" y2="240"/><line x1="150" y1="60" x2="150" y2="240"/><line x1="180" y1="60" x2="180" y2="240"/><line x1="210" y1="60" x2="210" y2="240"/><line x1="240" y1="60" x2="240" y2="240"/></g>
+  <g text-anchor="middle" font-size="10.5" fill="#5b6876" font-weight="700"><text x="75" y="52">1</text><text x="105" y="52">2</text><text x="135" y="52">3</text><text x="165" y="52">4</text><text x="195" y="52">5</text><text x="225" y="52">6</text><text x="45" y="79">1</text><text x="45" y="109">2</text><text x="45" y="139">3</text><text x="45" y="169">4</text><text x="45" y="199">5</text><text x="45" y="229">6</text></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f" font-weight="600"><text x="105" y="79">1</text><text x="135" y="79">1</text><text x="75" y="109">1</text><text x="165" y="109">1</text><text x="75" y="139">1</text><text x="165" y="139">1</text><text x="105" y="169">1</text><text x="135" y="169">1</text><text x="195" y="169">1</text><text x="165" y="199">1</text><text x="225" y="199">1</text><text x="195" y="229">1</text></g>
+  <g font-size="10.5" fill="#12324f" font-weight="600"><text x="440" y="60">1 -&gt;</text><text x="440" y="95">2 -&gt;</text><text x="440" y="130">3 -&gt;</text><text x="440" y="165">4 -&gt;</text><text x="440" y="200">5 -&gt;</text><text x="440" y="235">6 -&gt;</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="476" y="43" width="26" height="24"/><rect x="510" y="43" width="26" height="24"/><rect x="476" y="78" width="26" height="24"/><rect x="510" y="78" width="26" height="24"/><rect x="476" y="113" width="26" height="24"/><rect x="510" y="113" width="26" height="24"/><rect x="476" y="148" width="26" height="24"/><rect x="510" y="148" width="26" height="24"/><rect x="544" y="148" width="26" height="24"/><rect x="476" y="183" width="26" height="24"/><rect x="510" y="183" width="26" height="24"/><rect x="476" y="218" width="26" height="24"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f" font-weight="600"><text x="489" y="60">2</text><text x="523" y="60">3</text><text x="489" y="95">1</text><text x="523" y="95">4</text><text x="489" y="130">1</text><text x="523" y="130">4</text><text x="489" y="165">2</text><text x="523" y="165">3</text><text x="557" y="165">5</text><text x="489" y="200">4</text><text x="523" y="200">6</text><text x="489" y="235">5</text></g>
+</svg>
+
+:::
+
+Con esas dos representaciones ya construidas, comparar el costo real de las dos operaciones que más se
+usan en la práctica, verificar si existe una arista concreta y recorrer todos los vecinos de un nodo,
+depende de una sola variable, qué tan denso es el grafo. Un grafo denso tiene un número de aristas `E`
+cercano al máximo posible, `V x (V-1) / 2` en uno no dirigido, mientras que un grafo disperso tiene `E`
+mucho más cercano a `V`, cada vértice con solo un puñado de vecinos sin importar cuántos vértices haya
+en total. La mayoría de los grafos del mundo real, redes sociales, mapas de carreteras, grafos de
+dependencias entre paquetes de software, son dispersos, un usuario tiene decenas de contactos, no
+millones.
+
+| Operación | Matriz de adyacencia | Lista de adyacencia |
+|---|---|---|
+| Espacio total | `O(V^2)`, siempre, sin importar cuántas aristas existan realmente | `O(V + E)`, proporcional a las aristas reales |
+| Verificar si existe la arista `(u, v)` | `O(1)`, una sola consulta a `matriz[u][v]` | `O(grado(u))`, hay que recorrer la lista de vecinos de `u` |
+| Recorrer todos los vecinos de `u` | `O(V)`, siempre, hay que revisar toda la fila aunque casi todo sea vacío | `O(grado(u))`, proporcional a los vecinos reales |
+| Agregar una arista nueva | `O(1)` | `O(1)`, se agrega al final de la lista |
+| Recorrer todas las aristas del grafo (lo que hacen DFS y BFS) | `O(V^2)` | `O(V + E)` |
+
+En un grafo denso, donde `grado(u)` se acerca a `V` para casi todo vértice, la lista de adyacencia
+pierde su ventaja, recorrer los vecinos de un nodo cuesta casi lo mismo con las dos representaciones, y
+la matriz gana en la operación de verificar una arista puntual, siempre `O(1)` sin importar la densidad.
+En un grafo disperso, que es el caso más común, la diferencia es enorme. Toma un grafo con cien mil
+vértices y trescientas mil aristas, un grado promedio de seis, típico de una red de contactos. La matriz
+necesita `100 000 x 100 000`, diez mil millones de casillas, que empaquetadas en el bit más compacto
+posible ya piden más de mil millones de bytes, y sin empaquetar, una casilla por byte, piden diez veces
+más. La lista de adyacencia solo necesita una entrada por cada extremo de cada arista, seiscientas mil
+entradas en total, unos pocos megabytes. Esta cuenta no depende de en qué computador se ejecute, es
+aritmética pura sobre cuántas casillas exige cada representación, y es la razón por la que casi ningún
+programa real usa matriz de adyacencia para un grafo grande y disperso, aunque sea la representación más
+sencilla de explicar en un pizarrón.
+
+```java
+import java.util.*;
+
+public class GrafoLista {
+    private Map<Integer, List<Integer>> listaAdyacencia = new LinkedHashMap<>();
+
+    public void agregarVertice(int v) {
+        listaAdyacencia.putIfAbsent(v, new ArrayList<>());
+    }
+
+    public void agregarArista(int origen, int destino) {
+        agregarVertice(origen);
+        agregarVertice(destino);
+        listaAdyacencia.get(origen).add(destino);
+        listaAdyacencia.get(destino).add(origen); // grafo no dirigido
+    }
+
+    public boolean existeArista(int origen, int destino) {
+        return listaAdyacencia.getOrDefault(origen, Collections.emptyList()).contains(destino);
+    }
+
+    public List<Integer> vecinos(int v) {
+        return listaAdyacencia.getOrDefault(v, Collections.emptyList());
+    }
+
+    public Set<Integer> vertices() {
+        return listaAdyacencia.keySet();
+    }
+}
+```
+
+```python
+class GrafoLista:
+    def __init__(self):
+        self.lista_adyacencia = {}
+
+    def agregar_vertice(self, v):
+        self.lista_adyacencia.setdefault(v, [])
+
+    def agregar_arista(self, origen, destino):
+        self.agregar_vertice(origen)
+        self.agregar_vertice(destino)
+        self.lista_adyacencia[origen].append(destino)
+        self.lista_adyacencia[destino].append(origen)  # grafo no dirigido
+
+    def existe_arista(self, origen, destino):
+        return destino in self.lista_adyacencia.get(origen, [])
+
+    def vecinos(self, v):
+        return self.lista_adyacencia.get(v, [])
+
+    def vertices(self):
+        return self.lista_adyacencia.keys()
+```
+
+`GrafoLista` usa `LinkedHashMap` en Java, en vez del `HashMap` que usaron otras estructuras del curso,
+porque preserva el orden en que se agregaron los vértices, lo mismo que un diccionario de Python ya hace
+por defecto desde la versión 3.7. Esa decisión no cambia la complejidad de ninguna operación, solo hace
+que recorrer `vertices()` produzca siempre el mismo orden, el orden de inserción, lo que vuelve
+reproducibles los resultados de los recorridos y las componentes conexas que vienen más adelante.
+
+La matriz de adyacencia se implementa con una tabla de booleanos de tamaño fijo, definida desde la
+construcción del grafo:
+
+```java
+public class GrafoMatriz {
+    private boolean[][] matriz;
+    private int numVertices;
+
+    public GrafoMatriz(int numVertices) {
+        this.numVertices = numVertices;
+        this.matriz = new boolean[numVertices][numVertices];
+    }
+
+    public void agregarArista(int origen, int destino) {
+        matriz[origen][destino] = true;
+        matriz[destino][origen] = true; // grafo no dirigido
+    }
+
+    public boolean existeArista(int origen, int destino) {
+        return matriz[origen][destino];
+    }
+
+    public List<Integer> vecinos(int v) {
+        List<Integer> resultado = new ArrayList<>();
+        for (int i = 0; i < numVertices; i++) {
+            if (matriz[v][i]) {
+                resultado.add(i);
+            }
+        }
+        return resultado;
+    }
+}
+```
+
+```python
+class GrafoMatriz:
+    def __init__(self, num_vertices):
+        self.num_vertices = num_vertices
+        self.matriz = [[False] * num_vertices for _ in range(num_vertices)]
+
+    def agregar_arista(self, origen, destino):
+        self.matriz[origen][destino] = True
+        self.matriz[destino][origen] = True  # grafo no dirigido
+
+    def existe_arista(self, origen, destino):
+        return self.matriz[origen][destino]
+
+    def vecinos(self, v):
+        return [i for i in range(self.num_vertices) if self.matriz[v][i]]
+```
+
+Fíjate en `vecinos` de `GrafoMatriz`, recorre las `numVertices` columnas completas de la fila `v` sin
+importar cuántas casillas realmente valgan verdadero, mientras que `vecinos` de `GrafoLista` solo
+devuelve la lista ya lista, sin ningún recorrido extra. Esa sola diferencia es la que explica la fila
+"recorrer todos los vecinos" de la tabla de arriba, y es la operación que más se repite dentro de
+cualquier recorrido, como vas a ver en la siguiente sección. El resto de esta guía usa `GrafoLista`
+como representación por defecto, precisamente porque el grafo de ejemplo es disperso y porque DFS y BFS
+dependen sobre todo de recorrer vecinos, no de verificar aristas puntuales.
+
+::: {.callout-tip}
+## Reto 1. Elige la representación
+
+Vas a modelar dos grafos distintos. El primero es la red de vuelos directos entre los cerca de doscientos
+aeropuertos principales del mundo, donde la mayoría de pares de aeropuertos no tiene vuelo directo. El
+segundo es un grafo de solo doce vértices que representa qué tan cerca de la capacidad máxima de
+conexión está, con más de la mitad de todos los pares posibles conectados entre sí. Antes de seguir,
+decide qué representación conviene para cada uno.
+
+<label><input type="checkbox"> Lista de adyacencia para los dos casos, porque siempre es más rapida</label>
+<label><input type="checkbox"> Lista de adyacencia para los vuelos, matriz de adyacencia para el grafo de doce vertices casi completo</label>
+<label><input type="checkbox"> Matriz de adyacencia para los dos casos, porque es mas facil de programar</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La segunda es correcta. La red de vuelos, con doscientos vértices y la mayoría de pares sin conexión
+directa, es un grafo disperso, la lista de adyacencia gasta memoria proporcional a los vuelos que
+realmente existen y recorrer los vecinos de un aeropuerto es rápido porque casi siempre tiene pocos
+vuelos directos. El segundo grafo, con solo doce vértices y más de la mitad de los pares posibles
+conectados, es denso, `V` es tan pequeño que `O(V^2)` de la matriz no pesa nada en memoria, y a cambio
+la matriz da verificación de arista en `O(1)` sin ningún recorrido. No hay una representación
+universalmente más rápida, la respuesta correcta depende de la densidad concreta del grafo que se está
+modelando.
+:::
+
+## Recorridos: DFS y BFS
+
+Recorrer un grafo es visitar cada uno de sus vértices alcanzables desde un punto de partida exactamente
+una vez, la misma idea que ya trabajaste con árboles en el Tema 3, pero con una diferencia importante,
+un grafo puede tener ciclos, así que un recorrido sin control puede visitar el mismo vértice una y otra
+vez sin terminar nunca. Por eso todo recorrido de grafo necesita un conjunto de vértices ya visitados,
+que en un árbol no hacía falta porque nunca hay forma de volver a un nodo ya recorrido.
+
+### DFS: profundidad, con recursión o con pila explícita
+
+La búsqueda en profundidad, DFS por sus siglas en inglés, avanza todo lo que puede por un vecino antes
+de retroceder, exactamente como el preorden del Tema 3 pero permitiendo, gracias al conjunto de
+visitados, que el grafo tenga ciclos sin que el recorrido se cuelgue. Sobre el grafo de ejemplo,
+empezando en el vértice 1, DFS visita 1, baja a su primer vecino, 2, baja al primer vecino no visitado
+de 2, que es 4, y desde 4 sigue bajando hasta que ya no queda ningún vecino nuevo, momento en el que
+retrocede y prueba la siguiente rama.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DFS desde el vertice 1 sobre la componente 1 del grafo de ejemplo. El orden de visita, marcado con un numero en verde junto a cada vertice, es: 1 primero, 2 segundo, 4 tercero, 3 cuarto, 5 quinto, 6 sexto. El recorrido baja primero por 1-2-4, retrocede a 3 porque ya no hay mas vecinos sin visitar desde 4 en esa direccion, y despues continua bajando por 4-5-6" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="150" y="22" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">DFS desde 1: 1, 2, 4, 3, 5, 6</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="55" x2="225" y2="120"/><line x1="75" y1="120" x2="150" y2="185"/><line x1="225" y1="120" x2="150" y2="185"/><line x1="150" y1="185" x2="150" y2="250"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text></g>
+  <g text-anchor="middle" font-size="12" fill="#0e6f6c" font-weight="700"><text x="170" y="38">1</text><text x="52" y="103">2</text><text x="248" y="140">4</text><text x="128" y="168">3</text><text x="170" y="235">5</text></g>
+  <text x="400" y="55" font-size="10.5" fill="#12324f" font-weight="700">paso a paso, con pila explicita:</text>
+  <g font-size="10" fill="#5b6876"><text x="400" y="75">1. pila=[1] -&gt; visita 1, pila=[3, 2]</text><text x="400" y="93">2. pila=[3, 2] -&gt; visita 2, pila=[3, 4]</text><text x="400" y="111">3. pila=[3, 4] -&gt; visita 4, pila=[3, 5, 3]</text><text x="400" y="129">4. pila=[3, 5, 3] -&gt; visita 3, pila=[3, 5]</text><text x="400" y="147">5. pila=[3, 5] -&gt; visita 5, pila=[3, 6]</text><text x="400" y="165">6. pila=[3, 6] -&gt; visita 6, pila=[3]</text></g>
+  <text x="400" y="187" font-size="9.5" fill="#0e6f6c">el 3 restante ya esta visitado: se descarta sin volver a visitarlo</text>
+  <text x="400" y="270" font-size="9.5" fill="#5b6876">nota: el 3 aparece dos veces en la pila en el paso 3,</text>
+  <text x="400" y="286" font-size="9.5" fill="#5b6876">porque se agrego antes de visitarlo y de nuevo al</text>
+  <text x="400" y="302" font-size="9.5" fill="#5b6876">procesar 4, que tambien lo tiene como vecino</text>
+</svg>
+
+:::
+
+```java
+public List<Integer> dfs(int inicio) {
+    List<Integer> resultado = new ArrayList<>();
+    Set<Integer> visitados = new HashSet<>();
+    dfs(inicio, visitados, resultado);
+    return resultado;
+}
+
+private void dfs(int actual, Set<Integer> visitados, List<Integer> resultado) {
+    visitados.add(actual);
+    resultado.add(actual);
+    for (int vecino : vecinos(actual)) {
+        if (!visitados.contains(vecino)) {
+            dfs(vecino, visitados, resultado);
+        }
+    }
+}
+```
+
+```python
+def dfs(self, inicio):
+    visitados = set()
+    resultado = []
+    self._dfs(inicio, visitados, resultado)
+    return resultado
+
+def _dfs(self, actual, visitados, resultado):
+    visitados.add(actual)
+    resultado.append(actual)
+    for vecino in self.vecinos(actual):
+        if vecino not in visitados:
+            self._dfs(vecino, visitados, resultado)
+```
+
+La versión recursiva de arriba deja que la pila de llamadas del propio lenguaje lleve la cuenta de por
+dónde volver, exactamente como `inorden` y `preorden` en el Tema 3. Cuando esa pila implícita no es
+deseable, por ejemplo porque el grafo puede ser muy profundo, como se ve más adelante en esta guía, DFS
+se escribe igual con una pila explícita, agregada a mano:
+
+```java
+public List<Integer> dfsIterativo(int inicio) {
+    List<Integer> resultado = new ArrayList<>();
+    Set<Integer> visitados = new HashSet<>();
+    Deque<Integer> pila = new ArrayDeque<>();
+    pila.push(inicio);
+    while (!pila.isEmpty()) {
+        int actual = pila.pop();
+        if (!visitados.contains(actual)) {
+            visitados.add(actual);
+            resultado.add(actual);
+            List<Integer> vecinos = vecinos(actual);
+            for (int i = vecinos.size() - 1; i >= 0; i--) {
+                if (!visitados.contains(vecinos.get(i))) {
+                    pila.push(vecinos.get(i));
+                }
+            }
+        }
+    }
+    return resultado;
+}
+```
+
+```python
+def dfs_iterativo(self, inicio):
+    resultado = []
+    visitados = set()
+    pila = [inicio]
+    while pila:
+        actual = pila.pop()
+        if actual not in visitados:
+            visitados.add(actual)
+            resultado.append(actual)
+            for vecino in reversed(self.vecinos(actual)):
+                if vecino not in visitados:
+                    pila.append(vecino)
+    return resultado
+```
+
+Esta versión marca un vértice como visitado recién cuando lo saca de la pila, no cuando lo agrega, así
+que un mismo vértice puede quedar empujado más de una vez antes de que le toque salir, como muestra el
+paso 3 del diagrama de arriba con el vértice 3. No es un error, cuando ese vértice duplicado vuelve a
+salir de la pila, la comprobación `if actual not in visitados` lo descarta sin volver a procesarlo, el
+resultado final es idéntico al de la versión recursiva. El recorrido de los vecinos en orden invertido,
+`reversed(self.vecinos(actual))`, es lo que hace que el primer vecino de la lista sea el último en
+entrar a la pila y por lo tanto el primero en salir, preservando el mismo orden de visita que produce la
+recursión.
+
+::: {.callout-tip}
+## Reto 2. Traza un DFS desde otro vértice
+
+Sobre el grafo de ejemplo completo, con la lista de adyacencia `1: [2, 3]`, `2: [1, 4]`, `3: [1, 4]`,
+`4: [2, 3, 5]`, `5: [4, 6]`, `6: [5]`, vas a correr `dfs(4)` en vez de `dfs(1)`. Antes de seguir, decide
+en qué orden queda visitado el grafo.
+
+<label><input type="checkbox"> 4, 2, 1, 3, 5, 6</label>
+<label><input type="checkbox"> 4, 5, 6, 2, 1, 3</label>
+<label><input type="checkbox"> 4, 2, 3, 1, 5, 6</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La primera es correcta. Empezando en 4, el primer vecino de la lista es 2, así que baja ahí primero,
+visita 2, cuyo primer vecino es 1, sin visitar, baja a 1. Desde 1 el primer vecino es 2, ya visitado, y
+el segundo es 3, sin visitar, baja a 3. Desde 3 los dos vecinos, 1 y 4, ya están visitados, así que
+retrocede hasta que encuentra una rama pendiente, el segundo vecino de 4, que es 3, ya visitado también,
+y el tercero, 5, sin visitar. Baja a 5, y de ahí a 6. El orden final es 4, 2, 1, 3, 5, 6, distinto al
+orden 1, 2, 4, 3, 5, 6 que produce empezar en 1, porque DFS no visita el grafo completo en un orden fijo,
+depende por completo del vértice de inicio y del orden en que aparecen los vecinos en cada lista.
+:::
+
+### BFS: amplitud, con la Cola del Tema 2
+
+La búsqueda en amplitud, BFS por sus siglas en inglés, visita todos los vértices a una misma distancia
+del inicio antes de avanzar a la siguiente distancia, la misma idea del recorrido por niveles que ya
+programaste sobre un árbol en el Tema 3, apoyada en la misma `Cola` que construiste con lista enlazada
+en el Tema 2 de esta unidad. La diferencia frente a DFS no está en el código de alto nivel, que se ve
+casi igual, está en la estructura que decide qué vértice sigue, una `Cola` en vez de una `Pila`.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BFS desde el vertice 1 sobre la componente 1 del grafo de ejemplo. El orden de visita es: 1 primero, 2 y 3 en el segundo nivel, 4 en el tercer nivel, 5 en el cuarto nivel, 6 en el quinto nivel. La cola pasa por los estados [2,3], [3,4], [4], [5], [6] y vacia, encolando siempre por el fondo y desencolando siempre por el frente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="150" y="22" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">BFS desde 1: 1, 2, 3, 4, 5, 6</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="55" x2="225" y2="120"/><line x1="75" y1="120" x2="150" y2="185"/><line x1="225" y1="120" x2="150" y2="185"/><line x1="150" y1="185" x2="150" y2="250"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text></g>
+  <g text-anchor="middle" font-size="12" fill="#0e6f6c" font-weight="700"><text x="170" y="38">1</text><text x="52" y="103">2</text><text x="248" y="103">3</text><text x="128" y="168">4</text><text x="170" y="235">5</text></g>
+  <text x="60" y="290" font-size="10.5" fill="#12324f" font-weight="700">estados de la cola tras cada paso:</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="300" width="4" height="0"/></g>
+  <text x="400" y="55" font-size="10.5" fill="#12324f" font-weight="700">paso a paso, con la Cola del Tema 2:</text>
+  <g font-size="10" fill="#5b6876"><text x="400" y="75">1. cola=[1] -&gt; visita 1, cola=[2, 3]</text><text x="400" y="93">2. cola=[2, 3] -&gt; visita 2, cola=[3, 4]</text><text x="400" y="111">3. cola=[3, 4] -&gt; visita 3, cola=[4]</text><text x="400" y="129">4. cola=[4] -&gt; visita 4, cola=[5]</text><text x="400" y="147">5. cola=[5] -&gt; visita 5, cola=[6]</text><text x="400" y="165">6. cola=[6] -&gt; visita 6, cola=[]</text></g>
+  <text x="400" y="187" font-size="9.5" fill="#0e6f6c">ningun vertice se repite en la cola: BFS marca</text>
+  <text x="400" y="203" font-size="9.5" fill="#0e6f6c">visitado al encolar, no al desencolar</text>
+</svg>
+
+:::
+
+```java
+public List<Integer> bfs(int inicio) {
+    List<Integer> resultado = new ArrayList<>();
+    Set<Integer> visitados = new HashSet<>();
+    Cola cola = new Cola();
+    cola.encolar(inicio);
+    visitados.add(inicio);
+    while (!cola.estaVacia()) {
+        int actual = (Integer) cola.desencolar();
+        resultado.add(actual);
+        for (int vecino : vecinos(actual)) {
+            if (!visitados.contains(vecino)) {
+                visitados.add(vecino);
+                cola.encolar(vecino);
+            }
+        }
+    }
+    return resultado;
+}
+```
+
+```python
+def bfs(self, inicio):
+    resultado = []
+    visitados = {inicio}
+    cola = Cola()
+    cola.encolar(inicio)
+    while not cola.esta_vacia():
+        actual = cola.desencolar()
+        resultado.append(actual)
+        for vecino in self.vecinos(actual):
+            if vecino not in visitados:
+                visitados.add(vecino)
+                cola.encolar(vecino)
+    return resultado
+```
+
+Fíjate en una diferencia con `dfsIterativo`, aquí un vértice se marca visitado en el mismo momento en
+que se encola, no cuando se desencola. Por eso la traza de la `Cola` nunca repite un vértice, a
+diferencia de la pila explícita del DFS iterativo, que sí dejó pasar un 3 duplicado. Esa diferencia no
+es casualidad, es la que garantiza que BFS visite los vértices en orden estricto de distancia al
+inicio, primero todos los que están a un salto, después todos los que están a dos, si un vértice pudiera
+quedar encolado dos veces se rompería esa garantía de nivel por nivel. `(Integer) cola.desencolar()` en
+Java hace el mismo trabajo que `(NodoArbol) cola.desencolar()` en el Tema 3, `Cola` guarda `Object`
+desde que se definió, así que hay que devolver el dato a su tipo real antes de usarlo, aquí un
+`Integer` que Java desempaqueta de forma automática al asignarlo a un `int`.
+
+::: {.callout-tip}
+## Reto 3. Cambia la Cola por una Pila dentro de bfs
+
+Sobre el grafo de ejemplo, alguien reescribe `bfs` cambiando `cola.encolar` por `pila.apilar` y
+`cola.desencolar` por `pila.desapilar`, sin tocar ninguna otra línea, la misma trampa del Reto 2 del
+Tema 3 pero ahora sobre un grafo. Antes de seguir, decide qué le pasa al orden de salida empezando en el
+vértice 1.
+
+<label><input type="checkbox"> El orden sigue siendo por niveles, 1, 2, 3, 4, 5, 6</label>
+<label><input type="checkbox"> El orden deja de respetar los niveles, porque una pila devuelve primero lo ultimo que entro</label>
+<label><input type="checkbox"> El programa entra en un ciclo infinito y nunca termina</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+La segunda es correcta, igual que en el Tema 3. Con `Cola`, después de visitar 1 y encolar 2 y 3, el
+siguiente en salir es 2, el primero que entró, FIFO, así que el recorrido respeta el nivel completo
+antes de avanzar. Con `Pila`, después de apilar 2 y 3, el siguiente en salir es 3, el último que entró,
+LIFO, y desde 3 se apilan sus vecinos sin visitar antes de que 2 tenga oportunidad de procesarse, así
+que el orden final termina siendo 1, 3, 4, 2, 5, 6, una mezcla que ya no corresponde a ningún nivel de
+distancia real desde el vértice 1. El programa sí termina, cada vértice sigue marcándose visitado al
+entrar a la estructura, lo único que cambia es el orden, no la terminación. Lo que faltaría llamar
+"recorrido en amplitud" es exactamente la garantía de nivel por nivel que se pierde.
+:::
+
+## Una aplicación real: componentes conexas
+
+Saber si dos vértices están en la misma componente conexa, el mismo grupo alcanzable por algún camino,
+es una pregunta que aparece todo el tiempo en la práctica, si dos usuarios de una red social tienen
+algún contacto en común que los conecte, si dos computadores de una red pueden enviarse un paquete, si
+un grafo de dependencias entre módulos de software está completo o tiene piezas sueltas. Encontrar todas
+las componentes de un grafo es una extensión directa de BFS, en vez de correrlo una sola vez desde un
+vértice fijo, se corre desde cada vértice todavía sin visitar, hasta que no queda ninguno.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El grafo de ejemplo completo con sus dos componentes conexas resaltadas en colores distintos: la primera, en verde, agrupa los vertices 1 a 6; la segunda, en un tono neutro, agrupa los vertices 7 y 8. No existe ninguna arista entre las dos, asi que un recorrido que empiece en 1 nunca llega a 7 ni a 8" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="22" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">componentesConexas() encuentra dos grupos: {1,2,3,4,5,6} y {7,8}</text>
+  <rect x="20" y="35" width="260" height="300" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="460" y="140" width="260" height="80" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="150" y="52" font-size="10.5" fill="#0e6f6c" text-anchor="middle">componente 1: {1, 2, 3, 4, 5, 6}</text>
+  <text x="590" y="157" font-size="10.5" fill="#5b6876" text-anchor="middle">componente 2: {7, 8}</text>
+  <g fill="none" stroke="#0e6f6c" stroke-width="1.8"><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="55" x2="225" y2="120"/><line x1="75" y1="120" x2="150" y2="185"/><line x1="225" y1="120" x2="150" y2="185"/><line x1="150" y1="185" x2="150" y2="250"/><line x1="150" y1="250" x2="150" y2="315"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8"><line x1="560" y1="180" x2="680" y2="180"/></g>
+  <g fill="#ffffff" stroke="#8fc9c5"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/><circle cx="150" cy="315" r="18"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="560" cy="180" r="18"/><circle cx="680" cy="180" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text><text x="560" y="185">7</text><text x="680" y="185">8</text></g>
+</svg>
+
+:::
+
+```java
+public List<List<Integer>> componentesConexas() {
+    List<List<Integer>> componentes = new ArrayList<>();
+    Set<Integer> visitados = new HashSet<>();
+    for (int v : vertices()) {
+        if (!visitados.contains(v)) {
+            componentes.add(bfsDesde(v, visitados));
+        }
+    }
+    return componentes;
+}
+
+private List<Integer> bfsDesde(int inicio, Set<Integer> visitados) {
+    List<Integer> resultado = new ArrayList<>();
+    Cola cola = new Cola();
+    cola.encolar(inicio);
+    visitados.add(inicio);
+    while (!cola.estaVacia()) {
+        int actual = (Integer) cola.desencolar();
+        resultado.add(actual);
+        for (int vecino : vecinos(actual)) {
+            if (!visitados.contains(vecino)) {
+                visitados.add(vecino);
+                cola.encolar(vecino);
+            }
+        }
+    }
+    return resultado;
+}
+```
+
+```python
+def componentes_conexas(self):
+    componentes = []
+    visitados = set()
+    for v in self.vertices():
+        if v not in visitados:
+            componentes.append(self._bfs_desde(v, visitados))
+    return componentes
+
+def _bfs_desde(self, inicio, visitados):
+    resultado = []
+    cola = Cola()
+    cola.encolar(inicio)
+    visitados.add(inicio)
+    while not cola.esta_vacia():
+        actual = cola.desencolar()
+        resultado.append(actual)
+        for vecino in self.vecinos(actual):
+            if vecino not in visitados:
+                visitados.add(vecino)
+                cola.encolar(vecino)
+    return resultado
+```
+
+El bucle externo de `componentesConexas` recorre `vertices()` una sola vez, y aunque hay un `bfsDesde`
+anidado adentro, el conjunto `visitados` es compartido entre todas las llamadas, así que ningún vértice
+se procesa dos veces, el costo total sigue siendo `O(V + E)`, la misma complejidad de un solo BFS, no
+`V` veces esa complejidad. Sobre el grafo de ejemplo completo, `componentesConexas()` devuelve
+`[[1, 2, 3, 4, 5, 6], [7, 8]]`, exactamente los dos grupos del diagrama.
+
+::: {.callout-tip}
+## Reto 4. Predice el número de componentes
+
+A partir del grafo de ejemplo completo, se elimina la arista entre 4 y 5, sin tocar ninguna otra arista.
+Antes de seguir, decide cuántas componentes conexas tiene el grafo resultante.
+
+<label><input type="checkbox"> Sigue teniendo 2 componentes, la arista eliminada no cambia nada</label>
+<label><input type="checkbox"> Pasa a tener 3 componentes</label>
+<label><input type="checkbox"> Pasa a tener 4 componentes</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+La segunda es correcta. La arista 4-5 era el único enlace entre el grupo `{1, 2, 3, 4}`, conectado por
+el ciclo, y la cola `{5, 6}`. Al quitarla, ese grupo se parte en dos componentes nuevas, `{1, 2, 3, 4}`
+y `{5, 6}`, que se suman a la componente que nunca cambió, `{7, 8}`, para un total de 3. Cada arista que
+conecta dos partes de un grafo sin que exista ningún otro camino alternativo entre ellas se llama puente,
+y quitarla siempre aumenta el número de componentes en exactamente uno.
+:::
+
+## Cuando el grafo es profundo: el límite de la recursión
+
+El Tema 3 mostró que un árbol binario de búsqueda puede degenerar en una cadena si los datos llegan ya
+ordenados, y que recorrer esa cadena con la versión recursiva de `buscar` revienta con `RecursionError`
+antes de terminar, porque la pila de llamadas de Python soporta por defecto mil llamadas activas a la
+vez. Un grafo tiene exactamente el mismo problema, y es todavía más fácil de encontrar, porque un grafo
+en forma de cadena larga, un vértice conectado apenas con el siguiente, es una estructura perfectamente
+válida y común, por ejemplo la ruta de una tubería, una cadena de bloques de una blockchain, o
+cualquier secuencia de eventos donde cada uno depende solo del anterior.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un grafo en forma de cadena con cinco mil vertices, mostrados como 0, 1, 2, 3, 4, puntos suspensivos, 4999. Debajo, una pila de llamadas creciendo hacia arriba, visitar(0), visitar(1), visitar(2), y asi hasta topar con una linea roja punteada marcada limite aproximado de 1000 llamadas activas, con la etiqueta RecursionError justo encima de esa linea" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="22" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Una cadena de 5000 vertices y su pila de llamadas recursivas</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="55" y1="70" x2="105" y2="70"/><line x1="105" y1="70" x2="155" y2="70"/><line x1="155" y1="70" x2="205" y2="70"/><line x1="205" y1="70" x2="255" y2="70"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="55" cy="70" r="16"/><circle cx="105" cy="70" r="16"/><circle cx="155" cy="70" r="16"/><circle cx="205" cy="70" r="16"/><circle cx="255" cy="70" r="16"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f" font-weight="600"><text x="55" y="75">0</text><text x="105" y="75">1</text><text x="155" y="75">2</text><text x="205" y="75">3</text><text x="255" y="75">4</text></g>
+  <text x="300" y="75" font-size="16" fill="#5b6876">...</text>
+  <text x="360" y="75" font-size="10.5" fill="#5b6876">5000 vertices en total</text>
+  <rect x="60" y="120" width="120" height="16" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="60" y="104" width="120" height="16" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="60" y="88" width="120" height="16" fill="#eef4fa" stroke="#c7d6e6"/>
+  <g font-size="9.5" fill="#12324f"><text x="66" y="100">visitar(2)</text><text x="66" y="116">visitar(1)</text><text x="66" y="132">visitar(0)</text></g>
+  <line x1="55" y1="60" x2="55" y2="88" stroke="#8fb3d1" stroke-width="1.2"/>
+  <text x="200" y="98" font-size="10.5" fill="#5b6876">cada visitar(i) apila un marco nuevo</text>
+  <text x="200" y="114" font-size="10.5" fill="#5b6876">antes de llamar a visitar(i+1)</text>
+  <line x1="60" y1="45" x2="180" y2="45" stroke="#c0392b" stroke-width="1.6" stroke-dasharray="5 4"/>
+  <text x="120" y="38" font-size="10" fill="#c0392b" text-anchor="middle" font-weight="700">limite ~1000 llamadas activas: RecursionError</text>
+  <text x="380" y="170" font-size="10.5" fill="#12324f" font-weight="700" text-anchor="middle">verificado con la cadena real de 5000 vertices:</text>
+  <text x="380" y="190" font-size="10" fill="#0e6f6c" text-anchor="middle">dfs recursivo revienta antes de terminar de recorrer la cadena</text>
+  <text x="380" y="208" font-size="10" fill="#0e6f6c" text-anchor="middle">dfs_iterativo con pila explicita recorre los 5000 vertices sin problema</text>
+</svg>
+
+:::
+
+El siguiente script en Python construye un grafo con cinco mil vértices en forma de cadena, `0` unido a
+`1`, `1` unido a `2`, y así hasta `4999`, y corre las dos versiones de DFS que ya viste sobre ese mismo
+grafo:
+
+```python
+import sys
+
+def construir_cadena(n):
+    grafo = {i: [] for i in range(n)}
+    for i in range(n - 1):
+        grafo[i].append(i + 1)
+        grafo[i + 1].append(i)
+    return grafo
+
+print("limite de recursion por defecto:", sys.getrecursionlimit())
+
+N = 5000
+grafo = construir_cadena(N)
+
+try:
+    orden = dfs_recursivo(grafo, 0)
+    print("dfs recursivo completo, nodos visitados:", len(orden))
+except RecursionError as e:
+    print("RecursionError en dfs_recursivo con N =", N, "->", e)
+
+orden_it = dfs_iterativo(grafo, 0)
+print("dfs iterativo completo, nodos visitados:", len(orden_it))
+```
+
+La salida real de esa ejecución fue esta:
+
+```
+limite de recursion por defecto: 1000
+RecursionError en dfs_recursivo con N = 5000 -> maximum recursion depth exceeded
+dfs iterativo completo, nodos visitados: 5000
+```
+
+El resultado exacto varía un poco según el equipo donde se ejecute, algunas configuraciones de Python
+suben el límite de recursión por encima de mil, pero la dirección del resultado no cambia, cualquier
+cadena de unos pocos miles de vértices supera ese límite y hace que la versión recursiva de DFS falle
+antes de completar el recorrido, mientras que `dfsIterativo`, con su pila explícita que vive en el
+montículo y no en la pila de llamadas del intérprete, recorre la cadena completa sin ningún problema.
+Esta es la razón concreta por la que esta guía enseñó las dos versiones de DFS, no por completitud
+académica, un grafo real puede tener una forma que revienta la versión recursiva sin ningún aviso
+previo, exactamente como el árbol binario de búsqueda degenerado del Tema 3.
+
+## Grafos ponderados: preparando el terreno para la Unidad 4
+
+Hasta aquí, toda arista del grafo de ejemplo valía lo mismo, la única pregunta que un recorrido podía
+responder era si existe un camino entre dos vértices, y cuántos saltos tiene. La mayoría de los problemas
+reales de grafos necesitan una pregunta más fina, cuál es el camino más barato, no el que menos vértices
+cruza, sino el que suma menos costo. Ese costo es el peso de cada arista, un número que puede representar
+una distancia en kilómetros, un tiempo en minutos, o una tarifa en pesos, según qué esté modelando el
+grafo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El mismo grafo de ejemplo con un peso agregado a cada arista de la componente 1: la arista 1-2 pesa 4, la arista 1-3 pesa 2, la arista 2-4 pesa 5, la arista 3-4 pesa 1, la arista 4-5 pesa 3 y la arista 5-6 pesa 6. La arista 7-8 de la componente 2 pesa 2" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="22" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El grafo de ejemplo, ahora ponderado</text>
+  <rect x="20" y="35" width="260" height="300" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="460" y="140" width="260" height="80" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="55" x2="225" y2="120"/><line x1="75" y1="120" x2="150" y2="185"/><line x1="225" y1="120" x2="150" y2="185"/><line x1="150" y1="185" x2="150" y2="250"/><line x1="150" y1="250" x2="150" y2="315"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="560" y1="180" x2="680" y2="180"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/><circle cx="150" cy="315" r="18"/><circle cx="560" cy="180" r="18"/><circle cx="680" cy="180" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text><text x="560" y="185">7</text><text x="680" y="185">8</text></g>
+  <g font-size="10.5" fill="#0e6f6c" font-weight="700" text-anchor="middle"><rect x="97" y="79" width="16" height="14" fill="#ffffff"/><text x="105" y="90">4</text><rect x="192" y="79" width="16" height="14" fill="#ffffff"/><text x="200" y="90">2</text><rect x="97" y="145" width="16" height="14" fill="#ffffff"/><text x="105" y="156">5</text><rect x="192" y="145" width="16" height="14" fill="#ffffff"/><text x="200" y="156">1</text><rect x="157" y="210" width="16" height="14" fill="#ffffff"/><text x="165" y="221">3</text><rect x="157" y="275" width="16" height="14" fill="#ffffff"/><text x="165" y="286">6</text><rect x="612" y="173" width="16" height="14" fill="#ffffff"/><text x="620" y="184">2</text></g>
+</svg>
+
+:::
+
+Guardar ese peso en memoria solo pide un cambio pequeño sobre `GrafoLista`, en vez de que cada entrada de
+la lista de adyacencia sea un vecino suelto, cada entrada pasa a ser un par, el vecino y el peso de la
+arista que lo conecta:
+
+```java
+import java.util.*;
+
+public class GrafoPonderado {
+    private Map<Integer, List<int[]>> listaAdyacencia = new LinkedHashMap<>();
+
+    public void agregarVertice(int v) {
+        listaAdyacencia.putIfAbsent(v, new ArrayList<>());
+    }
+
+    public void agregarArista(int origen, int destino, int peso) {
+        agregarVertice(origen);
+        agregarVertice(destino);
+        listaAdyacencia.get(origen).add(new int[]{destino, peso});
+        listaAdyacencia.get(destino).add(new int[]{origen, peso}); // grafo no dirigido
+    }
+
+    public List<int[]> vecinos(int v) {
+        return listaAdyacencia.getOrDefault(v, Collections.emptyList());
+    }
+
+    public Set<Integer> vertices() {
+        return listaAdyacencia.keySet();
+    }
+}
+```
+
+```python
+class GrafoPonderado:
+    def __init__(self):
+        self.lista_adyacencia = {}
+
+    def agregar_vertice(self, v):
+        self.lista_adyacencia.setdefault(v, [])
+
+    def agregar_arista(self, origen, destino, peso):
+        self.agregar_vertice(origen)
+        self.agregar_vertice(destino)
+        self.lista_adyacencia[origen].append((destino, peso))
+        self.lista_adyacencia[destino].append((origen, peso))  # grafo no dirigido
+
+    def vecinos(self, v):
+        return self.lista_adyacencia.get(v, [])
+
+    def vertices(self):
+        return self.lista_adyacencia.keys()
+```
+
+En Java cada vecino queda como un arreglo `int[]{destino, peso}` en vez de un solo entero, y en Python
+como una tupla `(destino, peso)`, la única diferencia frente a `GrafoLista`. `GrafoPonderado` todavía no
+trae `dfs`, `bfs` ni `componentesConexas`, esos tres métodos no cambian con el peso, funcionan igual
+ignorando el segundo elemento de cada par, así que no hace falta repetirlos. Lo que sí falta, y es
+justo lo que abre la Unidad 4, es un método que use el peso de verdad, para responder cuál es el camino
+más barato entre dos vértices, no solo si existe alguno.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de clase UML de GrafoPonderado, con el atributo listaAdyacencia como diccionario de listas de pares vecino-peso, y los metodos publicos agregarVertice, agregarArista, vecinos y vertices; una nota aclara que dfs, bfs y componentesConexas se heredan sin cambios de la idea de GrafoLista, y que Dijkstra, Prim y Kruskal se agregan en la Unidad 4 sobre esta misma clase" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">GrafoPonderado: la clase que reutiliza la Unidad 4</text>
+  <rect x="200" y="40" width="360" height="170" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g stroke="#8fc9c5"><line x1="200" y1="76" x2="560" y2="76"/><line x1="200" y1="108" x2="560" y2="108"/></g>
+  <text x="380" y="64" font-size="14.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">GrafoPonderado</text>
+  <text x="214" y="98" font-size="11.5" fill="#12324f">- listaAdyacencia: Map&lt;Integer, List&lt;par vecino-peso&gt;&gt;</text>
+  <g font-size="11.5" fill="#12324f"><text x="214" y="128">+ agregarVertice(v: int): void</text><text x="214" y="148">+ agregarArista(origen, destino, peso: int): void</text><text x="214" y="168">+ vecinos(v: int): List&lt;par vecino-peso&gt;</text><text x="214" y="188">+ vertices(): Set&lt;Integer&gt;</text></g>
+  <rect x="140" y="230" width="480" height="40" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="246" font-size="10" fill="#5b6876" text-anchor="middle">dfs, bfs y componentesConexas se agregan igual que en GrafoLista, sin cambios</text>
+  <text x="380" y="260" font-size="10" fill="#0e6f6c" text-anchor="middle">Dijkstra, Prim y Kruskal llegan en la Unidad 4, sobre esta misma clase</text>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Reto 5. Compara el costo de dos caminos
+
+Sobre el grafo ponderado de esta sección, hay dos caminos posibles entre el vértice 1 y el vértice 5,
+`1-2-4-5` y `1-3-4-5`. Los dos cruzan exactamente tres aristas, el mismo número de saltos. Antes de
+seguir, suma el peso de cada camino y decide cuál es más barato.
+
+<label><input type="checkbox"> Los dos caminos cuestan lo mismo, porque tienen el mismo numero de aristas</label>
+<label><input type="checkbox"> 1-2-4-5 es mas barato</label>
+<label><input type="checkbox"> 1-3-4-5 es mas barato</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+La tercera es correcta. El camino `1-2-4-5` suma los pesos `4 + 5 + 3`, doce en total. El camino
+`1-3-4-5` suma `2 + 1 + 3`, seis en total, la mitad. Los dos caminos cruzan el mismo número de aristas,
+tres, así que contar saltos no alcanza para decidir cuál conviene, hay que sumar los pesos reales. Esta
+es exactamente la pregunta que un recorrido como DFS o BFS no puede responder por sí solo, los dos
+tratan cada arista como si constara lo mismo, y es la pregunta que el algoritmo de Dijkstra de la
+Unidad 4 resuelve de forma sistemática sobre esta misma clase `GrafoPonderado`.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] La definición formal de un grafo como `G = (V, E)`, y qué significa que sea dirigido o no
+      dirigido, ponderado o no ponderado, cíclico o acíclico, conexo o no conexo
+- [ ] Por qué la matriz de adyacencia cuesta `O(V^2)` en espacio sin importar la densidad, mientras que
+      la lista de adyacencia cuesta `O(V + E)`, y cuándo conviene cada una según qué tan denso sea el
+      grafo
+- [ ] Trazar DFS y BFS a mano sobre un grafo pequeño, con pila y con la `Cola` del Tema 2
+      respectivamente, y explicar por qué usar la estructura equivocada rompe la garantía del recorrido
+- [ ] Encontrar todas las componentes conexas de un grafo corriendo BFS desde cada vértice sin visitar
+- [ ] Explicar por qué DFS recursivo puede reventar con `RecursionError` sobre un grafo muy profundo, y
+      por qué la versión con pila explícita no tiene ese problema
+- [ ] Representar un grafo ponderado guardando el peso junto a cada vecino, y explicar por qué contar
+      aristas no basta para decidir cuál camino es más barato
+:::
+
+## Lo que sigue
+
+La Unidad 4 retoma exactamente la clase `GrafoPonderado` que construiste en esta guía, sin ningún cambio
+en su representación, para responder la pregunta que quedó abierta en el último reto, cuál es el camino
+más barato entre dos vértices cualesquiera. El algoritmo de Dijkstra resuelve esa pregunta para caminos
+más cortos desde un solo origen, y los algoritmos de Prim y de Kruskal resuelven un problema relacionado
+pero distinto, encontrar el árbol de expansión mínima, el subconjunto de aristas más barato que conecta
+todos los vértices sin dejar ninguno fuera y sin formar ningún ciclo. Los tres algoritmos son extensiones
+directas de las ideas de hoy, Dijkstra se parece a BFS pero eligiendo en cada paso el vértice más barato
+en vez del primero en la cola, y Prim y Kruskal construyen su árbol agregando aristas baratas de una
+forma que evita justo los ciclos que esta guía aprendió a detectar con las componentes conexas.
+
+## Recursos
+
+- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
+  "Elementary Graph Algorithms", secciones sobre representación de grafos, búsqueda en amplitud y
+  búsqueda en profundidad.
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo sobre grafos, con la
+  comparación entre matriz de adyacencia y lista de adyacencia, y los algoritmos de recorrido.
+- Weiss, M. A. *Estructuras de datos en Java.* Capítulo "Graphs" (Grafos), secciones sobre
+  representación con lista de adyacencia y aplicaciones de la búsqueda en profundidad.
+- [Documentación oficial de Python sobre `sys.getrecursionlimit` y `sys.setrecursionlimit`](https://docs.python.org/3/library/sys.html#sys.getrecursionlimit)
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. Las trazas de
+recorrido y la medición del límite de recursión son ejecuciones reales hechas durante la preparación del
+material; el resultado exacto varía según el equipo que lo ejecute.
+:::

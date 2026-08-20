@@ -1,0 +1,911 @@
+---
+title: "Tema 3. El árbol que ordena mientras almacena"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                    |
+|--------|----------------------------------------------------|
+| Unidad | Unidad 3. Estructuras dinámicas                   |
+| Tema   | Tema 3. Árboles binarios de búsqueda               |
+:::
+
+Los dos temas anteriores de esta unidad eran estructuras lineales, cada nodo con exactamente un
+siguiente, una sola forma de recorrerlas, de principio a fin. Hoy eso cambia. El árbol binario de
+búsqueda le da a cada nodo dos caminos posibles, izquierdo y derecho, y esa segunda referencia es lo
+que le permite hacer algo que ninguna lista enlazada puede hacer sola, mantener sus datos ordenados
+mientras los guarda, sin necesitar un paso aparte de ordenamiento. El Tema 2 cerró anunciando este
+momento, la misma pieza `Nodo` con dos referencias en vez de una, y una promesa concreta, apoyarte en
+la `Cola` que construiste para programar uno de los recorridos. Esa promesa se cumple en la sección de
+recorrido por niveles.
+
+## Qué es un árbol y qué lo vuelve un árbol binario de búsqueda
+
+Un árbol, en esta estructura de datos, es un conjunto de nodos conectados de forma jerárquica, no
+lineal. Hay un nodo especial sin padre, la raíz, y cada nodo tiene cero, uno o más nodos hijos. Un nodo
+sin hijos es una hoja. Cuando cada nodo tiene como máximo dos hijos, distinguibles como izquierdo y
+derecho, el árbol es binario. Todavía no hay ningún orden implicado en esa definición, un árbol binario
+cualquiera podría tener los datos acomodados de cualquier forma.
+
+Lo que convierte un árbol binario en un árbol binario de búsqueda, ABB de aquí en adelante, es una
+regla adicional que se cumple en cada nodo del árbol, no solo en la raíz, todo valor guardado en el
+subárbol izquierdo de un nodo es menor que el valor de ese nodo, y todo valor guardado en su subárbol
+derecho es mayor. Esta guía trabaja con una política explícita para los valores repetidos, ningún dato
+puede aparecer dos veces en el árbol, así que insertar un valor que ya existe no modifica nada y lo
+descarta sin lanzar ningún error, la misma decisión que toma la clase `BinarySearchTree` de Weiss en su
+implementación de referencia.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol binario de busqueda de ejemplo con raiz 50, hijo izquierdo 30 con hijos 20 y 40, e hijo derecho 70 con hijos 60 y 80; una region sombreada a la izquierda marca que todo valor del subarbol izquierdo de 50 es menor que 50, y una region sombreada a la derecha marca que todo valor del subarbol derecho es mayor que 50; la misma regla se repite en cada nodo, por ejemplo 20 esta a la izquierda de 30 porque 20 es menor que 30" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd33a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">El arbol de ejemplo y su invariante de orden</text>
+  <rect x="95" y="96" width="270" height="156" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="400" y="96" width="270" height="156" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="230" y="112" font-size="10.5" fill="#5b6876" text-anchor="middle">subarbol izquierdo: todo valor menor que 50</text>
+  <text x="535" y="112" font-size="10.5" fill="#5b6876" text-anchor="middle">subarbol derecho: todo valor mayor que 50</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd33a)"><path d="M368,78 L242,122"/><path d="M392,78 L518,122"/><path d="M222,158 L152,202"/><path d="M238,158 L308,202"/><path d="M522,158 L452,202"/><path d="M538,158 L608,202"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="357" y="42" width="46" height="36"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="207" y="122" width="46" height="36"/><rect x="507" y="122" width="46" height="36"/><rect x="117" y="202" width="46" height="36"/><rect x="297" y="202" width="46" height="36"/><rect x="417" y="202" width="46" height="36"/><rect x="597" y="202" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="65">50</text><text x="230" y="145">30</text><text x="530" y="145">70</text><text x="140" y="225">20</text><text x="320" y="225">40</text><text x="440" y="225">60</text><text x="620" y="225">80</text></g>
+  <text x="380" y="30" font-size="10.5" fill="#0e6f6c" text-anchor="middle">raiz</text>
+  <text x="380" y="268" font-size="10.5" fill="#0e6f6c" text-anchor="middle">la regla se repite en cada nodo: 20 esta a la izquierda de 30 porque 20 menor que 30, 40 a la derecha porque 40 mayor que 30</text>
+</svg>
+
+:::
+
+Este árbol de siete nodos es el resultado de insertar, en este orden, 50, 30, 70, 20, 40, 60 y 80. Vas
+a verlo reaparecer en el resto de esta guía, porque cada operación se explica sobre el mismo ejemplo en
+vez de saltar de un árbol a otro.
+
+La altura de un árbol es la distancia, en número de enlaces, desde la raíz hasta la hoja más lejana. La
+profundidad de un nodo es la distancia desde la raíz hasta ese nodo. En el árbol de arriba la raíz tiene
+profundidad 0, 30 y 70 tienen profundidad 1, y las cuatro hojas tienen profundidad 2, así que la altura
+completa del árbol es 2. Esta cuenta vuelve a aparecer más adelante, porque es la que decide cuánto
+trabajo cuesta cada operación.
+
+## El nodo con dos caminos: NodoArbol
+
+El `Nodo` del Tema 1 guardaba un dato y una sola referencia, `siguiente`. Un árbol necesita dos
+referencias por nodo, así que esta guía usa una clase nueva, `NodoArbol`, con la misma forma que
+`Nodo` pero con `izquierdo` y `derecho` en vez de un único `siguiente`.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de clase UML de NodoArbol, con atributos dato, izquierdo y derecho sin metodos publicos, junto a ArbolBinarioBusqueda, con el atributo raiz y los metodos insertar, buscar, eliminar, inorden, preorden, postorden y porNiveles" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">NodoArbol junto a ArbolBinarioBusqueda, el mismo encapsulamiento de Pila y Cola</text>
+  <rect x="30" y="40" width="280" height="150" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g stroke="#8fc9c5"><line x1="30" y1="76" x2="310" y2="76"/></g>
+  <text x="170" y="64" font-size="14.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">NodoArbol</text>
+  <g font-size="11.5" fill="#12324f"><text x="44" y="98">- dato: int</text><text x="44" y="120">- izquierdo: NodoArbol</text><text x="44" y="142">- derecho: NodoArbol</text></g>
+  <text x="44" y="170" font-size="10.5" fill="#5b6876">sin metodos publicos, igual que Nodo</text>
+  <rect x="360" y="40" width="370" height="250" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <g stroke="#c7d6e6"><line x1="360" y1="76" x2="730" y2="76"/><line x1="360" y1="108" x2="730" y2="108"/></g>
+  <text x="545" y="64" font-size="14.5" font-weight="700" fill="#12324f" text-anchor="middle">ArbolBinarioBusqueda</text>
+  <text x="374" y="98" font-size="11.5" fill="#12324f">- raiz: NodoArbol</text>
+  <g font-size="11.5" fill="#12324f"><text x="374" y="128">+ insertar(dato: int): void</text><text x="374" y="148">+ buscar(dato: int): boolean</text><text x="374" y="168">+ eliminar(dato: int): void</text><text x="374" y="188">+ inorden(): List</text><text x="374" y="208">+ preorden(): List</text><text x="374" y="228">+ postorden(): List</text><text x="374" y="248">+ porNiveles(): List</text></g>
+</svg>
+
+:::
+
+```java
+public class NodoArbol {
+    int dato;
+    NodoArbol izquierdo;
+    NodoArbol derecho;
+
+    public NodoArbol(int dato) {
+        this.dato = dato;
+        this.izquierdo = null;
+        this.derecho = null;
+    }
+}
+
+public class ArbolBinarioBusqueda {
+    private NodoArbol raiz;
+}
+```
+
+```python
+class NodoArbol:
+    def __init__(self, dato):
+        self.dato = dato
+        self.izquierdo = None
+        self.derecho = None
+
+
+class ArbolBinarioBusqueda:
+    def __init__(self):
+        self.raiz = None
+```
+
+Esta guía usa `int` para el dato, en vez de un tipo genérico como el `Object` que usaron `Pila` y
+`Cola`. La razón es concreta, insertar y buscar necesitan comparar valores con `<` y `>`, y `Object`
+no ofrece esa operación en Java sin pedirle al tipo que implemente `Comparable<T>`, un paso extra que
+esta guía deja fuera para no distraer de la estructura del árbol. Python no tiene ese problema, `<`
+funciona sobre cualquier tipo que lo soporte sin declarar nada aparte.
+
+## Insertar: bajar hasta el hueco correcto
+
+Insertar un valor nuevo consiste en compararlo contra la raíz, decidir si baja a la izquierda o a la
+derecha según el resultado de esa comparación, y repetir la misma decisión en cada nodo siguiente hasta
+llegar a una referencia vacía, que es exactamente el lugar donde el valor nuevo debe colgar. El Tema 3
+de la Unidad 1 ya explicó qué necesita una función recursiva, un caso base y un caso recursivo que
+avanza hacia él, y `insertar` encaja en ese molde sin ningún ajuste, el caso base es un subárbol vacío,
+`null` en Java o `None` en Python, y el caso recursivo compara el dato y desciende por la referencia
+que corresponda.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Insertar 45 en el arbol de ejemplo: 45 es menor que 50, baja a la izquierda hacia 30; 45 es mayor que 30, baja a la derecha hacia 40; 45 es mayor que 40, baja a la derecha de 40, que esta vacia, y ahi se cuelga el nuevo nodo 45" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd33b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">insertar(45): tres comparaciones hasta el hueco vacio</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd33b)"><path d="M368,78 L242,122"/><path d="M392,78 L518,122"/><path d="M222,158 L152,202"/><path d="M238,158 L308,202"/><path d="M522,158 L452,202"/><path d="M538,158 L608,202"/><path d="M328,238 L392,282"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="357" y="42" width="46" height="36"/><rect x="207" y="122" width="46" height="36"/><rect x="297" y="202" width="46" height="36"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="507" y="122" width="46" height="36"/><rect x="117" y="202" width="46" height="36"/><rect x="417" y="202" width="46" height="36"/><rect x="597" y="202" width="46" height="36"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6" stroke-dasharray="4 3"><rect x="377" y="282" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="65">50</text><text x="230" y="145">30</text><text x="530" y="145">70</text><text x="140" y="225">20</text><text x="320" y="225">40</text><text x="440" y="225">60</text><text x="620" y="225">80</text></g>
+  <text x="400" y="305" font-size="13" fill="#0e6f6c" text-anchor="middle" font-weight="700">45</text>
+  <rect x="460" y="40" width="270" height="120" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="475" y="58" font-size="11" fill="#12324f" font-weight="700">insertar(45):</text>
+  <text x="475" y="78" font-size="10.5" fill="#0e6f6c">1. 45 menor que 50: baja a la izquierda</text>
+  <text x="475" y="98" font-size="10.5" fill="#0e6f6c">2. 45 mayor que 30: baja a la derecha</text>
+  <text x="475" y="118" font-size="10.5" fill="#0e6f6c">3. 45 mayor que 40: baja a la derecha,</text>
+  <text x="475" y="134" font-size="10.5" fill="#0e6f6c">hueco vacio, ahi se cuelga el nodo nuevo</text>
+</svg>
+
+:::
+
+```java
+public void insertar(int dato) {
+    raiz = insertar(raiz, dato);
+}
+
+private NodoArbol insertar(NodoArbol nodo, int dato) {
+    if (nodo == null) {
+        return new NodoArbol(dato); // caso base: aqui va el nodo nuevo
+    }
+    if (dato < nodo.dato) {
+        nodo.izquierdo = insertar(nodo.izquierdo, dato);
+    } else if (dato > nodo.dato) {
+        nodo.derecho = insertar(nodo.derecho, dato);
+    }
+    // dato == nodo.dato: valor repetido, no se hace nada
+    return nodo;
+}
+```
+
+```python
+def insertar(self, dato):
+    self.raiz = self._insertar(self.raiz, dato)
+
+def _insertar(self, nodo, dato):
+    if nodo is None:
+        return NodoArbol(dato)  # caso base: aqui va el nodo nuevo
+    if dato < nodo.dato:
+        nodo.izquierdo = self._insertar(nodo.izquierdo, dato)
+    elif dato > nodo.dato:
+        nodo.derecho = self._insertar(nodo.derecho, dato)
+    # dato == nodo.dato: valor repetido, no se hace nada
+    return nodo
+```
+
+El patrón de este método es el mismo que ya trabajaste con `fibonacci` en la Unidad 1, cada llamada
+combina su propio resultado con el de la llamada recursiva, en este caso reasignando
+`nodo.izquierdo` o `nodo.derecho` al resultado de bajar un nivel más. Ese reasignar en cada nivel es lo
+que permite que el mismo método sirva tanto para colgar un nodo nuevo cuando el árbol está vacío en ese
+punto, como para no cambiar nada cuando el subárbol ya existe, `nodo = insertar(nodo, dato)` deja
+`nodo` intacto salvo en el nivel exacto donde apareció el hueco vacío.
+
+::: {.callout-tip}
+## Reto 1. Dónde cuelga el nodo nuevo
+
+Sobre el árbol de ejemplo de esta guía, raíz 50, con 30 y 70 como hijos, y 20, 40, 60 y 80 como hojas,
+vas a insertar el valor 65. Antes de seguir, traza a mano las comparaciones, empezando en la raíz, y
+decide de qué nodo va a colgar 65 y de qué lado.
+
+<label><input type="checkbox"> 65 cuelga a la izquierda de 70</label>
+<label><input type="checkbox"> 65 cuelga a la derecha de 60</label>
+<label><input type="checkbox"> 65 cuelga a la izquierda de 60</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La segunda es correcta. La primera comparación es 65 contra la raíz, 50, y 65 es mayor, así que baja a
+la derecha, hacia 70. La segunda comparación es 65 contra 70, y 65 es menor, así que baja a la
+izquierda, hacia 60. La tercera comparación es 65 contra 60, y 65 es mayor, así que baja a la derecha
+de 60, que está vacía, y ahí se cuelga el nodo nuevo. El resultado final es 65 como hijo derecho de 60,
+tres comparaciones en total, una por cada nivel que el árbol tiene de altura más uno.
+:::
+
+## Buscar: el mismo camino que insertar
+
+Buscar un valor recorre exactamente el mismo camino que seguiría insertarlo, la única diferencia es qué
+pasa al llegar a una referencia vacía, insertar cuelga ahí un nodo nuevo, buscar concluye que el valor
+no está en el árbol.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Buscar 60 en el arbol de ejemplo: 60 es mayor que 50, va a la derecha hacia 70; 60 es menor que 70, va a la izquierda hacia 60; 60 es igual a 60, encontrado, dos comparaciones antes de llegar" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd33c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">buscar(60): mismo camino que insertar, hasta encontrar el dato</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd33c)"><path d="M368,78 L242,122"/><path d="M392,78 L518,122"/><path d="M222,158 L152,202"/><path d="M238,158 L308,202"/><path d="M522,158 L452,202"/><path d="M538,158 L608,202"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="207" y="122" width="46" height="36"/><rect x="117" y="202" width="46" height="36"/><rect x="297" y="202" width="46" height="36"/><rect x="597" y="202" width="46" height="36"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="357" y="42" width="46" height="36"/><rect x="507" y="122" width="46" height="36"/><rect x="417" y="202" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="65">50</text><text x="230" y="145">30</text><text x="530" y="145">70</text><text x="140" y="225">20</text><text x="320" y="225">40</text><text x="440" y="225">60</text><text x="620" y="225">80</text></g>
+  <text x="380" y="256" font-size="11" fill="#0e6f6c" text-anchor="middle">60 mayor que 50, a la derecha; 60 menor que 70, a la izquierda; 60 igual a 60, encontrado</text>
+</svg>
+
+:::
+
+```java
+public boolean buscar(int dato) {
+    return buscar(raiz, dato);
+}
+
+private boolean buscar(NodoArbol nodo, int dato) {
+    if (nodo == null) {
+        return false; // caso base: se acabo el arbol y no aparecio
+    }
+    if (dato == nodo.dato) {
+        return true; // caso base: lo encontro
+    }
+    return dato < nodo.dato ? buscar(nodo.izquierdo, dato) : buscar(nodo.derecho, dato);
+}
+```
+
+```python
+def buscar(self, dato):
+    return self._buscar(self.raiz, dato)
+
+def _buscar(self, nodo, dato):
+    if nodo is None:
+        return False  # caso base: se acabo el arbol y no aparecio
+    if dato == nodo.dato:
+        return True  # caso base: lo encontro
+    return self._buscar(nodo.izquierdo, dato) if dato < nodo.dato else self._buscar(nodo.derecho, dato)
+```
+
+Cada llamada recursiva baja exactamente un nivel, así que el número de comparaciones que hace
+`buscar` nunca pasa de la altura del árbol más uno. Sobre el árbol de ejemplo, con altura 2, ningún
+valor tarda más de tres comparaciones en encontrarse o en descartarse. Esa relación entre altura y
+costo real es el hilo que conecta el resto de esta guía.
+
+## Recorridos: cuatro formas de visitar el mismo árbol
+
+Recorrer un árbol es visitar cada uno de sus nodos exactamente una vez, y a diferencia de una lista, en
+un árbol no hay un único orden natural de hacerlo. Los primeros tres recorridos que siguen comparten la
+misma estructura recursiva, el caso base es un subárbol vacío, que no aporta nada al recorrido, y el
+caso recursivo visita el nodo actual y desciende a sus dos subárboles, la única diferencia entre los
+tres es el momento exacto en que cada método decide "visitar" el nodo actual, antes de bajar, entre
+las dos bajadas, o después de las dos.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres recorridos del mismo arbol de ejemplo, con el orden de visita marcado dentro de cada nodo y el valor de cada nodo arriba: inorden visita 20, 30, 40, 50, 60, 70, 80 en ese orden, exactamente ordenado; preorden visita 50, 30, 20, 40, 70, 60, 80, primero la raiz; postorden visita 20, 40, 30, 60, 80, 70, 50, la raiz al final" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd33d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Inorden: izquierda, nodo, derecha. Da los datos en orden: 20, 30, 40, 50, 60, 70, 80</text>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1.4" marker-end="url(#esd33d)"><path d="M368,78 L242,102"/><path d="M392,78 L518,102"/><path d="M222,118 L152,142"/><path d="M238,118 L308,142"/><path d="M522,118 L452,142"/><path d="M538,118 L608,142"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="357" y="62" width="46" height="32"/><rect x="207" y="102" width="46" height="32"/><rect x="507" y="102" width="46" height="32"/><rect x="117" y="142" width="46" height="32"/><rect x="297" y="142" width="46" height="32"/><rect x="417" y="142" width="46" height="32"/><rect x="597" y="142" width="46" height="32"/></g>
+  <g text-anchor="middle" font-size="10" fill="#5b6876"><text x="380" y="56">50</text><text x="230" y="96">30</text><text x="530" y="96">70</text><text x="140" y="136">20</text><text x="320" y="136">40</text><text x="440" y="136">60</text><text x="620" y="136">80</text></g>
+  <g text-anchor="middle" font-size="13" fill="#0e6f6c" font-weight="700"><text x="380" y="83">4</text><text x="230" y="123">2</text><text x="530" y="123">6</text><text x="140" y="163">1</text><text x="320" y="163">3</text><text x="440" y="163">5</text><text x="620" y="163">7</text></g>
+  <text x="380" y="196" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Preorden: nodo, izquierda, derecha. Visita la raiz primero: 50, 30, 20, 40, 70, 60, 80</text>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1.4" marker-end="url(#esd33d)"><path d="M368,258 L242,282"/><path d="M392,258 L518,282"/><path d="M222,298 L152,322"/><path d="M238,298 L308,322"/><path d="M522,298 L452,322"/><path d="M538,298 L608,322"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="357" y="242" width="46" height="32"/><rect x="207" y="282" width="46" height="32"/><rect x="507" y="282" width="46" height="32"/><rect x="117" y="322" width="46" height="32"/><rect x="297" y="322" width="46" height="32"/><rect x="417" y="322" width="46" height="32"/><rect x="597" y="322" width="46" height="32"/></g>
+  <g text-anchor="middle" font-size="10" fill="#5b6876"><text x="380" y="236">50</text><text x="230" y="276">30</text><text x="530" y="276">70</text><text x="140" y="316">20</text><text x="320" y="316">40</text><text x="440" y="316">60</text><text x="620" y="316">80</text></g>
+  <g text-anchor="middle" font-size="13" fill="#0e6f6c" font-weight="700"><text x="380" y="263">1</text><text x="230" y="303">2</text><text x="530" y="303">5</text><text x="140" y="343">3</text><text x="320" y="343">4</text><text x="440" y="343">6</text><text x="620" y="343">7</text></g>
+  <text x="380" y="376" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Postorden: izquierda, derecha, nodo. Visita la raiz al final: 20, 40, 30, 60, 80, 70, 50</text>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1.4" marker-end="url(#esd33d)"><path d="M368,438 L242,462"/><path d="M392,438 L518,462"/><path d="M222,478 L152,502"/><path d="M238,478 L308,502"/><path d="M522,478 L452,502"/><path d="M538,478 L608,502"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="357" y="422" width="46" height="32"/><rect x="207" y="462" width="46" height="32"/><rect x="507" y="462" width="46" height="32"/><rect x="117" y="502" width="46" height="32"/><rect x="297" y="502" width="46" height="32"/><rect x="417" y="502" width="46" height="32"/><rect x="597" y="502" width="46" height="32"/></g>
+  <g text-anchor="middle" font-size="10" fill="#5b6876"><text x="380" y="416">50</text><text x="230" y="456">30</text><text x="530" y="456">70</text><text x="140" y="496">20</text><text x="320" y="496">40</text><text x="440" y="496">60</text><text x="620" y="496">80</text></g>
+  <g text-anchor="middle" font-size="13" fill="#0e6f6c" font-weight="700"><text x="380" y="443">7</text><text x="230" y="483">2</text><text x="530" y="483">6</text><text x="140" y="523">1</text><text x="320" y="523">3</text><text x="440" y="523">4</text><text x="620" y="523">5</text></g>
+</svg>
+
+:::
+
+Fíjate en la fila de inorden, el número dentro de cada nodo coincide exactamente con la posición
+horizontal del nodo en el dibujo, 1 a la izquierda del todo, 7 a la derecha del todo. No es coincidencia,
+es la razón por la que este recorrido se llama así, visita primero todo el subárbol izquierdo, después
+el nodo, después todo el subárbol derecho, y como el invariante del ABB garantiza que el subárbol
+izquierdo tiene todo lo menor y el derecho todo lo mayor, el resultado siempre sale ordenado de menor a
+mayor, sin ningún paso adicional de ordenamiento.
+
+```java
+public java.util.List<Integer> inorden() {
+    java.util.List<Integer> resultado = new java.util.ArrayList<>();
+    inorden(raiz, resultado);
+    return resultado;
+}
+
+private void inorden(NodoArbol nodo, java.util.List<Integer> resultado) {
+    if (nodo == null) {
+        return; // caso base: subarbol vacio, nada que visitar
+    }
+    inorden(nodo.izquierdo, resultado);
+    resultado.add(nodo.dato);
+    inorden(nodo.derecho, resultado);
+}
+
+public java.util.List<Integer> preorden() {
+    java.util.List<Integer> resultado = new java.util.ArrayList<>();
+    preorden(raiz, resultado);
+    return resultado;
+}
+
+private void preorden(NodoArbol nodo, java.util.List<Integer> resultado) {
+    if (nodo == null) {
+        return;
+    }
+    resultado.add(nodo.dato);
+    preorden(nodo.izquierdo, resultado);
+    preorden(nodo.derecho, resultado);
+}
+
+public java.util.List<Integer> postorden() {
+    java.util.List<Integer> resultado = new java.util.ArrayList<>();
+    postorden(raiz, resultado);
+    return resultado;
+}
+
+private void postorden(NodoArbol nodo, java.util.List<Integer> resultado) {
+    if (nodo == null) {
+        return;
+    }
+    postorden(nodo.izquierdo, resultado);
+    postorden(nodo.derecho, resultado);
+    resultado.add(nodo.dato);
+}
+```
+
+```python
+def inorden(self):
+    resultado = []
+    self._inorden(self.raiz, resultado)
+    return resultado
+
+def _inorden(self, nodo, resultado):
+    if nodo is None:
+        return  # caso base: subarbol vacio, nada que visitar
+    self._inorden(nodo.izquierdo, resultado)
+    resultado.append(nodo.dato)
+    self._inorden(nodo.derecho, resultado)
+
+def preorden(self):
+    resultado = []
+    self._preorden(self.raiz, resultado)
+    return resultado
+
+def _preorden(self, nodo, resultado):
+    if nodo is None:
+        return
+    resultado.append(nodo.dato)
+    self._preorden(nodo.izquierdo, resultado)
+    self._preorden(nodo.derecho, resultado)
+
+def postorden(self):
+    resultado = []
+    self._postorden(self.raiz, resultado)
+    return resultado
+
+def _postorden(self, nodo, resultado):
+    if nodo is None:
+        return
+    self._postorden(nodo.izquierdo, resultado)
+    self._postorden(nodo.derecho, resultado)
+    resultado.append(nodo.dato)
+```
+
+Preorden y postorden se usan menos que inorden para leer datos ordenados, pero tienen su propio uso.
+Preorden visita cada nodo antes que a sus hijos, así que sirve para copiar un árbol o para serializarlo
+de una forma que después se puede reconstruir insertando en ese mismo orden. Postorden visita cada nodo
+después que a sus dos hijos, así que sirve para liberar la memoria de un árbol de abajo hacia arriba, o
+para evaluar una expresión donde primero hay que resolver las dos ramas antes de aplicar la operación
+de la raíz.
+
+### Recorrido por niveles: la aplicación real de la Cola del Tema 2
+
+Los tres recorridos de arriba avanzan en profundidad, se meten todo lo que pueden por una rama antes de
+volver. El recorrido por niveles hace lo contrario, visita todos los nodos de una profundidad antes de
+pasar a la siguiente, la raíz primero, después sus dos hijos, después los cuatro nietos. Ese orden no
+sale de la recursión de forma natural, sale de una estructura FIFO, exactamente la `Cola` que construiste
+en el Tema 2, y esta es la aplicación real que ese tema prometió.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Recorrido por niveles del arbol de ejemplo con una cola: el orden de visita es 50, 30, 70, 20, 40, 60, 80, marcado dentro de cada nodo; abajo, tres instantaneas de la cola muestran su contenido despues de procesar la raiz, despues de procesar 30, y despues de procesar 70, ilustrando como cada nodo procesado encola a sus dos hijos antes de que el siguiente de la cola sea procesado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd33e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">porNiveles(): 50, 30, 70, 20, 40, 60, 80, con una Cola por debajo</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd33e)"><path d="M368,78 L242,122"/><path d="M392,78 L518,122"/><path d="M222,158 L152,202"/><path d="M238,158 L308,202"/><path d="M522,158 L452,202"/><path d="M538,158 L608,202"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="357" y="42" width="46" height="36"/><rect x="207" y="122" width="46" height="36"/><rect x="507" y="122" width="46" height="36"/><rect x="117" y="202" width="46" height="36"/><rect x="297" y="202" width="46" height="36"/><rect x="417" y="202" width="46" height="36"/><rect x="597" y="202" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="65">50</text><text x="230" y="145">30</text><text x="530" y="145">70</text><text x="140" y="225">20</text><text x="320" y="225">40</text><text x="440" y="225">60</text><text x="620" y="225">80</text></g>
+  <text x="60" y="270" font-size="10.5" fill="#0e6f6c">tras procesar 50:</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="180" y="256" width="42" height="28"/><rect x="226" y="256" width="42" height="28"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="201" y="275">30</text><text x="247" y="275">70</text></g>
+  <text x="180" y="248" font-size="9.5" fill="#5b6876">frente</text>
+  <text x="60" y="312" font-size="10.5" fill="#0e6f6c">tras procesar 30:</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="180" y="298" width="42" height="28"/><rect x="226" y="298" width="42" height="28"/><rect x="272" y="298" width="42" height="28"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="201" y="317">70</text><text x="247" y="317">20</text><text x="293" y="317">40</text></g>
+  <text x="180" y="290" font-size="9.5" fill="#5b6876">frente</text>
+  <text x="60" y="354" font-size="10.5" fill="#0e6f6c">tras procesar 70:</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="180" y="340" width="42" height="28"/><rect x="226" y="340" width="42" height="28"/><rect x="272" y="340" width="42" height="28"/><rect x="318" y="340" width="42" height="28"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="201" y="359">20</text><text x="247" y="359">40</text><text x="293" y="359">60</text><text x="339" y="359">80</text></g>
+  <text x="180" y="332" font-size="9.5" fill="#5b6876">frente</text>
+  <text x="560" y="290" font-size="10.5" fill="#5b6876">cada nodo procesado encola sus</text>
+  <text x="560" y="306" font-size="10.5" fill="#5b6876">dos hijos antes de que el siguiente</text>
+  <text x="560" y="322" font-size="10.5" fill="#5b6876">de la cola sea procesado: por eso</text>
+  <text x="560" y="338" font-size="10.5" fill="#5b6876">el orden respeta cada nivel completo</text>
+</svg>
+
+:::
+
+```java
+public java.util.List<Integer> porNiveles() {
+    java.util.List<Integer> resultado = new java.util.ArrayList<>();
+    if (raiz == null) {
+        return resultado;
+    }
+    Cola cola = new Cola();
+    cola.encolar(raiz);
+    while (!cola.estaVacia()) {
+        NodoArbol actual = (NodoArbol) cola.desencolar();
+        resultado.add(actual.dato);
+        if (actual.izquierdo != null) {
+            cola.encolar(actual.izquierdo);
+        }
+        if (actual.derecho != null) {
+            cola.encolar(actual.derecho);
+        }
+    }
+    return resultado;
+}
+```
+
+```python
+def por_niveles(self):
+    resultado = []
+    if self.raiz is None:
+        return resultado
+    cola = Cola()
+    cola.encolar(self.raiz)
+    while not cola.esta_vacia():
+        actual = cola.desencolar()
+        resultado.append(actual.dato)
+        if actual.izquierdo is not None:
+            cola.encolar(actual.izquierdo)
+        if actual.derecho is not None:
+            cola.encolar(actual.derecho)
+    return resultado
+```
+
+`porNiveles` no usa ninguna recursión, es el mismo bucle `mientras la cola no esta vacia` que ya
+escribiste en `simularAtencion` en el Tema 2, solo que en vez de clientes encola nodos del árbol. La
+línea `(NodoArbol) cola.desencolar()` en Java es obligatoria porque `Cola` guarda `Object`, tal como se
+definió en el Tema 2, así que hay que devolver el dato a su tipo real antes de leer `izquierdo` y
+`derecho`, el mismo costo del tipo genérico que ya pagaste al usar `Pila` y `Cola` con cualquier otro
+dato. Python no necesita ese paso, porque no exige declarar el tipo de lo que sale de `desencolar`.
+
+::: {.callout-tip}
+## Reto 2. Completa el recorrido por niveles
+
+Sobre el árbol de ejemplo, si en vez de `Cola` alguien usa por error una `Pila` dentro de
+`porNiveles`, cambiando `cola.encolar` por `pila.apilar` y `cola.desencolar` por `pila.desapilar`, sin
+tocar ninguna otra línea. Antes de seguir, decide qué le pasa al orden de salida.
+
+<label><input type="checkbox"> El orden de salida sigue siendo por niveles, 50, 30, 70, 20, 40, 60, 80</label>
+<label><input type="checkbox"> El orden de salida deja de ser por niveles, porque una pila devuelve primero lo último que entró</label>
+<label><input type="checkbox"> El programa lanza una excepción porque NodoArbol no se puede apilar</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La segunda es correcta. `NodoArbol` se puede guardar en cualquiera de las dos estructuras sin problema,
+el error no está ahí, está en el orden en que salen. Con `Cola`, el primer nodo que se procesa después
+de la raíz es el primero que se encoló entre sus hijos, FIFO, así que el recorrido respeta cada nivel
+completo antes de pasar al siguiente. Con `Pila`, el primer nodo que se procesa después de la raíz es
+el último que se apiló, LIFO, así que después de procesar 50 y apilar 30 y 70, el siguiente en salir es
+70, y su hijo 80 se apila encima de 60, así que el orden termina siendo 50, 70, 80, 60, 30, 40, 20, una
+mezcla de niveles que no corresponde a ningún recorrido con nombre reconocido. La estructura que se
+elige detrás de un recorrido no es un detalle de implementación, es lo que define qué recorrido es.
+:::
+
+## Eliminar: el caso que rompe más implementaciones
+
+Eliminar un valor del árbol tiene que dejarlo intacto como ABB después de sacar el nodo, y eso obliga a
+tratar tres situaciones distintas según cuántos hijos tenga el nodo que se va.
+
+Si el nodo es una hoja, sin hijos, basta con quitar la referencia que el padre tenía hacia él, no queda
+ningún hueco que llenar. Si el nodo tiene un solo hijo, ese hijo simplemente toma el lugar del nodo
+eliminado, el padre pasa a apuntar directo al nieto. El tercer caso, un nodo con dos hijos, es el que de
+verdad exige cuidado, porque no hay ningún hijo único que pueda subir a ocupar su lugar sin romper el
+invariante de orden.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos casos simples de eliminacion. Caso 1, eliminar una hoja: 30 tenia como hijos 20 y 40, se elimina 20, marcado con borde punteado, y despues 30 queda solo con el hijo 40. Caso 2, eliminar un nodo con un solo hijo: 10 apunta a 15, que a su vez apunta a su unico hijo 18; se elimina 15, marcado con borde punteado, y 18 sube a ocupar directamente el lugar de 15, asi que 10 pasa a apuntar a 18" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd33f" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="185" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Caso 1: eliminar una hoja (20)</text>
+  <text x="575" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Caso 2: eliminar un nodo con un hijo (15)</text>
+  <text x="90" y="40" font-size="10.5" fill="#5b6876">antes</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="65" y="50" width="42" height="30"/><rect x="115" y="50" width="42" height="30"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-dasharray="4 3"><rect x="20" y="50" width="42" height="30"/></g>
+  <path d="M62,65 L86,58" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33f)"/>
+  <path d="M107,65 L131,58" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33f)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="86" y="70">30</text><text x="41" y="70">20</text><text x="136" y="70">40</text></g>
+  <text x="90" y="106" font-size="10.5" fill="#5b6876">despues</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="65" y="116" width="42" height="30"/><rect x="115" y="116" width="42" height="30"/></g>
+  <path d="M107,131 L131,124" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33f)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="86" y="136">30</text><text x="136" y="136">40</text></g>
+  <text x="185" y="190" font-size="10.5" fill="#0e6f6c" text-anchor="middle">30 pierde su referencia hacia 20, nada mas cambia</text>
+  <text x="470" y="40" font-size="10.5" fill="#5b6876">antes</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="450" y="42" width="40" height="28"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-dasharray="4 3"><rect x="450" y="80" width="40" height="28"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="450" y="118" width="40" height="28"/></g>
+  <path d="M470,70 L470,80" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33f)"/>
+  <path d="M470,108 L470,118" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33f)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="470" y="61">10</text><text x="470" y="99">15</text><text x="470" y="137">18</text></g>
+  <path d="M500,94 L610,94" fill="none" stroke="#0e6f6c" stroke-width="1.4" marker-end="url(#esd33f)"/>
+  <text x="555" y="86" font-size="10" fill="#0e6f6c" text-anchor="middle">elimina 15</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="640" y="42" width="40" height="28"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="640" y="118" width="40" height="28"/></g>
+  <path d="M660,70 L660,118" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33f)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="660" y="61">10</text><text x="660" y="137">18</text></g>
+  <text x="575" y="190" font-size="10.5" fill="#0e6f6c" text-anchor="middle">18 sube directo al lugar de 15, el invariante de orden sigue valido</text>
+</svg>
+
+:::
+
+### El caso difícil: un nodo con dos hijos
+
+Cuando el nodo a eliminar tiene dos hijos, ni el izquierdo ni el derecho pueden simplemente subir a
+tomar su lugar, porque cada uno arrastra su propio subárbol completo y no hay forma de conectarlos a
+los dos sin romper el invariante. La solución estándar, la misma que usa la implementación de referencia
+de Weiss, es reemplazar el dato del nodo eliminado por su sucesor inorden, el siguiente valor más
+grande que existe en el árbol, y después eliminar ese sucesor de su posición original, donde el problema
+ya se volvió uno de los dos casos simples de arriba.
+
+El sucesor inorden de un nodo con dos hijos siempre es el valor más pequeño de su subárbol derecho, y
+encontrarlo es sencillo, basta con bajar por la izquierda desde ese subárbol derecho hasta que ya no
+haya más hijo izquierdo. Ese nodo mínimo nunca tiene hijo izquierdo, por definición es el más pequeño de
+su rama, así que al eliminarlo de su posición original siempre cae en el caso de hoja o de un solo hijo,
+nunca de vuelta en el caso difícil.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Eliminar 30 del arbol de ejemplo, que tiene dos hijos, 20 y 40. Paso 1, se identifica el sucesor inorden, el minimo del subarbol derecho de 30, que es 40 porque no tiene hijo izquierdo. Paso 2, el dato de 30 se reemplaza por 40. Paso 3, el nodo original 40, ahora una hoja, se elimina de su posicion; el resultado final tiene la raiz de ese subarbol con dato 40, hijo izquierdo 20 y sin hijo derecho" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd33g" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">1. eliminar(30): buscar sucesor</text>
+  <text x="380" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">2. copiar dato del sucesor</text>
+  <text x="630" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">3. eliminar el sucesor original</text>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-dasharray="4 3"><rect x="80" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="100" width="42" height="30"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="140" y="100" width="42" height="30"/></g>
+  <path d="M96,70 L57,100" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33g)"/>
+  <path d="M106,70 L161,100" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33g)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="101" y="60">30</text><text x="41" y="120">20</text><text x="161" y="120">40</text></g>
+  <text x="161" y="152" font-size="10" fill="#0e6f6c" text-anchor="middle">sucesor: minimo</text>
+  <text x="161" y="166" font-size="10" fill="#0e6f6c" text-anchor="middle">del subarbol derecho</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="330" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="270" y="100" width="42" height="30"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-dasharray="4 3"><rect x="390" y="100" width="42" height="30"/></g>
+  <path d="M346,70 L307,100" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33g)"/>
+  <path d="M356,70 L411,100" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33g)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="351" y="60">40</text><text x="291" y="120">20</text><text x="411" y="120">40</text></g>
+  <text x="351" y="152" font-size="10" fill="#0e6f6c" text-anchor="middle">30 cambia su dato por 40</text>
+  <text x="411" y="166" font-size="10" fill="#5b6876" text-anchor="middle">el original queda duplicado</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="600" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="540" y="100" width="42" height="30"/></g>
+  <path d="M616,70 L577,100" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33g)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="621" y="60">40</text><text x="561" y="120">20</text></g>
+  <text x="621" y="152" font-size="10" fill="#0e6f6c" text-anchor="middle">40 original era hoja: se quita solo</text>
+  <text x="380" y="230" font-size="11.5" fill="#0e6f6c" text-anchor="middle">resultado: el nodo que antes tenia dato 30 ahora tiene dato 40, con 20 a la izquierda y sin hijo derecho</text>
+  <text x="380" y="252" font-size="11" fill="#5b6876" text-anchor="middle">el sucesor nunca tiene hijo izquierdo, asi que al eliminarlo de su posicion cae en el caso de hoja o de un solo hijo</text>
+</svg>
+
+:::
+
+```java
+public void eliminar(int dato) {
+    raiz = eliminar(raiz, dato);
+}
+
+private NodoArbol eliminar(NodoArbol nodo, int dato) {
+    if (nodo == null) {
+        return null; // el dato no estaba en el arbol
+    }
+    if (dato < nodo.dato) {
+        nodo.izquierdo = eliminar(nodo.izquierdo, dato);
+    } else if (dato > nodo.dato) {
+        nodo.derecho = eliminar(nodo.derecho, dato);
+    } else if (nodo.izquierdo != null && nodo.derecho != null) {
+        // dos hijos: copia el sucesor inorden y elimina ese sucesor de su lugar
+        nodo.dato = minimo(nodo.derecho);
+        nodo.derecho = eliminar(nodo.derecho, nodo.dato);
+    } else {
+        // hoja o un solo hijo: el hijo que exista, o null, toma el lugar
+        nodo = (nodo.izquierdo != null) ? nodo.izquierdo : nodo.derecho;
+    }
+    return nodo;
+}
+
+private int minimo(NodoArbol nodo) {
+    while (nodo.izquierdo != null) {
+        nodo = nodo.izquierdo;
+    }
+    return nodo.dato;
+}
+```
+
+```python
+def eliminar(self, dato):
+    self.raiz = self._eliminar(self.raiz, dato)
+
+def _eliminar(self, nodo, dato):
+    if nodo is None:
+        return None  # el dato no estaba en el arbol
+    if dato < nodo.dato:
+        nodo.izquierdo = self._eliminar(nodo.izquierdo, dato)
+    elif dato > nodo.dato:
+        nodo.derecho = self._eliminar(nodo.derecho, dato)
+    elif nodo.izquierdo is not None and nodo.derecho is not None:
+        # dos hijos: copia el sucesor inorden y elimina ese sucesor de su lugar
+        nodo.dato = self._minimo(nodo.derecho)
+        nodo.derecho = self._eliminar(nodo.derecho, nodo.dato)
+    else:
+        # hoja o un solo hijo: el hijo que exista, o None, toma el lugar
+        nodo = nodo.izquierdo if nodo.izquierdo is not None else nodo.derecho
+    return nodo
+
+def _minimo(self, nodo):
+    while nodo.izquierdo is not None:
+        nodo = nodo.izquierdo
+    return nodo.dato
+```
+
+Los dos ramales `else if` con un solo hijo y el ramal final con cero o un hijo comparten una misma línea,
+`nodo = nodo.izquierdo != null ? nodo.izquierdo : nodo.derecho`, que cubre a la vez el caso de la hoja,
+donde los dos son `null` y el resultado es `null`, y el caso de un hijo, donde el hijo que exista ocupa
+el lugar. La rama de los dos hijos es la única que necesita una segunda llamada recursiva a `eliminar`,
+porque después de copiar el dato del sucesor todavía queda pendiente sacarlo de su posición original,
+para no dejarlo duplicado en el árbol.
+
+::: {.callout-tip}
+## Reto 3. Traza la eliminación de un nodo con dos hijos
+
+Sobre el árbol de ejemplo completo, raíz 50 con hijos 30 y 70, y hojas 20, 40, 60 y 80, vas a eliminar
+70, que tiene dos hijos, 60 y 80. Antes de seguir, decide cuál es el sucesor inorden de 70 y qué dato
+queda en su lugar después de eliminarlo.
+
+<label><input type="checkbox"> El sucesor es 80, y el nodo termina con dato 80, conservando su hijo izquierdo 60</label>
+<label><input type="checkbox"> El sucesor es 60, el mínimo del subárbol izquierdo de 70</label>
+<label><input type="checkbox"> El sucesor es 50, porque es la raíz</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+La primera es correcta. El sucesor inorden se busca siempre en el subárbol derecho, nunca en el
+izquierdo, así que la segunda opción parte de un subárbol equivocado desde el inicio. El subárbol
+derecho de 70 tiene un único nodo, 80, sin ningún hijo izquierdo propio, así que `minimo` se detiene ahí
+mismo en el primer paso, el sucesor es 80. El nodo que tenía dato 70 pasa a tener dato 80, y como la
+operación de eliminar solo tocó el subárbol derecho, para sacar de ahí al 80 original que quedó
+duplicado, el hijo izquierdo, 60, sigue exactamente donde estaba, intacto. Si el subárbol derecho de 70
+hubiera tenido más de un nodo, por ejemplo 80 con un hijo izquierdo 75, el procedimiento seguiría siendo
+el mismo, bajar por la izquierda del subárbol derecho hasta que ya no haya más hijo izquierdo, y en ese
+caso el sucesor habría sido 75, no 80.
+:::
+
+## Altura del árbol: por qué importa
+
+Cada operación que viste en esta guía, insertar, buscar y eliminar, hace como máximo una comparación por
+nivel de altura antes de terminar. Esa es la razón concreta por la que la altura del árbol no es un
+detalle técnico, es lo que decide si estas operaciones son rápidas o lentas.
+
+Si el árbol se mantiene razonablemente equilibrado, con más o menos la misma cantidad de nodos a cada
+lado en cada nivel, su altura crece de forma logarítmica respecto al número de nodos, `log2(n)`, porque
+cada nivel adicional duplica aproximadamente cuántos nodos caben. Con mil nodos bien repartidos, la
+altura ronda diez, con un millón, ronda veinte. Ese es el caso promedio de un ABB construido con datos
+que llegan en un orden razonablemente variado, y es lo que le da al árbol su fama, operaciones en
+`O(log n)`.
+
+Pero nada en el algoritmo de `insertar` obliga a que el árbol quede equilibrado. Si los datos llegan ya
+ordenados, cada valor nuevo es mayor que todos los anteriores, así que siempre baja por la derecha y
+siempre cuelga como hijo derecho del último nodo insertado. El resultado es una cadena, cada nodo con
+un solo hijo, exactamente la forma de una lista enlazada, y la altura deja de ser `log2(n)` para
+convertirse en `n - 1`, el peor caso posible, `O(n)`.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de forma: insertar 10, 20, 30, 40 y 50 ya ordenados produce una cadena degenerada donde cada nodo solo tiene hijo derecho, altura 4 con 5 nodos; insertar los mismos cinco valores en un orden distinto, por ejemplo 30, 10, 40, 20, 50, produce un arbol mucho mas bajo, altura 2 con los mismos 5 nodos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd33h" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="150" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">insertar 10,20,30,40,50 ya ordenados</text>
+  <text x="560" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">insertar los mismos 5 en otro orden</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="34" width="40" height="28"/><rect x="60" y="72" width="40" height="28"/><rect x="100" y="110" width="40" height="28"/><rect x="140" y="148" width="40" height="28"/><rect x="180" y="186" width="40" height="28"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33h)"><path d="M56,62 L64,72"/><path d="M96,100 L104,110"/><path d="M136,138 L144,148"/><path d="M176,176 L184,186"/></g>
+  <g text-anchor="middle" font-size="10.5" fill="#12324f"><text x="40" y="52">10</text><text x="80" y="90">20</text><text x="120" y="128">30</text><text x="160" y="166">40</text><text x="200" y="204">50</text></g>
+  <text x="120" y="236" font-size="10.5" fill="#0e6f6c" text-anchor="middle">altura 4 con 5 nodos: cada uno con un solo hijo, igual que una lista</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="490" y="34" width="42" height="30"/><rect x="440" y="90" width="42" height="30"/><rect x="540" y="90" width="42" height="30"/><rect x="410" y="146" width="42" height="30"/><rect x="570" y="146" width="42" height="30"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#esd33h)"><path d="M498,64 L466,90"/><path d="M524,64 L556,90"/><path d="M448,120 L436,146"/><path d="M572,120 L586,146"/></g>
+  <g text-anchor="middle" font-size="10.5" fill="#12324f"><text x="511" y="53">30</text><text x="461" y="109">10</text><text x="561" y="109">40</text><text x="431" y="165">20</text><text x="591" y="165">50</text></g>
+  <text x="500" y="236" font-size="10.5" fill="#0e6f6c" text-anchor="middle">altura 2 con los mismos 5 nodos: mismo contenido, forma completamente distinta</text>
+</svg>
+
+:::
+
+Los dos árboles del diagrama guardan exactamente los mismos cinco valores, la única diferencia es el
+orden en que se insertaron, y esa diferencia sola cambia la altura de 4 a 2. En un árbol de miles de
+nodos la diferencia entre `O(log n)` y `O(n)` deja de ser una curiosidad y se convierte en la diferencia
+entre un programa que responde de inmediato y uno que se arrastra.
+
+### El árbol degenerado, medido de verdad
+
+Para que esta diferencia no quede en teoría, vale la pena medirla. El siguiente script en Python
+construye dos árboles con los mismos ocho mil valores enteros, uno insertándolos ya ordenados, el caso
+degenerado, y otro insertándolos en un orden aleatorio, y compara la altura resultante y el tiempo que
+toma buscar tres mil valores en cada uno.
+
+```python
+import random
+import time
+import math
+
+N = 8000
+datos_ordenados = list(range(N))
+datos_aleatorios = list(range(N))
+random.seed(42)
+random.shuffle(datos_aleatorios)
+
+arbol_degenerado = ArbolBinarioBusqueda()
+for x in datos_ordenados:
+    arbol_degenerado.insertar(x)
+
+arbol_aleatorio = ArbolBinarioBusqueda()
+for x in datos_aleatorios:
+    arbol_aleatorio.insertar(x)
+
+print(f"altura del arbol degenerado: {arbol_degenerado.altura()}")
+print(f"altura del arbol con insercion aleatoria: {arbol_aleatorio.altura()}")
+print(f"log2(N) de referencia: {math.log2(N):.1f}")
+
+busquedas = random.sample(range(N), 3000)
+
+inicio = time.perf_counter()
+for x in busquedas:
+    arbol_degenerado.buscar(x)
+tiempo_degenerado = time.perf_counter() - inicio
+
+inicio = time.perf_counter()
+for x in busquedas:
+    arbol_aleatorio.buscar(x)
+tiempo_aleatorio = time.perf_counter() - inicio
+
+print(f"tiempo en el arbol degenerado: {tiempo_degenerado:.4f} s")
+print(f"tiempo en el arbol aleatorio: {tiempo_aleatorio:.4f} s")
+print(f"razon: {tiempo_degenerado / tiempo_aleatorio:.1f}x mas lento")
+```
+
+`insertar` y `buscar` en este script se escribieron en su versión iterativa, con un bucle en vez de
+llamadas recursivas, no por preferencia de estilo. La versión recursiva de esta misma guía, corriendo
+sobre un árbol degenerado de ocho mil nodos, se estrella antes de terminar:
+
+```
+$ python -c "
+import sys
+raiz = None
+for x in range(3000):
+    raiz = insertar_recursivo(raiz, x)
+buscar_recursivo(raiz, 2999)
+"
+RecursionError: maximum recursion depth exceeded
+```
+
+El límite de recursión por defecto de Python es 1000 llamadas activas a la vez, y un árbol degenerado
+de tres mil nodos ya necesita el doble de eso solo para bajar hasta la última hoja, así que
+`RecursionError` aparece incluso antes de terminar de construir el árbol. Es la misma familia de error
+que el Tema 3 de la Unidad 1 explicó con `factorial` y el desbordamiento de pila, `StackOverflowError`
+en Java, `RecursionError` en Python, aplicada ahora a una estructura de datos completa en vez de a un
+solo número. Un árbol degenerado no solo vuelve las operaciones más lentas, en un lenguaje con límite de
+recursión puede volverlas imposibles de ejecutar tal como se escribieron en esta guía.
+
+Con las versiones iterativas, que no dependen de la pila de llamadas del intérprete, el script sobre
+ocho mil elementos corrió sin problema y produjo esta salida real:
+
+```
+N = 8000 elementos insertados en cada arbol
+altura del arbol degenerado: 7999
+altura del arbol con insercion aleatoria: 35
+log2(N) de referencia: 13.0
+
+tiempo en el arbol degenerado: 0.4898 s
+tiempo en el arbol aleatorio: 0.0029 s
+razon: 167.2x mas lento
+```
+
+El resultado exacto varía según el equipo donde se ejecute, lo que importa es la dirección y la
+magnitud, la altura del árbol degenerado es exactamente `n - 1`, 7999 con 8000 nodos, mientras que la
+altura del árbol con inserción aleatoria, 35, queda cerca del `log2(n)` de referencia, 13, más alta por
+la variación natural de un orden aleatorio, pero de un orden de magnitud completamente distinto. Esa
+diferencia en altura se traduce directo en el tiempo de búsqueda, 167 veces más lento en el árbol
+degenerado sobre este equipo en particular, una proporción que crece todavía más a medida que crece `N`,
+porque la altura degenerada crece de forma lineal mientras la altura equilibrada apenas se mueve.
+
+Este es exactamente el gancho hacia el próximo tema. Un árbol binario de búsqueda, tal como lo
+construiste hoy, no tiene ninguna defensa contra este escenario, insertar datos ordenados es una entrada
+perfectamente válida y el árbol se degrada sin avisar ni lanzar ningún error. El Tema 4 de esta unidad
+resuelve justo este problema con dos familias de árboles que se reorganizan solos durante la inserción y
+la eliminación para mantener la altura cerca de `log2(n)` sin importar en qué orden lleguen los datos,
+los árboles 2-3 y los árboles AVL.
+
+::: {.callout-tip}
+## Reto 4. Predice la altura
+
+Sin ejecutar ningún código, decide qué le pasaría a la altura de un ABB vacío si se insertan los valores
+5, 3, 8, 1, 4, 7, 9, en ese orden exacto, comparado con insertar esos mismos siete valores ya ordenados,
+1, 3, 4, 5, 7, 8, 9.
+
+<label><input type="checkbox"> Las dos inserciones producen la misma altura, porque son los mismos siete valores</label>
+<label><input type="checkbox"> El primer orden produce un árbol de altura 2, razonablemente equilibrado</label>
+<label><input type="checkbox"> El segundo orden, ya ordenado, produce un árbol de altura 6, una cadena</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+La segunda y la tercera son correctas, la primera es el error más común de subestimar cuánto importa el
+orden de inserción. Insertando 5, 3, 8, 1, 4, 7, 9 en ese orden, 5 queda de raíz, 3 y 8 como sus hijos,
+y 1, 4, 7, 9 se acomodan como hojas de esos dos, un árbol de altura 2 con los siete nodos razonablemente
+repartidos. Insertando los mismos siete valores ya ordenados, 1 es la raíz, 3 cuelga a su derecha porque
+es mayor, 4 cuelga a la derecha de 3 por la misma razón, y así sucesivamente, una cadena de siete nodos
+donde cada uno solo tiene hijo derecho, altura 6, exactamente `n - 1`. El contenido final del árbol, los
+mismos siete valores, no dice nada sobre su forma, la forma la decide por completo el orden de llegada.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] Qué invariante de orden cumple un árbol binario de búsqueda en cada uno de sus nodos, no solo en
+      la raíz, y qué política sigue esta guía con los valores repetidos
+- [ ] Por qué `insertar`, `buscar` y `eliminar` bajan como máximo un nivel por comparación, y qué
+      relación tiene eso con la altura del árbol
+- [ ] Explicar la diferencia entre inorden, preorden y postorden, y por qué inorden siempre entrega los
+      datos ordenados de menor a mayor
+- [ ] Implementar el recorrido por niveles con una `Cola`, y explicar por qué una `Pila` en su lugar
+      rompe el orden por niveles
+- [ ] Trazar los tres casos de `eliminar`, hoja, un hijo y dos hijos, y explicar por qué el sucesor
+      inorden nunca tiene hijo izquierdo
+- [ ] Explicar por qué insertar datos ya ordenados degrada un árbol binario de búsqueda a una cadena de
+      altura `n - 1`, y qué consecuencia real tiene esa altura sobre el tiempo de búsqueda
+:::
+
+## Lo que sigue
+
+El Tema 4 de esta unidad enfrenta directamente el problema que acabas de medir, un árbol binario de
+búsqueda ordinario no se defiende solo del caso degenerado. Los árboles 2-3 y los árboles AVL reorganizan
+su propia forma cada vez que insertan o eliminan un nodo, para que la altura se mantenga cerca de
+`log2(n)` sin importar en qué orden lleguen los datos, la misma garantía de `O(log n)` que el árbol de
+hoy solo cumple en el caso promedio.
+
+## Recursos
+
+- Weiss, M. A. *Estructuras de datos en Java.* Capítulo "Trees" (Árboles), secciones sobre el árbol
+  binario de búsqueda, `insert`, `remove` y el manejo del caso de dos hijos con el sucesor inorden.
+- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
+  "Binary Search Trees", secciones sobre recorridos, `TREE-INSERT` y `TREE-DELETE`.
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo sobre árboles de
+  búsqueda, con la comparación entre el caso promedio y el caso degenerado.
+- [Documentación oficial de Python sobre `sys.getrecursionlimit` y `sys.setrecursionlimit`](https://docs.python.org/3/library/sys.html#sys.getrecursionlimit)
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. La medición
+de tiempos y alturas es una ejecución real del script publicado, hecha durante la preparación del
+material; el resultado exacto varía según el equipo que lo ejecute.
+:::

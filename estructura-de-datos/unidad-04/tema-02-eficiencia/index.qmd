@@ -1,0 +1,801 @@
+---
+title: "Tema 2. Eficiencia y comparación de algoritmos"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                |
+|--------|----------------------------------------------------------------|
+| Unidad | Unidad 4. Métodos de ordenamiento, búsqueda y eficiencia       |
+| Tema   | Tema 2. Eficiencia y comparación de algoritmos                  |
+:::
+
+El Tema 1 midió seis algoritmos de ordenamiento sobre el mismo arreglo de siete números y después
+sobre tres mil números generados al azar, y el resultado más llamativo de esa medición fue la
+brecha entre quicksort, que ordenó los tres mil elementos en cuatro milésimas de segundo, y
+burbuja, que tardó noventa y dos veces más sobre la misma entrada. Esa brecha se explicó de forma
+intuitiva, quicksort divide el problema en mitades mientras que burbuja compara pareja por pareja
+sin dividir nada, y la palabra intuitiva es justo el límite que cierra este tema. La Unidad 3 dejó
+otras dos pistas del mismo tipo sin formalizar, un árbol binario de búsqueda desbalanceado degrada
+su búsqueda de un puñado de comparaciones a recorrer la lista entera, y una recursión sin caso base
+correcto agota la pila de llamadas antes de terminar. Este tema construye el lenguaje matemático
+que explica los tres episodios con precisión, la complejidad computacional y la notación
+asintótica, y lo aplica de vuelta sobre los mismos seis algoritmos del Tema 1 para dejar la tabla
+comparativa definitiva del curso.
+
+## Contar operaciones en vez de cronometrar
+
+Cronometrar un programa parece la forma más directa de saber qué tan eficiente es, pero el propio
+Tema 1 ya avisó que ese número cambia de equipo a equipo, y también cambia entre dos ejecuciones en
+la misma máquina según qué otros programas estén corriendo en ese momento. Un cronómetro mide
+segundos de reloj, y los segundos de reloj dependen de la velocidad del procesador, de cuánta
+memoria caché tiene disponible el programa y de decisiones del compilador o del intérprete que
+nada tienen que ver con el algoritmo en sí. La complejidad computacional resuelve ese problema
+cambiando la pregunta, en vez de cuántos segundos tarda un algoritmo, cuenta cuántas operaciones
+elementales ejecuta, comparaciones, asignaciones, sumas, para una entrada de tamaño *n*, y expresa
+ese conteo como una función T(n) que no depende de en qué máquina se ejecute el programa.
+
+Burbuja sobre el arreglo de siete elementos del Tema 1 hace siempre el mismo número de
+comparaciones para el mismo arreglo de entrada, sin importar si corre en un equipo nuevo o en uno
+de varios años, porque el número de comparaciones lo fija la estructura del algoritmo, dos ciclos
+anidados que recorren el arreglo, no la velocidad del hardware que las ejecuta. Lo que sí cambia de
+equipo a equipo es cuánto tiempo de reloj toma cada una de esas comparaciones, así que dos máquinas
+distintas dan tiempos distintos para el mismo T(n). Por eso la complejidad computacional se define
+siempre en función del tamaño de la entrada, y por eso las próximas secciones miden T(n) contando
+operaciones, con el tiempo de reloj real usado únicamente como una confirmación práctica de que el
+conteo teórico predijo bien lo que pasó, tal como ya se hizo en los dos benchmarks del Tema 1.
+
+## Notación asintótica: cotas superior, inferior y ajustada
+
+Contar operaciones exactas es tedioso e innecesario, lo que de verdad importa es cómo crece T(n)
+cuando *n* se hace grande, no si son 3n+2 o 3n+7 comparaciones. La notación asintótica captura ese
+crecimiento ignorando constantes y términos de menor orden, y la ciencia de la computación usa tres
+símbolos con definiciones matemáticas precisas para describir tres relaciones distintas entre una
+función T(n) y una función de referencia g(n), casi siempre una potencia de *n* sencilla como n,
+n^2 o log n.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 545" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres definiciones de notacion asintotica sobre el mismo eje horizontal de n. Fila superior O grande: la curva f(n) puede hacer lo que quiera antes de n0, pero desde n0 en adelante se mantiene siempre por debajo de la linea c por g(n), la region sombreada marca donde la cota debe cumplirse. Fila intermedia Omega: desde n0 en adelante f(n) se mantiene siempre por encima de la linea c por g(n). Fila inferior Theta: desde n0 en adelante f(n) queda atrapada entre dos lineas, c1 por g(n) abajo y c2 por g(n) arriba" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">O, Omega y Theta: tres formas de acotar el crecimiento de f(n)</text>
+  <text x="380" y="35" font-size="10.5" fill="#5b6876" text-anchor="middle">f(n) es la curva solida en verde, c por g(n) es la referencia discontinua en azul, n0 marca donde empieza a exigirse la cota</text>
+  <rect x="290" y="45" width="400" height="130" fill="#e4f2f1" opacity="0.45"/>
+  <line x1="290" y1="45" x2="290" y2="175" stroke="#5b6876" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <line x1="60" y1="175" x2="700" y2="175" stroke="#cfd8e3" stroke-width="1.2"/>
+  <path d="M60,145 L690,55" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <path d="M90,100 L150,90 L230,75 L290,112 L390,105 L490,95 L590,80 L690,65" fill="none" stroke="#0e6f6c" stroke-width="2"/>
+  <text x="290" y="188" font-size="10" fill="#5b6876" text-anchor="middle">n0</text>
+  <text x="705" y="58" font-size="10.5" fill="#8fb3d1" text-anchor="start">c * g(n)</text>
+  <text x="695" y="72" font-size="10.5" fill="#0e6f6c" text-anchor="end">f(n)</text>
+  <text x="80" y="205" font-size="11" font-weight="600" fill="#12324f">f(n) es O(g(n))</text>
+  <text x="80" y="218" font-size="9.5" fill="#5b6876">existen c &gt; 0 y n0 tales que para todo n &gt;= n0: 0 &lt;= f(n) &lt;= c * g(n)</text>
+  <rect x="290" y="245" width="400" height="130" fill="#e4f2f1" opacity="0.45"/>
+  <line x1="290" y1="245" x2="290" y2="375" stroke="#5b6876" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <line x1="60" y1="375" x2="700" y2="375" stroke="#cfd8e3" stroke-width="1.2"/>
+  <path d="M60,345 L690,255" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <path d="M90,344 L150,330 L230,322 L290,300 L390,280 L490,265 L590,250 L690,235" fill="none" stroke="#0e6f6c" stroke-width="2"/>
+  <text x="290" y="388" font-size="10" fill="#5b6876" text-anchor="middle">n0</text>
+  <text x="705" y="258" font-size="10.5" fill="#8fb3d1" text-anchor="start">c * g(n)</text>
+  <text x="695" y="232" font-size="10.5" fill="#0e6f6c" text-anchor="end">f(n)</text>
+  <text x="80" y="405" font-size="11" font-weight="600" fill="#12324f">f(n) es Omega(g(n))</text>
+  <text x="80" y="418" font-size="9.5" fill="#5b6876">existen c &gt; 0 y n0 tales que para todo n &gt;= n0: 0 &lt;= c * g(n) &lt;= f(n)</text>
+  <rect x="290" y="445" width="400" height="60" fill="#e4f2f1" opacity="0.45"/>
+  <line x1="290" y1="445" x2="290" y2="505" stroke="#5b6876" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <path d="M60,430 L690,400" fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="6 4"/>
+  <path d="M60,455 L690,425" fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="2 3"/>
+  <path d="M90,440 L150,435 L230,433 L290,431 L390,427 L490,422 L590,417 L690,412" fill="none" stroke="#0e6f6c" stroke-width="2"/>
+  <text x="290" y="518" font-size="10" fill="#5b6876" text-anchor="middle">n0</text>
+  <text x="705" y="403" font-size="9.5" fill="#8fb3d1" text-anchor="start">c2 * g(n)</text>
+  <text x="705" y="428" font-size="9.5" fill="#8fb3d1" text-anchor="start">c1 * g(n)</text>
+  <text x="80" y="520" font-size="11" font-weight="600" fill="#12324f">f(n) es Theta(g(n))</text>
+  <text x="80" y="533" font-size="9.5" fill="#5b6876">existen c1, c2 &gt; 0 y n0 tales que para todo n &gt;= n0: c1 * g(n) &lt;= f(n) &lt;= c2 * g(n)</text>
+</svg>
+
+:::
+
+La definición de O grande, la más usada de las tres, dice que f(n) es O(g(n)) si existen una
+constante c mayor que cero y un umbral n0 tales que, para todo n mayor o igual a n0, se cumple 0
+menor o igual que f(n) menor o igual que c multiplicado por g(n). En palabras simples, a partir de
+cierto tamaño de entrada, f(n) nunca crece más rápido que c veces g(n), así que O(g(n)) describe
+una *cota superior*, una garantía de que el algoritmo no será peor que eso, aunque en la práctica
+pueda comportarse mejor para entradas concretas. Omega funciona al revés, f(n) es Omega(g(n)) si
+existen c mayor que cero y n0 tales que para todo n mayor o igual a n0 se cumple 0 menor o igual
+que c multiplicado por g(n) menor o igual que f(n), una *cota inferior* que garantiza que el
+algoritmo no será mejor que eso. Theta combina las dos, f(n) es Theta(g(n)) si existen dos
+constantes c1 y c2 mayores que cero y un n0 tales que para todo n mayor o igual a n0 se cumple c1
+multiplicado por g(n) menor o igual que f(n) menor o igual que c2 multiplicado por g(n), lo que
+significa que g(n) describe el crecimiento real de f(n) por arriba y por abajo al mismo tiempo, una
+*cota ajustada*. Cuando una guía o un libro de texto escribe "el algoritmo es O(n^2)" sin más
+matices, casi siempre quiere decir que también es Theta(n^2), pero formalmente O grande solo
+promete el techo, no descarta que el algoritmo sea en realidad más rápido.
+
+::: {.callout-tip}
+## Reto 1. Cuál relación aplica
+
+La función f(n) = 3n^2 + 5n representa el número de operaciones de un algoritmo, y se compara
+contra g(n) = n^2. Antes de seguir, decide cuáles de las tres relaciones, O, Omega o Theta, se
+cumplen entre f(n) y g(n).
+
+<label><input type="checkbox"> Solo O(n^2), porque 3n^2 + 5n crece mas rapido que n^2 y nunca podria tener una cota inferior con la misma g(n)</label>
+<label><input type="checkbox"> Las tres, O(n^2), Omega(n^2) y por lo tanto Theta(n^2), porque el termino 5n queda dominado por 3n^2 desde un n0 pequeño</label>
+<label><input type="checkbox"> Ninguna de las tres, porque f(n) tiene dos terminos y g(n) solo tiene uno, asi que nunca son comparables</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La segunda es correcta. Para O(n^2), basta tomar c = 8 y n0 = 1, porque desde n = 1 en adelante 3n^2
++ 5n es siempre menor o igual que 8n^2, ya que 5n es menor o igual que 5n^2 para todo n mayor o
+igual a 1. Para Omega(n^2), basta tomar c = 3 y n0 = 1, porque 3n^2 + 5n es siempre mayor o igual
+que 3n^2, el término 5n solo suma, nunca resta. Como valen las dos, O(n^2) y Omega(n^2), la
+definición de Theta se cumple automáticamente con c1 = 3 y c2 = 8, y n0 = 1. Esta es la razón
+práctica por la que, al analizar código real, casi nunca hace falta calcular T(n) término por
+término, basta con identificar el término que domina cuando n crece, en este caso 3n^2, y descartar
+los términos de menor orden y las constantes multiplicativas.
+:::
+
+## Clases de complejidad: de la más rápida a la más lenta
+
+Con la notación ya definida, la pregunta práctica es qué formas de g(n) aparecen una y otra vez al
+analizar algoritmos reales. Existe un puñado de clases que cubren casi todo lo que vas a encontrar
+en este curso, y cada una crece a una velocidad cualitativamente distinta de la anterior, tan
+distinta que un algoritmo de una clase peor puede volverse impráctico mucho antes de que la entrada
+llegue a ser realmente grande.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafica esquematica del crecimiento de seis clases de complejidad segun n crece de 0 a 32. O(1) es una linea plana en la parte baja. O(log n) crece muy despacio, casi plana. O(n) es una diagonal recta. O(n log n) queda apenas por encima de la diagonal. O(n cuadrado) es una curva que se empina con fuerza hacia el final. O(2 elevado a n) empieza igual de bajo que las demas pero se dispara verticalmente y sale de la escala del grafico alrededor de n=16, marcado con una linea punteada de aviso. El eje vertical no esta a escala real, es una comparacion cualitativa de forma" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Seis clases de complejidad, de O(1) a O(2^n)</text>
+  <text x="380" y="32" font-size="10" fill="#5b6876" text-anchor="middle">eje vertical esquematico, no a escala real: O(2^n) haria illegibles a las demas curvas con la misma regla</text>
+  <line x1="60" y1="350" x2="700" y2="350" stroke="#cfd8e3" stroke-width="1.4"/>
+  <line x1="60" y1="350" x2="60" y2="25" stroke="#cfd8e3" stroke-width="1.4"/>
+  <line x1="225" y1="350" x2="225" y2="356" stroke="#5b6876" stroke-width="1"/>
+  <line x1="380" y1="350" x2="380" y2="356" stroke="#5b6876" stroke-width="1"/>
+  <line x1="690" y1="350" x2="690" y2="356" stroke="#5b6876" stroke-width="1"/>
+  <text x="225" y="368" font-size="9.5" fill="#5b6876" text-anchor="middle">n=8</text>
+  <text x="380" y="368" font-size="9.5" fill="#5b6876" text-anchor="middle">n=16</text>
+  <text x="690" y="368" font-size="9.5" fill="#5b6876" text-anchor="middle">n=32</text>
+  <text x="380" y="392" font-size="11" fill="#12324f" text-anchor="middle">n, tamano de la entrada</text>
+  <path d="M70,335 L690,335" fill="none" stroke="#5b6876" stroke-width="2"/>
+  <path d="M70,335 Q380,300 690,285" fill="none" stroke="#8fb3d1" stroke-width="2"/>
+  <path d="M70,335 L690,150" fill="none" stroke="#12324f" stroke-width="2"/>
+  <path d="M70,335 Q450,220 690,95" fill="none" stroke="#12324f" stroke-width="2" stroke-dasharray="7 4"/>
+  <path d="M70,335 Q500,250 690,45" fill="none" stroke="#0e6f6c" stroke-width="2"/>
+  <path d="M70,335 C250,330 330,300 360,175 C372,120 378,60 383,28" fill="none" stroke="#0e6f6c" stroke-width="2.4" stroke-dasharray="6 3"/>
+  <line x1="383" y1="28" x2="383" y2="350" stroke="#0e6f6c" stroke-width="1" stroke-dasharray="2 3" opacity="0.5"/>
+  <text x="700" y="339" font-size="10" fill="#5b6876" text-anchor="start">O(1)</text>
+  <text x="700" y="289" font-size="10" fill="#8fb3d1" text-anchor="start">O(log n)</text>
+  <text x="700" y="154" font-size="10" fill="#12324f" text-anchor="start">O(n)</text>
+  <text x="700" y="99" font-size="10" fill="#12324f" text-anchor="start">O(n log n)</text>
+  <text x="700" y="49" font-size="10" fill="#0e6f6c" text-anchor="start">O(n^2)</text>
+  <text x="386" y="24" font-size="9.5" fill="#0e6f6c" text-anchor="start">O(2^n) sale de la escala en n=16</text>
+</svg>
+
+:::
+
+Cada clase de la lista siguiente ya apareció en el curso, sin que en su momento se le pusiera
+todavía el nombre formal de su clase de complejidad.
+
+- **O(1), tiempo constante.** El acceso a un arreglo por índice de la Unidad 2, `arreglo[i]`, hace
+  el mismo trabajo sin importar si el arreglo tiene diez o diez millones de elementos, porque la
+  dirección de memoria de cualquier casilla se calcula con una sola multiplicación y una suma.
+- **O(log n), tiempo logarítmico.** La búsqueda en un árbol binario de búsqueda balanceado de la
+  Unidad 3 descarta la mitad del árbol restante en cada comparación, así que el número de niveles
+  que recorre crece muchísimo más despacio que el número de nodos del árbol, log base 2 de n en vez
+  de n.
+- **O(n), tiempo lineal.** Recorrer una lista enlazada de la Unidad 3 de principio a fin visita cada
+  nodo exactamente una vez, así que el trabajo crece en proporción directa al tamaño de la lista.
+- **O(n log n), linealítmico.** Quicksort y shellsort del Tema 1 de esta unidad combinan un
+  recorrido lineal con una división del problema que se repite log n veces, la combinación que
+  hace que ordenar tres mil números tome una fracción de segundo en vez de fracciones de minuto.
+- **O(n^2), tiempo cuadrático.** Burbuja, inserción y selección del Tema 1 comparan cada elemento
+  contra buena parte de los demás, un ciclo anidado dentro de otro ciclo del mismo tamaño, la razón
+  por la que burbuja tardó noventa y dos veces más que quicksort en el benchmark de tres mil
+  números.
+- **O(2^n), tiempo exponencial.** La recursión ingenua de Fibonacci de la Unidad 1, Tema 3, vuelve a
+  calcular el mismo subproblema una y otra vez en ramas distintas del árbol de llamadas, y esa
+  duplicación crece doblándose en cada nivel adicional de n, la clase de complejidad más costosa de
+  las seis y la única de este tema que se vuelve impráctica con entradas todavía pequeñas.
+
+La siguiente tabla deja los números exactos detrás del esquema del diagrama, calculados sin
+aproximar, para que la diferencia entre clases deje de ser una intuición y se vuelva una cifra
+concreta.
+
+::: {.tabla-ancha}
+| n  | O(1) | O(log n) | O(n) | O(n log n) | O(n^2) | O(2^n) |
+|---|---|---|---|---|---|---|
+| 1  | 1 | 0.00 | 1  | 0.00   | 1    | 2 |
+| 2  | 1 | 1.00 | 2  | 2.00   | 4    | 4 |
+| 4  | 1 | 2.00 | 4  | 8.00   | 16   | 16 |
+| 8  | 1 | 3.00 | 8  | 24.00  | 64   | 256 |
+| 16 | 1 | 4.00 | 16 | 64.00  | 256  | 65 536 |
+| 32 | 1 | 5.00 | 32 | 160.00 | 1024 | 4 294 967 296 |
+:::
+
+Entre n = 16 y n = 32, apenas al doblar el tamaño de la entrada, O(n^2) pasa de 256 a 1024, cuatro
+veces más, mientras que O(2^n) pasa de sesenta y cinco mil a más de cuatro mil millones. Ningún
+procesador real termina esa segunda columna en un tiempo razonable si n sigue creciendo, y esa es
+la diferencia cualitativa que separa una clase polinomial, donde n aparece en la base de una
+potencia, de una clase exponencial, donde n aparece en el exponente.
+
+::: {.callout-tip}
+## Reto 2. Ordenar clases por su costo relativo
+
+Un algoritmo hace 2n comparaciones y otro hace n^2 / 100 comparaciones. Para n = 1000, el primero
+hace 2000 comparaciones y el segundo hace 10 000, así que el segundo parece peor en ese punto.
+Antes de seguir, decide qué pasa si n crece hasta 100 000.
+
+<label><input type="checkbox"> El primero sigue siendo peor, porque ya lo era en n=1000 y esa relacion no cambia con n</label>
+<label><input type="checkbox"> El segundo se vuelve muchisimo peor, porque pertenece a la clase O(n^2) y esa clase termina superando a cualquier O(n) sin importar la constante que la multiplique</label>
+<label><input type="checkbox"> Los dos crecen igual, porque las constantes 2 y 1/100 ya fijaron la relacion para siempre</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La segunda es correcta. En n = 100 000, el primer algoritmo hace 200 000 comparaciones, mientras
+que el segundo hace 100 000 000, quinientas veces más, y esa brecha sigue abriéndose sin límite a
+medida que n crece. Este es exactamente el contenido de la definición formal de O grande, la
+constante c y el punto n0 explican por qué en n = 1000 el algoritmo O(n^2) todavía parecía peor por
+poco, pero a partir de cierto n0 la clase de complejidad domina por completo sobre cualquier
+constante multiplicativa. La clase de complejidad describe el comportamiento asintótico, el que se
+observa cuando n crece sin límite, no el comportamiento en un punto aislado.
+:::
+
+## Contar operaciones en código real: bucles anidados
+
+Contar operaciones en un bucle simple es directo, un ciclo que recorre las n posiciones de un
+arreglo una sola vez hace n comparaciones, O(n). La parte que exige más cuidado son los bucles
+anidados, porque el costo depende de si el ciclo interno recorre siempre el mismo rango, sin
+importar en qué vuelta del ciclo externo está, o si ese rango cambia según el ciclo externo, como
+ya pasó sin que se le pusiera nombre en el ciclo interno de `seleccion` del Tema 1.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos cuadriculas de 4 por 4 para n=4. La cuadricula izquierda, bucle independiente, tiene las 16 celdas sombreadas porque el ciclo interno j recorre siempre las 4 posiciones sin importar el valor de i. La cuadricula derecha, bucle dependiente, solo tiene sombreadas en verde las celdas donde j es mayor que i, 6 de las 16, porque el ciclo interno arranca en i+1 y se acorta a medida que i crece" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cuantas celdas visita un bucle anidado, para n=4</text>
+  <text x="195" y="34" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">independiente: for j in range(n)</text>
+  <text x="565" y="34" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">dependiente: for j in range(i+1, n)</text>
+  <g text-anchor="middle" font-size="9.5" fill="#5b6876"><text x="146" y="58">j=0</text><text x="178" y="58">j=1</text><text x="210" y="58">j=2</text><text x="242" y="58">j=3</text></g>
+  <g text-anchor="middle" font-size="9.5" fill="#5b6876"><text x="120" y="80">i=0</text><text x="120" y="112">i=1</text><text x="120" y="144">i=2</text><text x="120" y="176">i=3</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="130" y="66" width="32" height="32"/><rect x="162" y="66" width="32" height="32"/><rect x="194" y="66" width="32" height="32"/><rect x="226" y="66" width="32" height="32"/><rect x="130" y="98" width="32" height="32"/><rect x="162" y="98" width="32" height="32"/><rect x="194" y="98" width="32" height="32"/><rect x="226" y="98" width="32" height="32"/><rect x="130" y="130" width="32" height="32"/><rect x="162" y="130" width="32" height="32"/><rect x="194" y="130" width="32" height="32"/><rect x="226" y="130" width="32" height="32"/><rect x="130" y="162" width="32" height="32"/><rect x="162" y="162" width="32" height="32"/><rect x="194" y="162" width="32" height="32"/><rect x="226" y="162" width="32" height="32"/></g>
+  <g text-anchor="middle" font-size="9.5" fill="#5b6876"><text x="516" y="58">j=0</text><text x="548" y="58">j=1</text><text x="580" y="58">j=2</text><text x="612" y="58">j=3</text></g>
+  <g text-anchor="middle" font-size="9.5" fill="#5b6876"><text x="490" y="80">i=0</text><text x="490" y="112">i=1</text><text x="490" y="144">i=2</text><text x="490" y="176">i=3</text></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="500" y="66" width="32" height="32"/><rect x="500" y="98" width="32" height="32"/><rect x="532" y="98" width="32" height="32"/><rect x="500" y="130" width="32" height="32"/><rect x="532" y="130" width="32" height="32"/><rect x="596" y="130" width="32" height="32"/><rect x="500" y="162" width="32" height="32"/><rect x="532" y="162" width="32" height="32"/><rect x="564" y="162" width="32" height="32"/><rect x="596" y="162" width="32" height="32"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="532" y="66" width="32" height="32"/><rect x="564" y="66" width="32" height="32"/><rect x="596" y="66" width="32" height="32"/><rect x="564" y="98" width="32" height="32"/><rect x="596" y="98" width="32" height="32"/><rect x="628" y="130" width="32" height="32"/></g>
+  <text x="195" y="212" font-size="10.5" fill="#0e6f6c" text-anchor="middle">16 celdas visitadas: n^2, sin importar el contenido del arreglo</text>
+  <text x="565" y="212" font-size="10.5" fill="#0e6f6c" text-anchor="middle">6 celdas visitadas: n(n-1)/2, el rango de j se achica con cada i</text>
+  <text x="380" y="238" font-size="10" fill="#5b6876" text-anchor="middle">celdas en verde: cuando j &gt; i, el mismo patron triangular del ciclo interno de seleccion en el Tema 1</text>
+</svg>
+
+:::
+
+```java
+public static int contarIndependiente(int n) {
+    int contador = 0;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            contador++;
+        }
+    }
+    return contador;
+}
+
+public static int contarDependiente(int n) {
+    int contador = 0;
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            contador++;
+        }
+    }
+    return contador;
+}
+```
+
+```python
+def contar_independiente(n):
+    contador = 0
+    for i in range(n):
+        for j in range(n):
+            contador += 1
+    return contador
+
+
+def contar_dependiente(n):
+    contador = 0
+    for i in range(n):
+        for j in range(i + 1, n):
+            contador += 1
+    return contador
+```
+
+La salida real de correr las dos funciones en Python para tres tamaños de entrada fue esta:
+
+```
+n= 5  independiente=   25 (n^2=25)  dependiente=   10 (n(n-1)/2=10)
+n=10  independiente=  100 (n^2=100)  dependiente=   45 (n(n-1)/2=45)
+n=20  independiente=  400 (n^2=400)  dependiente=  190 (n(n-1)/2=190)
+```
+
+`contarIndependiente` visita las n * n combinaciones posibles de i y j porque el rango del ciclo
+interno no depende de i, así que su costo es exactamente n^2, tanto para O grande como para Omega,
+lo que lo hace Theta(n^2). `contarDependiente` es el mismo ciclo interno de `seleccion` del Tema 1,
+el rango de j empieza en i + 1 y se acorta una posición por cada vuelta del ciclo externo, así que
+el total es la suma (n - 1) + (n - 2) + ... + 1 + 0, que la fórmula de Gauss reduce a n(n-1)/2. Esa
+fórmula, al expandirla, es (n^2 - n) / 2, un polinomio donde el término n^2 domina sobre el término
+n cuando n crece, así que sigue siendo Theta(n^2) exactamente igual que el ciclo independiente,
+aunque visite justo la mitad de celdas. La constante multiplicativa cambia, la clase de complejidad
+no, un ejemplo directo de por qué la notación asintótica descarta constantes, ambos ciclos son
+"cuadráticos" aunque uno haga el doble de trabajo que el otro para el mismo n.
+
+::: {.callout-tip}
+## Reto 3. Un tercer ciclo anidado
+
+Un tercer ciclo recorre `for i in range(n): for j in range(n // 2): contador += 1`, un ciclo interno
+cuyo rango es siempre la mitad de n, sin depender de i. Antes de seguir, decide a qué clase de
+complejidad pertenece ese ciclo.
+
+<label><input type="checkbox"> O(n), porque solo un ciclo depende directamente de n, el otro esta fijo en n/2</label>
+<label><input type="checkbox"> O(n^2), porque el total de vueltas es n multiplicado por n/2, que sigue siendo un polinomio de grado 2 en n</label>
+<label><input type="checkbox"> O(n/2), una clase de complejidad distinta a las demas por tener una fraccion en el exponente</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+La segunda es correcta. El total de vueltas es n * (n / 2) = n^2 / 2, un polinomio de segundo grado
+en n con la constante 1/2 en vez de 1. La notación asintótica descarta esa constante exactamente
+igual que descartó el 1/2 del Reto anterior, así que el ciclo sigue siendo O(n^2) y, de hecho,
+Theta(n^2). La tercera opción no existe como clase de complejidad, "n/2" no es una potencia de n
+distinta, es la misma clase O(n) con una constante multiplicativa distinta, un error común es
+confundir una constante que divide a n con un cambio real de clase.
+:::
+
+## Ecuaciones de recurrencia: cuando el algoritmo se llama a sí mismo
+
+Contar operaciones en un ciclo es sumar, contar operaciones en una función recursiva es resolver
+una ecuación, porque el costo de una llamada depende del costo de las llamadas que hace a su vez, y
+esa dependencia se escribe como una *recurrencia*. Quicksort, con el esquema de partición del Tema
+1, ilustra el caso más importante del curso, cuando el pivote parte el segmento en dos mitades
+razonablemente parejas, cada llamada a `quicksort` sobre un segmento de tamaño n hace una partición
+que cuesta O(n) y después se llama a sí misma dos veces sobre segmentos de tamaño n/2, lo que se
+escribe T(n) = 2 T(n/2) + O(n), con el caso base T(1) = O(1).
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol de recursion de T(n) = 2T(n/2) + O(n). Nivel 0, la raiz, es un solo nodo con trabajo cn. Nivel 1 son dos nodos T(n/2), cada uno con trabajo c(n/2), que suman cn en ese nivel. Nivel 2 son cuatro nodos T(n/4), cada uno con trabajo c(n/4), que tambien suman cn en ese nivel. Los puntos suspensivos indican que el patron continua hasta el nivel log2(n), donde hay n hojas T(1) con trabajo constante cada una, que tambien suman cn. La suma de los log2(n) mas 1 niveles, cada uno aportando cn, da T(n) = cn(log2(n) + 1), que es O(n log n)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Arbol de recursion de T(n) = 2T(n/2) + O(n)</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="290" y="30" width="180" height="32" rx="6"/></g>
+  <text x="380" y="51" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">T(n), trabajo propio: cn</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="330" y1="62" x2="200" y2="96"/><line x1="430" y1="62" x2="560" y2="96"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="95" y="96" width="210" height="30" rx="6"/><rect x="455" y="96" width="210" height="30" rx="6"/></g>
+  <text x="200" y="116" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/2), trabajo: c(n/2)</text>
+  <text x="560" y="116" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/2), trabajo: c(n/2)</text>
+  <text x="380" y="118" font-size="10" fill="#5b6876" text-anchor="middle">nivel 1: 2 nodos, suma cn</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.2"><line x1="150" y1="126" x2="80" y2="156"/><line x1="250" y1="126" x2="320" y2="156"/><line x1="510" y1="126" x2="440" y2="156"/><line x1="610" y1="126" x2="680" y2="156"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="156" width="100" height="28" rx="5"/><rect x="270" y="156" width="100" height="28" rx="5"/><rect x="390" y="156" width="100" height="28" rx="5"/><rect x="630" y="156" width="100" height="28" rx="5"/></g>
+  <text x="80" y="175" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/4)</text>
+  <text x="320" y="175" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/4)</text>
+  <text x="440" y="175" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/4)</text>
+  <text x="680" y="175" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/4)</text>
+  <text x="380" y="198" font-size="10" fill="#5b6876" text-anchor="middle">nivel 2: 4 nodos, cada uno c(n/4), suma cn</text>
+  <text x="380" y="228" font-size="14" fill="#5b6876" text-anchor="middle">. . .</text>
+  <text x="380" y="252" font-size="10.5" fill="#0e6f6c" text-anchor="middle">nivel log2(n): n hojas T(1), cada una trabajo constante, suma cn</text>
+  <line x1="60" y1="270" x2="700" y2="270" stroke="#cfd8e3" stroke-width="1"/>
+  <text x="380" y="292" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">suma total: cn en cada uno de los log2(n) + 1 niveles</text>
+  <text x="380" y="312" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">T(n) = cn * (log2(n) + 1) = O(n log n)</text>
+</svg>
+
+:::
+
+El método del árbol de recursión resuelve T(n) = 2 T(n/2) + O(n) sin necesidad de adivinar la
+respuesta de antemano, dibuja cada llamada recursiva como un nodo y suma el trabajo nivel por
+nivel. La raíz hace un trabajo de cn, siendo c la constante escondida detrás del O(n) de la
+partición. Esa raíz se llama a sí misma dos veces sobre segmentos de la mitad de tamaño, así que el
+nivel 1 tiene dos nodos, cada uno con trabajo c(n/2), y la suma de ese nivel completo vuelve a dar
+cn, porque 2 multiplicado por c(n/2) es cn. El nivel 2 tiene cuatro nodos con trabajo c(n/4) cada
+uno, y la suma vuelve a dar cn, el mismo patrón se repite en cada nivel sin importar cuántos nodos
+tenga, porque el número de nodos se duplica exactamente cuando el tamaño de cada segmento se parte
+a la mitad. El árbol termina cuando el tamaño del segmento llega a 1, y eso ocurre después de
+log2(n) niveles, porque dividir n entre 2 repetidamente log2(n) veces es justo lo que hace falta
+para llegar a 1. Con log2(n) más uno niveles, cada uno aportando cn de trabajo, el total es T(n) =
+cn multiplicado por (log2(n) + 1), y como la notación asintótica descarta la constante c y el más
+uno, el resultado es T(n) = O(n log n), la misma clase de complejidad que ya midió el benchmark del
+Tema 1 sobre quicksort con pivote aleatorio.
+
+Ese mismo argumento explica también el peor caso que el Tema 1 midió por separado, cuando el pivote
+resulta ser siempre el elemento más pequeño o el más grande del segmento, como pasó con el arreglo
+ya ordenado y pivote fijo, cada partición reduce el problema en solo un elemento en vez de a la
+mitad, así que la recurrencia deja de ser T(n) = 2 T(n/2) + O(n) y pasa a ser T(n) = T(n - 1) +
+O(n), una cadena de n particiones anidadas en vez de un árbol de altura log n. Resolver esa
+recurrencia por sustitución directa, T(n) = T(n-1) + cn = T(n-2) + c(n-1) + cn = ... = T(1) + c(2 +
+3 + ... + n), reduce la suma otra vez con la fórmula de Gauss a c multiplicado por n(n+1)/2 menos c,
+que es O(n^2), exactamente el número de comparaciones, 1 124 250, que midió el segundo benchmark
+del Tema 1 sobre mil quinientos elementos ya ordenados, y que coincidió cifra por cifra con la
+fórmula N(N-1)/2 de un algoritmo O(n^2) puro.
+
+::: {.callout-tip}
+## Reto 4. La recurrencia de la búsqueda binaria
+
+La búsqueda binaria de un valor en un arreglo ordenado descarta la mitad de las posiciones
+restantes en cada comparación y se llama a sí misma sobre la mitad que le queda, lo que se escribe
+T(n) = T(n/2) + O(1), con caso base T(1) = O(1). Antes de seguir, decide cuántos niveles tiene el
+árbol de recursión de esa función y a qué clase de complejidad pertenece.
+
+<label><input type="checkbox"> log2(n) niveles, cada uno con trabajo constante, asi que T(n) = O(log n)</label>
+<label><input type="checkbox"> n niveles, uno por cada elemento del arreglo, asi que T(n) = O(n)</label>
+<label><input type="checkbox"> log2(n) niveles, pero cada nivel duplica su trabajo como en quicksort, asi que T(n) = O(n log n)</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+La primera es correcta. El árbol de recursión de T(n) = T(n/2) + O(1) tiene un solo nodo por nivel,
+no dos como en quicksort, porque búsqueda binaria descarta una mitad y solo sigue explorando la
+otra, nunca las dos. El tamaño del segmento se sigue dividiendo entre 2 en cada nivel, así que hacen
+falta log2(n) niveles para llegar a un segmento de tamaño 1, exactamente igual que en el árbol de
+quicksort, pero como cada nivel tiene un solo nodo con trabajo constante O(1) en vez de un nivel
+completo con trabajo cn, la suma total es log2(n) multiplicado por una constante, que es O(log n).
+Esa es la razón matemática, no solo intuitiva, de por qué la búsqueda en un árbol binario de
+búsqueda balanceado de la Unidad 3 es logarítmica, el mismo patrón de descartar una mitad en cada
+paso que usa búsqueda binaria sobre un arreglo ordenado.
+:::
+
+## Mejor, promedio y peor caso: la tabla definitiva
+
+El Tema 1 ya midió el mejor, el promedio y el peor caso de los seis algoritmos de forma empírica e
+intuitiva, un arreglo ya ordenado corre distinto a uno mezclado al azar y distinto a uno en orden
+inverso. Con la notación asintótica formalizada, esa misma tabla se puede escribir con precisión,
+usando O para el peor caso, que es la garantía que de verdad importa cuando un programa no controla
+qué entrada va a recibir, y usando Theta cuando el mejor y el peor caso coinciden en la misma clase,
+lo que significa que ese algoritmo se comporta igual sin importar el orden de entrada.
+
+::: {.tabla-ancha}
+| Algoritmo | Mejor caso | Caso promedio | Peor caso | Peor caso ajustado |
+|---|---|---|---|---|
+| Burbuja | Omega(n) | Theta(n^2) | O(n^2) | Theta(n^2) |
+| Inserción | Omega(n) | Theta(n^2) | O(n^2) | Theta(n^2) |
+| Selección | Omega(n^2) | Theta(n^2) | O(n^2) | Theta(n^2) |
+| Quicksort | Omega(n log n) | Theta(n log n) | O(n^2) | Theta(n^2) |
+| Shellsort (Knuth) | Omega(n log n) | entre O(n^{4/3}) y O(n^{3/2}) | O(n^{3/2}) | sin Theta cerrado conocido |
+| Radix (LSD) | Omega(d(n+b)) | Theta(d(n+b)) | O(d(n+b)) | Theta(d(n+b)) |
+:::
+
+Selección es el único de los tres algoritmos cuadráticos donde el mejor caso también es Omega(n^2),
+porque el Reto 3 del Tema 1 ya demostró que su ciclo interno recorre el resto completo sin importar
+si el arreglo llega ordenado, así que su mejor y su peor caso son la misma clase, Theta(n^2) en los
+tres escenarios. Burbuja e inserción, en cambio, tienen un mejor caso Omega(n) real, la bandera de
+intercambio de burbuja y la condición de parada temprana del `while` de inserción, así que su
+clase varía según la entrada y solo el peor caso llega a Theta(n^2). Quicksort es el caso más
+interesante de la tabla, su comportamiento típico es Theta(n log n), la clase que confirmó el
+benchmark de tres mil elementos, pero su peor caso teórico sigue siendo Theta(n^2), la clase que
+confirmó el segundo benchmark sobre el arreglo ya ordenado con pivote fijo, y la distancia entre esas
+dos filas es exactamente lo que explica por qué ninguna implementación seria de quicksort deja el
+pivote en una posición predecible. Shellsort es el único algoritmo de la tabla sin una cota Theta
+cerrada para su caso promedio, ni Cormen ni Weiss dan una fórmula exacta, solo cotas O y Omega, una
+de las pocas preguntas abiertas de análisis de algoritmos que sigue apareciendo en un curso
+introductorio.
+
+## Cuando la intuición falla: constantes ocultas
+
+La notación asintótica describe qué pasa cuando n crece sin límite, pero descarta deliberadamente
+las constantes multiplicativas, y esas constantes sí importan para entradas pequeñas. Quicksort es
+Theta(n log n) en promedio y burbuja e inserción son Theta(n^2), así que la intuición dice que
+quicksort siempre debería ganar, pero cada partición de quicksort hace trabajo adicional que
+inserción no hace, elegir un pivote al azar, intercambiar posiciones, apilar dos llamadas
+recursivas, mientras que inserción es un único ciclo simple sin ninguna de esas operaciones extra.
+Para un arreglo de mil elementos esa diferencia de constantes es insignificante frente a la
+diferencia de clase, pero para un arreglo de diez o veinte elementos puede pesar más que la propia
+clase de complejidad.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafico de barras comparando el tiempo de insercion contra quicksort para arreglos de tamano 10, 20, 50 y 100, cada barra corresponde a 20000 repeticiones sobre el mismo arreglo. Para n=10 y n=20 la barra de insercion, en verde, es mas corta que la de quicksort, en gris, insercion gana. Para n=50 y n=100 la barra de quicksort, en verde, es mas corta que la de insercion, en gris, quicksort gana. El cruce ocurre entre n=20 y n=50" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Tiempo de 20 000 repeticiones: insercion contra quicksort segun n</text>
+  <text x="380" y="32" font-size="10" fill="#5b6876" text-anchor="middle">en verde, el algoritmo mas rapido para ese tamano de arreglo</text>
+  <line x1="60" y1="230" x2="700" y2="230" stroke="#cfd8e3" stroke-width="1.4"/>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="100" y="226" width="20" height="4"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="124" y="221" width="20" height="9"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="260" y="221" width="20" height="9"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="284" y="212" width="20" height="18"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="420" y="171" width="20" height="59"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="444" y="179" width="20" height="51"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="580" y="10" width="20" height="220"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="604" y="119" width="20" height="111"/></g>
+  <g text-anchor="middle" font-size="9" fill="#5b6876"><text x="110" y="219">0.06s</text><text x="134" y="214">0.14s</text><text x="270" y="214">0.15s</text><text x="294" y="205">0.29s</text><text x="430" y="164">0.97s</text><text x="454" y="172">0.83s</text><text x="590" y="7" transform="rotate(0)">3.62s</text><text x="614" y="112">1.82s</text></g>
+  <g text-anchor="middle" font-size="10.5" fill="#12324f" font-weight="600"><text x="122" y="248">n=10</text><text x="282" y="248">n=20</text><text x="442" y="248">n=50</text><text x="602" y="248">n=100</text></g>
+  <text x="380" y="270" font-size="10.5" fill="#0e6f6c" text-anchor="middle">el cruce ocurre entre n=20 y n=50: antes de ese punto insercion gana pese a ser O(n^2)</text>
+</svg>
+
+:::
+
+El siguiente script mide las dos funciones del Tema 1, `insercion` y `quicksort_aleatorio`, sobre
+el mismo arreglo generado al azar, repitiendo cada una veinte mil veces para que el tiempo total sea
+medible con precisión incluso en entradas de solo diez elementos.
+
+```python
+import random
+import time
+
+
+def insercion(a):
+    a = a[:]
+    for i in range(1, len(a)):
+        clave = a[i]
+        j = i - 1
+        while j >= 0 and a[j] > clave:
+            a[j + 1] = a[j]
+            j -= 1
+        a[j + 1] = clave
+    return a
+
+
+def quicksort_aleatorio(a):
+    a = a[:]
+    _quicksort(a, 0, len(a) - 1)
+    return a
+
+
+def _quicksort(a, bajo, alto):
+    while bajo < alto:
+        p = _particion(a, bajo, alto)
+        if p - bajo < alto - p:
+            _quicksort(a, bajo, p - 1)
+            bajo = p + 1
+        else:
+            _quicksort(a, p + 1, alto)
+            alto = p - 1
+
+
+def _particion(a, bajo, alto):
+    idx = random.randint(bajo, alto)
+    a[idx], a[alto] = a[alto], a[idx]
+    pivote = a[alto]
+    i = bajo - 1
+    for j in range(bajo, alto):
+        if a[j] <= pivote:
+            i += 1
+            a[i], a[j] = a[j], a[i]
+    a[i + 1], a[alto] = a[alto], a[i + 1]
+    return i + 1
+
+
+random.seed(42)
+REPETICIONES = 20000
+
+for n in (10, 20, 50, 100):
+    datos = [random.randint(0, 1000) for _ in range(n)]
+    inicio = time.perf_counter()
+    for _ in range(REPETICIONES):
+        insercion(datos)
+    tiempo_insercion = time.perf_counter() - inicio
+    inicio = time.perf_counter()
+    for _ in range(REPETICIONES):
+        quicksort_aleatorio(datos)
+    tiempo_quicksort = time.perf_counter() - inicio
+    print(f"n={n:4d}  insercion={tiempo_insercion:8.4f}s  quicksort={tiempo_quicksort:8.4f}s")
+```
+
+La salida real de esa ejecución fue esta:
+
+```
+n=  10  insercion=  0.0591s  quicksort=  0.1401s  quicksort/insercion=2.37x
+n=  20  insercion=  0.1519s  quicksort=  0.2928s  quicksort/insercion=1.93x
+n=  50  insercion=  0.9678s  quicksort=  0.8310s  quicksort/insercion=0.86x
+n= 100  insercion=  3.6152s  quicksort=  1.8240s  quicksort/insercion=0.50x
+```
+
+Para n = 10 y n = 20, insercion es más rápida que quicksort, casi el doble de rápida en n = 10, a
+pesar de pertenecer a la clase de peor complejidad asintótica de las dos. El cruce ocurre entre n =
+20 y n = 50, a partir de ahí quicksort se vuelve consistentemente más rápido y la ventaja crece con
+n, tal como predice la diferencia entre Theta(n^2) y Theta(n log n). El resultado exacto varía según
+el equipo donde se ejecute, pero la existencia de un punto de cruce no es un accidente de esta
+máquina, es la razón concreta detrás de una práctica real de las bibliotecas de ordenamiento de uso
+industrial, Java y Python cambian a un algoritmo distinto, más parecido a inserción, cuando el
+segmento que queda por ordenar se vuelve pequeño durante la propia recursión de quicksort, en vez de
+seguir dividiendo un segmento donde ya no vale la pena pagar el costo fijo de una partición.
+
+::: {.callout-tip}
+## Reto 5. Qué algoritmo conviene para un arreglo de tres elementos
+
+Con los datos del benchmark de arriba, alguien tiene que ordenar arreglos de exactamente tres
+elementos, muchas veces por segundo, dentro de un programa más grande. Antes de seguir, decide qué
+algoritmo conviene usar.
+
+<label><input type="checkbox"> Quicksort, porque su clase de complejidad Theta(n log n) siempre es mejor que la Theta(n^2) de insercion</label>
+<label><input type="checkbox"> Insercion, porque para arreglos tan pequenos las constantes de quicksort (eleccion de pivote, particion, recursion) pesan mas que la diferencia de clase, como confirma el benchmark para n=10</label>
+<label><input type="checkbox"> No importa, cualquiera de los dos tarda lo mismo para arreglos de tres elementos</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+La segunda es correcta. El benchmark midió a partir de n = 10 y ya mostró a insercion ganando con
+comodidad, y un arreglo de tres elementos está todavía más lejos del punto donde la clase de
+complejidad empieza a dominar, así que las constantes ocultas de quicksort pesan proporcionalmente
+más. Esta no es una curiosidad de laboratorio, es la razón de que Java y Python, además de otras
+bibliotecas de ordenamiento de uso extendido, apliquen inserción directamente cuando el segmento por
+ordenar cae por debajo de un umbral pequeño, en vez de seguir aplicando quicksort hasta el final. La
+notación asintótica sigue siendo la herramienta correcta para decidir qué algoritmo escalará mejor,
+pero un algoritmo O(n log n) no es automáticamente más rápido que uno O(n^2) para cualquier n, solo
+lo garantiza a partir de un n0, exactamente como exige la propia definición formal de O grande.
+:::
+
+## El trade-off espacio-tiempo: memoización
+
+La recursión ingenua de Fibonacci de la Unidad 1 sirve también para mostrar la otra cara de la
+eficiencia, no toda mejora de velocidad sale de cambiar de algoritmo, algunas salen de gastar más
+memoria a cambio de menos tiempo, una decisión que se llama *trade-off espacio-tiempo*.
+`fibonacci_ingenuo(n)` recalcula el mismo subproblema una y otra vez porque cada llamada se ramifica
+en dos llamadas más sin recordar nada de lo que ya calculó, así que `fibonacci(2)`, por ejemplo,
+termina calculándose varias veces dentro del mismo árbol de llamadas para un n moderado.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol de llamadas de fibonacci ingenuo de 4. La raiz fib(4) se llama a si misma como fib(3) a la izquierda y fib(2) a la derecha. La rama izquierda fib(3) se expande en fib(2) y fib(1). Ese fib(2) de la izquierda se expande en fib(1) y fib(0). La rama derecha de la raiz, fib(2), esta marcada con borde discontinuo y una nota porque es un subproblema identico al fib(2) que ya se calculo dentro de la rama izquierda, pero fibonacci ingenuo no lo recuerda y lo vuelve a expandir completo en fib(1) y fib(0)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Arbol de llamadas de fibonacci ingenuo(4): el mismo subproblema se repite</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="310" y="30" width="140" height="30" rx="6"/></g>
+  <text x="380" y="50" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">fib(4)</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.3"><line x1="340" y1="60" x2="200" y2="94"/><line x1="420" y1="60" x2="560" y2="94"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="130" y="94" width="140" height="30" rx="6"/></g>
+  <text x="200" y="114" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">fib(3)</text>
+  <g fill="#f5f7fa" stroke="#8fc9c5" stroke-dasharray="4 3"><rect x="490" y="94" width="140" height="30" rx="6"/></g>
+  <text x="560" y="114" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">fib(2), otra vez</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.2"><line x1="170" y1="124" x2="90" y2="156"/><line x1="240" y1="124" x2="310" y2="156"/><line x1="530" y1="124" x2="470" y2="156"/><line x1="600" y1="124" x2="670" y2="156"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="30" y="156" width="120" height="28" rx="5"/></g>
+  <text x="90" y="175" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(2)</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="250" y="156" width="120" height="28" rx="5"/></g>
+  <text x="310" y="175" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(1) = 1</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="410" y="156" width="120" height="28" rx="5"/></g>
+  <text x="470" y="175" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(1) = 1</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="610" y="156" width="120" height="28" rx="5"/></g>
+  <text x="670" y="175" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(0) = 0</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.1"><line x1="70" y1="184" x2="30" y2="212"/><line x1="110" y1="184" x2="150" y2="212"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="0" y="212" width="90" height="26" rx="5"/></g>
+  <text x="45" y="230" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(1) = 1</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="110" y="212" width="90" height="26" rx="5"/></g>
+  <text x="155" y="230" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(0) = 0</text>
+  <text x="560" y="260" font-size="10" fill="#0e6f6c" text-anchor="middle">con memoizacion, este nodo se reemplaza por una consulta O(1) a una tabla, sin volver a expandirse</text>
+</svg>
+
+:::
+
+```python
+def fibonacci_ingenuo(n):
+    if n <= 1:
+        return n
+    return fibonacci_ingenuo(n - 1) + fibonacci_ingenuo(n - 2)
+
+
+def fibonacci_memo(n, memo=None):
+    if memo is None:
+        memo = {}
+    if n <= 1:
+        return n
+    if n in memo:
+        return memo[n]
+    memo[n] = fibonacci_memo(n - 1, memo) + fibonacci_memo(n - 2, memo)
+    return memo[n]
+```
+
+```java
+public static long fibonacciIngenuo(int n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fibonacciIngenuo(n - 1) + fibonacciIngenuo(n - 2);
+}
+
+public static long fibonacciMemo(int n, Map<Integer, Long> memo) {
+    if (n <= 1) {
+        return n;
+    }
+    if (memo.containsKey(n)) {
+        return memo.get(n);
+    }
+    long resultado = fibonacciMemo(n - 1, memo) + fibonacciMemo(n - 2, memo);
+    memo.put(n, resultado);
+    return resultado;
+}
+```
+
+`fibonacci_memo` guarda en un diccionario cada resultado la primera vez que lo calcula, así que la
+segunda vez que el árbol de llamadas llegaría a pedir, por ejemplo, `fibonacci(2)`, la función
+consulta el diccionario en O(1) en vez de volver a expandir las dos llamadas recursivas de ese
+nodo. Esa tabla convierte el árbol exponencial en un recorrido donde cada valor de 0 a n se calcula
+una sola vez, O(n) en tiempo, a cambio de gastar O(n) de memoria extra para la tabla, el trade-off
+espacio-tiempo, cambiar memoria por velocidad.
+
+```
+n= 20  fibonacci(20)=      6765  ingenuo=  0.00104s  memo=0.0000093s  razon=     111.6x
+n= 28  fibonacci(28)=    317811  ingenuo=  0.04865s  memo=0.0000225s  razon=    2162.2x
+n= 32  fibonacci(32)=   2178309  ingenuo=  0.33861s  memo=0.0000225s  razon=   15049.4x
+```
+
+La razón entre los dos tiempos crece con n mucho más rápido que en el benchmark de quicksort contra
+inserción, porque ahí las dos clases de complejidad eran Theta(n log n) contra Theta(n^2), una
+diferencia polinomial, mientras que aquí la diferencia es Theta(2^n) contra Theta(n), una
+exponencial contra una lineal, y esa es justamente la clase de brecha que ninguna constante oculta
+alcanza a compensar, ni siquiera para valores de n moderados como 28 o 32. El tiempo de la versión
+memoizada ni siquiera creció de forma perceptible entre n = 28 y n = 32 en esta medición, porque
+O(n) sobre esas magnitudes es una cantidad de trabajo demasiado pequeña para que el reloj del
+sistema la distinga con claridad, mientras que la versión ingenua sí muestra el crecimiento
+exponencial a simple vista.
+
+::: {.callout-tip}
+## Reto 6. Qué pasaría con fibonacci(40)
+
+Con la razón que muestra la tabla de arriba, alguien decide llamar a `fibonacci_ingenuo(40)` en vez
+de `fibonacci_ingenuo(32)`. Antes de seguir, decide aproximadamente qué tan distinto sería el
+tiempo, sabiendo que cada incremento de 1 en n multiplica aproximadamente por 1.618 el número de
+llamadas de la versión ingenua.
+
+<label><input type="checkbox"> Un poco mas lento, proporcional a la diferencia de 8 en el valor de n</label>
+<label><input type="checkbox"> Mucho mas lento, varias decenas de veces mas que fibonacci_ingenuo(32), porque cada n adicional multiplica el trabajo en vez de sumarle una cantidad fija</label>
+<label><input type="checkbox"> Igual de rapido, porque fibonacci_ingenuo(32) ya tardo menos de medio segundo, asi que el margen sobra</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+La segunda es correcta. Multiplicar por 1.618 aproximadamente cada incremento de 1 en n, elevado a
+la octava potencia para llegar de 32 a 40, da un factor cercano a 1.618^8, unas 47 veces más
+trabajo, así que un tiempo de 0.34 segundos en n = 32 se convertiría en un tiempo cercano a 16
+segundos en n = 40, y seguiría multiplicándose por ese mismo factor con cada n adicional. Esa es la
+diferencia entre crecer sumando y crecer multiplicando, lo que hace que una función O(2^n) se vuelva
+impráctica con entradas todavía modestas, mientras que `fibonacci_memo(40)` seguiría tardando una
+fracción de milisegundo, porque su tiempo crece de forma lineal, no exponencial.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] Por qué la complejidad computacional se mide contando operaciones en función de n en vez de
+      cronometrar, y qué explica que dos equipos midan tiempos distintos para el mismo algoritmo
+- [ ] Las definiciones formales de O, Omega y Theta, con sus constantes c y n0, y la diferencia entre
+      una cota superior, una cota inferior y una cota ajustada
+- [ ] Las seis clases de complejidad comunes, en orden de menor a mayor costo, con un ejemplo real
+      del curso para cada una
+- [ ] Cómo contar operaciones en bucles anidados independientes contra dependientes, y cómo resolver
+      una ecuación de recurrencia con el método del árbol de recursión
+- [ ] La tabla definitiva de mejor, promedio y peor caso de los seis algoritmos de ordenamiento,
+      expresada con notación asintótica precisa
+- [ ] Por qué un algoritmo con mejor clase asintótica puede perder frente a uno peor en entradas
+      pequeñas, por constantes ocultas, y qué es el trade-off espacio-tiempo de la memoización
+:::
+
+## Lo que sigue
+
+El Tema 3 de esta unidad retoma la clase `GrafoPonderado` de la Unidad 3 para resolver caminos más
+cortos con el algoritmo de Dijkstra y árboles de expansión mínima con Prim y con Kruskal, tres
+algoritmos que se van a analizar con exactamente el mismo vocabulario de este tema, notación O,
+ecuaciones de recurrencia cuando aplique y comparación de mejor y peor caso. El Tema 4 cierra la
+unidad y el curso con los algoritmos de búsqueda, secuencial, binaria y secuencial con índices,
+donde la búsqueda binaria retoma directamente la recurrencia T(n) = T(n/2) + O(1) que ya se resolvió
+en el Reto 4 de esta guía.
+
+## Recursos
+
+- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
+  sobre el crecimiento de funciones, con las definiciones formales de O, Omega y Theta, y el
+  capítulo sobre recurrencias, con el método del árbol de recursión y el teorema maestro.
+- Weiss, M. A. *Data Structures and Algorithm Analysis.* Capítulo introductorio de análisis de
+  algoritmos, con la notación asintótica aplicada a ejemplos de código y la discusión sobre la
+  falta de una cota Theta cerrada para el caso promedio de shellsort.
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo sobre análisis de
+  algoritmos, con el conteo de operaciones en bucles y la resolución de recurrencias por sustitución.
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. Los tres
+benchmarks, la tabla de crecimiento y los conteos de los bucles anidados son ejecuciones reales
+hechas durante la preparación del material; el resultado exacto varía según el equipo que lo
+ejecute.
+:::

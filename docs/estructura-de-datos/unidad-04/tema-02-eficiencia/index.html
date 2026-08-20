@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Oscar Leonel Sánchez Conde">
+
+<title>Tema 2. Eficiencia y comparación de algoritmos – Clases María Cano 2026-02</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../estilos/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-8713356167177fd77be9341a95314561.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-9d905b06f1e8b96cef5de7dac512495c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No se han encontrado resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-04/index.html">Unidad 4. Métodos de ordenamiento, búsqueda y eficiencia</a></li><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-04/tema-02-eficiencia/index.html">Tema 2. Eficiencia y comparación de algoritmos</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../../../">Clases María Cano 2026-02</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Presentación del curso</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 1. Introducción a las estructuras de datos</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-01-generalidades-algoritmos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Generalidades de algoritmos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-02-poo/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. Paradigma de programación orientada a objetos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-03-recursividad/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Recursividad e implementación</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-04-estrategias/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 4. Estrategias de programación</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 2. Estructuras fijas</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/tema-01-vectores-arreglos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Vectores o arreglos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/tema-02-matrices/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. La fila se convierte en cuadrícula</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/tema-03-pilas-colas-vectores/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Pilas y colas usando vectores</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 3. Estructuras dinámicas</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/tema-01-listas-enlazadas/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Listas simples, dobles y circulares</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/tema-02-pilas-colas-listas/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. Pilas y colas usando listas</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/tema-03-arboles-binarios-busqueda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Árboles binarios de búsqueda</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/tema-04-arboles-avl/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 4. Árboles 2-3 y árboles AVL</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/tema-05-grafos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 5. Grafos</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 4. Métodos de ordenamiento, búsqueda y eficiencia</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-04/tema-01-ordenamiento/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Algoritmos de ordenamiento</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-04/tema-02-eficiencia/index.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Tema 2. Eficiencia y comparación de algoritmos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-04/tema-03-caminos-mas-cortos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Caminos más cortos y árboles de expansión mínima</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-04/tema-04-busqueda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 4. Algoritmos de búsqueda</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta guía</h2>
+   
+  <ul>
+  <li><a href="#contar-operaciones-en-vez-de-cronometrar" id="toc-contar-operaciones-en-vez-de-cronometrar" class="nav-link active" data-scroll-target="#contar-operaciones-en-vez-de-cronometrar"><span class="header-section-number">1</span> Contar operaciones en vez de cronometrar</a></li>
+  <li><a href="#notación-asintótica-cotas-superior-inferior-y-ajustada" id="toc-notación-asintótica-cotas-superior-inferior-y-ajustada" class="nav-link" data-scroll-target="#notación-asintótica-cotas-superior-inferior-y-ajustada"><span class="header-section-number">2</span> Notación asintótica: cotas superior, inferior y ajustada</a></li>
+  <li><a href="#clases-de-complejidad-de-la-más-rápida-a-la-más-lenta" id="toc-clases-de-complejidad-de-la-más-rápida-a-la-más-lenta" class="nav-link" data-scroll-target="#clases-de-complejidad-de-la-más-rápida-a-la-más-lenta"><span class="header-section-number">3</span> Clases de complejidad: de la más rápida a la más lenta</a></li>
+  <li><a href="#contar-operaciones-en-código-real-bucles-anidados" id="toc-contar-operaciones-en-código-real-bucles-anidados" class="nav-link" data-scroll-target="#contar-operaciones-en-código-real-bucles-anidados"><span class="header-section-number">4</span> Contar operaciones en código real: bucles anidados</a></li>
+  <li><a href="#ecuaciones-de-recurrencia-cuando-el-algoritmo-se-llama-a-sí-mismo" id="toc-ecuaciones-de-recurrencia-cuando-el-algoritmo-se-llama-a-sí-mismo" class="nav-link" data-scroll-target="#ecuaciones-de-recurrencia-cuando-el-algoritmo-se-llama-a-sí-mismo"><span class="header-section-number">5</span> Ecuaciones de recurrencia: cuando el algoritmo se llama a sí mismo</a></li>
+  <li><a href="#mejor-promedio-y-peor-caso-la-tabla-definitiva" id="toc-mejor-promedio-y-peor-caso-la-tabla-definitiva" class="nav-link" data-scroll-target="#mejor-promedio-y-peor-caso-la-tabla-definitiva"><span class="header-section-number">6</span> Mejor, promedio y peor caso: la tabla definitiva</a></li>
+  <li><a href="#cuando-la-intuición-falla-constantes-ocultas" id="toc-cuando-la-intuición-falla-constantes-ocultas" class="nav-link" data-scroll-target="#cuando-la-intuición-falla-constantes-ocultas"><span class="header-section-number">7</span> Cuando la intuición falla: constantes ocultas</a></li>
+  <li><a href="#el-trade-off-espacio-tiempo-memoización" id="toc-el-trade-off-espacio-tiempo-memoización" class="nav-link" data-scroll-target="#el-trade-off-espacio-tiempo-memoización"><span class="header-section-number">8</span> El trade-off espacio-tiempo: memoización</a></li>
+  <li><a href="#lo-que-te-llevas-de-hoy" id="toc-lo-que-te-llevas-de-hoy" class="nav-link" data-scroll-target="#lo-que-te-llevas-de-hoy"><span class="header-section-number">9</span> Lo que te llevas de hoy</a></li>
+  <li><a href="#lo-que-sigue" id="toc-lo-que-sigue" class="nav-link" data-scroll-target="#lo-que-sigue"><span class="header-section-number">10</span> Lo que sigue</a></li>
+  <li><a href="#recursos" id="toc-recursos" class="nav-link" data-scroll-target="#recursos"><span class="header-section-number">11</span> Recursos</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-04/index.html">Unidad 4. Métodos de ordenamiento, búsqueda y eficiencia</a></li><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-04/tema-02-eficiencia/index.html">Tema 2. Eficiencia y comparación de algoritmos</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Tema 2. Eficiencia y comparación de algoritmos</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Autor/a</div>
+    <div class="quarto-title-meta-contents">
+             <p>Oscar Leonel Sánchez Conde </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Fecha de publicación</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">19 de agosto de 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="ficha">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 88%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Unidad</td>
+<td>Unidad 4. Métodos de ordenamiento, búsqueda y eficiencia</td>
+</tr>
+<tr class="even">
+<td>Tema</td>
+<td>Tema 2. Eficiencia y comparación de algoritmos</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>El Tema 1 midió seis algoritmos de ordenamiento sobre el mismo arreglo de siete números y después sobre tres mil números generados al azar, y el resultado más llamativo de esa medición fue la brecha entre quicksort, que ordenó los tres mil elementos en cuatro milésimas de segundo, y burbuja, que tardó noventa y dos veces más sobre la misma entrada. Esa brecha se explicó de forma intuitiva, quicksort divide el problema en mitades mientras que burbuja compara pareja por pareja sin dividir nada, y la palabra intuitiva es justo el límite que cierra este tema. La Unidad 3 dejó otras dos pistas del mismo tipo sin formalizar, un árbol binario de búsqueda desbalanceado degrada su búsqueda de un puñado de comparaciones a recorrer la lista entera, y una recursión sin caso base correcto agota la pila de llamadas antes de terminar. Este tema construye el lenguaje matemático que explica los tres episodios con precisión, la complejidad computacional y la notación asintótica, y lo aplica de vuelta sobre los mismos seis algoritmos del Tema 1 para dejar la tabla comparativa definitiva del curso.</p>
+<section id="contar-operaciones-en-vez-de-cronometrar" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="contar-operaciones-en-vez-de-cronometrar"><span class="header-section-number">1</span> Contar operaciones en vez de cronometrar</h2>
+<p>Cronometrar un programa parece la forma más directa de saber qué tan eficiente es, pero el propio Tema 1 ya avisó que ese número cambia de equipo a equipo, y también cambia entre dos ejecuciones en la misma máquina según qué otros programas estén corriendo en ese momento. Un cronómetro mide segundos de reloj, y los segundos de reloj dependen de la velocidad del procesador, de cuánta memoria caché tiene disponible el programa y de decisiones del compilador o del intérprete que nada tienen que ver con el algoritmo en sí. La complejidad computacional resuelve ese problema cambiando la pregunta, en vez de cuántos segundos tarda un algoritmo, cuenta cuántas operaciones elementales ejecuta, comparaciones, asignaciones, sumas, para una entrada de tamaño <em>n</em>, y expresa ese conteo como una función T(n) que no depende de en qué máquina se ejecute el programa.</p>
+<p>Burbuja sobre el arreglo de siete elementos del Tema 1 hace siempre el mismo número de comparaciones para el mismo arreglo de entrada, sin importar si corre en un equipo nuevo o en uno de varios años, porque el número de comparaciones lo fija la estructura del algoritmo, dos ciclos anidados que recorren el arreglo, no la velocidad del hardware que las ejecuta. Lo que sí cambia de equipo a equipo es cuánto tiempo de reloj toma cada una de esas comparaciones, así que dos máquinas distintas dan tiempos distintos para el mismo T(n). Por eso la complejidad computacional se define siempre en función del tamaño de la entrada, y por eso las próximas secciones miden T(n) contando operaciones, con el tiempo de reloj real usado únicamente como una confirmación práctica de que el conteo teórico predijo bien lo que pasó, tal como ya se hizo en los dos benchmarks del Tema 1.</p>
+</section>
+<section id="notación-asintótica-cotas-superior-inferior-y-ajustada" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="notación-asintótica-cotas-superior-inferior-y-ajustada"><span class="header-section-number">2</span> Notación asintótica: cotas superior, inferior y ajustada</h2>
+<p>Contar operaciones exactas es tedioso e innecesario, lo que de verdad importa es cómo crece T(n) cuando <em>n</em> se hace grande, no si son 3n+2 o 3n+7 comparaciones. La notación asintótica captura ese crecimiento ignorando constantes y términos de menor orden, y la ciencia de la computación usa tres símbolos con definiciones matemáticas precisas para describir tres relaciones distintas entre una función T(n) y una función de referencia g(n), casi siempre una potencia de <em>n</em> sencilla como n, n^2 o log n.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 545" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres definiciones de notacion asintotica sobre el mismo eje horizontal de n. Fila superior O grande: la curva f(n) puede hacer lo que quiera antes de n0, pero desde n0 en adelante se mantiene siempre por debajo de la linea c por g(n), la region sombreada marca donde la cota debe cumplirse. Fila intermedia Omega: desde n0 en adelante f(n) se mantiene siempre por encima de la linea c por g(n). Fila inferior Theta: desde n0 en adelante f(n) queda atrapada entre dos lineas, c1 por g(n) abajo y c2 por g(n) arriba" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">O, Omega y Theta: tres formas de acotar el crecimiento de f(n)</text> <text x="380" y="35" font-size="10.5" fill="#5b6876" text-anchor="middle">f(n) es la curva solida en verde, c por g(n) es la referencia discontinua en azul, n0 marca donde empieza a exigirse la cota</text> <rect x="290" y="45" width="400" height="130" fill="#e4f2f1" opacity="0.45"></rect> <line x1="290" y1="45" x2="290" y2="175" stroke="#5b6876" stroke-width="1.2" stroke-dasharray="4 3"></line> <line x1="60" y1="175" x2="700" y2="175" stroke="#cfd8e3" stroke-width="1.2"></line> <path d="M60,145 L690,55" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="6 4"></path> <path d="M90,100 L150,90 L230,75 L290,112 L390,105 L490,95 L590,80 L690,65" fill="none" stroke="#0e6f6c" stroke-width="2"></path> <text x="290" y="188" font-size="10" fill="#5b6876" text-anchor="middle">n0</text> <text x="705" y="58" font-size="10.5" fill="#8fb3d1" text-anchor="start">c * g(n)</text> <text x="695" y="72" font-size="10.5" fill="#0e6f6c" text-anchor="end">f(n)</text> <text x="80" y="205" font-size="11" font-weight="600" fill="#12324f">f(n) es O(g(n))</text> <text x="80" y="218" font-size="9.5" fill="#5b6876">existen c &gt; 0 y n0 tales que para todo n &gt;= n0: 0 &lt;= f(n) &lt;= c * g(n)</text> <rect x="290" y="245" width="400" height="130" fill="#e4f2f1" opacity="0.45"></rect> <line x1="290" y1="245" x2="290" y2="375" stroke="#5b6876" stroke-width="1.2" stroke-dasharray="4 3"></line> <line x1="60" y1="375" x2="700" y2="375" stroke="#cfd8e3" stroke-width="1.2"></line> <path d="M60,345 L690,255" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="6 4"></path> <path d="M90,344 L150,330 L230,322 L290,300 L390,280 L490,265 L590,250 L690,235" fill="none" stroke="#0e6f6c" stroke-width="2"></path> <text x="290" y="388" font-size="10" fill="#5b6876" text-anchor="middle">n0</text> <text x="705" y="258" font-size="10.5" fill="#8fb3d1" text-anchor="start">c * g(n)</text> <text x="695" y="232" font-size="10.5" fill="#0e6f6c" text-anchor="end">f(n)</text> <text x="80" y="405" font-size="11" font-weight="600" fill="#12324f">f(n) es Omega(g(n))</text> <text x="80" y="418" font-size="9.5" fill="#5b6876">existen c &gt; 0 y n0 tales que para todo n &gt;= n0: 0 &lt;= c * g(n) &lt;= f(n)</text> <rect x="290" y="445" width="400" height="60" fill="#e4f2f1" opacity="0.45"></rect> <line x1="290" y1="445" x2="290" y2="505" stroke="#5b6876" stroke-width="1.2" stroke-dasharray="4 3"></line> <path d="M60,430 L690,400" fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="6 4"></path> <path d="M60,455 L690,425" fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="2 3"></path> <path d="M90,440 L150,435 L230,433 L290,431 L390,427 L490,422 L590,417 L690,412" fill="none" stroke="#0e6f6c" stroke-width="2"></path> <text x="290" y="518" font-size="10" fill="#5b6876" text-anchor="middle">n0</text> <text x="705" y="403" font-size="9.5" fill="#8fb3d1" text-anchor="start">c2 * g(n)</text> <text x="705" y="428" font-size="9.5" fill="#8fb3d1" text-anchor="start">c1 * g(n)</text> <text x="80" y="520" font-size="11" font-weight="600" fill="#12324f">f(n) es Theta(g(n))</text> <text x="80" y="533" font-size="9.5" fill="#5b6876">existen c1, c2 &gt; 0 y n0 tales que para todo n &gt;= n0: c1 * g(n) &lt;= f(n) &lt;= c2 * g(n)</text>
+</svg>
+</div>
+<p>La definición de O grande, la más usada de las tres, dice que f(n) es O(g(n)) si existen una constante c mayor que cero y un umbral n0 tales que, para todo n mayor o igual a n0, se cumple 0 menor o igual que f(n) menor o igual que c multiplicado por g(n). En palabras simples, a partir de cierto tamaño de entrada, f(n) nunca crece más rápido que c veces g(n), así que O(g(n)) describe una <em>cota superior</em>, una garantía de que el algoritmo no será peor que eso, aunque en la práctica pueda comportarse mejor para entradas concretas. Omega funciona al revés, f(n) es Omega(g(n)) si existen c mayor que cero y n0 tales que para todo n mayor o igual a n0 se cumple 0 menor o igual que c multiplicado por g(n) menor o igual que f(n), una <em>cota inferior</em> que garantiza que el algoritmo no será mejor que eso. Theta combina las dos, f(n) es Theta(g(n)) si existen dos constantes c1 y c2 mayores que cero y un n0 tales que para todo n mayor o igual a n0 se cumple c1 multiplicado por g(n) menor o igual que f(n) menor o igual que c2 multiplicado por g(n), lo que significa que g(n) describe el crecimiento real de f(n) por arriba y por abajo al mismo tiempo, una <em>cota ajustada</em>. Cuando una guía o un libro de texto escribe “el algoritmo es O(n^2)” sin más matices, casi siempre quiere decir que también es Theta(n^2), pero formalmente O grande solo promete el techo, no descarta que el algoritmo sea en realidad más rápido.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 1. Cuál relación aplica
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La función f(n) = 3n^2 + 5n representa el número de operaciones de un algoritmo, y se compara contra g(n) = n^2. Antes de seguir, decide cuáles de las tres relaciones, O, Omega o Theta, se cumplen entre f(n) y g(n).</p>
+<p><label><input type="checkbox"> Solo O(n^2), porque 3n^2 + 5n crece mas rapido que n^2 y nunca podria tener una cota inferior con la misma g(n)</label> <label><input type="checkbox"> Las tres, O(n^2), Omega(n^2) y por lo tanto Theta(n^2), porque el termino 5n queda dominado por 3n^2 desde un n0 pequeño</label> <label><input type="checkbox"> Ninguna de las tres, porque f(n) tiene dos terminos y g(n) solo tiene uno, asi que nunca son comparables</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 1
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La segunda es correcta. Para O(n^2), basta tomar c = 8 y n0 = 1, porque desde n = 1 en adelante 3n^2 + 5n es siempre menor o igual que 8n^2, ya que 5n es menor o igual que 5n^2 para todo n mayor o igual a 1. Para Omega(n^2), basta tomar c = 3 y n0 = 1, porque 3n^2 + 5n es siempre mayor o igual que 3n^2, el término 5n solo suma, nunca resta. Como valen las dos, O(n^2) y Omega(n^2), la definición de Theta se cumple automáticamente con c1 = 3 y c2 = 8, y n0 = 1. Esta es la razón práctica por la que, al analizar código real, casi nunca hace falta calcular T(n) término por término, basta con identificar el término que domina cuando n crece, en este caso 3n^2, y descartar los términos de menor orden y las constantes multiplicativas.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="clases-de-complejidad-de-la-más-rápida-a-la-más-lenta" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="clases-de-complejidad-de-la-más-rápida-a-la-más-lenta"><span class="header-section-number">3</span> Clases de complejidad: de la más rápida a la más lenta</h2>
+<p>Con la notación ya definida, la pregunta práctica es qué formas de g(n) aparecen una y otra vez al analizar algoritmos reales. Existe un puñado de clases que cubren casi todo lo que vas a encontrar en este curso, y cada una crece a una velocidad cualitativamente distinta de la anterior, tan distinta que un algoritmo de una clase peor puede volverse impráctico mucho antes de que la entrada llegue a ser realmente grande.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafica esquematica del crecimiento de seis clases de complejidad segun n crece de 0 a 32. O(1) es una linea plana en la parte baja. O(log n) crece muy despacio, casi plana. O(n) es una diagonal recta. O(n log n) queda apenas por encima de la diagonal. O(n cuadrado) es una curva que se empina con fuerza hacia el final. O(2 elevado a n) empieza igual de bajo que las demas pero se dispara verticalmente y sale de la escala del grafico alrededor de n=16, marcado con una linea punteada de aviso. El eje vertical no esta a escala real, es una comparacion cualitativa de forma" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Seis clases de complejidad, de O(1) a O(2^n)</text> <text x="380" y="32" font-size="10" fill="#5b6876" text-anchor="middle">eje vertical esquematico, no a escala real: O(2^n) haria illegibles a las demas curvas con la misma regla</text> <line x1="60" y1="350" x2="700" y2="350" stroke="#cfd8e3" stroke-width="1.4"></line> <line x1="60" y1="350" x2="60" y2="25" stroke="#cfd8e3" stroke-width="1.4"></line> <line x1="225" y1="350" x2="225" y2="356" stroke="#5b6876" stroke-width="1"></line> <line x1="380" y1="350" x2="380" y2="356" stroke="#5b6876" stroke-width="1"></line> <line x1="690" y1="350" x2="690" y2="356" stroke="#5b6876" stroke-width="1"></line> <text x="225" y="368" font-size="9.5" fill="#5b6876" text-anchor="middle">n=8</text> <text x="380" y="368" font-size="9.5" fill="#5b6876" text-anchor="middle">n=16</text> <text x="690" y="368" font-size="9.5" fill="#5b6876" text-anchor="middle">n=32</text> <text x="380" y="392" font-size="11" fill="#12324f" text-anchor="middle">n, tamano de la entrada</text> <path d="M70,335 L690,335" fill="none" stroke="#5b6876" stroke-width="2"></path> <path d="M70,335 Q380,300 690,285" fill="none" stroke="#8fb3d1" stroke-width="2"></path> <path d="M70,335 L690,150" fill="none" stroke="#12324f" stroke-width="2"></path> <path d="M70,335 Q450,220 690,95" fill="none" stroke="#12324f" stroke-width="2" stroke-dasharray="7 4"></path> <path d="M70,335 Q500,250 690,45" fill="none" stroke="#0e6f6c" stroke-width="2"></path> <path d="M70,335 C250,330 330,300 360,175 C372,120 378,60 383,28" fill="none" stroke="#0e6f6c" stroke-width="2.4" stroke-dasharray="6 3"></path> <line x1="383" y1="28" x2="383" y2="350" stroke="#0e6f6c" stroke-width="1" stroke-dasharray="2 3" opacity="0.5"></line> <text x="700" y="339" font-size="10" fill="#5b6876" text-anchor="start">O(1)</text> <text x="700" y="289" font-size="10" fill="#8fb3d1" text-anchor="start">O(log n)</text> <text x="700" y="154" font-size="10" fill="#12324f" text-anchor="start">O(n)</text> <text x="700" y="99" font-size="10" fill="#12324f" text-anchor="start">O(n log n)</text> <text x="700" y="49" font-size="10" fill="#0e6f6c" text-anchor="start">O(n^2)</text> <text x="386" y="24" font-size="9.5" fill="#0e6f6c" text-anchor="start">O(2^n) sale de la escala en n=16</text>
+</svg>
+</div>
+<p>Cada clase de la lista siguiente ya apareció en el curso, sin que en su momento se le pusiera todavía el nombre formal de su clase de complejidad.</p>
+<ul>
+<li><strong>O(1), tiempo constante.</strong> El acceso a un arreglo por índice de la Unidad 2, <code>arreglo[i]</code>, hace el mismo trabajo sin importar si el arreglo tiene diez o diez millones de elementos, porque la dirección de memoria de cualquier casilla se calcula con una sola multiplicación y una suma.</li>
+<li><strong>O(log n), tiempo logarítmico.</strong> La búsqueda en un árbol binario de búsqueda balanceado de la Unidad 3 descarta la mitad del árbol restante en cada comparación, así que el número de niveles que recorre crece muchísimo más despacio que el número de nodos del árbol, log base 2 de n en vez de n.</li>
+<li><strong>O(n), tiempo lineal.</strong> Recorrer una lista enlazada de la Unidad 3 de principio a fin visita cada nodo exactamente una vez, así que el trabajo crece en proporción directa al tamaño de la lista.</li>
+<li><strong>O(n log n), linealítmico.</strong> Quicksort y shellsort del Tema 1 de esta unidad combinan un recorrido lineal con una división del problema que se repite log n veces, la combinación que hace que ordenar tres mil números tome una fracción de segundo en vez de fracciones de minuto.</li>
+<li><strong>O(n^2), tiempo cuadrático.</strong> Burbuja, inserción y selección del Tema 1 comparan cada elemento contra buena parte de los demás, un ciclo anidado dentro de otro ciclo del mismo tamaño, la razón por la que burbuja tardó noventa y dos veces más que quicksort en el benchmark de tres mil números.</li>
+<li><strong>O(2^n), tiempo exponencial.</strong> La recursión ingenua de Fibonacci de la Unidad 1, Tema 3, vuelve a calcular el mismo subproblema una y otra vez en ramas distintas del árbol de llamadas, y esa duplicación crece doblándose en cada nivel adicional de n, la clase de complejidad más costosa de las seis y la única de este tema que se vuelve impráctica con entradas todavía pequeñas.</li>
+</ul>
+<p>La siguiente tabla deja los números exactos detrás del esquema del diagrama, calculados sin aproximar, para que la diferencia entre clases deje de ser una intuición y se vuelva una cifra concreta.</p>
+<div class="tabla-ancha">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>n</th>
+<th>O(1)</th>
+<th>O(log n)</th>
+<th>O(n)</th>
+<th>O(n log n)</th>
+<th>O(n^2)</th>
+<th>O(2^n)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>1</td>
+<td>0.00</td>
+<td>1</td>
+<td>0.00</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>1</td>
+<td>1.00</td>
+<td>2</td>
+<td>2.00</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td>1</td>
+<td>2.00</td>
+<td>4</td>
+<td>8.00</td>
+<td>16</td>
+<td>16</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>1</td>
+<td>3.00</td>
+<td>8</td>
+<td>24.00</td>
+<td>64</td>
+<td>256</td>
+</tr>
+<tr class="odd">
+<td>16</td>
+<td>1</td>
+<td>4.00</td>
+<td>16</td>
+<td>64.00</td>
+<td>256</td>
+<td>65 536</td>
+</tr>
+<tr class="even">
+<td>32</td>
+<td>1</td>
+<td>5.00</td>
+<td>32</td>
+<td>160.00</td>
+<td>1024</td>
+<td>4 294 967 296</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Entre n = 16 y n = 32, apenas al doblar el tamaño de la entrada, O(n^2) pasa de 256 a 1024, cuatro veces más, mientras que O(2^n) pasa de sesenta y cinco mil a más de cuatro mil millones. Ningún procesador real termina esa segunda columna en un tiempo razonable si n sigue creciendo, y esa es la diferencia cualitativa que separa una clase polinomial, donde n aparece en la base de una potencia, de una clase exponencial, donde n aparece en el exponente.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 2. Ordenar clases por su costo relativo
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Un algoritmo hace 2n comparaciones y otro hace n^2 / 100 comparaciones. Para n = 1000, el primero hace 2000 comparaciones y el segundo hace 10 000, así que el segundo parece peor en ese punto. Antes de seguir, decide qué pasa si n crece hasta 100 000.</p>
+<p><label><input type="checkbox"> El primero sigue siendo peor, porque ya lo era en n=1000 y esa relacion no cambia con n</label> <label><input type="checkbox"> El segundo se vuelve muchisimo peor, porque pertenece a la clase O(n^2) y esa clase termina superando a cualquier O(n) sin importar la constante que la multiplique</label> <label><input type="checkbox"> Los dos crecen igual, porque las constantes 2 y 1/100 ya fijaron la relacion para siempre</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 2
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La segunda es correcta. En n = 100 000, el primer algoritmo hace 200 000 comparaciones, mientras que el segundo hace 100 000 000, quinientas veces más, y esa brecha sigue abriéndose sin límite a medida que n crece. Este es exactamente el contenido de la definición formal de O grande, la constante c y el punto n0 explican por qué en n = 1000 el algoritmo O(n^2) todavía parecía peor por poco, pero a partir de cierto n0 la clase de complejidad domina por completo sobre cualquier constante multiplicativa. La clase de complejidad describe el comportamiento asintótico, el que se observa cuando n crece sin límite, no el comportamiento en un punto aislado.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="contar-operaciones-en-código-real-bucles-anidados" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="contar-operaciones-en-código-real-bucles-anidados"><span class="header-section-number">4</span> Contar operaciones en código real: bucles anidados</h2>
+<p>Contar operaciones en un bucle simple es directo, un ciclo que recorre las n posiciones de un arreglo una sola vez hace n comparaciones, O(n). La parte que exige más cuidado son los bucles anidados, porque el costo depende de si el ciclo interno recorre siempre el mismo rango, sin importar en qué vuelta del ciclo externo está, o si ese rango cambia según el ciclo externo, como ya pasó sin que se le pusiera nombre en el ciclo interno de <code>seleccion</code> del Tema 1.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos cuadriculas de 4 por 4 para n=4. La cuadricula izquierda, bucle independiente, tiene las 16 celdas sombreadas porque el ciclo interno j recorre siempre las 4 posiciones sin importar el valor de i. La cuadricula derecha, bucle dependiente, solo tiene sombreadas en verde las celdas donde j es mayor que i, 6 de las 16, porque el ciclo interno arranca en i+1 y se acorta a medida que i crece" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cuantas celdas visita un bucle anidado, para n=4</text> <text x="195" y="34" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">independiente: for j in range(n)</text> <text x="565" y="34" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">dependiente: for j in range(i+1, n)</text> <g text-anchor="middle" font-size="9.5" fill="#5b6876"><text x="146" y="58">j=0</text><text x="178" y="58">j=1</text><text x="210" y="58">j=2</text><text x="242" y="58">j=3</text></g> <g text-anchor="middle" font-size="9.5" fill="#5b6876"><text x="120" y="80">i=0</text><text x="120" y="112">i=1</text><text x="120" y="144">i=2</text><text x="120" y="176">i=3</text></g> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="130" y="66" width="32" height="32"></rect><rect x="162" y="66" width="32" height="32"></rect><rect x="194" y="66" width="32" height="32"></rect><rect x="226" y="66" width="32" height="32"></rect><rect x="130" y="98" width="32" height="32"></rect><rect x="162" y="98" width="32" height="32"></rect><rect x="194" y="98" width="32" height="32"></rect><rect x="226" y="98" width="32" height="32"></rect><rect x="130" y="130" width="32" height="32"></rect><rect x="162" y="130" width="32" height="32"></rect><rect x="194" y="130" width="32" height="32"></rect><rect x="226" y="130" width="32" height="32"></rect><rect x="130" y="162" width="32" height="32"></rect><rect x="162" y="162" width="32" height="32"></rect><rect x="194" y="162" width="32" height="32"></rect><rect x="226" y="162" width="32" height="32"></rect></g> <g text-anchor="middle" font-size="9.5" fill="#5b6876"><text x="516" y="58">j=0</text><text x="548" y="58">j=1</text><text x="580" y="58">j=2</text><text x="612" y="58">j=3</text></g> <g text-anchor="middle" font-size="9.5" fill="#5b6876"><text x="490" y="80">i=0</text><text x="490" y="112">i=1</text><text x="490" y="144">i=2</text><text x="490" y="176">i=3</text></g> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="500" y="66" width="32" height="32"></rect><rect x="500" y="98" width="32" height="32"></rect><rect x="532" y="98" width="32" height="32"></rect><rect x="500" y="130" width="32" height="32"></rect><rect x="532" y="130" width="32" height="32"></rect><rect x="596" y="130" width="32" height="32"></rect><rect x="500" y="162" width="32" height="32"></rect><rect x="532" y="162" width="32" height="32"></rect><rect x="564" y="162" width="32" height="32"></rect><rect x="596" y="162" width="32" height="32"></rect></g> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="532" y="66" width="32" height="32"></rect><rect x="564" y="66" width="32" height="32"></rect><rect x="596" y="66" width="32" height="32"></rect><rect x="564" y="98" width="32" height="32"></rect><rect x="596" y="98" width="32" height="32"></rect><rect x="628" y="130" width="32" height="32"></rect></g> <text x="195" y="212" font-size="10.5" fill="#0e6f6c" text-anchor="middle">16 celdas visitadas: n^2, sin importar el contenido del arreglo</text> <text x="565" y="212" font-size="10.5" fill="#0e6f6c" text-anchor="middle">6 celdas visitadas: n(n-1)/2, el rango de j se achica con cada i</text> <text x="380" y="238" font-size="10" fill="#5b6876" text-anchor="middle">celdas en verde: cuando j &gt; i, el mismo patron triangular del ciclo interno de seleccion en el Tema 1</text>
+</svg>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">static</span> <span class="dt">int</span> <span class="fu">contarIndependiente</span><span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> contador <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> n<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> n<span class="op">;</span> j<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            contador<span class="op">++;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> contador<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">static</span> <span class="dt">int</span> <span class="fu">contarDependiente</span><span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> contador <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> n<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> j <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">;</span> j <span class="op">&lt;</span> n<span class="op">;</span> j<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>            contador<span class="op">++;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> contador<span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> contar_independiente(n):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    contador <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            contador <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> contador</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> contar_dependiente(n):</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    contador <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(i <span class="op">+</span> <span class="dv">1</span>, n):</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>            contador <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> contador</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La salida real de correr las dos funciones en Python para tres tamaños de entrada fue esta:</p>
+<pre><code>n= 5  independiente=   25 (n^2=25)  dependiente=   10 (n(n-1)/2=10)
+n=10  independiente=  100 (n^2=100)  dependiente=   45 (n(n-1)/2=45)
+n=20  independiente=  400 (n^2=400)  dependiente=  190 (n(n-1)/2=190)</code></pre>
+<p><code>contarIndependiente</code> visita las n * n combinaciones posibles de i y j porque el rango del ciclo interno no depende de i, así que su costo es exactamente n^2, tanto para O grande como para Omega, lo que lo hace Theta(n^2). <code>contarDependiente</code> es el mismo ciclo interno de <code>seleccion</code> del Tema 1, el rango de j empieza en i + 1 y se acorta una posición por cada vuelta del ciclo externo, así que el total es la suma (n - 1) + (n - 2) + … + 1 + 0, que la fórmula de Gauss reduce a n(n-1)/2. Esa fórmula, al expandirla, es (n^2 - n) / 2, un polinomio donde el término n^2 domina sobre el término n cuando n crece, así que sigue siendo Theta(n^2) exactamente igual que el ciclo independiente, aunque visite justo la mitad de celdas. La constante multiplicativa cambia, la clase de complejidad no, un ejemplo directo de por qué la notación asintótica descarta constantes, ambos ciclos son “cuadráticos” aunque uno haga el doble de trabajo que el otro para el mismo n.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 3. Un tercer ciclo anidado
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Un tercer ciclo recorre <code>for i in range(n): for j in range(n // 2): contador += 1</code>, un ciclo interno cuyo rango es siempre la mitad de n, sin depender de i. Antes de seguir, decide a qué clase de complejidad pertenece ese ciclo.</p>
+<p><label><input type="checkbox"> O(n), porque solo un ciclo depende directamente de n, el otro esta fijo en n/2</label> <label><input type="checkbox"> O(n^2), porque el total de vueltas es n multiplicado por n/2, que sigue siendo un polinomio de grado 2 en n</label> <label><input type="checkbox"> O(n/2), una clase de complejidad distinta a las demas por tener una fraccion en el exponente</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 3
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La segunda es correcta. El total de vueltas es n * (n / 2) = n^2 / 2, un polinomio de segundo grado en n con la constante 1/2 en vez de 1. La notación asintótica descarta esa constante exactamente igual que descartó el 1/2 del Reto anterior, así que el ciclo sigue siendo O(n^2) y, de hecho, Theta(n^2). La tercera opción no existe como clase de complejidad, “n/2” no es una potencia de n distinta, es la misma clase O(n) con una constante multiplicativa distinta, un error común es confundir una constante que divide a n con un cambio real de clase.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="ecuaciones-de-recurrencia-cuando-el-algoritmo-se-llama-a-sí-mismo" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="ecuaciones-de-recurrencia-cuando-el-algoritmo-se-llama-a-sí-mismo"><span class="header-section-number">5</span> Ecuaciones de recurrencia: cuando el algoritmo se llama a sí mismo</h2>
+<p>Contar operaciones en un ciclo es sumar, contar operaciones en una función recursiva es resolver una ecuación, porque el costo de una llamada depende del costo de las llamadas que hace a su vez, y esa dependencia se escribe como una <em>recurrencia</em>. Quicksort, con el esquema de partición del Tema 1, ilustra el caso más importante del curso, cuando el pivote parte el segmento en dos mitades razonablemente parejas, cada llamada a <code>quicksort</code> sobre un segmento de tamaño n hace una partición que cuesta O(n) y después se llama a sí misma dos veces sobre segmentos de tamaño n/2, lo que se escribe T(n) = 2 T(n/2) + O(n), con el caso base T(1) = O(1).</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol de recursion de T(n) = 2T(n/2) + O(n). Nivel 0, la raiz, es un solo nodo con trabajo cn. Nivel 1 son dos nodos T(n/2), cada uno con trabajo c(n/2), que suman cn en ese nivel. Nivel 2 son cuatro nodos T(n/4), cada uno con trabajo c(n/4), que tambien suman cn en ese nivel. Los puntos suspensivos indican que el patron continua hasta el nivel log2(n), donde hay n hojas T(1) con trabajo constante cada una, que tambien suman cn. La suma de los log2(n) mas 1 niveles, cada uno aportando cn, da T(n) = cn(log2(n) + 1), que es O(n log n)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Arbol de recursion de T(n) = 2T(n/2) + O(n)</text> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="290" y="30" width="180" height="32" rx="6"></rect></g> <text x="380" y="51" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">T(n), trabajo propio: cn</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="330" y1="62" x2="200" y2="96"></line><line x1="430" y1="62" x2="560" y2="96"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="95" y="96" width="210" height="30" rx="6"></rect><rect x="455" y="96" width="210" height="30" rx="6"></rect></g> <text x="200" y="116" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/2), trabajo: c(n/2)</text> <text x="560" y="116" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/2), trabajo: c(n/2)</text> <text x="380" y="118" font-size="10" fill="#5b6876" text-anchor="middle">nivel 1: 2 nodos, suma cn</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.2"><line x1="150" y1="126" x2="80" y2="156"></line><line x1="250" y1="126" x2="320" y2="156"></line><line x1="510" y1="126" x2="440" y2="156"></line><line x1="610" y1="126" x2="680" y2="156"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="156" width="100" height="28" rx="5"></rect><rect x="270" y="156" width="100" height="28" rx="5"></rect><rect x="390" y="156" width="100" height="28" rx="5"></rect><rect x="630" y="156" width="100" height="28" rx="5"></rect></g> <text x="80" y="175" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/4)</text> <text x="320" y="175" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/4)</text> <text x="440" y="175" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/4)</text> <text x="680" y="175" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">T(n/4)</text> <text x="380" y="198" font-size="10" fill="#5b6876" text-anchor="middle">nivel 2: 4 nodos, cada uno c(n/4), suma cn</text> <text x="380" y="228" font-size="14" fill="#5b6876" text-anchor="middle">. . .</text> <text x="380" y="252" font-size="10.5" fill="#0e6f6c" text-anchor="middle">nivel log2(n): n hojas T(1), cada una trabajo constante, suma cn</text> <line x1="60" y1="270" x2="700" y2="270" stroke="#cfd8e3" stroke-width="1"></line> <text x="380" y="292" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">suma total: cn en cada uno de los log2(n) + 1 niveles</text> <text x="380" y="312" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">T(n) = cn * (log2(n) + 1) = O(n log n)</text>
+</svg>
+</div>
+<p>El método del árbol de recursión resuelve T(n) = 2 T(n/2) + O(n) sin necesidad de adivinar la respuesta de antemano, dibuja cada llamada recursiva como un nodo y suma el trabajo nivel por nivel. La raíz hace un trabajo de cn, siendo c la constante escondida detrás del O(n) de la partición. Esa raíz se llama a sí misma dos veces sobre segmentos de la mitad de tamaño, así que el nivel 1 tiene dos nodos, cada uno con trabajo c(n/2), y la suma de ese nivel completo vuelve a dar cn, porque 2 multiplicado por c(n/2) es cn. El nivel 2 tiene cuatro nodos con trabajo c(n/4) cada uno, y la suma vuelve a dar cn, el mismo patrón se repite en cada nivel sin importar cuántos nodos tenga, porque el número de nodos se duplica exactamente cuando el tamaño de cada segmento se parte a la mitad. El árbol termina cuando el tamaño del segmento llega a 1, y eso ocurre después de log2(n) niveles, porque dividir n entre 2 repetidamente log2(n) veces es justo lo que hace falta para llegar a 1. Con log2(n) más uno niveles, cada uno aportando cn de trabajo, el total es T(n) = cn multiplicado por (log2(n) + 1), y como la notación asintótica descarta la constante c y el más uno, el resultado es T(n) = O(n log n), la misma clase de complejidad que ya midió el benchmark del Tema 1 sobre quicksort con pivote aleatorio.</p>
+<p>Ese mismo argumento explica también el peor caso que el Tema 1 midió por separado, cuando el pivote resulta ser siempre el elemento más pequeño o el más grande del segmento, como pasó con el arreglo ya ordenado y pivote fijo, cada partición reduce el problema en solo un elemento en vez de a la mitad, así que la recurrencia deja de ser T(n) = 2 T(n/2) + O(n) y pasa a ser T(n) = T(n - 1) + O(n), una cadena de n particiones anidadas en vez de un árbol de altura log n.&nbsp;Resolver esa recurrencia por sustitución directa, T(n) = T(n-1) + cn = T(n-2) + c(n-1) + cn = … = T(1) + c(2 + 3 + … + n), reduce la suma otra vez con la fórmula de Gauss a c multiplicado por n(n+1)/2 menos c, que es O(n^2), exactamente el número de comparaciones, 1 124 250, que midió el segundo benchmark del Tema 1 sobre mil quinientos elementos ya ordenados, y que coincidió cifra por cifra con la fórmula N(N-1)/2 de un algoritmo O(n^2) puro.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 4. La recurrencia de la búsqueda binaria
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La búsqueda binaria de un valor en un arreglo ordenado descarta la mitad de las posiciones restantes en cada comparación y se llama a sí misma sobre la mitad que le queda, lo que se escribe T(n) = T(n/2) + O(1), con caso base T(1) = O(1). Antes de seguir, decide cuántos niveles tiene el árbol de recursión de esa función y a qué clase de complejidad pertenece.</p>
+<p><label><input type="checkbox"> log2(n) niveles, cada uno con trabajo constante, asi que T(n) = O(log n)</label> <label><input type="checkbox"> n niveles, uno por cada elemento del arreglo, asi que T(n) = O(n)</label> <label><input type="checkbox"> log2(n) niveles, pero cada nivel duplica su trabajo como en quicksort, asi que T(n) = O(n log n)</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 4
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La primera es correcta. El árbol de recursión de T(n) = T(n/2) + O(1) tiene un solo nodo por nivel, no dos como en quicksort, porque búsqueda binaria descarta una mitad y solo sigue explorando la otra, nunca las dos. El tamaño del segmento se sigue dividiendo entre 2 en cada nivel, así que hacen falta log2(n) niveles para llegar a un segmento de tamaño 1, exactamente igual que en el árbol de quicksort, pero como cada nivel tiene un solo nodo con trabajo constante O(1) en vez de un nivel completo con trabajo cn, la suma total es log2(n) multiplicado por una constante, que es O(log n). Esa es la razón matemática, no solo intuitiva, de por qué la búsqueda en un árbol binario de búsqueda balanceado de la Unidad 3 es logarítmica, el mismo patrón de descartar una mitad en cada paso que usa búsqueda binaria sobre un arreglo ordenado.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="mejor-promedio-y-peor-caso-la-tabla-definitiva" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="mejor-promedio-y-peor-caso-la-tabla-definitiva"><span class="header-section-number">6</span> Mejor, promedio y peor caso: la tabla definitiva</h2>
+<p>El Tema 1 ya midió el mejor, el promedio y el peor caso de los seis algoritmos de forma empírica e intuitiva, un arreglo ya ordenado corre distinto a uno mezclado al azar y distinto a uno en orden inverso. Con la notación asintótica formalizada, esa misma tabla se puede escribir con precisión, usando O para el peor caso, que es la garantía que de verdad importa cuando un programa no controla qué entrada va a recibir, y usando Theta cuando el mejor y el peor caso coinciden en la misma clase, lo que significa que ese algoritmo se comporta igual sin importar el orden de entrada.</p>
+<div class="tabla-ancha">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Algoritmo</th>
+<th>Mejor caso</th>
+<th>Caso promedio</th>
+<th>Peor caso</th>
+<th>Peor caso ajustado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Burbuja</td>
+<td>Omega(n)</td>
+<td>Theta(n^2)</td>
+<td>O(n^2)</td>
+<td>Theta(n^2)</td>
+</tr>
+<tr class="even">
+<td>Inserción</td>
+<td>Omega(n)</td>
+<td>Theta(n^2)</td>
+<td>O(n^2)</td>
+<td>Theta(n^2)</td>
+</tr>
+<tr class="odd">
+<td>Selección</td>
+<td>Omega(n^2)</td>
+<td>Theta(n^2)</td>
+<td>O(n^2)</td>
+<td>Theta(n^2)</td>
+</tr>
+<tr class="even">
+<td>Quicksort</td>
+<td>Omega(n log n)</td>
+<td>Theta(n log n)</td>
+<td>O(n^2)</td>
+<td>Theta(n^2)</td>
+</tr>
+<tr class="odd">
+<td>Shellsort (Knuth)</td>
+<td>Omega(n log n)</td>
+<td>entre O(n^{4/3}) y O(n^{3/2})</td>
+<td>O(n^{3/2})</td>
+<td>sin Theta cerrado conocido</td>
+</tr>
+<tr class="even">
+<td>Radix (LSD)</td>
+<td>Omega(d(n+b))</td>
+<td>Theta(d(n+b))</td>
+<td>O(d(n+b))</td>
+<td>Theta(d(n+b))</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Selección es el único de los tres algoritmos cuadráticos donde el mejor caso también es Omega(n^2), porque el Reto 3 del Tema 1 ya demostró que su ciclo interno recorre el resto completo sin importar si el arreglo llega ordenado, así que su mejor y su peor caso son la misma clase, Theta(n^2) en los tres escenarios. Burbuja e inserción, en cambio, tienen un mejor caso Omega(n) real, la bandera de intercambio de burbuja y la condición de parada temprana del <code>while</code> de inserción, así que su clase varía según la entrada y solo el peor caso llega a Theta(n^2). Quicksort es el caso más interesante de la tabla, su comportamiento típico es Theta(n log n), la clase que confirmó el benchmark de tres mil elementos, pero su peor caso teórico sigue siendo Theta(n^2), la clase que confirmó el segundo benchmark sobre el arreglo ya ordenado con pivote fijo, y la distancia entre esas dos filas es exactamente lo que explica por qué ninguna implementación seria de quicksort deja el pivote en una posición predecible. Shellsort es el único algoritmo de la tabla sin una cota Theta cerrada para su caso promedio, ni Cormen ni Weiss dan una fórmula exacta, solo cotas O y Omega, una de las pocas preguntas abiertas de análisis de algoritmos que sigue apareciendo en un curso introductorio.</p>
+</section>
+<section id="cuando-la-intuición-falla-constantes-ocultas" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="cuando-la-intuición-falla-constantes-ocultas"><span class="header-section-number">7</span> Cuando la intuición falla: constantes ocultas</h2>
+<p>La notación asintótica describe qué pasa cuando n crece sin límite, pero descarta deliberadamente las constantes multiplicativas, y esas constantes sí importan para entradas pequeñas. Quicksort es Theta(n log n) en promedio y burbuja e inserción son Theta(n^2), así que la intuición dice que quicksort siempre debería ganar, pero cada partición de quicksort hace trabajo adicional que inserción no hace, elegir un pivote al azar, intercambiar posiciones, apilar dos llamadas recursivas, mientras que inserción es un único ciclo simple sin ninguna de esas operaciones extra. Para un arreglo de mil elementos esa diferencia de constantes es insignificante frente a la diferencia de clase, pero para un arreglo de diez o veinte elementos puede pesar más que la propia clase de complejidad.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafico de barras comparando el tiempo de insercion contra quicksort para arreglos de tamano 10, 20, 50 y 100, cada barra corresponde a 20000 repeticiones sobre el mismo arreglo. Para n=10 y n=20 la barra de insercion, en verde, es mas corta que la de quicksort, en gris, insercion gana. Para n=50 y n=100 la barra de quicksort, en verde, es mas corta que la de insercion, en gris, quicksort gana. El cruce ocurre entre n=20 y n=50" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Tiempo de 20 000 repeticiones: insercion contra quicksort segun n</text> <text x="380" y="32" font-size="10" fill="#5b6876" text-anchor="middle">en verde, el algoritmo mas rapido para ese tamano de arreglo</text> <line x1="60" y1="230" x2="700" y2="230" stroke="#cfd8e3" stroke-width="1.4"></line> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="100" y="226" width="20" height="4"></rect></g> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="124" y="221" width="20" height="9"></rect></g> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="260" y="221" width="20" height="9"></rect></g> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="284" y="212" width="20" height="18"></rect></g> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="420" y="171" width="20" height="59"></rect></g> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="444" y="179" width="20" height="51"></rect></g> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="580" y="10" width="20" height="220"></rect></g> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="604" y="119" width="20" height="111"></rect></g> <g text-anchor="middle" font-size="9" fill="#5b6876"><text x="110" y="219">0.06s</text><text x="134" y="214">0.14s</text><text x="270" y="214">0.15s</text><text x="294" y="205">0.29s</text><text x="430" y="164">0.97s</text><text x="454" y="172">0.83s</text><text x="590" y="7" transform="rotate(0)">3.62s</text><text x="614" y="112">1.82s</text></g> <g text-anchor="middle" font-size="10.5" fill="#12324f" font-weight="600"><text x="122" y="248">n=10</text><text x="282" y="248">n=20</text><text x="442" y="248">n=50</text><text x="602" y="248">n=100</text></g> <text x="380" y="270" font-size="10.5" fill="#0e6f6c" text-anchor="middle">el cruce ocurre entre n=20 y n=50: antes de ese punto insercion gana pese a ser O(n^2)</text>
+</svg>
+</div>
+<p>El siguiente script mide las dos funciones del Tema 1, <code>insercion</code> y <code>quicksort_aleatorio</code>, sobre el mismo arreglo generado al azar, repitiendo cada una veinte mil veces para que el tiempo total sea medible con precisión incluso en entradas de solo diez elementos.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> insercion(a):</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    a <span class="op">=</span> a[:]</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="bu">len</span>(a)):</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        clave <span class="op">=</span> a[i]</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        j <span class="op">=</span> i <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> j <span class="op">&gt;=</span> <span class="dv">0</span> <span class="kw">and</span> a[j] <span class="op">&gt;</span> clave:</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>            a[j <span class="op">+</span> <span class="dv">1</span>] <span class="op">=</span> a[j]</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>            j <span class="op">-=</span> <span class="dv">1</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        a[j <span class="op">+</span> <span class="dv">1</span>] <span class="op">=</span> clave</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> quicksort_aleatorio(a):</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    a <span class="op">=</span> a[:]</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    _quicksort(a, <span class="dv">0</span>, <span class="bu">len</span>(a) <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _quicksort(a, bajo, alto):</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> bajo <span class="op">&lt;</span> alto:</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>        p <span class="op">=</span> _particion(a, bajo, alto)</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> p <span class="op">-</span> bajo <span class="op">&lt;</span> alto <span class="op">-</span> p:</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>            _quicksort(a, bajo, p <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>            bajo <span class="op">=</span> p <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>            _quicksort(a, p <span class="op">+</span> <span class="dv">1</span>, alto)</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>            alto <span class="op">=</span> p <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _particion(a, bajo, alto):</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    idx <span class="op">=</span> random.randint(bajo, alto)</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    a[idx], a[alto] <span class="op">=</span> a[alto], a[idx]</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    pivote <span class="op">=</span> a[alto]</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    i <span class="op">=</span> bajo <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(bajo, alto):</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> a[j] <span class="op">&lt;=</span> pivote:</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>            i <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>            a[i], a[j] <span class="op">=</span> a[j], a[i]</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    a[i <span class="op">+</span> <span class="dv">1</span>], a[alto] <span class="op">=</span> a[alto], a[i <span class="op">+</span> <span class="dv">1</span>]</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> i <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">42</span>)</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>REPETICIONES <span class="op">=</span> <span class="dv">20000</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> n <span class="kw">in</span> (<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">50</span>, <span class="dv">100</span>):</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    datos <span class="op">=</span> [random.randint(<span class="dv">0</span>, <span class="dv">1000</span>) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n)]</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>    inicio <span class="op">=</span> time.perf_counter()</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(REPETICIONES):</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>        insercion(datos)</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>    tiempo_insercion <span class="op">=</span> time.perf_counter() <span class="op">-</span> inicio</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>    inicio <span class="op">=</span> time.perf_counter()</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(REPETICIONES):</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>        quicksort_aleatorio(datos)</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>    tiempo_quicksort <span class="op">=</span> time.perf_counter() <span class="op">-</span> inicio</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"n=</span><span class="sc">{</span>n<span class="sc">:4d}</span><span class="ss">  insercion=</span><span class="sc">{</span>tiempo_insercion<span class="sc">:8.4f}</span><span class="ss">s  quicksort=</span><span class="sc">{</span>tiempo_quicksort<span class="sc">:8.4f}</span><span class="ss">s"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La salida real de esa ejecución fue esta:</p>
+<pre><code>n=  10  insercion=  0.0591s  quicksort=  0.1401s  quicksort/insercion=2.37x
+n=  20  insercion=  0.1519s  quicksort=  0.2928s  quicksort/insercion=1.93x
+n=  50  insercion=  0.9678s  quicksort=  0.8310s  quicksort/insercion=0.86x
+n= 100  insercion=  3.6152s  quicksort=  1.8240s  quicksort/insercion=0.50x</code></pre>
+<p>Para n = 10 y n = 20, insercion es más rápida que quicksort, casi el doble de rápida en n = 10, a pesar de pertenecer a la clase de peor complejidad asintótica de las dos. El cruce ocurre entre n = 20 y n = 50, a partir de ahí quicksort se vuelve consistentemente más rápido y la ventaja crece con n, tal como predice la diferencia entre Theta(n^2) y Theta(n log n). El resultado exacto varía según el equipo donde se ejecute, pero la existencia de un punto de cruce no es un accidente de esta máquina, es la razón concreta detrás de una práctica real de las bibliotecas de ordenamiento de uso industrial, Java y Python cambian a un algoritmo distinto, más parecido a inserción, cuando el segmento que queda por ordenar se vuelve pequeño durante la propia recursión de quicksort, en vez de seguir dividiendo un segmento donde ya no vale la pena pagar el costo fijo de una partición.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 5. Qué algoritmo conviene para un arreglo de tres elementos
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Con los datos del benchmark de arriba, alguien tiene que ordenar arreglos de exactamente tres elementos, muchas veces por segundo, dentro de un programa más grande. Antes de seguir, decide qué algoritmo conviene usar.</p>
+<p><label><input type="checkbox"> Quicksort, porque su clase de complejidad Theta(n log n) siempre es mejor que la Theta(n^2) de insercion</label> <label><input type="checkbox"> Insercion, porque para arreglos tan pequenos las constantes de quicksort (eleccion de pivote, particion, recursion) pesan mas que la diferencia de clase, como confirma el benchmark para n=10</label> <label><input type="checkbox"> No importa, cualquiera de los dos tarda lo mismo para arreglos de tres elementos</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 5
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La segunda es correcta. El benchmark midió a partir de n = 10 y ya mostró a insercion ganando con comodidad, y un arreglo de tres elementos está todavía más lejos del punto donde la clase de complejidad empieza a dominar, así que las constantes ocultas de quicksort pesan proporcionalmente más. Esta no es una curiosidad de laboratorio, es la razón de que Java y Python, además de otras bibliotecas de ordenamiento de uso extendido, apliquen inserción directamente cuando el segmento por ordenar cae por debajo de un umbral pequeño, en vez de seguir aplicando quicksort hasta el final. La notación asintótica sigue siendo la herramienta correcta para decidir qué algoritmo escalará mejor, pero un algoritmo O(n log n) no es automáticamente más rápido que uno O(n^2) para cualquier n, solo lo garantiza a partir de un n0, exactamente como exige la propia definición formal de O grande.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="el-trade-off-espacio-tiempo-memoización" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="el-trade-off-espacio-tiempo-memoización"><span class="header-section-number">8</span> El trade-off espacio-tiempo: memoización</h2>
+<p>La recursión ingenua de Fibonacci de la Unidad 1 sirve también para mostrar la otra cara de la eficiencia, no toda mejora de velocidad sale de cambiar de algoritmo, algunas salen de gastar más memoria a cambio de menos tiempo, una decisión que se llama <em>trade-off espacio-tiempo</em>. <code>fibonacci_ingenuo(n)</code> recalcula el mismo subproblema una y otra vez porque cada llamada se ramifica en dos llamadas más sin recordar nada de lo que ya calculó, así que <code>fibonacci(2)</code>, por ejemplo, termina calculándose varias veces dentro del mismo árbol de llamadas para un n moderado.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol de llamadas de fibonacci ingenuo de 4. La raiz fib(4) se llama a si misma como fib(3) a la izquierda y fib(2) a la derecha. La rama izquierda fib(3) se expande en fib(2) y fib(1). Ese fib(2) de la izquierda se expande en fib(1) y fib(0). La rama derecha de la raiz, fib(2), esta marcada con borde discontinuo y una nota porque es un subproblema identico al fib(2) que ya se calculo dentro de la rama izquierda, pero fibonacci ingenuo no lo recuerda y lo vuelve a expandir completo en fib(1) y fib(0)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Arbol de llamadas de fibonacci ingenuo(4): el mismo subproblema se repite</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="310" y="30" width="140" height="30" rx="6"></rect></g> <text x="380" y="50" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">fib(4)</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.3"><line x1="340" y1="60" x2="200" y2="94"></line><line x1="420" y1="60" x2="560" y2="94"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="130" y="94" width="140" height="30" rx="6"></rect></g> <text x="200" y="114" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">fib(3)</text> <g fill="#f5f7fa" stroke="#8fc9c5" stroke-dasharray="4 3"><rect x="490" y="94" width="140" height="30" rx="6"></rect></g> <text x="560" y="114" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">fib(2), otra vez</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.2"><line x1="170" y1="124" x2="90" y2="156"></line><line x1="240" y1="124" x2="310" y2="156"></line><line x1="530" y1="124" x2="470" y2="156"></line><line x1="600" y1="124" x2="670" y2="156"></line></g> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="30" y="156" width="120" height="28" rx="5"></rect></g> <text x="90" y="175" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(2)</text> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="250" y="156" width="120" height="28" rx="5"></rect></g> <text x="310" y="175" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(1) = 1</text> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="410" y="156" width="120" height="28" rx="5"></rect></g> <text x="470" y="175" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(1) = 1</text> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="610" y="156" width="120" height="28" rx="5"></rect></g> <text x="670" y="175" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(0) = 0</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.1"><line x1="70" y1="184" x2="30" y2="212"></line><line x1="110" y1="184" x2="150" y2="212"></line></g> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="0" y="212" width="90" height="26" rx="5"></rect></g> <text x="45" y="230" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(1) = 1</text> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="110" y="212" width="90" height="26" rx="5"></rect></g> <text x="155" y="230" font-size="9.5" font-weight="600" fill="#12324f" text-anchor="middle">fib(0) = 0</text> <text x="560" y="260" font-size="10" fill="#0e6f6c" text-anchor="middle">con memoizacion, este nodo se reemplaza por una consulta O(1) a una tabla, sin volver a expandirse</text>
+</svg>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fibonacci_ingenuo(n):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> n <span class="op">&lt;=</span> <span class="dv">1</span>:</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> n</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fibonacci_ingenuo(n <span class="op">-</span> <span class="dv">1</span>) <span class="op">+</span> fibonacci_ingenuo(n <span class="op">-</span> <span class="dv">2</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fibonacci_memo(n, memo<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> memo <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        memo <span class="op">=</span> {}</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> n <span class="op">&lt;=</span> <span class="dv">1</span>:</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> n</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> n <span class="kw">in</span> memo:</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> memo[n]</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    memo[n] <span class="op">=</span> fibonacci_memo(n <span class="op">-</span> <span class="dv">1</span>, memo) <span class="op">+</span> fibonacci_memo(n <span class="op">-</span> <span class="dv">2</span>, memo)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> memo[n]</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">static</span> <span class="dt">long</span> <span class="fu">fibonacciIngenuo</span><span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;=</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> n<span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">fibonacciIngenuo</span><span class="op">(</span>n <span class="op">-</span> <span class="dv">1</span><span class="op">)</span> <span class="op">+</span> <span class="fu">fibonacciIngenuo</span><span class="op">(</span>n <span class="op">-</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">static</span> <span class="dt">long</span> <span class="fu">fibonacciMemo</span><span class="op">(</span><span class="dt">int</span> n<span class="op">,</span> <span class="bu">Map</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">,</span> <span class="bu">Long</span><span class="op">&gt;</span> memo<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;=</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> n<span class="op">;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>memo<span class="op">.</span><span class="fu">containsKey</span><span class="op">(</span>n<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> memo<span class="op">.</span><span class="fu">get</span><span class="op">(</span>n<span class="op">);</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">long</span> resultado <span class="op">=</span> <span class="fu">fibonacciMemo</span><span class="op">(</span>n <span class="op">-</span> <span class="dv">1</span><span class="op">,</span> memo<span class="op">)</span> <span class="op">+</span> <span class="fu">fibonacciMemo</span><span class="op">(</span>n <span class="op">-</span> <span class="dv">2</span><span class="op">,</span> memo<span class="op">);</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    memo<span class="op">.</span><span class="fu">put</span><span class="op">(</span>n<span class="op">,</span> resultado<span class="op">);</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> resultado<span class="op">;</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>fibonacci_memo</code> guarda en un diccionario cada resultado la primera vez que lo calcula, así que la segunda vez que el árbol de llamadas llegaría a pedir, por ejemplo, <code>fibonacci(2)</code>, la función consulta el diccionario en O(1) en vez de volver a expandir las dos llamadas recursivas de ese nodo. Esa tabla convierte el árbol exponencial en un recorrido donde cada valor de 0 a n se calcula una sola vez, O(n) en tiempo, a cambio de gastar O(n) de memoria extra para la tabla, el trade-off espacio-tiempo, cambiar memoria por velocidad.</p>
+<pre><code>n= 20  fibonacci(20)=      6765  ingenuo=  0.00104s  memo=0.0000093s  razon=     111.6x
+n= 28  fibonacci(28)=    317811  ingenuo=  0.04865s  memo=0.0000225s  razon=    2162.2x
+n= 32  fibonacci(32)=   2178309  ingenuo=  0.33861s  memo=0.0000225s  razon=   15049.4x</code></pre>
+<p>La razón entre los dos tiempos crece con n mucho más rápido que en el benchmark de quicksort contra inserción, porque ahí las dos clases de complejidad eran Theta(n log n) contra Theta(n^2), una diferencia polinomial, mientras que aquí la diferencia es Theta(2^n) contra Theta(n), una exponencial contra una lineal, y esa es justamente la clase de brecha que ninguna constante oculta alcanza a compensar, ni siquiera para valores de n moderados como 28 o 32. El tiempo de la versión memoizada ni siquiera creció de forma perceptible entre n = 28 y n = 32 en esta medición, porque O(n) sobre esas magnitudes es una cantidad de trabajo demasiado pequeña para que el reloj del sistema la distinga con claridad, mientras que la versión ingenua sí muestra el crecimiento exponencial a simple vista.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 6. Qué pasaría con fibonacci(40)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Con la razón que muestra la tabla de arriba, alguien decide llamar a <code>fibonacci_ingenuo(40)</code> en vez de <code>fibonacci_ingenuo(32)</code>. Antes de seguir, decide aproximadamente qué tan distinto sería el tiempo, sabiendo que cada incremento de 1 en n multiplica aproximadamente por 1.618 el número de llamadas de la versión ingenua.</p>
+<p><label><input type="checkbox"> Un poco mas lento, proporcional a la diferencia de 8 en el valor de n</label> <label><input type="checkbox"> Mucho mas lento, varias decenas de veces mas que fibonacci_ingenuo(32), porque cada n adicional multiplica el trabajo en vez de sumarle una cantidad fija</label> <label><input type="checkbox"> Igual de rapido, porque fibonacci_ingenuo(32) ya tardo menos de medio segundo, asi que el margen sobra</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 6
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La segunda es correcta. Multiplicar por 1.618 aproximadamente cada incremento de 1 en n, elevado a la octava potencia para llegar de 32 a 40, da un factor cercano a 1.618^8, unas 47 veces más trabajo, así que un tiempo de 0.34 segundos en n = 32 se convertiría en un tiempo cercano a 16 segundos en n = 40, y seguiría multiplicándose por ese mismo factor con cada n adicional. Esa es la diferencia entre crecer sumando y crecer multiplicando, lo que hace que una función O(2^n) se vuelva impráctica con entradas todavía modestas, mientras que <code>fibonacci_memo(40)</code> seguiría tardando una fracción de milisegundo, porque su tiempo crece de forma lineal, no exponencial.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="lo-que-te-llevas-de-hoy" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="lo-que-te-llevas-de-hoy"><span class="header-section-number">9</span> Lo que te llevas de hoy</h2>
+<div class="checklist">
+<p>Al salir de este tema deberías poder explicar, sin mirar la guía:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">Por qué la complejidad computacional se mide contando operaciones en función de n en vez de cronometrar, y qué explica que dos equipos midan tiempos distintos para el mismo algoritmo</label></li>
+<li><label><input type="checkbox">Las definiciones formales de O, Omega y Theta, con sus constantes c y n0, y la diferencia entre una cota superior, una cota inferior y una cota ajustada</label></li>
+<li><label><input type="checkbox">Las seis clases de complejidad comunes, en orden de menor a mayor costo, con un ejemplo real del curso para cada una</label></li>
+<li><label><input type="checkbox">Cómo contar operaciones en bucles anidados independientes contra dependientes, y cómo resolver una ecuación de recurrencia con el método del árbol de recursión</label></li>
+<li><label><input type="checkbox">La tabla definitiva de mejor, promedio y peor caso de los seis algoritmos de ordenamiento, expresada con notación asintótica precisa</label></li>
+<li><label><input type="checkbox">Por qué un algoritmo con mejor clase asintótica puede perder frente a uno peor en entradas pequeñas, por constantes ocultas, y qué es el trade-off espacio-tiempo de la memoización</label></li>
+</ul>
+</div>
+</section>
+<section id="lo-que-sigue" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="lo-que-sigue"><span class="header-section-number">10</span> Lo que sigue</h2>
+<p>El Tema 3 de esta unidad retoma la clase <code>GrafoPonderado</code> de la Unidad 3 para resolver caminos más cortos con el algoritmo de Dijkstra y árboles de expansión mínima con Prim y con Kruskal, tres algoritmos que se van a analizar con exactamente el mismo vocabulario de este tema, notación O, ecuaciones de recurrencia cuando aplique y comparación de mejor y peor caso. El Tema 4 cierra la unidad y el curso con los algoritmos de búsqueda, secuencial, binaria y secuencial con índices, donde la búsqueda binaria retoma directamente la recurrencia T(n) = T(n/2) + O(1) que ya se resolvió en el Reto 4 de esta guía.</p>
+</section>
+<section id="recursos" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="recursos"><span class="header-section-number">11</span> Recursos</h2>
+<ul>
+<li>Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. <em>Introduction to Algorithms.</em> Capítulo sobre el crecimiento de funciones, con las definiciones formales de O, Omega y Theta, y el capítulo sobre recurrencias, con el método del árbol de recursión y el teorema maestro.</li>
+<li>Weiss, M. A. <em>Data Structures and Algorithm Analysis.</em> Capítulo introductorio de análisis de algoritmos, con la notación asintótica aplicada a ejemplos de código y la discusión sobre la falta de una cota Theta cerrada para el caso promedio de shellsort.</li>
+<li>Goodrich, M. T. y Tamassia, R. <em>Estructuras de datos y algoritmos.</em> Capítulo sobre análisis de algoritmos, con el conteo de operaciones en bucles y la resolución de recurrencias por sustitución.</li>
+</ul>
+<div class="pie-doc">
+<p>Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.</p>
+<p><strong>Transparencia.</strong> La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. Los tres benchmarks, la tabla de crecimiento y los conteos de los bucles anidados son ejecuciones reales hechas durante la preparación del material; el resultado exacto varía según el equipo que lo ejecute.</p>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/oscarleosanchez\.github\.io\/sitio-maria-cano-2026-02\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Oscar Leonel Sánchez Conde</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

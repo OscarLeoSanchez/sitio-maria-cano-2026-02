@@ -1,0 +1,728 @@
+---
+title: "Tema 2. La torre y la fila de cajas encadenadas"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                          |
+|--------|------------------------------------------|
+| Unidad | Unidad 3. Estructuras dinámicas           |
+| Tema   | Tema 2. Pilas y colas usando listas       |
+:::
+
+El Tema 1 de esta unidad cerró anunciando este momento. El mismo contrato que dejaste completo en el
+Tema 3 de la Unidad 2, `apilar`, `desapilar`, `cima` y `estaVacia` para la pila, `encolar`, `desencolar`,
+`frente` y `estaVacia` para la cola, hoy cambia de memoria por dentro sin que la firma pública se mueva
+ni una letra. Donde el Tema 3 de la Unidad 2 guardaba los elementos en un arreglo que había que
+redimensionar cuando se llenaba, hoy los guardas en la misma pieza que construiste en el Tema 1 de esta
+unidad, el `Nodo`, encadenado uno tras otro. La pila resulta casi directa una vez que entiendes por qué
+siempre trabaja sobre la cabeza de la lista. La cola exige una decisión adicional, un segundo puntero
+que el Tema 1 ya usó para la lista doble, y que aquí vuelve a aparecer por una razón distinta.
+
+## El contrato que no cambia
+
+Antes de tocar código vale la pena recordar qué queda fijo. La `Pila` del Tema 3 de la Unidad 2 expone
+`apilar(elemento)`, `desapilar()`, `cima()` y `estaVacia()`. La `Cola` expone `encolar(elemento)`,
+`desencolar()`, `frente()` y `estaVacia()`. Ningún nombre cambia, ningún parámetro cambia, ningún tipo
+de retorno cambia. Lo único que decide este tema es qué hay detrás de esos ocho métodos, y la respuesta
+para los dos es la misma pieza que ya conoces, el `Nodo` del Tema 1, reutilizado tal cual, sin agregarle
+ningún campo nuevo. `Nodo` guarda un dato y una referencia al siguiente, y con eso alcanza para todo lo
+que sigue.
+
+## La pila enlazada: por qué siempre trabaja sobre la cabeza
+
+Una pila solo necesita un extremo, el mismo por donde entra y por donde sale el último elemento. Sobre
+una lista enlazada ese extremo tiene que ser la cabeza, nunca la cola, y la razón es exactamente la que
+ya viste en el Tema 1 al comparar `insertarInicio` con `insertarFinal`. Insertar o eliminar en la cabeza
+no exige recorrer nada, solo tocar el nodo nuevo y la referencia que apunta al primero, así que el costo
+es O(1) sin importar cuántos elementos tenga la pila. Insertar o eliminar en el otro extremo, sin un
+puntero aparte que lo señale, exige caminar desde la cabeza hasta encontrar el nodo cuyo `siguiente` es
+`null`, un costo O(n) que crece con el tamaño de la pila.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Panel izquierdo: apilar y desapilar sobre una PilaEnlazada siempre tocan la cabeza, costo O(1); antes de apilar z la cabeza apunta a a, b, c, despues de apilar z la cabeza apunta a z que encadena con la vieja cabeza. Panel derecho: si la pila trabajara sobre el otro extremo de una lista simple sin puntero al ultimo nodo, alcanzar ese extremo exige caminar desde la cabeza recorriendo a, b y c, costo O(n)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd32a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="185" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">apilar y desapilar: siempre la cabeza</text>
+  <text x="575" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">si trabajaran sobre el otro extremo</text>
+  <text x="90" y="42" font-size="11" fill="#5b6876">antes</text>
+  <text x="30" y="60" font-size="10.5" fill="#0e6f6c">cabeza</text>
+  <path d="M30,64 L30,82" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd32a)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="84" width="46" height="36"/><rect x="90" y="84" width="46" height="36"/><rect x="170" y="84" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="33" y="106">a</text><text x="113" y="106">b</text><text x="193" y="106">c</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#esd32a)"><path d="M56,102 L86,102"/><path d="M136,102 L166,102"/></g>
+  <path d="M216,102 L246,102" fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#esd32a)"/>
+  <text x="264" y="106" font-size="10.5" fill="#5b6876">null</text>
+  <text x="90" y="150" font-size="11" fill="#5b6876">despues de apilar(z)</text>
+  <text x="30" y="168" font-size="10.5" fill="#0e6f6c">cabeza</text>
+  <path d="M30,172 L30,190" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd32a)"/>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="10" y="192" width="46" height="36"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="90" y="192" width="46" height="36"/><rect x="170" y="192" width="46" height="36"/><rect x="250" y="192" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="33" y="214">z</text><text x="113" y="214">a</text><text x="193" y="214">b</text><text x="273" y="214">c</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#esd32a)"><path d="M56,210 L86,210"/><path d="M136,210 L166,210"/><path d="M216,210 L246,210"/></g>
+  <path d="M296,210 L326,210" fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#esd32a)"/>
+  <text x="344" y="214" font-size="10.5" fill="#5b6876">null</text>
+  <text x="185" y="260" font-size="11" fill="#0e6f6c" text-anchor="middle">cima() lee cabeza.dato; costo O(1) real, sin recorrer nada</text>
+  <rect x="400" y="34" width="340" height="200" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="570" y="60" font-size="10.5" fill="#0e6f6c" text-anchor="middle">cabeza</text>
+  <path d="M570,66 L570,84" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd32a)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="422" y="86" width="46" height="36"/><rect x="502" y="86" width="46" height="36"/><rect x="582" y="86" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="445" y="108">a</text><text x="525" y="108">b</text><text x="605" y="108">c</text></g>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#esd32a)"><path d="M468,104 L498,104"/><path d="M548,104 L578,104"/></g>
+  <path d="M570,142 C540,160 500,168 460,140" fill="none" stroke="#0e6f6c" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#esd32a)"/>
+  <text x="570" y="180" font-size="10.5" fill="#0e6f6c" text-anchor="middle">caminar a, b, c hasta null</text>
+  <text x="570" y="216" font-size="11" fill="#5b6876" text-anchor="middle">sin puntero al final: O(n) cada vez</text>
+</svg>
+
+:::
+
+Por eso `PilaEnlazada` nunca toca el otro extremo. Todo lo que hace `apilar` es enganchar un nodo nuevo
+delante de la cabeza actual y mover la cabeza, exactamente el mismo par de pasos que `insertarInicio`
+del Tema 1, en el mismo orden obligatorio, primero conectar el nodo nuevo con lo que había, después mover
+la cabeza.
+
+```java
+public class Pila {
+    private Nodo cabeza;
+    private int tamaño;
+
+    public void apilar(Object elemento) {
+        Nodo nuevo = new Nodo(elemento);
+        nuevo.siguiente = cabeza;
+        cabeza = nuevo;
+        tamaño++;
+    }
+
+    public Object desapilar() {
+        if (estaVacia()) {
+            throw new IllegalStateException("la pila esta vacia");
+        }
+        Nodo eliminado = cabeza;
+        cabeza = cabeza.siguiente;
+        eliminado.siguiente = null;
+        tamaño--;
+        return eliminado.dato;
+    }
+
+    public Object cima() {
+        if (estaVacia()) {
+            throw new IllegalStateException("la pila esta vacia");
+        }
+        return cabeza.dato;
+    }
+
+    public boolean estaVacia() {
+        return cabeza == null;
+    }
+
+    public int tamaño() {
+        return tamaño;
+    }
+}
+```
+
+```python
+class Pila:
+    def __init__(self):
+        self._cabeza = None
+        self._tamaño = 0
+
+    def apilar(self, elemento):
+        nuevo = Nodo(elemento)
+        nuevo.siguiente = self._cabeza
+        self._cabeza = nuevo
+        self._tamaño += 1
+
+    def desapilar(self):
+        if self.esta_vacia():
+            raise IndexError("la pila esta vacia")
+        eliminado = self._cabeza
+        self._cabeza = self._cabeza.siguiente
+        eliminado.siguiente = None
+        self._tamaño -= 1
+        return eliminado.dato
+
+    def cima(self):
+        if self.esta_vacia():
+            raise IndexError("la pila esta vacia")
+        return self._cabeza.dato
+
+    def esta_vacia(self):
+        return self._cabeza is None
+
+    def tamaño(self):
+        return self._tamaño
+```
+
+`desapilar` deja explícitamente `eliminado.siguiente = null` antes de devolver el dato, la misma
+limpieza que ya viste en `eliminarInicio` del Tema 1 y en la sección de la fuga de memoria de ese mismo
+tema, para que el nodo que sale no quede como puente hacia el resto de la pila si alguna referencia
+externa todavía lo apunta.
+
+| Operación   | Costo real |
+|-------------|------------|
+| `apilar`    | O(1)       |
+| `desapilar` | O(1)       |
+| `cima`      | O(1)       |
+| `estaVacia` | O(1)       |
+
+Esta tabla vale la pena mirarla junto a la del Tema 3 de la Unidad 2. Allá `apilar` era O(1) amortizado,
+porque de vez en cuando disparaba una redimensión de O(n). Aquí `apilar` es O(1) real, sin ninguna letra
+pequeña, porque nunca hay que copiar nada, cada nodo se pide exactamente cuando se necesita.
+
+::: {.callout-tip}
+## Reto 1. Encuentra el error de este apilar
+
+El siguiente método en Java compila sin ningún error y no lanza ninguna excepción al ejecutarse, pero
+rompe la pila por completo. Ya viste este mismo patrón de error en el Tema 1, aplicado a
+`insertarInicio` de `ListaEnlazada`. Léelo con calma antes de seguir.
+
+```java
+public void apilar(Object elemento) {
+    Nodo nuevo = new Nodo(elemento);
+    cabeza = nuevo;
+    nuevo.siguiente = cabeza;
+    tamaño++;
+}
+```
+
+Antes de seguir, responde en una frase, ¿qué le pasa a los elementos que ya estaban apilados después de
+llamar a este método?
+
+<label><input type="checkbox"> El nodo nuevo queda apuntando a los elementos viejos, así que la pila crece correctamente</label>
+<label><input type="checkbox"> nuevo.siguiente termina apuntando al propio nuevo, porque cabeza ya vale nuevo en esa línea</label>
+<label><input type="checkbox"> Todos los elementos que había antes quedan inalcanzables, sin que el programa avise nada</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La segunda y la tercera son correctas, y el error es idéntico al que ya resolviste en el Tema 1. La
+línea `cabeza = nuevo` se ejecuta antes que `nuevo.siguiente = cabeza`, así que para cuando el programa
+llega a la segunda línea, `cabeza` ya no vale lo que valía al entrar al método, vale `nuevo`, y
+`nuevo.siguiente = cabeza` en realidad hace `nuevo.siguiente = nuevo`. Toda la pila que había antes de
+esta llamada, sin importar cuántos elementos tuviera, queda sin ninguna referencia que la alcance. El
+programa no lanza ninguna excepción, `apilar` termina sin error y `tamaño` incluso queda incrementado,
+pero la próxima llamada a `desapilar` va a devolver el elemento que se acaba de apilar una y otra vez, en
+un ciclo, porque `cabeza.siguiente` apunta a sí misma. La corrección exige leer `cabeza` antes de
+sobrescribirla, `nuevo.siguiente = cabeza;` primero, y `cabeza = nuevo;` después, exactamente el orden
+que usa la versión correcta de arriba.
+:::
+
+## La cola enlazada: por qué hace falta un puntero al último nodo
+
+Una cola necesita dos extremos distintos, uno para entrar y otro para salir. `desencolar` puede seguir
+trabajando sobre la cabeza, con el mismo costo O(1) que ya viste en la pila, porque el elemento que sale
+siempre es el más viejo, el primero de la cadena. El problema aparece en `encolar`. Si la clase solo
+guarda la cabeza, no hay forma de saber dónde termina la cadena sin recorrerla entera, así que cada
+`encolar` costaría O(n), el mismo problema que tenía `insertarFinal` en el Tema 1 cuando `ListaEnlazada`
+todavía no guardaba un puntero al último nodo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Panel izquierdo: ColaEnlazada guarda cabeza y ultimo; encolar z solo conecta ultimo.siguiente = z y mueve ultimo, costo O(1). Panel derecho: si la cola solo guardara cabeza, encolar exigiria caminar desde cabeza hasta el nodo con siguiente en null para enganchar ahi el nuevo, costo O(n)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd32b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="185" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">con puntero ultimo: encolar es O(1)</text>
+  <text x="575" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">sin puntero ultimo: encolar es O(n)</text>
+  <text x="30" y="46" font-size="10.5" fill="#0e6f6c">cabeza</text>
+  <path d="M30,50 L30,68" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd32b)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="70" width="46" height="36"/><rect x="90" y="70" width="46" height="36"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="170" y="70" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="33" y="92">a</text><text x="113" y="92">b</text><text x="193" y="92">z</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#esd32b)"><path d="M56,88 L86,88"/><path d="M136,88 L166,88"/></g>
+  <path d="M216,88 L246,88" fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#esd32b)"/>
+  <text x="264" y="92" font-size="10.5" fill="#5b6876">null</text>
+  <text x="193" y="52" font-size="10.5" fill="#0e6f6c" text-anchor="middle">ultimo</text>
+  <path d="M193,58 L193,68" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd32b)"/>
+  <text x="140" y="130" font-size="11" fill="#0e6f6c" text-anchor="middle">ultimo.siguiente = z; ultimo = z</text>
+  <text x="140" y="150" font-size="10.5" fill="#5b6876" text-anchor="middle">un solo enlace, sin caminar nada</text>
+  <rect x="400" y="34" width="340" height="200" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="570" y="60" font-size="10.5" fill="#0e6f6c" text-anchor="middle">cabeza</text>
+  <path d="M570,66 L570,84" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd32b)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="422" y="86" width="46" height="36"/><rect x="502" y="86" width="46" height="36"/><rect x="582" y="86" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="445" y="108">a</text><text x="525" y="108">b</text><text x="605" y="108">c</text></g>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#esd32b)"><path d="M468,104 L498,104"/><path d="M548,104 L578,104"/></g>
+  <path d="M570,142 C540,160 500,168 460,140" fill="none" stroke="#0e6f6c" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#esd32b)"/>
+  <text x="570" y="180" font-size="10.5" fill="#0e6f6c" text-anchor="middle">caminar hasta c para enganchar z ahi</text>
+  <text x="570" y="216" font-size="11" fill="#5b6876" text-anchor="middle">cada encolar recorre toda la cola</text>
+</svg>
+
+:::
+
+La solución es la misma que ya usó `ListaDoble` en el Tema 1, agregar un segundo campo, `ultimo`, que
+siempre apunta al nodo final. Con `cabeza` y `ultimo` guardados aparte, `encolar` deja de necesitar
+ningún recorrido, solo engancha el nodo nuevo detrás de `ultimo` y mueve `ultimo` para que apunte a él.
+
+```java
+public class Cola {
+    private Nodo cabeza;
+    private Nodo ultimo;
+    private int tamaño;
+
+    public void encolar(Object elemento) {
+        Nodo nuevo = new Nodo(elemento);
+        if (estaVacia()) {
+            cabeza = nuevo;
+            ultimo = nuevo;
+        } else {
+            ultimo.siguiente = nuevo;
+            ultimo = nuevo;
+        }
+        tamaño++;
+    }
+
+    public Object desencolar() {
+        if (estaVacia()) {
+            throw new IllegalStateException("la cola esta vacia");
+        }
+        Nodo eliminado = cabeza;
+        cabeza = cabeza.siguiente;
+        if (cabeza == null) {
+            ultimo = null;
+        }
+        eliminado.siguiente = null;
+        tamaño--;
+        return eliminado.dato;
+    }
+
+    public Object frente() {
+        if (estaVacia()) {
+            throw new IllegalStateException("la cola esta vacia");
+        }
+        return cabeza.dato;
+    }
+
+    public boolean estaVacia() {
+        return cabeza == null;
+    }
+
+    public int tamaño() {
+        return tamaño;
+    }
+}
+```
+
+```python
+class Cola:
+    def __init__(self):
+        self._cabeza = None
+        self._ultimo = None
+        self._tamaño = 0
+
+    def encolar(self, elemento):
+        nuevo = Nodo(elemento)
+        if self.esta_vacia():
+            self._cabeza = nuevo
+            self._ultimo = nuevo
+        else:
+            self._ultimo.siguiente = nuevo
+            self._ultimo = nuevo
+        self._tamaño += 1
+
+    def desencolar(self):
+        if self.esta_vacia():
+            raise IndexError("la cola esta vacia")
+        eliminado = self._cabeza
+        self._cabeza = self._cabeza.siguiente
+        if self._cabeza is None:
+            self._ultimo = None
+        eliminado.siguiente = None
+        self._tamaño -= 1
+        return eliminado.dato
+
+    def frente(self):
+        if self.esta_vacia():
+            raise IndexError("la cola esta vacia")
+        return self._cabeza.dato
+
+    def esta_vacia(self):
+        return self._cabeza is None
+
+    def tamaño(self):
+        return self._tamaño
+```
+
+Fíjate en la línea `if (cabeza == null) { ultimo = null; }` dentro de `desencolar`. No es una precaución
+de más, es obligatoria, y la siguiente sección muestra qué se rompe si se omite.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bug de olvidar limpiar ultimo: al desencolar el unico elemento a, cabeza pasa a null pero ultimo sigue apuntando al nodo a ya desconectado; el siguiente encolar de b hace ultimo.siguiente = b sobre ese nodo huerfano, asi que b queda unido a un nodo que nadie mas referencia, mientras cabeza sigue en null y la cola se reporta vacia aunque tenga un elemento adentro" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd32c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">desencolar() sin el "if" que limpia ultimo, sobre una cola de un solo elemento</text>
+  <text x="130" y="42" font-size="11" fill="#5b6876" text-anchor="middle">despues de desencolar(): cabeza = null</text>
+  <text x="60" y="62" font-size="10.5" fill="#0e6f6c">cabeza = null</text>
+  <text x="330" y="62" font-size="10.5" fill="#0e6f6c">ultimo</text>
+  <path d="M330,68 L330,86" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd32c)"/>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="300" y="88" width="60" height="38"/></g>
+  <text x="330" y="112" font-size="11.5" fill="#5b6876" text-anchor="middle">a</text>
+  <text x="330" y="146" font-size="10.5" fill="#5b6876" text-anchor="middle">nodo ya fuera de la cola,</text>
+  <text x="330" y="160" font-size="10.5" fill="#5b6876" text-anchor="middle">pero ultimo lo sigue apuntando</text>
+  <path d="M400,106 L440,106" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#esd32c)"/>
+  <text x="470" y="90" font-size="11" fill="#0e6f6c">encolar(b):</text>
+  <text x="470" y="106" font-size="10.5" fill="#0e6f6c">ultimo.siguiente = b</text>
+  <text x="470" y="122" font-size="10.5" fill="#0e6f6c">ultimo = b</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="620" y="88" width="60" height="38"/></g>
+  <text x="650" y="112" font-size="11.5" fill="#12324f" text-anchor="middle">b</text>
+  <text x="475" y="150" font-size="10.5" fill="#5b6876">cabeza sigue en null: nadie llega hasta b</text>
+  <text x="380" y="200" font-size="11.5" fill="#5b6876" text-anchor="middle">estaVacia() dice true porque solo mira cabeza, aunque el arreglo de nodos ya tenga a b adentro</text>
+  <text x="380" y="222" font-size="11.5" fill="#0e6f6c" text-anchor="middle">frente() y desencolar() van a lanzar "la cola esta vacia" para siempre, aunque encolar nunca fallo</text>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Reto 2. La cola que se traga sus propios elementos
+
+Imagina la misma clase `Cola` de arriba, salvo que `desencolar` no trae la línea
+`if (cabeza == null) { ultimo = null; }`. El código compila y las pruebas con dos o tres encolamientos
+seguidos de sus desencolamientos pasan sin ningún error. El problema aparece con esta secuencia exacta,
+encolar `a`, desencolar `a`, y después encolar `b`.
+
+Antes de seguir, responde, ¿qué le pasa al elemento `b` después de esa secuencia, y qué va a devolver
+`estaVacia()` justo después de encolarlo?
+
+<label><input type="checkbox"> b queda correctamente en la cola, y estaVacia() devuelve false</label>
+<label><input type="checkbox"> b queda enlazado a un nodo ya descartado, pero cabeza sigue en null, así que estaVacia() devuelve true</label>
+<label><input type="checkbox"> frente() y desencolar() van a lanzar "la cola esta vacia" aunque b este guardado en memoria</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La segunda y la tercera son correctas. Al desencolar el único elemento `a`, `cabeza = cabeza.siguiente`
+deja `cabeza` en `null`, correcto hasta ahí, pero como falta el `if`, `ultimo` sigue apuntando al nodo de
+`a`, que ya nadie más referencia desde la cola. Cuando llega `encolar(b)`, la rama `estaVacia()` no se
+toma porque esa comprobación mira `cabeza`, que en efecto es `null`, así que en teoría debería entrar por
+la rama de cola vacía. Pero si la implementación buggy usa `ultimo != null` en vez de `estaVacia()` para
+decidir, como suele pasar en un primer intento, entra por la rama equivocada, `ultimo.siguiente = b`
+engancha `b` al nodo huérfano de `a` en vez de convertirlo en la nueva cabeza, y `cabeza` se queda en
+`null` para siempre. El resultado es que `estaVacia()` sigue devolviendo `true` aunque `b` exista en
+memoria, conectado a un nodo que ya nadie recorre desde `cabeza`, así que `frente()` y `desencolar()`
+lanzan `"la cola esta vacia"` en cada llamada siguiente, sin que `encolar` haya avisado ningún error.
+Los datos entran y desaparecen del punto de vista de la cola, sin excepción y sin aviso, la misma familia
+de bug silencioso que ya viste con la cabeza perdida del Tema 1. La corrección es la línea que falta,
+reiniciar `ultimo` a `null` en el mismo momento en que `cabeza` queda en `null`.
+:::
+
+## Complejidad de la cola enlazada
+
+| Operación     | Costo real |
+|---------------|------------|
+| `encolar`     | O(1)       |
+| `desencolar`  | O(1)       |
+| `frente`      | O(1)       |
+| `estaVacia`   | O(1)       |
+
+Las cuatro operaciones quedan en O(1) real, sin ninguna amortización de por medio, algo que la cola
+sobre arreglo circular del Tema 3 de la Unidad 2 no lograba del todo, porque de vez en cuando pagaba una
+redimensión de O(n).
+
+## Tres formas de resolver el mismo contrato, lado a lado
+
+Con la pila y la cola enlazadas ya completas, conviene poner las tres implementaciones que este curso ya
+construyó una junto a la otra, la del arreglo de la Unidad 2, la lista enlazada de hoy con su puntero al
+último nodo, y la variante ingenua de lista enlazada sin ese puntero, la que el Reto 2 acaba de mostrar
+que se rompe.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagramas de clase UML de Pila y Cola con sus campos de hoy: Pila guarda cabeza de tipo Nodo y un contador tamaño; Cola guarda cabeza, ultimo y tamaño, los tres de tipo Nodo o int; los cuatro metodos publicos de cada una son identicos a los del Tema 3 de la Unidad 2, solo cambio el campo privado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Mismos metodos publicos, campos privados distintos</text>
+  <rect x="30" y="34" width="330" height="180" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g stroke="#8fc9c5"><line x1="30" y1="68" x2="360" y2="68"/><line x1="30" y1="102" x2="360" y2="102"/></g>
+  <text x="195" y="56" font-size="15" font-weight="700" fill="#0e6f6c" text-anchor="middle">Pila</text>
+  <g font-size="12" fill="#12324f"><text x="44" y="88">- cabeza: Nodo</text></g>
+  <g font-size="12" fill="#12324f"><text x="44" y="122">+ apilar(elemento: Object)</text><text x="44" y="142">+ desapilar(): Object</text><text x="44" y="162">+ cima(): Object</text><text x="44" y="182">+ estaVacia(): boolean</text></g>
+  <rect x="400" y="34" width="330" height="180" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <g stroke="#c7d6e6"><line x1="400" y1="68" x2="730" y2="68"/><line x1="400" y1="120" x2="730" y2="120"/></g>
+  <text x="565" y="56" font-size="15" font-weight="700" fill="#12324f" text-anchor="middle">Cola</text>
+  <g font-size="12" fill="#12324f"><text x="414" y="88">- cabeza: Nodo</text><text x="414" y="106">- ultimo: Nodo</text></g>
+  <g font-size="12" fill="#12324f"><text x="414" y="140">+ encolar(elemento: Object)</text><text x="414" y="160">+ desencolar(): Object</text><text x="414" y="180">+ frente(): Object</text><text x="414" y="200">+ estaVacia(): boolean</text></g>
+</svg>
+
+:::
+
+| Implementación                          | apilar / encolar | desapilar / desencolar | Memoria de sobra | Localidad de caché |
+|-------------------------------------------|:---:|:---:|---|---|
+| Arreglo con redimensionamiento (Unidad 2)  | O(1) amortizado | O(1) | sí, por el factor de crecimiento | buena, casillas contiguas |
+| Lista enlazada con `ultimo` (este tema)    | O(1) real       | O(1) | no, cada nodo se pide justo a tiempo | pobre, nodos dispersos |
+| Lista enlazada sin `ultimo` (variante ingenua) | O(n) al encolar | O(1) | no | pobre, nodos dispersos |
+
+La tercera fila no es una opción real, es la que acabas de ver romperse en el Reto 2, y se incluye para
+que la diferencia con la segunda fila quede imposible de confundir, el `ultimo` no es un lujo, es lo que
+separa una cola utilizable de una que degrada su operación más común a O(n).
+
+Entre la primera fila y la segunda, la elección ya no es un error contra un acierto, es un compromiso
+real, el mismo que el Tema 1 explicó con la medición de recorrido, dos millones de elementos donde la
+lista tardó 1.4 veces más que el arreglo por la localidad de caché, no por la notación O grande, que era
+igual para las dos. El arreglo con redimensionamiento conviene cuando el número de elementos es
+razonablemente predecible y las operaciones se hacen en ráfagas rápidas, porque el hardware favorece
+recorrer casillas contiguas. La lista enlazada conviene cuando el tamaño es imposible de anticipar o
+cambia todo el tiempo entre muy poco y mucho, porque nunca desperdicia memoria en casillas que después
+sobran, y porque nunca paga el costo puntual de copiar todo un arreglo durante una redimensión, un costo
+que en un sistema con restricciones de tiempo real puede caer justo en el peor momento. El Javadoc de
+`java.util.ArrayDeque`, ya citado en el Tema 3 de la Unidad 2, recomienda esta clase respaldada por
+arreglo por encima de `LinkedList` para pila y cola de uso general, precisamente porque en la práctica
+esa localidad de caché pesa más que el ahorro de memoria de la lista enlazada, salvo que el problema
+concreto necesite justo lo que la lista enlazada ofrece.
+
+## Caso de estudio: verificar paréntesis balanceados con una pila
+
+Un compilador, antes de generar una sola línea de código máquina, tiene que confirmar que cada símbolo
+de apertura en el código fuente cierra con el símbolo correcto, en el orden correcto. La cadena
+`(a[b]c)` está balanceada, la cadena `(a[b)c]` no lo está, aunque tenga la misma cantidad de cada
+símbolo, porque el orden de cierre no respeta el orden de apertura.
+
+Antes de ver la solución, piensa en esta pregunta de análisis, ¿qué estructura te deja saber, en
+cualquier punto de la cadena, cuál fue el último símbolo de apertura que todavía no cerró?
+
+La respuesta es la pila, y no por casualidad, es exactamente el mismo orden que ya viste en `apilar` y
+`desapilar`, el último símbolo que abrió tiene que ser el primero en cerrar, LIFO puro. Cada símbolo de
+apertura se apila. Cada símbolo de cierre debe coincidir con lo que hay en la cima, si coincide se
+desapila y se sigue, si no coincide o la pila ya está vacía, la cadena no está balanceada.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Procesamiento de la cadena parentesis a corchete b corchete c parentesis con una pila: cada simbolo de apertura se apila, cada simbolo de cierre compara contra la cima y desapila si coincide; al terminar la cadena la pila queda vacia, señal de que todo cerro en el orden correcto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd32d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">balanceada("(a[b]c)"): la pila a lo largo del recorrido</text>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="700"><text x="60" y="42">(</text><text x="130" y="42">a</text><text x="200" y="42">[</text><text x="270" y="42">b</text><text x="340" y="42">]</text><text x="410" y="42">c</text><text x="480" y="42">)</text></g>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1"><line x1="30" y1="52" x2="510" y2="52"/></g>
+  <text x="60" y="80" font-size="11" fill="#5b6876" text-anchor="middle">apila (</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="42" y="88" width="36" height="30"/></g>
+  <text x="60" y="108" font-size="11.5" fill="#0e6f6c" text-anchor="middle">(</text>
+  <text x="200" y="80" font-size="11" fill="#5b6876" text-anchor="middle">apila [</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="182" y="88" width="36" height="30"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="182" y="120" width="36" height="30"/></g>
+  <text x="200" y="108" font-size="11.5" fill="#12324f" text-anchor="middle">[</text>
+  <text x="200" y="140" font-size="11.5" fill="#0e6f6c" text-anchor="middle">(</text>
+  <text x="340" y="80" font-size="11" fill="#5b6876" text-anchor="middle">] coincide con cima [, desapila</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="322" y="120" width="36" height="30"/></g>
+  <text x="340" y="140" font-size="11.5" fill="#0e6f6c" text-anchor="middle">(</text>
+  <text x="480" y="80" font-size="11" fill="#5b6876" text-anchor="middle">) coincide con cima (, desapila</text>
+  <text x="480" y="120" font-size="11" fill="#5b6876" text-anchor="middle">pila vacia</text>
+  <text x="380" y="180" font-size="11.5" fill="#0e6f6c" text-anchor="middle">al terminar la cadena la pila quedo vacia: balanceada</text>
+  <text x="380" y="200" font-size="11.5" fill="#5b6876" text-anchor="middle">si un cierre no coincide con la cima, o la pila esta vacia al cerrar, la cadena no esta balanceada</text>
+</svg>
+
+:::
+
+```java
+public static boolean balanceada(String cadena) {
+    Pila pila = new Pila();
+    Map<Character, Character> pares = Map.of(')', '(', ']', '[', '}', '{');
+    for (char simbolo : cadena.toCharArray()) {
+        if (simbolo == '(' || simbolo == '[' || simbolo == '{') {
+            pila.apilar(simbolo);
+        } else if (pares.containsKey(simbolo)) {
+            if (pila.estaVacia() || !pila.desapilar().equals(pares.get(simbolo))) {
+                return false;
+            }
+        }
+    }
+    return pila.estaVacia();
+}
+```
+
+```python
+def balanceada(cadena):
+    pila = Pila()
+    pares = {')': '(', ']': '[', '}': '{'}
+    for simbolo in cadena:
+        if simbolo in '([{':
+            pila.apilar(simbolo)
+        elif simbolo in pares:
+            if pila.esta_vacia() or pila.desapilar() != pares[simbolo]:
+                return False
+    return pila.esta_vacia()
+```
+
+El chequeo final, `return pila.estaVacia()`, es tan importante como el ciclo, porque una cadena como
+`"(a"` nunca produce ningún cierre incorrecto durante el recorrido, el único problema es que se queda un
+símbolo de apertura sin cerrar al terminar la cadena, y solo la pila no vacía al final lo delata.
+
+## Caso de estudio: una fila de atención con una cola
+
+Una sucursal atiende a sus clientes en el orden en que llegan, el primero que llega es el primero que se
+atiende. Antes de ver la solución, piensa en esta pregunta, si un cliente nuevo pudiera colarse cerca del
+mostrador en vez de ir al final de la fila, ¿qué le pasaría a los que ya estaban esperando su turno?
+
+Perderían su lugar sin haber hecho nada mal, que es exactamente lo que una cola impide por diseño. Cada
+cliente nuevo se encola al final, y el mostrador siempre atiende al que está en el frente, el mismo par
+de extremos, entrada por `ultimo` y salida por `cabeza`, que ya construiste arriba.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fila de atencion modelada con una cola: los clientes 4 y 5 llegan y se encolan al final junto al cliente 3, mientras el mostrador atiende y desencola al cliente 1 desde el frente; el orden de atencion, 1, 2, 3 y despues 4 y 5, respeta exactamente el orden de llegada" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd32e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">llegan por ultimo, se atienden por cabeza</text>
+  <text x="160" y="42" font-size="10.5" fill="#0e6f6c">cabeza (mostrador)</text>
+  <path d="M160,48 L160,66" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd32e)"/>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="120" y="68" width="60" height="40"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="200" y="68" width="60" height="40"/><rect x="280" y="68" width="60" height="40"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="150" y="92">1</text><text x="230" y="92">2</text><text x="310" y="92">3</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#esd32e)"><path d="M180,88 L196,88"/><path d="M260,88 L276,88"/></g>
+  <text x="340" y="52" font-size="10.5" fill="#0e6f6c">ultimo</text>
+  <path d="M340,58 L340,66" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#esd32e)"/>
+  <text x="500" y="60" font-size="11" fill="#5b6876" text-anchor="middle">llegan 4 y 5, se encolan</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="450" y="68" width="60" height="40"/><rect x="530" y="68" width="60" height="40"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="480" y="92">4</text><text x="560" y="92">5</text></g>
+  <path d="M340,88 C380,88 410,88 446,88" fill="none" stroke="#cfd8e3" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#esd32e)"/>
+  <text x="150" y="150" font-size="11" fill="#0e6f6c" text-anchor="middle">desencolar() atiende a 1 primero</text>
+  <text x="380" y="190" font-size="11.5" fill="#5b6876" text-anchor="middle">orden de atencion: 1, 2, 3, 4, 5, exactamente el orden de llegada</text>
+</svg>
+
+:::
+
+```java
+public static void simularAtencion(List<String> clientes) {
+    Cola fila = new Cola();
+    for (String cliente : clientes) {
+        fila.encolar(cliente);
+        System.out.println(cliente + " llega y espera turno");
+    }
+    while (!fila.estaVacia()) {
+        System.out.println(fila.desencolar() + " es atendido");
+    }
+}
+```
+
+```python
+def simular_atencion(clientes):
+    fila = Cola()
+    for cliente in clientes:
+        fila.encolar(cliente)
+        print(f"{cliente} llega y espera turno")
+    while not fila.esta_vacia():
+        print(f"{fila.desencolar()} es atendido")
+```
+
+Esta misma estructura vuelve a aparecer en el Tema 5 de esta unidad, con un nombre distinto para el mismo
+mecanismo. Un algoritmo de recorrido de grafos por niveles, conocido como BFS, visita primero todos los
+vecinos directos de un nodo de partida antes de avanzar a los vecinos de esos vecinos, y logra ese orden
+exacto encolando cada nodo apenas se descubre y desencolando siempre el más antiguo, la misma disciplina
+de fila que acabas de programar para atender clientes.
+
+## Qué pasa si usas Pila donde el problema pide Cola
+
+El error de confundir estos dos contratos no es un descuido menor, tiene una consecuencia observable de
+inmediato. Un sistema de impresión recibe trabajos de tres usuarios, en este orden, `informe.pdf`,
+`factura.pdf` y `boletin.pdf`, y los va guardando en una estructura antes de imprimirlos.
+
+```java
+Pila trabajosMal = new Pila();
+trabajosMal.apilar("informe.pdf");
+trabajosMal.apilar("factura.pdf");
+trabajosMal.apilar("boletin.pdf");
+while (!trabajosMal.estaVacia()) {
+    System.out.println("imprime " + trabajosMal.desapilar());
+}
+```
+
+```
+imprime boletin.pdf
+imprime factura.pdf
+imprime informe.pdf
+```
+
+El usuario que envió su informe primero es el que más espera, porque una pila devuelve siempre el último
+que entró. Cambiar `Pila` por `Cola`, sin tocar ninguna otra línea del programa que envía los trabajos,
+corrige el orden por completo.
+
+```
+imprime informe.pdf
+imprime factura.pdf
+imprime boletin.pdf
+```
+
+Ningún compilador ni ningún tipo de dato avisa este error, porque `Pila` y `Cola` son dos clases
+distintas con dos contratos válidos cada uno, el programa compila y corre sin ninguna excepción en los
+dos casos. La única señal de que algo salió mal es el orden en el que las cosas ocurren, y esa señal
+solo se nota si alguien compara el resultado contra lo que el problema pedía de verdad.
+
+::: {.callout-tip}
+## Reto 3. Predice el orden de salida
+
+Se encolan o apilan, según la estructura, los números 10, 20 y 30, en ese orden, uno tras otro, sin sacar
+ninguno hasta el final. Después se sacan todos, uno por uno, con `desapilar()` o `desencolar()` según
+corresponda, y se imprime cada uno en el orden en que sale.
+
+<label><input type="checkbox"> Con una Pila, el orden de salida es 10, 20, 30</label>
+<label><input type="checkbox"> Con una Pila, el orden de salida es 30, 20, 10</label>
+<label><input type="checkbox"> Con una Cola, el orden de salida es 10, 20, 30</label>
+<label><input type="checkbox"> Con una Cola, el orden de salida es 30, 20, 10</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+La segunda y la tercera son correctas. La `Pila` devuelve siempre el último elemento que entró, así que
+tras apilar 10, 20 y 30, el primer `desapilar()` devuelve 30, después 20, después 10, el orden queda
+invertido frente a como entraron. La `Cola` devuelve siempre el primero que entró, así que tras encolar
+10, 20 y 30, el primer `desencolar()` devuelve 10, después 20, después 30, el mismo orden de llegada. Es
+la misma diferencia que separa el ejemplo del sistema de impresión de arriba, LIFO contra FIFO, y ninguna
+de las dos es "la correcta" en abstracto, cada una es correcta para el problema que de verdad pide ese
+orden.
+:::
+
+## Lo que java.util.LinkedList y collections.deque ya resuelven
+
+Lo que construiste hoy tampoco es un ejercicio aislado. El Javadoc de `java.util.LinkedList`, ya citado
+en el Tema 1 de esta unidad, describe la clase como una implementación de las interfaces `List` y
+`Deque` con lista doblemente enlazada por dentro, e implementar `Deque` significa que trae de fábrica los
+métodos `push` y `pop` para usarla como pila, y `offer` y `poll` para usarla como cola, con el mismo
+costo O(1) que construiste a mano en este tema, porque por dentro mantiene exactamente los dos punteros,
+a la cabeza y a la cola, que hoy programaste tú mismo. La documentación oficial de `collections.deque`
+en Python, también citada en el Tema 1, resuelve el mismo par de contratos con `append` y `pop` para el
+lado de la pila, y `append` y `popleft` para el lado de la cola, sin que el programador tenga que
+mantener ningún puntero aparte, porque `deque` ya lo hace por dentro.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] Por qué `apilar` y `desapilar` siempre trabajan sobre la cabeza de la lista, y qué costo tendrían
+      si trabajaran sobre el otro extremo sin un puntero que lo señale
+- [ ] Por qué `Cola` necesita un segundo puntero, `ultimo`, y qué costo tendría `encolar` sin él
+- [ ] Qué le pasa a una cola si `desencolar` deja el último elemento sin reiniciar `ultimo` a `null`
+      cuando la cola queda vacía
+- [ ] Comparar pila y cola sobre arreglo redimensionable contra pila y cola sobre lista enlazada, en
+      costo real y en localidad de caché
+- [ ] Resolver un problema de paréntesis balanceados con una pila, explicando por qué el orden LIFO es
+      el que necesita ese problema
+- [ ] Resolver una simulación de fila de atención con una cola, explicando por qué el orden FIFO es el
+      que necesita ese problema
+- [ ] Reconocer la consecuencia observable de usar Pila donde el problema pide Cola, o al revés
+:::
+
+## Lo que sigue
+
+El Tema 3 de esta unidad deja atrás las estructuras lineales y construye la primera estructura
+jerárquica del curso, el árbol binario de búsqueda. Va a reutilizar la misma idea de `Nodo` que ya
+conoces, con dos referencias en vez de una, y va a apoyarse en la pila o en la cola que construiste hoy
+para programar sus recorridos, otra razón más para que el contrato de hoy quede firme antes de avanzar.
+
+## Recursos
+
+- Weiss, M. A. *Estructuras de datos en Java.* Capítulo sobre listas, pilas y colas, sección de
+  implementación de pilas y colas con lista enlazada.
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo sobre pilas, colas y
+  deques, con su implementación con lista enlazada.
+- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
+  "Elementary Data Structures", sección sobre pilas y colas.
+- [Javadoc de `java.util.LinkedList`, Java SE 17](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/LinkedList.html)
+- [Javadoc de `java.util.Deque`, Java SE 17](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Deque.html)
+- [Javadoc de `java.util.ArrayDeque`, Java SE 17](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/ArrayDeque.html)
+- [`collections.deque`, documentación oficial de Python 3](https://docs.python.org/3/library/collections.html#collections.deque)
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

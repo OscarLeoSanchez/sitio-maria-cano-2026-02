@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Oscar Leonel Sánchez Conde">
+
+<title>Tema 3. Caminos más cortos y árboles de expansión mínima – Clases María Cano 2026-02</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../estilos/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-8713356167177fd77be9341a95314561.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-9d905b06f1e8b96cef5de7dac512495c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No se han encontrado resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-04/index.html">Unidad 4. Métodos de ordenamiento, búsqueda y eficiencia</a></li><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-04/tema-03-caminos-mas-cortos/index.html">Tema 3. Caminos más cortos y árboles de expansión mínima</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../../../">Clases María Cano 2026-02</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Presentación del curso</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 1. Introducción a las estructuras de datos</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-01-generalidades-algoritmos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Generalidades de algoritmos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-02-poo/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. Paradigma de programación orientada a objetos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-03-recursividad/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Recursividad e implementación</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-01/tema-04-estrategias/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 4. Estrategias de programación</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 2. Estructuras fijas</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/tema-01-vectores-arreglos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Vectores o arreglos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/tema-02-matrices/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. La fila se convierte en cuadrícula</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-02/tema-03-pilas-colas-vectores/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Pilas y colas usando vectores</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 3. Estructuras dinámicas</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/tema-01-listas-enlazadas/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Listas simples, dobles y circulares</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/tema-02-pilas-colas-listas/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. Pilas y colas usando listas</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/tema-03-arboles-binarios-busqueda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Árboles binarios de búsqueda</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/tema-04-arboles-avl/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 4. Árboles 2-3 y árboles AVL</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-03/tema-05-grafos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 5. Grafos</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 4. Métodos de ordenamiento, búsqueda y eficiencia</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-04/tema-01-ordenamiento/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Algoritmos de ordenamiento</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-04/tema-02-eficiencia/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. Eficiencia y comparación de algoritmos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-04/tema-03-caminos-mas-cortos/index.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Tema 3. Caminos más cortos y árboles de expansión mínima</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../estructura-de-datos/unidad-04/tema-04-busqueda/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 4. Algoritmos de búsqueda</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta guía</h2>
+   
+  <ul>
+  <li><a href="#el-algoritmo-de-dijkstra-el-camino-más-barato-desde-un-origen" id="toc-el-algoritmo-de-dijkstra-el-camino-más-barato-desde-un-origen" class="nav-link active" data-scroll-target="#el-algoritmo-de-dijkstra-el-camino-más-barato-desde-un-origen"><span class="header-section-number">1</span> El algoritmo de Dijkstra: el camino más barato desde un origen</a>
+  <ul class="collapse">
+  <li><a href="#cómo-elegir-el-vértice-más-barato-la-cola-de-prioridad" id="toc-cómo-elegir-el-vértice-más-barato-la-cola-de-prioridad" class="nav-link" data-scroll-target="#cómo-elegir-el-vértice-más-barato-la-cola-de-prioridad">Cómo elegir el vértice más barato: la cola de prioridad</a></li>
+  <li><a href="#traza-de-dijkstra-sobre-el-grafo-ponderado" id="toc-traza-de-dijkstra-sobre-el-grafo-ponderado" class="nav-link" data-scroll-target="#traza-de-dijkstra-sobre-el-grafo-ponderado">Traza de Dijkstra sobre el grafo ponderado</a></li>
+  <li><a href="#por-qué-dijkstra-falla-con-pesos-negativos" id="toc-por-qué-dijkstra-falla-con-pesos-negativos" class="nav-link" data-scroll-target="#por-qué-dijkstra-falla-con-pesos-negativos">Por qué Dijkstra falla con pesos negativos</a></li>
+  <li><a href="#complejidad-de-dijkstra-según-la-cola-de-prioridad" id="toc-complejidad-de-dijkstra-según-la-cola-de-prioridad" class="nav-link" data-scroll-target="#complejidad-de-dijkstra-según-la-cola-de-prioridad">Complejidad de Dijkstra según la cola de prioridad</a></li>
+  </ul></li>
+  <li><a href="#el-algoritmo-de-prim-árbol-de-expansión-mínima-por-vértices" id="toc-el-algoritmo-de-prim-árbol-de-expansión-mínima-por-vértices" class="nav-link" data-scroll-target="#el-algoritmo-de-prim-árbol-de-expansión-mínima-por-vértices"><span class="header-section-number">2</span> El algoritmo de Prim: árbol de expansión mínima por vértices</a>
+  <ul class="collapse">
+  <li><a href="#traza-de-prim-sobre-el-grafo-ponderado" id="toc-traza-de-prim-sobre-el-grafo-ponderado" class="nav-link" data-scroll-target="#traza-de-prim-sobre-el-grafo-ponderado">Traza de Prim sobre el grafo ponderado</a></li>
+  </ul></li>
+  <li><a href="#el-algoritmo-de-kruskal-árbol-de-expansión-mínima-por-aristas" id="toc-el-algoritmo-de-kruskal-árbol-de-expansión-mínima-por-aristas" class="nav-link" data-scroll-target="#el-algoritmo-de-kruskal-árbol-de-expansión-mínima-por-aristas"><span class="header-section-number">3</span> El algoritmo de Kruskal: árbol de expansión mínima por aristas</a>
+  <ul class="collapse">
+  <li><a href="#detectar-ciclos-conjuntos-disjuntos" id="toc-detectar-ciclos-conjuntos-disjuntos" class="nav-link" data-scroll-target="#detectar-ciclos-conjuntos-disjuntos">Detectar ciclos: conjuntos disjuntos</a></li>
+  <li><a href="#traza-de-kruskal-sobre-el-grafo-ponderado" id="toc-traza-de-kruskal-sobre-el-grafo-ponderado" class="nav-link" data-scroll-target="#traza-de-kruskal-sobre-el-grafo-ponderado">Traza de Kruskal sobre el grafo ponderado</a></li>
+  <li><a href="#complejidad-de-kruskal-y-cuándo-preferirlo-sobre-prim" id="toc-complejidad-de-kruskal-y-cuándo-preferirlo-sobre-prim" class="nav-link" data-scroll-target="#complejidad-de-kruskal-y-cuándo-preferirlo-sobre-prim">Complejidad de Kruskal y cuándo preferirlo sobre Prim</a></li>
+  </ul></li>
+  <li><a href="#los-tres-algoritmos-uno-al-lado-del-otro" id="toc-los-tres-algoritmos-uno-al-lado-del-otro" class="nav-link" data-scroll-target="#los-tres-algoritmos-uno-al-lado-del-otro"><span class="header-section-number">4</span> Los tres algoritmos, uno al lado del otro</a></li>
+  <li><a href="#lo-que-te-llevas-de-hoy" id="toc-lo-que-te-llevas-de-hoy" class="nav-link" data-scroll-target="#lo-que-te-llevas-de-hoy"><span class="header-section-number">5</span> Lo que te llevas de hoy</a></li>
+  <li><a href="#lo-que-sigue" id="toc-lo-que-sigue" class="nav-link" data-scroll-target="#lo-que-sigue"><span class="header-section-number">6</span> Lo que sigue</a></li>
+  <li><a href="#recursos" id="toc-recursos" class="nav-link" data-scroll-target="#recursos"><span class="header-section-number">7</span> Recursos</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-04/index.html">Unidad 4. Métodos de ordenamiento, búsqueda y eficiencia</a></li><li class="breadcrumb-item"><a href="../../../estructura-de-datos/unidad-04/tema-03-caminos-mas-cortos/index.html">Tema 3. Caminos más cortos y árboles de expansión mínima</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Tema 3. Caminos más cortos y árboles de expansión mínima</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Autor/a</div>
+    <div class="quarto-title-meta-contents">
+             <p>Oscar Leonel Sánchez Conde </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Fecha de publicación</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">19 de agosto de 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="ficha">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 88%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Unidad</td>
+<td>Unidad 4. Métodos de ordenamiento, búsqueda y eficiencia</td>
+</tr>
+<tr class="even">
+<td>Tema</td>
+<td>Tema 3. Caminos más cortos y árboles de expansión mínima</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>El Tema 5 de la Unidad 3 dejó lista la clase <code>GrafoPonderado</code>, con cada vecino guardado junto al peso de la arista que lo conecta, y cerró con el Reto 5, sumar el peso de dos caminos entre el vértice 1 y el vértice 5 y decidir cuál sale más barato. Ese reto se resolvió a mano, sumando dos caminos concretos, <code>1-2-4-5</code> con doce de costo contra <code>1-3-4-5</code> con seis, pero la pregunta general, cuál es el camino más barato entre un vértice y cualquier otro, sin tener que enumerar cada camino posible, quedó abierta a propósito. Este tema la cierra con el algoritmo de Dijkstra, y de paso resuelve un problema relacionado pero distinto, cómo conectar todos los vértices de un grafo al menor costo total posible, con los algoritmos de Prim y de Kruskal. Los tres trabajan directamente sobre <code>GrafoPonderado</code>, sin ningún cambio a su representación, y los tres se analizan con el mismo vocabulario de notación asintótica que formalizó el Tema 2.</p>
+<section id="el-algoritmo-de-dijkstra-el-camino-más-barato-desde-un-origen" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="el-algoritmo-de-dijkstra-el-camino-más-barato-desde-un-origen"><span class="header-section-number">1</span> El algoritmo de Dijkstra: el camino más barato desde un origen</h2>
+<p>Dijkstra resuelve el problema de caminos más cortos de origen único, encontrar la distancia mínima desde un vértice de partida hacia todos los demás vértices alcanzables del grafo. La idea central es voraz, en cada paso el algoritmo da por definitiva la distancia del vértice no visitado más barato que conoce hasta ese momento, y usa esa distancia para intentar mejorar la de sus vecinos. Esto funciona porque, en un grafo sin pesos negativos, ningún camino que pase por un vértice más caro puede terminar siendo más barato que uno que ya llegó por la ruta más económica conocida, así que una vez que un vértice se marca como definitivo, ninguna exploración posterior puede mejorar su distancia. Esa garantía, como se ve más adelante, es exactamente la que se rompe cuando aparece un peso negativo.</p>
+<section id="cómo-elegir-el-vértice-más-barato-la-cola-de-prioridad" class="level3">
+<h3 class="anchored" data-anchor-id="cómo-elegir-el-vértice-más-barato-la-cola-de-prioridad">Cómo elegir el vértice más barato: la cola de prioridad</h3>
+<p>Cada paso de Dijkstra necesita responder la misma pregunta, de todos los vértices que todavía no son definitivos, cuál tiene la distancia provisional más baja. Resolver esa pregunta recorriendo la lista completa cada vez funciona, pero cuesta caro, y una <em>cola de prioridad</em> es la estructura diseñada justo para esto, mantener un conjunto de elementos y devolver siempre el de menor valor sin tener que ordenarlos todos de nuevo en cada consulta.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de dos formas de implementar extraer el vertice con menor distancia. A la izquierda, una lista sin ordenar con las entradas distancia 2 vertice 3, distancia 4 vertice 2 y distancia 6 vertice 5, con una flecha que barre las tres para encontrar el minimo, costo O(n) por extraccion. A la derecha, un monticulo binario con la misma entrada distancia 2 vertice 3 en la raiz y las otras dos entradas como hijos, la raiz siempre es el minimo y extraerla cuesta O(log n)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="190" y="24" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Lista sin ordenar: O(n) por extraccion</text> <text x="570" y="24" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Monticulo binario: O(log n) por extraccion</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="60" width="130" height="36" rx="6"></rect><rect x="60" y="106" width="130" height="36" rx="6"></rect><rect x="60" y="152" width="130" height="36" rx="6"></rect></g> <g font-size="11" fill="#12324f" font-weight="600" text-anchor="middle"><text x="125" y="82">dist 2, v 3</text><text x="125" y="128">dist 4, v 2</text><text x="125" y="174">dist 6, v 5</text></g> <path d="M220,78 C245,60 245,190 220,170" fill="none" stroke="#0e6f6c" stroke-width="1.6" stroke-dasharray="4 3"></path> <text x="252" y="128" font-size="10" fill="#0e6f6c" text-anchor="start">hay que recorrer</text> <text x="252" y="142" font-size="10" fill="#0e6f6c" text-anchor="start">las tres para saber</text> <text x="252" y="156" font-size="10" fill="#0e6f6c" text-anchor="start">cual es la menor</text> <g fill="#e4f2f1" stroke="#8fc9c5"><circle cx="570" cy="75" r="34"></circle></g> <text x="570" y="72" font-size="10.5" fill="#0e6f6c" font-weight="700" text-anchor="middle">dist 2</text> <text x="570" y="86" font-size="10.5" fill="#0e6f6c" font-weight="700" text-anchor="middle">v 3</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="550" y1="100" x2="500" y2="150"></line><line x1="590" y1="100" x2="640" y2="150"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="500" cy="180" r="30"></circle><circle cx="640" cy="180" r="30"></circle></g> <text x="500" y="177" font-size="10" fill="#12324f" font-weight="600" text-anchor="middle">dist 4</text> <text x="500" y="190" font-size="10" fill="#12324f" font-weight="600" text-anchor="middle">v 2</text> <text x="640" y="177" font-size="10" fill="#12324f" font-weight="600" text-anchor="middle">dist 6</text> <text x="640" y="190" font-size="10" fill="#12324f" font-weight="600" text-anchor="middle">v 5</text> <text x="570" y="235" font-size="10" fill="#0e6f6c" text-anchor="middle">la raiz siempre es el minimo: extraerla solo pide reacomodar el arbol</text>
+</svg>
+</div>
+<p>Un montículo binario guarda sus elementos en un árbol donde cada nodo es siempre menor o igual que sus dos hijos, así que el elemento mínimo queda siempre en la raíz, consultarlo cuesta O(1) y extraerlo cuesta O(log n), porque tras quitar la raíz hay que mover el último elemento a su lugar y dejarlo hundirse hasta la posición donde vuelve a cumplirse esa regla, un recorrido de a lo sumo log2(n) niveles. Insertar un elemento nuevo cuesta también O(log n), por la misma razón, el elemento entra al final y sube burbujeando hasta su posición correcta. Implementar un montículo binario desde cero es un tema en sí mismo, así que esta guía usa la implementación ya lista de la biblioteca estándar, el módulo <code>heapq</code> en Python y la clase <code>PriorityQueue</code> en Java, una simplificación razonable de la operación de extraer el mínimo que no cambia ninguna idea del algoritmo, solo evita reescribir una estructura de datos que ya viene resuelta y probada.</p>
+<p>Ni <code>heapq</code> ni <code>PriorityQueue</code> ofrecen una operación directa para bajar la prioridad de un elemento que ya está adentro, lo que en la literatura se llama <em>decrease-key</em>. La solución práctica, y la que usa el código de esta guía, es insertar una entrada nueva cada vez que se mejora una distancia, sin quitar la entrada vieja, y descartarla como obsoleta si llega a salir de la cola después de que el vértice ya quedó definitivo. Esa entrada obsoleta no rompe el resultado, solo cuesta un poco de memoria y una comprobación extra al momento de extraerla, el precio de simplificar la implementación en vez de mantener un índice que permita localizar y actualizar cualquier entrada.</p>
+</section>
+<section id="traza-de-dijkstra-sobre-el-grafo-ponderado" class="level3">
+<h3 class="anchored" data-anchor-id="traza-de-dijkstra-sobre-el-grafo-ponderado">Traza de Dijkstra sobre el grafo ponderado</h3>
+<p>Sobre la componente 1 del grafo de la Unidad 3, con las aristas <code>1-2=4</code>, <code>1-3=2</code>, <code>2-4=5</code>, <code>3-4=1</code>, <code>4-5=3</code> y <code>5-6=6</code>, Dijkstra desde el vértice 1 confirma justo lo que el Reto 5 del Tema 5 ya había adelantado a mano, la distancia más barata hasta el vértice 5 es seis, y llega por el camino <code>1-3-4-5</code>, no por <code>1-2-4-5</code>.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Traza de Dijkstra desde el vertice 1 sobre la componente 1 del grafo ponderado. Orden de finalizacion marcado junto a cada vertice: 1 primero con distancia 0, 3 segundo con distancia 2, 4 tercero con distancia 3, 2 cuarto con distancia 4, 5 quinto con distancia 6, 6 sexto con distancia 12. A la derecha, la traza paso a paso de la cola de prioridad" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="150" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Dijkstra desde 1: orden 1, 3, 4, 2, 5, 6</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="150" y1="55" x2="75" y2="120"></line><line x1="150" y1="55" x2="225" y2="120"></line><line x1="75" y1="120" x2="150" y2="185"></line><line x1="225" y1="120" x2="150" y2="185"></line><line x1="150" y1="185" x2="150" y2="250"></line><line x1="150" y1="250" x2="150" y2="315"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"></circle><circle cx="75" cy="120" r="18"></circle><circle cx="225" cy="120" r="18"></circle><circle cx="150" cy="185" r="18"></circle><circle cx="150" cy="250" r="18"></circle><circle cx="150" cy="315" r="18"></circle></g> <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text></g> <g font-size="9.5" fill="#5b6876" font-weight="700" text-anchor="middle"><text x="105" y="90">4</text><text x="200" y="90">2</text><text x="105" y="156">5</text><text x="200" y="156">1</text><text x="165" y="221">3</text><text x="165" y="286">6</text></g> <g text-anchor="middle" font-size="11" fill="#0e6f6c" font-weight="700"><text x="170" y="38">1o, dist 0</text><text x="30" y="103">4o, dist 4</text><text x="270" y="103">2o, dist 2</text><text x="98" y="168">3o, dist 3</text><text x="170" y="238">5o, dist 6</text><text x="170" y="303">6o, dist 12</text></g> <text x="450" y="42" font-size="10.5" fill="#12324f" font-weight="700">paso a paso, con cola de prioridad:</text> <g font-size="9.5" fill="#5b6876"><text x="450" y="60">1. cola=[(0,1)] -&gt; extrae 1, relaja 2 y 3</text><text x="450" y="76"> cola=[(2,3),(4,2)]</text><text x="450" y="92">2. extrae 3 (dist 2), relaja 4: dist(4)=3</text><text x="450" y="108"> cola=[(3,4),(4,2)]</text><text x="450" y="124">3. extrae 4 (dist 3), relaja 5: dist(5)=6</text><text x="450" y="140"> 2 via 4 costaria 8, no mejora, se ignora</text><text x="450" y="156"> cola=[(4,2),(6,5)]</text><text x="450" y="172">4. extrae 2 (dist 4), sin mejoras nuevas</text><text x="450" y="188"> cola=[(6,5)]</text><text x="450" y="204">5. extrae 5 (dist 6), relaja 6: dist(6)=12</text><text x="450" y="220"> cola=[(12,6)]</text><text x="450" y="236">6. extrae 6 (dist 12), cola vacia: termina</text></g> <text x="380" y="330" font-size="10" fill="#0e6f6c" text-anchor="middle">distancias finales desde 1: {1:0, 2:4, 3:2, 4:3, 5:6, 6:12}</text>
+</svg>
+</div>
+<p>El vértice 3 se finaliza antes que el 2 aunque el 2 sea vecino directo de 1, porque su distancia provisional, dos, es menor que la del 2, cuatro, y Dijkstra siempre extrae el vértice no definitivo más barato, sin importar cuántos saltos tiene desde el origen. Al finalizar el 4, la relajación hacia el 2 calcula un camino alternativo de ocho, <code>1-3-4-2</code>, que no mejora los cuatro ya conocidos de la arista directa <code>1-2</code>, así que esa relajación no cambia nada, un candidato descartado sin ceremonia, como pasa la mayor parte del tiempo dentro del algoritmo.</p>
+<p>Estos métodos se agregan directamente a la clase <code>GrafoPonderado</code> que ya tienes.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="bu">Map</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">,</span> <span class="bu">Integer</span><span class="op">&gt;</span> <span class="fu">dijkstra</span><span class="op">(</span><span class="dt">int</span> origen<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">Map</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">,</span> <span class="bu">Integer</span><span class="op">&gt;</span> distancia <span class="op">=</span> <span class="kw">new</span> <span class="bu">HashMap</span><span class="op">&lt;&gt;();</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> v <span class="op">:</span> <span class="fu">vertices</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        distancia<span class="op">.</span><span class="fu">put</span><span class="op">(</span>v<span class="op">,</span> <span class="bu">Integer</span><span class="op">.</span><span class="fu">MAX_VALUE</span><span class="op">);</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    distancia<span class="op">.</span><span class="fu">put</span><span class="op">(</span>origen<span class="op">,</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">PriorityQueue</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">[]&gt;</span> cola <span class="op">=</span> <span class="kw">new</span> <span class="bu">PriorityQueue</span><span class="op">&lt;&gt;((</span>a<span class="op">,</span> b<span class="op">)</span> <span class="op">-&gt;</span> a<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">-</span> b<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    cola<span class="op">.</span><span class="fu">add</span><span class="op">(</span><span class="kw">new</span> <span class="dt">int</span><span class="op">[]{</span>origen<span class="op">,</span> <span class="dv">0</span><span class="op">});</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">Set</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">&gt;</span> finalizados <span class="op">=</span> <span class="kw">new</span> <span class="bu">HashSet</span><span class="op">&lt;&gt;();</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!</span>cola<span class="op">.</span><span class="fu">isEmpty</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span><span class="op">[]</span> actual <span class="op">=</span> cola<span class="op">.</span><span class="fu">poll</span><span class="op">();</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> u <span class="op">=</span> actual<span class="op">[</span><span class="dv">0</span><span class="op">],</span> distU <span class="op">=</span> actual<span class="op">[</span><span class="dv">1</span><span class="op">];</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>finalizados<span class="op">.</span><span class="fu">contains</span><span class="op">(</span>u<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span> <span class="co">// entrada obsoleta: ya se proceso este vertice con una distancia mejor</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        finalizados<span class="op">.</span><span class="fu">add</span><span class="op">(</span>u<span class="op">);</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span><span class="op">[]</span> par <span class="op">:</span> <span class="fu">vecinos</span><span class="op">(</span>u<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int</span> v <span class="op">=</span> par<span class="op">[</span><span class="dv">0</span><span class="op">],</span> peso <span class="op">=</span> par<span class="op">[</span><span class="dv">1</span><span class="op">];</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int</span> nuevaDistancia <span class="op">=</span> distU <span class="op">+</span> peso<span class="op">;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>nuevaDistancia <span class="op">&lt;</span> distancia<span class="op">.</span><span class="fu">get</span><span class="op">(</span>v<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>                distancia<span class="op">.</span><span class="fu">put</span><span class="op">(</span>v<span class="op">,</span> nuevaDistancia<span class="op">);</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>                cola<span class="op">.</span><span class="fu">add</span><span class="op">(</span><span class="kw">new</span> <span class="dt">int</span><span class="op">[]{</span>v<span class="op">,</span> nuevaDistancia<span class="op">});</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> distancia<span class="op">;</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> heapq</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> dijkstra(<span class="va">self</span>, origen):</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    distancia <span class="op">=</span> {v: <span class="bu">float</span>(<span class="st">'inf'</span>) <span class="cf">for</span> v <span class="kw">in</span> <span class="va">self</span>.vertices()}</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    distancia[origen] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    cola <span class="op">=</span> [(<span class="dv">0</span>, origen)]</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    finalizados <span class="op">=</span> <span class="bu">set</span>()</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> cola:</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        dist_u, u <span class="op">=</span> heapq.heappop(cola)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> u <span class="kw">in</span> finalizados:</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span>  <span class="co"># entrada obsoleta: ya se proceso este vertice con una distancia mejor</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        finalizados.add(u)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> v, peso <span class="kw">in</span> <span class="va">self</span>.vecinos(u):</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            nueva_distancia <span class="op">=</span> dist_u <span class="op">+</span> peso</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> nueva_distancia <span class="op">&lt;</span> distancia[v]:</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>                distancia[v] <span class="op">=</span> nueva_distancia</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>                heapq.heappush(cola, (nueva_distancia, v))</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> distancia</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La comprobación <code>if u in finalizados: continue</code> es justo la que descarta las entradas obsoletas que deja la falta de <code>decrease-key</code>, sin ese chequeo el algoritmo seguiría dando el resultado correcto en distancia, porque procesar un vértice ya finalizado con una distancia peor no cambia nada, pero haría trabajo de más innecesario cada vez que una entrada vieja sale de la cola.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 1. Traza Dijkstra desde otro origen
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Sobre el mismo grafo ponderado, corres <code>dijkstra(4)</code> en vez de <code>dijkstra(1)</code>. Antes de seguir, calcula la distancia final de 4 a 6.</p>
+<p><label><input type="checkbox"> 8</label> <label><input type="checkbox"> 9</label> <label><input type="checkbox"> 12</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 1
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La segunda es correcta, nueve. Desde 4 el algoritmo finaliza primero 3 con distancia 1, porque la arista <code>3-4</code> pesa 1. Desde 3 relaja 1 con distancia 1 + 2 = 3. El siguiente en extraerse es 1, con distancia 3, porque hay empate con el 5 (que también quedó en 3) y el desempate por número de vértice favorece al menor. Desde 1 se intenta relajar 2 con 3 + 4 = 7, peor que el 5 que ya tenía por la arista directa <code>4-2</code>, así que no mejora. Se extrae 5 con distancia 3, y desde ahí se relaja 6 con 3 + 6 = 9. Por último se extrae 2 con distancia 5, sin relajaciones nuevas, y 6 con distancia 9. El resultado final es <code>{4:0, 3:1, 1:3, 5:3, 2:5, 6:9}</code>.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="por-qué-dijkstra-falla-con-pesos-negativos" class="level3">
+<h3 class="anchored" data-anchor-id="por-qué-dijkstra-falla-con-pesos-negativos">Por qué Dijkstra falla con pesos negativos</h3>
+<p>Todo el argumento de Dijkstra depende de una idea, una vez que un vértice queda finalizado con su distancia mínima, ningún camino descubierto después puede mejorarla, porque cualquier camino alternativo tendría que pasar por un vértice todavía no finalizado, que por construcción tiene una distancia provisional mayor o igual, y sumarle el peso de al menos una arista más solo puede aumentar el costo. Esa garantía se rompe en cuanto una arista puede restar en vez de sumar, un camino que en apariencia era más caro puede terminar siendo más barato después de cruzar una arista de peso negativo, y para entonces Dijkstra ya dio por cerrado un vértice que en realidad no tenía la distancia correcta.</p>
+<p>Un grafo no dirigido con una arista de peso negativo no sirve para ilustrar esto, porque esa sola arista ya forma un <em>ciclo de peso negativo</em>, ir y volver por ella reduce el costo sin límite cada vez que se repite, y ningún algoritmo de camino más corto está definido sobre un grafo así, la respuesta correcta sería menos infinito. Por eso el contraejemplo que sigue usa un grafo dirigido, donde cada arista solo se recorre en un sentido y no hay forma de generar un ciclo con una sola arista.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafo dirigido con cuatro vertices A, B, C y D, usado para mostrar que Dijkstra falla con pesos negativos. La arista A a B pesa 2, la arista A a C pesa 1, la arista B a C pesa menos 3, la arista C a D pesa 1. El camino directo A a C a D cuesta 1 mas 1 igual a 2, pero el camino A a B a C a D cuesta 2 mas menos 3 mas 1, es decir 0, mas barato que el directo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="t3neg1" markerwidth="9" markerheight="9" refx="7" refy="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"></path></marker></defs> <text x="390" y="22" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Grafo dirigido con una arista de peso negativo</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#t3neg1)"><line x1="110" y1="70" x2="570" y2="70"></line><line x1="108" y1="79" x2="322" y2="181"></line><line x1="572" y1="79" x2="358" y2="181"></line><line x1="360" y1="190" x2="670" y2="190"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="90" cy="70" r="20"></circle><circle cx="590" cy="70" r="20"></circle><circle cx="340" cy="190" r="20"></circle><circle cx="690" cy="190" r="20"></circle></g> <g text-anchor="middle" font-size="14" fill="#12324f" font-weight="700"><text x="90" y="75">A</text><text x="590" y="75">B</text><text x="340" y="195">C</text><text x="690" y="195">D</text></g> <g fill="#ffffff"><rect x="332" y="46" width="16" height="14"></rect><rect x="200" y="118" width="16" height="14"></rect><rect x="450" y="118" width="30" height="14"></rect><rect x="507" y="166" width="16" height="14"></rect></g> <g font-size="11" fill="#0e6f6c" font-weight="700" text-anchor="middle"><text x="340" y="57">2</text><text x="208" y="129">1</text><text x="465" y="129">-3</text><text x="515" y="177">1</text></g> <text x="380" y="235" font-size="10.5" fill="#0e6f6c" text-anchor="middle">camino directo A-C-D cuesta 1+1=2; camino A-B-C-D cuesta 2+(-3)+1=0, mas barato</text>
+</svg>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 2. Predice si Dijkstra acierta
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Sobre el grafo dirigido de arriba, con <code>A-&amp;gt;B=2</code>, <code>A-&amp;gt;C=1</code>, <code>B-&amp;gt;C=-3</code> y <code>C-&amp;gt;D=1</code>, corres <code>dijkstra(A)</code> para calcular la distancia más corta hasta <code>D</code>. Antes de seguir, decide si el resultado va a ser correcto.</p>
+<p><label><input type="checkbox"> Si, Dijkstra siempre encuentra el camino mas corto sin importar el signo de los pesos</label> <label><input type="checkbox"> No, Dijkstra reporta distancia 2 para D, cuando el camino real mas barato cuesta 0</label> <label><input type="checkbox"> No, Dijkstra entra en un ciclo infinito y nunca termina</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 2
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La segunda es correcta. Dijkstra extrae primero <code>A</code> con distancia 0, y relaja sus dos vecinos, <code>B</code> queda en 2 y <code>C</code> queda en 1. El siguiente en extraerse es el más barato de los dos no finalizados, <code>C</code> con distancia 1, así que <code>C</code> queda marcado como definitivo ahí mismo, y desde <code>C</code> se relaja <code>D</code>, que queda en <code>1 + 1 = 2</code>. Cuando después se extrae <code>B</code> con distancia 2 y se intenta relajar <code>C</code> con <code>2 + (-3) = -1</code>, la entrada nueva sí se agrega a la cola porque <code>-1</code> es menor que el <code>1</code> guardado, pero <code>C</code> ya está en <code>finalizados</code>, así que cuando esa entrada vuelve a salir de la cola, el chequeo <code>if u in finalizados: continue</code> la descarta sin volver a explorar los vecinos de <code>C</code> con la distancia corregida. El resultado es que <code>distancia[C]</code> puede terminar mostrando <code>-1</code> en el diccionario final, un efecto secundario de que la actualización sí ocurre antes del descarte, pero <code>distancia[D]</code> se queda en <code>2</code>, calculado con la distancia vieja e incorrecta de <code>C</code>, porque <code>D</code> nunca vuelve a relajarse desde el <code>C</code> corregido. El resultado real más barato de <code>A</code> a <code>D</code> es <code>0</code>, por el camino <code>A-&amp;gt;B-&amp;gt;C-&amp;gt;D</code>. El problema no es un detalle de esta implementación en particular, es estructural, cualquier Dijkstra que deje de reexplorar un vértice una vez que lo trata como definitivo puede arrastrar un error así hacia cualquier vértice que dependa de él, incluso si el propio vértice afectado llega a mostrar, por accidente, un número que parece correcto.</p>
+</div>
+</div>
+</div>
+<p>El algoritmo de Bellman-Ford resuelve este mismo problema sin esa limitación, porque en vez de finalizar un vértice apenas se extrae el más barato, relaja las <code>V - 1</code> aristas del grafo completo, <code>V - 1</code> veces, dejando que cualquier mejora se propague sin importar en qué orden se descubran los caminos, a costa de una complejidad mayor, <code>O(V * E)</code> frente al <code>O((V + E) log V)</code> de Dijkstra con montículo binario. Sobre el contraejemplo de arriba, Bellman-Ford sí calcula <code>distancia[D] = 0</code>, el resultado correcto. Esta guía no implementa Bellman-Ford, el capítulo de caminos más cortos de Cormen, Leiserson, Rivest y Stein lo cubre en detalle, junto con la forma de detectar si el propio grafo tiene un ciclo de peso negativo, caso en el que ningún camino más corto está definido.</p>
+</section>
+<section id="complejidad-de-dijkstra-según-la-cola-de-prioridad" class="level3">
+<h3 class="anchored" data-anchor-id="complejidad-de-dijkstra-según-la-cola-de-prioridad">Complejidad de Dijkstra según la cola de prioridad</h3>
+<p>La complejidad total de Dijkstra depende de cuánto cuesta cada extracción del mínimo y cada relajación, y eso cambia según qué estructura de datos implemente la cola de prioridad.</p>
+<div class="tabla-ancha">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Implementación de la cola</th>
+<th>Extraer mínimo</th>
+<th>Insertar o relajar</th>
+<th>Complejidad total</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Lista sin ordenar</td>
+<td>O(V)</td>
+<td>O(1)</td>
+<td>O(V^2 + E) = O(V^2)</td>
+</tr>
+<tr class="even">
+<td>Montículo binario (<code>heapq</code>, <code>PriorityQueue</code>)</td>
+<td>O(log V)</td>
+<td>O(log V)</td>
+<td>O((V + E) log V)</td>
+</tr>
+<tr class="odd">
+<td>Montículo de Fibonacci (teórico)</td>
+<td>O(log V) amortizado</td>
+<td>O(1) amortizado</td>
+<td>O(E + V log V)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>La lista sin ordenar hace <code>V</code> extracciones a <code>O(V)</code> cada una, <code>O(V^2)</code> en total, más <code>O(E)</code> de relajaciones a costo constante cada una, y como <code>E</code> nunca pasa de <code>V * (V-1) / 2</code>, el término <code>V^2</code> domina siempre, así que esta versión conviene solo en grafos densos donde de todas formas <code>E</code> se acerca a <code>V^2</code>. El montículo binario paga <code>O(log V)</code> por cada una de las <code>V</code> extracciones y por cada una de las <code>E</code> relajaciones que empujan una entrada nueva a la cola, <code>O((V + E) log V)</code> en total, la opción de uso general y la que implementa el código de esta guía con <code>heapq</code> y <code>PriorityQueue</code>. El montículo de Fibonacci logra <code>decrease-key</code> en <code>O(1)</code> amortizado en vez de reinsertar una entrada nueva, lo que baja la cota teórica a <code>O(E + V log V)</code>, la mejor de las tres, pero su implementación real es compleja y sus constantes ocultas son grandes, así que en la práctica casi ninguna biblioteca estándar la ofrece, ni Python ni Java la traen lista para usar, y esta guía la menciona solo como referencia de qué tan lejos llega la cota teórica.</p>
+</section>
+</section>
+<section id="el-algoritmo-de-prim-árbol-de-expansión-mínima-por-vértices" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="el-algoritmo-de-prim-árbol-de-expansión-mínima-por-vértices"><span class="header-section-number">2</span> El algoritmo de Prim: árbol de expansión mínima por vértices</h2>
+<p>Dijkstra responde cuál es el camino más barato desde un origen hasta cada otro vértice. Prim responde una pregunta distinta, cuál es el subconjunto de aristas más barato que conecta todos los vértices del grafo entre sí, sin dejar ninguno aislado y sin formar ningún ciclo, un <em>árbol de expansión mínima</em>. Los dos algoritmos comparten la misma estructura, en cada paso extraen de una cola de prioridad el elemento más barato y lo usan para actualizar a sus vecinos, pero el criterio que ordena la cola es distinto, Dijkstra prioriza la distancia acumulada desde el origen, mientras que Prim prioriza solo el peso de la arista que conecta un vértice nuevo al árbol que ya se construyó, sin importar cuántos saltos separan a ese vértice del punto de partida.</p>
+<p>Esa diferencia de criterio hace que los dos árboles resultantes puedan ser distintos incluso sobre el mismo grafo, porque minimizar la distancia de cada vértice al origen y minimizar el costo total de conectar todos los vértices son objetivos que no siempre coinciden.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion sobre un triangulo de tres vertices S, P y Q con S-P peso 2, S-Q peso 2 y P-Q peso 1. Panel izquierdo: el arbol de caminos mas cortos de Dijkstra desde S usa las dos aristas S-P y S-Q, peso total 4, porque cada nodo llega por su ruta directa mas barata, dejando P-Q sin usar. Panel derecho: el arbol de expansion minima de Prim usa P-Q y S-P, peso total 3, mas barato en conjunto, pero la distancia de S a Q dentro de ese arbol pasa a ser 2 mas 1 igual a 3, peor que los 2 que daba Dijkstra" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Mismo triangulo, dos arboles distintos segun el objetivo</text> <text x="190" y="38" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">Dijkstra desde S: arbol de caminos mas cortos</text> <g fill="none" stroke="#0e6f6c" stroke-width="2"><line x1="190" y1="60" x2="110" y2="130"></line><line x1="190" y1="60" x2="270" y2="130"></line></g> <g fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="4 3"><line x1="110" y1="130" x2="270" y2="130"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="190" cy="60" r="18"></circle><circle cx="110" cy="130" r="18"></circle><circle cx="270" cy="130" r="18"></circle></g> <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="700"><text x="190" y="65">S</text><text x="110" y="135">P</text><text x="270" y="135">Q</text></g> <g font-size="10.5" fill="#0e6f6c" font-weight="700" text-anchor="middle"><text x="135" y="90">2</text><text x="245" y="90">2</text><text x="190" y="150">1, sin usar</text></g> <text x="190" y="185" font-size="10.5" fill="#0e6f6c" text-anchor="middle">dist(P)=2, dist(Q)=2, peso total del arbol=4</text> <text x="570" y="38" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">Prim: arbol de expansion minima</text> <g fill="none" stroke="#0e6f6c" stroke-width="2"><line x1="570" y1="60" x2="490" y2="130"></line><line x1="490" y1="130" x2="650" y2="130"></line></g> <g fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="4 3"><line x1="570" y1="60" x2="650" y2="130"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="570" cy="60" r="18"></circle><circle cx="490" cy="130" r="18"></circle><circle cx="650" cy="130" r="18"></circle></g> <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="700"><text x="570" y="65">S</text><text x="490" y="135">P</text><text x="650" y="135">Q</text></g> <g font-size="10.5" fill="#0e6f6c" font-weight="700" text-anchor="middle"><text x="515" y="90">2</text><text x="570" y="150">1</text><text x="625" y="90">2, sin usar</text></g> <text x="570" y="185" font-size="10.5" fill="#0e6f6c" text-anchor="middle">peso total del arbol=3, pero la distancia de S a Q en este arbol es 2+1=3</text>
+</svg>
+</div>
+<p>Sobre el triángulo <code>S</code>, <code>P</code>, <code>Q</code>, con <code>S-P=2</code>, <code>S-Q=2</code> y <code>P-Q=1</code>, Dijkstra desde <code>S</code> usa las dos aristas directas y deja <code>P-Q</code> sin tocar, porque cada vértice ya llega por su ruta más barata posible sin necesidad de pasar por el otro. Prim, en cambio, prefiere <code>P-Q</code> sobre una de las dos aristas directas, porque construye el árbol más barato en total, y usar la arista de peso uno en vez de repetir dos aristas de peso dos ahorra una unidad en el total, aunque eso signifique que, dentro de ese árbol, llegar de <code>S</code> a <code>Q</code> ahora cuesta <code>2 + 1 = 3</code> en vez de los dos directos. Ningún resultado es incorrecto, cada algoritmo optimiza una cosa distinta, y confundir “el árbol más barato en total” con “el camino más corto a cada vértice” es el error más común al mezclar los dos algoritmos.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 3. Qué arista deja fuera cada árbol
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Sobre el mismo triángulo <code>S</code>, <code>P</code>, <code>Q</code> de arriba, con <code>S-P=2</code>, <code>S-Q=2</code> y <code>P-Q=1</code>, decide qué arista deja fuera el árbol de expansión mínima de Prim, y qué arista deja fuera el árbol de caminos más cortos de Dijkstra desde <code>S</code>.</p>
+<p><label><input type="checkbox"> Prim deja fuera P-Q, Dijkstra deja fuera S-Q</label> <label><input type="checkbox"> Prim deja fuera S-Q, Dijkstra deja fuera P-Q</label> <label><input type="checkbox"> Los dos dejan fuera la misma arista, P-Q</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 3
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La segunda es correcta. Prim construye el árbol más barato en total, así que prefiere la arista de peso uno, <code>P-Q</code>, sobre una de las dos de peso dos, y deja fuera <code>S-Q</code>, porque conectar <code>Q</code> a través de <code>P</code> ya cuesta menos en conjunto. Dijkstra, en cambio, nunca usa <code>P-Q</code> en este caso, porque cada vértice ya tiene una ruta directa desde <code>S</code> tan barata como la que ofrecería pasar por el otro vértice, así que no hay ninguna razón para preferir el camino indirecto y la arista <code>P-Q</code> queda sin usar en el árbol de caminos más cortos.</p>
+</div>
+</div>
+</div>
+<section id="traza-de-prim-sobre-el-grafo-ponderado" class="level3">
+<h3 class="anchored" data-anchor-id="traza-de-prim-sobre-el-grafo-ponderado">Traza de Prim sobre el grafo ponderado</h3>
+<p>Sobre la componente 1 completa, arrancando en el vértice 1, Prim construye el árbol agregando en cada paso la arista más barata que conecta un vértice ya incluido con uno todavía afuera.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Traza de Prim desde el vertice 1 sobre la componente 1 del grafo ponderado. Las aristas del arbol de expansion minima se resaltan en verde en el orden en que se agregan: 1-3 primero, 3-4 segundo, 4-5 tercero, 1-2 cuarto, 5-6 quinto. La arista 2-4 aparece en gris punteado porque se descarta, sus dos extremos ya estaban en el arbol y agregarla formaria un ciclo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="150" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Prim desde 1: arbol de expansion minima, peso total 16</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="4 3"><line x1="75" y1="120" x2="150" y2="185"></line></g> <g fill="none" stroke="#0e6f6c" stroke-width="2.2"><line x1="150" y1="55" x2="225" y2="120"></line><line x1="225" y1="120" x2="150" y2="185"></line><line x1="150" y1="185" x2="150" y2="250"></line><line x1="150" y1="55" x2="75" y2="120"></line><line x1="150" y1="250" x2="150" y2="315"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"></circle><circle cx="75" cy="120" r="18"></circle><circle cx="225" cy="120" r="18"></circle><circle cx="150" cy="185" r="18"></circle><circle cx="150" cy="250" r="18"></circle><circle cx="150" cy="315" r="18"></circle></g> <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text></g> <g font-size="9.5" fill="#5b6876" font-weight="700" text-anchor="middle"><text x="105" y="90">4o: 4</text><text x="200" y="90">1o: 2</text><text x="105" y="156">descartada</text><text x="200" y="156">2o: 1</text><text x="165" y="221">3o: 3</text><text x="165" y="286">5o: 6</text></g> <text x="450" y="42" font-size="10.5" fill="#12324f" font-weight="700">paso a paso, con cola de prioridad de aristas:</text> <g font-size="9.5" fill="#5b6876"><text x="450" y="60">1. arbol={1}, candidatas 1-2(4), 1-3(2)</text><text x="450" y="76"> agrega 1-3(2), arbol={1,3}</text><text x="450" y="92">2. candidatas 1-2(4), 3-4(1)</text><text x="450" y="108"> agrega 3-4(1), arbol={1,3,4}</text><text x="450" y="124">3. candidatas 1-2(4), 2-4(5), 4-5(3)</text><text x="450" y="140"> agrega 4-5(3), arbol={1,3,4,5}</text><text x="450" y="156">4. candidatas 1-2(4), 2-4(5), 5-6(6)</text><text x="450" y="172"> agrega 1-2(4), arbol={1,2,3,4,5}</text><text x="450" y="188"> 2-4 ya conecta dos vertices del arbol:</text><text x="450" y="204"> se descarta al aparecer despues</text><text x="450" y="220">5. agrega 5-6(6), arbol completo</text></g>
+</svg>
+</div>
+<p>La arista <code>2-4</code>, de peso cinco, nunca entra al árbol, porque para cuando le toca salir de la cola, tanto el 2 como el 4 ya están adentro, agregarla conectaría dos vértices que el árbol ya conecta por otro camino y formaría un ciclo, algo que un árbol, por definición, no puede tener. Esa es la razón concreta por la que el peso total del árbol, dieciséis, coincide con la suma de las otras cinco aristas, <code>2 + 1 + 3 + 4 + 6</code>, la componente completa menos justo la más cara de las cuatro que formaban el único ciclo del grafo original.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="bu">List</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">[]&gt;</span> <span class="fu">prim</span><span class="op">(</span><span class="dt">int</span> origen<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">List</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">[]&gt;</span> arbol <span class="op">=</span> <span class="kw">new</span> <span class="bu">ArrayList</span><span class="op">&lt;&gt;();</span> <span class="co">// cada elemento: [origen, destino, peso]</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">Set</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">&gt;</span> enArbol <span class="op">=</span> <span class="kw">new</span> <span class="bu">HashSet</span><span class="op">&lt;&gt;();</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">PriorityQueue</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">[]&gt;</span> cola <span class="op">=</span> <span class="kw">new</span> <span class="bu">PriorityQueue</span><span class="op">&lt;&gt;((</span>a<span class="op">,</span> b<span class="op">)</span> <span class="op">-&gt;</span> a<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">-</span> b<span class="op">[</span><span class="dv">2</span><span class="op">]);</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    enArbol<span class="op">.</span><span class="fu">add</span><span class="op">(</span>origen<span class="op">);</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span><span class="op">[]</span> par <span class="op">:</span> <span class="fu">vecinos</span><span class="op">(</span>origen<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        cola<span class="op">.</span><span class="fu">add</span><span class="op">(</span><span class="kw">new</span> <span class="dt">int</span><span class="op">[]{</span>origen<span class="op">,</span> par<span class="op">[</span><span class="dv">0</span><span class="op">],</span> par<span class="op">[</span><span class="dv">1</span><span class="op">]});</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!</span>cola<span class="op">.</span><span class="fu">isEmpty</span><span class="op">()</span> <span class="op">&amp;&amp;</span> enArbol<span class="op">.</span><span class="fu">size</span><span class="op">()</span> <span class="op">&lt;</span> <span class="fu">vertices</span><span class="op">().</span><span class="fu">size</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span><span class="op">[]</span> arista <span class="op">=</span> cola<span class="op">.</span><span class="fu">poll</span><span class="op">();</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> destino <span class="op">=</span> arista<span class="op">[</span><span class="dv">1</span><span class="op">];</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>enArbol<span class="op">.</span><span class="fu">contains</span><span class="op">(</span>destino<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span> <span class="co">// los dos extremos ya estan en el arbol: agregarla formaria un ciclo</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        enArbol<span class="op">.</span><span class="fu">add</span><span class="op">(</span>destino<span class="op">);</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        arbol<span class="op">.</span><span class="fu">add</span><span class="op">(</span>arista<span class="op">);</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span><span class="op">[]</span> par <span class="op">:</span> <span class="fu">vecinos</span><span class="op">(</span>destino<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!</span>enArbol<span class="op">.</span><span class="fu">contains</span><span class="op">(</span>par<span class="op">[</span><span class="dv">0</span><span class="op">]))</span> <span class="op">{</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>                cola<span class="op">.</span><span class="fu">add</span><span class="op">(</span><span class="kw">new</span> <span class="dt">int</span><span class="op">[]{</span>destino<span class="op">,</span> par<span class="op">[</span><span class="dv">0</span><span class="op">],</span> par<span class="op">[</span><span class="dv">1</span><span class="op">]});</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> arbol<span class="op">;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prim(<span class="va">self</span>, origen):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    arbol <span class="op">=</span> []</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    en_arbol <span class="op">=</span> {origen}</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    cola <span class="op">=</span> [(peso, origen, v) <span class="cf">for</span> v, peso <span class="kw">in</span> <span class="va">self</span>.vecinos(origen)]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    heapq.heapify(cola)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    total_vertices <span class="op">=</span> <span class="bu">len</span>(<span class="bu">list</span>(<span class="va">self</span>.vertices()))</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> cola <span class="kw">and</span> <span class="bu">len</span>(en_arbol) <span class="op">&lt;</span> total_vertices:</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        peso, u, v <span class="op">=</span> heapq.heappop(cola)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> v <span class="kw">in</span> en_arbol:</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span>  <span class="co"># los dos extremos ya estan en el arbol: agregarla formaria un ciclo</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        en_arbol.add(v)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        arbol.append((u, v, peso))</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> w, p <span class="kw">in</span> <span class="va">self</span>.vecinos(v):</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> w <span class="kw">not</span> <span class="kw">in</span> en_arbol:</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>                heapq.heappush(cola, (p, v, w))</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> arbol</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El patrón es idéntico al de <code>dijkstra</code>, una cola de prioridad, un conjunto de lo ya definitivo y una comprobación que descarta entradas obsoletas, solo cambia qué número ordena la cola, el peso puro de la arista candidata en vez de la distancia acumulada desde el origen. Esa cercanía en el código es la misma que explica por qué los dos algoritmos comparten complejidad, <code>O((V + E) log V)</code> con montículo binario y <code>O(V^2)</code> con una lista sin ordenar, las mismas cotas de la tabla de la sección anterior, solo que aquí “relajar” significa comparar el peso de una arista nueva contra el mejor candidato conocido para conectar un vértice, no acumular una distancia.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 4. Prim desde otro vértice
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si <code>prim</code> arranca en el vértice 6 en vez del vértice 1, sobre el mismo grafo ponderado. Antes de seguir, decide si el árbol de expansión mínima resultante cambia.</p>
+<p><label><input type="checkbox"> Si, el peso total cambia porque el punto de partida importa</label> <label><input type="checkbox"> No, el arbol final tiene las mismas aristas y el mismo peso total, 16, solo cambia el orden en que se agregan</label> <label><input type="checkbox"> No se puede saber sin correr el algoritmo de nuevo</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 4
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La segunda es correcta. Los seis pesos del grafo, <code>4, 2, 5, 1, 3, 6</code>, son todos distintos entre sí, así que no hay ningún empate que un vértice de partida distinto pueda resolver de otra forma, el árbol de expansión mínima de un grafo con pesos únicos es siempre el mismo sin importar por dónde arranque Prim. Lo único que cambia al arrancar en 6 es el orden en que las cinco aristas entran al árbol, la cola de prioridad explora el grafo en otra secuencia, pero termina agregando exactamente las mismas cinco aristas, <code>1-3</code>, <code>3-4</code>, <code>4-5</code>, <code>1-2</code> y <code>5-6</code>, con el mismo peso total de dieciséis. Cuando sí hay pesos empatados, distintos puntos de partida pueden producir árboles distintos, pero todos con el mismo peso total mínimo, la propiedad que le da nombre al algoritmo se conserva aunque el árbol concreto no sea único.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="el-algoritmo-de-kruskal-árbol-de-expansión-mínima-por-aristas" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="el-algoritmo-de-kruskal-árbol-de-expansión-mínima-por-aristas"><span class="header-section-number">3</span> El algoritmo de Kruskal: árbol de expansión mínima por aristas</h2>
+<p>Prim construye el árbol de expansión mínima creciendo desde un vértice, agregando siempre la arista más barata que toca el árbol actual. Kruskal llega al mismo tipo de resultado por un camino distinto, ordena todas las aristas del grafo de menor a mayor peso y las va agregando una por una, sin importar si tocan el árbol que ya existe, con una sola condición, que agregarla no forme un ciclo. Los dos algoritmos son <em>voraces</em> en el mismo sentido que ya usó el Tema 4 de la Unidad 1 para selección de actividades, cada uno toma en cada paso la decisión que parece mejor en ese momento, la arista más barata disponible, y la teoría detrás de los dos garantiza que esa sucesión de decisiones locales produce el óptimo global, el árbol de expansión mínima real, no solo una aproximación.</p>
+<section id="detectar-ciclos-conjuntos-disjuntos" class="level3">
+<h3 class="anchored" data-anchor-id="detectar-ciclos-conjuntos-disjuntos">Detectar ciclos: conjuntos disjuntos</h3>
+<p>La parte que Kruskal necesita y Prim no, es una forma barata de responder, para cada arista candidata, si sus dos extremos ya están conectados por aristas agregadas antes, porque conectarlos de nuevo formaría un ciclo. La estructura diseñada para esa pregunta es <em>conjuntos disjuntos</em>, o union-find, que mantiene una partición del conjunto de vértices en grupos, y ofrece dos operaciones, encontrar a qué grupo pertenece un vértice, y unir dos grupos en uno solo cuando una arista los conecta por primera vez.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Conjuntos disjuntos con compresion de camino sobre cuatro elementos genericos a, b, c, d. Panel izquierdo: arbol despues de unir a con b, c con d, y despues a con c, con a como raiz, b y c como hijos directos de a, y d como hijo de c. Panel derecho: el mismo conjunto despues de llamar a encontrar sobre d, que aplica compresion de camino y hace que d pase a ser hijo directo de la raiz a en vez de hijo de c" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Conjuntos disjuntos: union y compresion de camino</text> <text x="190" y="216" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">tras unir(a,b), unir(c,d), unir(a,c)</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="190" y1="55" x2="110" y2="115"></line><line x1="190" y1="55" x2="270" y2="115"></line><line x1="270" y1="115" x2="270" y2="175"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="190" cy="55" r="17"></circle><circle cx="110" cy="115" r="17"></circle><circle cx="270" cy="115" r="17"></circle><circle cx="270" cy="175" r="17"></circle></g> <g text-anchor="middle" font-size="12" fill="#12324f" font-weight="700"><text x="190" y="60">a</text><text x="110" y="120">b</text><text x="270" y="120">c</text><text x="270" y="180">d</text></g> <text x="570" y="216" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">tras encontrar(d): d ya apunta directo a a</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="570" y1="55" x2="490" y2="115"></line><line x1="570" y1="55" x2="650" y2="115"></line></g> <g fill="none" stroke="#0e6f6c" stroke-width="1.6" stroke-dasharray="4 3"><line x1="570" y1="55" x2="570" y2="175"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="570" cy="55" r="17"></circle><circle cx="490" cy="115" r="17"></circle><circle cx="650" cy="115" r="17"></circle><circle cx="570" cy="175" r="17"></circle></g> <g text-anchor="middle" font-size="12" fill="#12324f" font-weight="700"><text x="570" y="60">a</text><text x="490" y="120">b</text><text x="650" y="120">c</text><text x="570" y="180">d</text></g> <text x="380" y="240" font-size="10" fill="#0e6f6c" text-anchor="middle">sin compresion, cada encontrar(d) tendria que subir d, luego c, luego a; con compresion sube una sola vez</text>
+</svg>
+</div>
+<p>Cada grupo se representa como un árbol donde cada nodo guarda un puntero a su padre, y la raíz apunta a sí misma. Encontrar el grupo de un elemento significa subir por esos punteros hasta llegar a la raíz, y unir dos grupos significa hacer que la raíz de uno pase a ser hijo de la raíz del otro. La <em>compresión de camino</em> es la mejora que evita que ese árbol crezca en línea recta, cada vez que <code>encontrar</code> sube hasta la raíz, aprovecha el viaje para hacer que todos los nodos que visitó apunten directamente a esa raíz, así que la próxima consulta sobre cualquiera de ellos es inmediata en vez de repetir la subida completa. Con compresión de camino, y una regla adicional para decidir cuál raíz queda arriba al unir dos grupos, cada operación cuesta en la práctica un tiempo tan cercano a constante que se describe como <code>O(alfa(V))</code>, donde alfa es la función inversa de Ackermann, una función que crece tan despacio que para cualquier cantidad de vértices que se pueda representar en un computador real su valor nunca pasa de cuatro o cinco, así que en la práctica cada operación de conjuntos disjuntos cuesta esencialmente <code>O(1)</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">class</span> ConjuntosDisjuntos <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="bu">Map</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">,</span> <span class="bu">Integer</span><span class="op">&gt;</span> padre <span class="op">=</span> <span class="kw">new</span> <span class="bu">HashMap</span><span class="op">&lt;&gt;();</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">private</span> <span class="bu">Map</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">,</span> <span class="bu">Integer</span><span class="op">&gt;</span> tamano <span class="op">=</span> <span class="kw">new</span> <span class="bu">HashMap</span><span class="op">&lt;&gt;();</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">agregar</span><span class="op">(</span><span class="dt">int</span> v<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        padre<span class="op">.</span><span class="fu">putIfAbsent</span><span class="op">(</span>v<span class="op">,</span> v<span class="op">);</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        tamano<span class="op">.</span><span class="fu">putIfAbsent</span><span class="op">(</span>v<span class="op">,</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">int</span> <span class="fu">encontrar</span><span class="op">(</span><span class="dt">int</span> x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>padre<span class="op">.</span><span class="fu">get</span><span class="op">(</span>x<span class="op">)</span> <span class="op">!=</span> x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>            padre<span class="op">.</span><span class="fu">put</span><span class="op">(</span>x<span class="op">,</span> <span class="fu">encontrar</span><span class="op">(</span>padre<span class="op">.</span><span class="fu">get</span><span class="op">(</span>x<span class="op">)));</span> <span class="co">// compresion de camino</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> padre<span class="op">.</span><span class="fu">get</span><span class="op">(</span>x<span class="op">);</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">unir</span><span class="op">(</span><span class="dt">int</span> x<span class="op">,</span> <span class="dt">int</span> y<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> raizX <span class="op">=</span> <span class="fu">encontrar</span><span class="op">(</span>x<span class="op">);</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> raizY <span class="op">=</span> <span class="fu">encontrar</span><span class="op">(</span>y<span class="op">);</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>raizX <span class="op">==</span> raizY<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span> <span class="co">// ya estan en el mismo conjunto: formaria un ciclo</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>tamano<span class="op">.</span><span class="fu">get</span><span class="op">(</span>raizX<span class="op">)</span> <span class="op">&lt;</span> tamano<span class="op">.</span><span class="fu">get</span><span class="op">(</span>raizY<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int</span> temp <span class="op">=</span> raizX<span class="op">;</span> raizX <span class="op">=</span> raizY<span class="op">;</span> raizY <span class="op">=</span> temp<span class="op">;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>        padre<span class="op">.</span><span class="fu">put</span><span class="op">(</span>raizY<span class="op">,</span> raizX<span class="op">);</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>        tamano<span class="op">.</span><span class="fu">put</span><span class="op">(</span>raizX<span class="op">,</span> tamano<span class="op">.</span><span class="fu">get</span><span class="op">(</span>raizX<span class="op">)</span> <span class="op">+</span> tamano<span class="op">.</span><span class="fu">get</span><span class="op">(</span>raizY<span class="op">));</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ConjuntosDisjuntos:</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.padre <span class="op">=</span> {}</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.tamano <span class="op">=</span> {}</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> agregar(<span class="va">self</span>, v):</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.padre.setdefault(v, v)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.tamano.setdefault(v, <span class="dv">1</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> encontrar(<span class="va">self</span>, x):</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.padre[x] <span class="op">!=</span> x:</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.padre[x] <span class="op">=</span> <span class="va">self</span>.encontrar(<span class="va">self</span>.padre[x])  <span class="co"># compresion de camino</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.padre[x]</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> unir(<span class="va">self</span>, x, y):</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        raiz_x <span class="op">=</span> <span class="va">self</span>.encontrar(x)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        raiz_y <span class="op">=</span> <span class="va">self</span>.encontrar(y)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> raiz_x <span class="op">==</span> raiz_y:</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="va">False</span>  <span class="co"># ya estan en el mismo conjunto: formaria un ciclo</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.tamano[raiz_x] <span class="op">&lt;</span> <span class="va">self</span>.tamano[raiz_y]:</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>            raiz_x, raiz_y <span class="op">=</span> raiz_y, raiz_x</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.padre[raiz_y] <span class="op">=</span> raiz_x</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.tamano[raiz_x] <span class="op">+=</span> <span class="va">self</span>.tamano[raiz_y]</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">True</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>unir</code> compara el tamaño de los dos grupos antes de decidir cuál raíz queda arriba, y siempre cuelga el grupo más pequeño debajo del más grande, la regla que en la literatura se llama unión por tamaño. Sin esa regla, unir siempre en el mismo sentido puede producir un árbol degenerado en forma de cadena, el mismo problema de profundidad que ya vio la Unidad 3 con un árbol binario de búsqueda mal balanceado, y la combinación de unión por tamaño con compresión de camino es justo lo que mantiene la estructura casi plana y las operaciones casi constantes.</p>
+</section>
+<section id="traza-de-kruskal-sobre-el-grafo-ponderado" class="level3">
+<h3 class="anchored" data-anchor-id="traza-de-kruskal-sobre-el-grafo-ponderado">Traza de Kruskal sobre el grafo ponderado</h3>
+<p>Ordenadas de menor a mayor peso, las seis aristas de la componente 1 quedan <code>3-4(1)</code>, <code>1-3(2)</code>, <code>4-5(3)</code>, <code>1-2(4)</code>, <code>2-4(5)</code> y <code>5-6(6)</code>. Kruskal las procesa en ese orden exacto.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Traza de Kruskal sobre la componente 1 del grafo ponderado. Las aristas se procesan en orden de peso ascendente: 3-4 peso 1, 1-3 peso 2, 4-5 peso 3, 1-2 peso 4, 2-4 peso 5, 5-6 peso 6. Todas se agregan al arbol de expansion minima excepto 2-4, marcada en gris punteado, que se descarta porque 2 y 4 ya estan en el mismo conjunto disjunto y agregarla formaria un ciclo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="150" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Kruskal: aristas en orden de peso ascendente</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="4 3"><line x1="75" y1="120" x2="150" y2="185"></line></g> <g fill="none" stroke="#0e6f6c" stroke-width="2.2"><line x1="225" y1="120" x2="150" y2="185"></line><line x1="150" y1="55" x2="225" y2="120"></line><line x1="150" y1="185" x2="150" y2="250"></line><line x1="150" y1="55" x2="75" y2="120"></line><line x1="150" y1="250" x2="150" y2="315"></line></g> <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"></circle><circle cx="75" cy="120" r="18"></circle><circle cx="225" cy="120" r="18"></circle><circle cx="150" cy="185" r="18"></circle><circle cx="150" cy="250" r="18"></circle><circle cx="150" cy="315" r="18"></circle></g> <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text></g> <g font-size="9.5" fill="#5b6876" font-weight="700" text-anchor="middle"><text x="105" y="90">4a: 4</text><text x="200" y="90">2a: 2</text><text x="105" y="156">5a: 5, ciclo</text><text x="200" y="156">1a: 1</text><text x="165" y="221">3a: 3</text><text x="165" y="286">6a: 6</text></g> <text x="450" y="42" font-size="10.5" fill="#12324f" font-weight="700">paso a paso, con conjuntos disjuntos:</text> <g font-size="9.5" fill="#5b6876"><text x="450" y="60">1. edges ordenadas: 3-4, 1-3, 4-5, 1-2, 2-4, 5-6</text><text x="450" y="76">2. 3-4(1): conjuntos distintos, une, agrega</text><text x="450" y="92">3. 1-3(2): conjuntos distintos, une, agrega</text><text x="450" y="108">4. 4-5(3): conjuntos distintos, une, agrega</text><text x="450" y="124">5. 1-2(4): conjuntos distintos, une, agrega</text><text x="450" y="140">6. 2-4(5): 2 y 4 ya en el mismo conjunto</text><text x="450" y="156"> (los une el camino 1-2 y 1-3-4), se</text><text x="450" y="172"> descarta para no formar un ciclo</text><text x="450" y="188">7. 5-6(6): conjuntos distintos, une, agrega</text><text x="450" y="204">arbol final: mismas 5 aristas que Prim,</text><text x="450" y="220">peso total 16</text></g>
+</svg>
+</div>
+<p>El árbol que arma Kruskal termina siendo exactamente el mismo que armó Prim, <code>1-3</code>, <code>3-4</code>, <code>4-5</code>, <code>1-2</code> y <code>5-6</code>, con el mismo peso total, dieciséis, aunque el orden en que cada algoritmo llegó a él sea completamente distinto, uno creciendo desde un vértice hacia afuera y el otro procesando aristas sin importar en qué parte del grafo estén. Esa coincidencia no es casualidad, cuando el árbol de expansión mínima de un grafo es único, como pasa aquí porque los seis pesos son todos distintos, cualquier algoritmo correcto tiene que llegar al mismo resultado, sin importar la estrategia que use para construirlo.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="bu">List</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">[]&gt;</span> <span class="fu">kruskal</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">List</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">[]&gt;</span> aristas <span class="op">=</span> <span class="kw">new</span> <span class="bu">ArrayList</span><span class="op">&lt;&gt;();</span> <span class="co">// cada elemento: [origen, destino, peso]</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">Set</span><span class="op">&lt;</span><span class="bu">String</span><span class="op">&gt;</span> vistas <span class="op">=</span> <span class="kw">new</span> <span class="bu">HashSet</span><span class="op">&lt;&gt;();</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> u <span class="op">:</span> <span class="fu">vertices</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span><span class="op">[]</span> par <span class="op">:</span> <span class="fu">vecinos</span><span class="op">(</span>u<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int</span> v <span class="op">=</span> par<span class="op">[</span><span class="dv">0</span><span class="op">],</span> peso <span class="op">=</span> par<span class="op">[</span><span class="dv">1</span><span class="op">];</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>            <span class="bu">String</span> clave <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">min</span><span class="op">(</span>u<span class="op">,</span> v<span class="op">)</span> <span class="op">+</span> <span class="st">"-"</span> <span class="op">+</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span><span class="op">(</span>u<span class="op">,</span> v<span class="op">);</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!</span>vistas<span class="op">.</span><span class="fu">contains</span><span class="op">(</span>clave<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                vistas<span class="op">.</span><span class="fu">add</span><span class="op">(</span>clave<span class="op">);</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                aristas<span class="op">.</span><span class="fu">add</span><span class="op">(</span><span class="kw">new</span> <span class="dt">int</span><span class="op">[]{</span>u<span class="op">,</span> v<span class="op">,</span> peso<span class="op">});</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    aristas<span class="op">.</span><span class="fu">sort</span><span class="op">((</span>a<span class="op">,</span> b<span class="op">)</span> <span class="op">-&gt;</span> a<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">-</span> b<span class="op">[</span><span class="dv">2</span><span class="op">]);</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    ConjuntosDisjuntos cd <span class="op">=</span> <span class="kw">new</span> <span class="fu">ConjuntosDisjuntos</span><span class="op">();</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> v <span class="op">:</span> <span class="fu">vertices</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        cd<span class="op">.</span><span class="fu">agregar</span><span class="op">(</span>v<span class="op">);</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">List</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">[]&gt;</span> mst <span class="op">=</span> <span class="kw">new</span> <span class="bu">ArrayList</span><span class="op">&lt;&gt;();</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span><span class="op">[]</span> arista <span class="op">:</span> aristas<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>cd<span class="op">.</span><span class="fu">unir</span><span class="op">(</span>arista<span class="op">[</span><span class="dv">0</span><span class="op">],</span> arista<span class="op">[</span><span class="dv">1</span><span class="op">]))</span> <span class="op">{</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>            mst<span class="op">.</span><span class="fu">add</span><span class="op">(</span>arista<span class="op">);</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mst<span class="op">;</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> kruskal(<span class="va">self</span>):</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    aristas <span class="op">=</span> []</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    vistas <span class="op">=</span> <span class="bu">set</span>()</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> u <span class="kw">in</span> <span class="va">self</span>.vertices():</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> v, peso <span class="kw">in</span> <span class="va">self</span>.vecinos(u):</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>            clave <span class="op">=</span> (<span class="bu">min</span>(u, v), <span class="bu">max</span>(u, v))</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> clave <span class="kw">not</span> <span class="kw">in</span> vistas:</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>                vistas.add(clave)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                aristas.append((peso, u, v))</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    aristas.sort()</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    cd <span class="op">=</span> ConjuntosDisjuntos()</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> v <span class="kw">in</span> <span class="va">self</span>.vertices():</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        cd.agregar(v)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    mst <span class="op">=</span> []</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> peso, u, v <span class="kw">in</span> aristas:</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cd.unir(u, v):</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>            mst.append((u, v, peso))</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mst</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El bucle que arma la lista <code>aristas</code> recorre <code>vecinos(u)</code> para cada vértice <code>u</code>, y como <code>GrafoPonderado</code> guarda cada arista no dirigida dos veces, una desde cada extremo, el conjunto <code>vistas</code> evita agregarla dos veces a la lista antes de ordenarla, quedándose con la clave <code>(min(u,v), max(u,v))</code> para que <code>3-4</code> y <code>4-3</code> cuenten como la misma arista. <code>cd.unir(arista[0], arista[1])</code> hace las dos cosas a la vez, decide si la arista forma un ciclo y, si no, ejecuta la unión, así que la condición del <code>if</code> sirve como filtro y como efecto secundario en la misma línea, un patrón compacto que vale la pena reconocer porque aparece seguido en código que usa conjuntos disjuntos.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 5. Por qué se rechaza 2-4
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Cuando Kruskal procesa la arista <code>2-4</code>, de peso cinco, la rechaza. Antes de seguir, decide qué verificación exacta de <code>ConjuntosDisjuntos</code> es la que provoca ese rechazo.</p>
+<p><label><input type="checkbox"> encontrar(2) y encontrar(4) devuelven raices distintas</label> <label><input type="checkbox"> encontrar(2) y encontrar(4) devuelven la misma raiz, porque el camino 1-2 y 1-3-4 ya los conecta</label> <label><input type="checkbox"> tamano.get(2) es mayor que tamano.get(4)</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 5
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La segunda es correcta. Para cuando le toca el turno a <code>2-4</code>, ya se procesaron <code>3-4</code>, <code>1-3</code> y <code>1-2</code>, así que 1, 2, 3 y 4 quedaron unidos en un solo conjunto, 2 por la arista directa <code>1-2</code> y 4 por la cadena <code>1-3-4</code>. <code>unir(2, 4)</code> llama primero a <code>encontrar(2)</code> y a <code>encontrar(4)</code>, y como las dos devuelven la misma raíz, la condición <code>raizX == raizY</code> se cumple y la función devuelve <code>false</code> sin tocar ningún puntero, la señal exacta que usa <code>kruskal</code> para descartar la arista sin agregarla al árbol.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="complejidad-de-kruskal-y-cuándo-preferirlo-sobre-prim" class="level3">
+<h3 class="anchored" data-anchor-id="complejidad-de-kruskal-y-cuándo-preferirlo-sobre-prim">Complejidad de Kruskal y cuándo preferirlo sobre Prim</h3>
+<p>El costo de Kruskal lo domina por completo el paso de ordenar las aristas, <code>O(E log E)</code>, porque las <code>E</code> operaciones de conjuntos disjuntos que siguen cuestan casi <code>O(1)</code> cada una gracias a la compresión de camino y a la unión por tamaño, un total de <code>O(E * alfa(V))</code>, una cantidad tan pequeña frente al costo del ordenamiento que se descarta en la notación final. Como ninguna arista se repite más de <code>V^2</code> veces, <code>log E</code> nunca es mayor que <code>2 * log V</code>, así que la cota se suele escribir también como <code>O(E log V)</code>, equivalente en la práctica.</p>
+<div class="tabla-ancha">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Algoritmo</th>
+<th>Complejidad típica</th>
+<th>Cuándo conviene</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Prim, con lista sin ordenar</td>
+<td>O(V^2)</td>
+<td>Grafos densos, donde E se acerca a V^2</td>
+</tr>
+<tr class="even">
+<td>Prim, con montículo binario</td>
+<td>O((V + E) log V)</td>
+<td>Uso general, sobre todo grafos dispersos</td>
+</tr>
+<tr class="odd">
+<td>Kruskal</td>
+<td>O(E log E) = O(E log V)</td>
+<td>Grafos dispersos, o cuando las aristas ya llegan como lista plana</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>En un grafo denso, donde <code>E</code> se acerca a <code>V^2</code>, <code>O(E log V)</code> de Kruskal se acerca a <code>O(V^2 log V)</code>, peor que el <code>O(V^2)</code> de Prim con una simple lista sin ordenar, porque ordenar una cantidad de aristas cercana a <code>V^2</code> cuesta ese logaritmo extra que Prim no paga. En un grafo disperso, donde <code>E</code> es apenas proporcional a <code>V</code>, <code>O(E log V)</code> se acerca a <code>O(V log V)</code>, comparable al <code>O((V + E) log V)</code> de Prim con montículo, y ahí la elección suele depender más de cómo llegan los datos, si las aristas ya están disponibles como una lista plana, sin necesidad de construir una lista de adyacencia completa, Kruskal se implementa más directo, mientras que si el grafo ya vive como <code>GrafoPonderado</code> con sus listas de vecinos, Prim aprovecha esa estructura sin ningún paso adicional de ordenamiento.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 6. Elige el algoritmo según la densidad
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Tienes dos grafos para construir un árbol de expansión mínima. El primero es disperso, diez mil vértices y quince mil aristas. El segundo es casi completo, doscientos vértices y cerca de diecinueve mil aristas, casi todos los pares posibles conectados. Antes de seguir, decide qué algoritmo conviene para cada uno.</p>
+<p><label><input type="checkbox"> Kruskal para los dos casos, porque ordenar aristas siempre es mas rapido</label> <label><input type="checkbox"> Kruskal para el disperso, Prim con lista sin ordenar para el casi completo</label> <label><input type="checkbox"> Prim para los dos casos, porque usa la misma estructura que Dijkstra</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 6
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La segunda es correcta. El grafo disperso tiene <code>E</code> apenas mayor que <code>V</code>, así que ordenar sus quince mil aristas cuesta poco, <code>O(E log V)</code> se mantiene manejable y Kruskal resuelve el problema sin complicaciones. El grafo casi completo tiene <code>V = 200</code>, tan pequeño que <code>O(V^2)</code> de Prim con una simple lista sin ordenar es apenas <code>40 000</code> operaciones, mientras que <code>O(E log E)</code> de Kruskal sobre diecinueve mil aristas ronda las <code>270 000</code> operaciones, varias veces más caro, porque ordenar una cantidad de aristas cercana al máximo posible para ese <code>V</code> paga el logaritmo completo sin ninguna ventaja a cambio. La densidad del grafo, no una preferencia general por un algoritmo sobre otro, es la que decide cuál conviene en cada caso concreto.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="los-tres-algoritmos-uno-al-lado-del-otro" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="los-tres-algoritmos-uno-al-lado-del-otro"><span class="header-section-number">4</span> Los tres algoritmos, uno al lado del otro</h2>
+<div class="tabla-ancha">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Algoritmo</th>
+<th>Qué resuelve</th>
+<th>Estructura auxiliar</th>
+<th>Complejidad con montículo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Dijkstra</td>
+<td>Camino más corto desde un origen a todos los demás vértices</td>
+<td>Cola de prioridad de vértices</td>
+<td>O((V + E) log V)</td>
+</tr>
+<tr class="even">
+<td>Prim</td>
+<td>Árbol de expansión mínima, creciendo desde un vértice</td>
+<td>Cola de prioridad de aristas candidatas</td>
+<td>O((V + E) log V)</td>
+</tr>
+<tr class="odd">
+<td>Kruskal</td>
+<td>Árbol de expansión mínima, procesando aristas ordenadas</td>
+<td>Conjuntos disjuntos</td>
+<td>O(E log V)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Los tres son algoritmos voraces que nunca reconsideran una decisión ya tomada, y los tres dependen de que el grafo no tenga pesos negativos, Dijkstra porque su prueba de correctitud asume que ningún camino futuro puede mejorar uno ya finalizado, y Prim y Kruskal porque, aunque sí toleran pesos negativos sin romperse, el problema de árbol de expansión mínima está definido igual con o sin negativos, la única de las tres nociones de esta guía que de verdad se rompe con un peso negativo es la de camino más corto de Dijkstra.</p>
+</section>
+<section id="lo-que-te-llevas-de-hoy" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="lo-que-te-llevas-de-hoy"><span class="header-section-number">5</span> Lo que te llevas de hoy</h2>
+<div class="checklist">
+<p>Al salir de este tema deberías poder explicar, sin mirar la guía:</p>
+<ul class="task-list">
+<li><label><input type="checkbox">Cómo Dijkstra usa una cola de prioridad para extraer siempre el vértice no finalizado más barato, y por qué esa elección voraz da el camino más corto correcto cuando no hay pesos negativos</label></li>
+<li><label><input type="checkbox">Trazar Dijkstra a mano sobre un grafo ponderado pequeño, incluida la relajación de vecinos y el descarte de entradas obsoletas en la cola</label></li>
+<li><label><input type="checkbox">Por qué una arista de peso negativo rompe la garantía de Dijkstra, con un ejemplo concreto donde el algoritmo reporta una distancia incorrecta, y qué algoritmo la corrige</label></li>
+<li><label><input type="checkbox">La diferencia entre Dijkstra y Prim, dos algoritmos con la misma estructura de código que resuelven problemas distintos, camino más corto desde un origen contra árbol más barato que conecta todos los vértices</label></li>
+<li><label><input type="checkbox">Cómo Kruskal usa conjuntos disjuntos con compresión de camino para detectar si una arista formaría un ciclo antes de agregarla</label></li>
+<li><label><input type="checkbox">Cuándo conviene Prim sobre Kruskal y viceversa, según qué tan denso sea el grafo</label></li>
+</ul>
+</div>
+</section>
+<section id="lo-que-sigue" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="lo-que-sigue"><span class="header-section-number">6</span> Lo que sigue</h2>
+<p>El Tema 4 cierra la unidad y el curso con los algoritmos de búsqueda, secuencial, binaria y secuencial con índices, implementados con programación orientada a objetos. La búsqueda binaria retoma directamente la recurrencia <code>T(n) = T(n/2) + O(1)</code> que el Tema 2 ya resolvió en su Reto 4, el mismo patrón de descartar una mitad en cada paso que hoy usó la cola de prioridad para descartar entradas obsoletas, y la comparación entre las tres formas de buscar se apoya en el mismo vocabulario de notación O, Omega y Theta que se usó para analizar Dijkstra, Prim y Kruskal.</p>
+</section>
+<section id="recursos" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="recursos"><span class="header-section-number">7</span> Recursos</h2>
+<ul>
+<li>Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. <em>Introduction to Algorithms.</em> Capítulo “Single-Source Shortest Paths”, con el algoritmo de Dijkstra, el algoritmo de Bellman-Ford y la detección de ciclos de peso negativo, y capítulo “Minimum Spanning Trees”, con los algoritmos de Prim y de Kruskal y el análisis de conjuntos disjuntos con compresión de camino.</li>
+<li>Goodrich, M. T. y Tamassia, R. <em>Estructuras de datos y algoritmos.</em> Capítulo sobre grafos, con la sección de caminos más cortos con Dijkstra y la sección de árboles de expansión mínima con Prim y Kruskal.</li>
+<li>Weiss, M. A. <em>Data Structures and Algorithm Analysis.</em> Capítulo “Graphs”, con la implementación de Dijkstra usando una cola de prioridad y el análisis de complejidad según la estructura elegida.</li>
+<li><a href="https://docs.python.org/3/library/heapq.html">Documentación oficial de Python sobre <code>heapq</code></a>, el módulo que implementa la cola de prioridad usada en el código de esta guía.</li>
+<li><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/PriorityQueue.html">Javadoc de <code>PriorityQueue</code> en Java SE</a>, la clase equivalente en Java, con la advertencia oficial de que no garantiza ningún orden entre elementos con la misma prioridad.</li>
+</ul>
+<div class="pie-doc">
+<p>Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.</p>
+<p><strong>Transparencia.</strong> La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. Las trazas de Dijkstra, Prim y Kruskal sobre el grafo de ejemplo se verificaron calculando cada paso con código, no a mano.</p>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/oscarleosanchez\.github\.io\/sitio-maria-cano-2026-02\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Oscar Leonel Sánchez Conde</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

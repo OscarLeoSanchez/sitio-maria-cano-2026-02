@@ -1,0 +1,1112 @@
+---
+title: "Tema 1. Algoritmos de ordenamiento"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                |
+|--------|----------------------------------------------------------------|
+| Unidad | Unidad 4. Métodos de ordenamiento, búsqueda y eficiencia       |
+| Tema   | Tema 1. Algoritmos de ordenamiento                              |
+:::
+
+La Unidad 3 cerró con `GrafoPonderado`, una estructura donde cada arista guarda un costo y donde
+quedó abierta la pregunta de cuál camino resulta más barato entre dos vértices. Antes de resolver
+esa pregunta con Dijkstra, Prim y Kruskal más adelante en esta unidad, hace falta resolver una
+pregunta más elemental que aparece en casi cualquier programa real, cómo poner en orden una
+colección de datos. Este tema retoma el arreglo de la Unidad 2, la estructura de memoria contigua
+donde acceder a un índice cuesta O(1), y estudia seis formas distintas de reorganizar sus elementos
+de menor a mayor: burbuja, inserción, selección, quicksort, shellsort y radix. Los seis trabajan
+sobre el mismo arreglo de siete números a lo largo de toda la guía, así que cada diagrama parte del
+mismo punto y permite comparar visualmente cómo cada algoritmo llega al mismo resultado final por un
+mecanismo distinto. El Tema 2 retoma estos mismos seis algoritmos para formalizar con notación
+Big-O por qué unos crecen mucho más rápido que otros a medida que el arreglo se agranda, así que las
+mediciones de hoy son el material sobre el que trabaja esa formalización.
+
+## El arreglo de ejemplo
+
+Los seis algoritmos ordenan el mismo arreglo de partida, `[64, 25, 12, 22, 11, 90, 34]`, para que
+las siete casillas de cada diagrama representen siempre los mismos siete números y el estudiante
+pueda comparar un algoritmo contra otro sin tener que reconstruir mentalmente un arreglo distinto
+cada vez.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El arreglo de ejemplo usado en los seis algoritmos de este tema: siete numeros en el orden 64, 25, 12, 22, 11, 90, 34, con su indice de 0 a 6 debajo de cada casilla" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El arreglo de ejemplo: el mismo punto de partida para los seis algoritmos</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="55" y="40" width="80" height="50" rx="6"/><rect x="150" y="40" width="80" height="50" rx="6"/><rect x="245" y="40" width="80" height="50" rx="6"/><rect x="340" y="40" width="80" height="50" rx="6"/><rect x="435" y="40" width="80" height="50" rx="6"/><rect x="530" y="40" width="80" height="50" rx="6"/><rect x="625" y="40" width="80" height="50" rx="6"/></g>
+  <g text-anchor="middle" font-size="15" font-weight="600" fill="#12324f"><text x="95" y="72">64</text><text x="190" y="72">25</text><text x="285" y="72">12</text><text x="380" y="72">22</text><text x="475" y="72">11</text><text x="570" y="72">90</text><text x="665" y="72">34</text></g>
+  <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="95" y="108">indice 0</text><text x="190" y="108">indice 1</text><text x="285" y="108">indice 2</text><text x="380" y="108">indice 3</text><text x="475" y="108">indice 4</text><text x="570" y="108">indice 5</text><text x="665" y="108">indice 6</text></g>
+  <text x="380" y="132" font-size="10.5" fill="#0e6f6c" text-anchor="middle">arreglo = [64, 25, 12, 22, 11, 90, 34]</text>
+</svg>
+
+:::
+
+Ordenar significa reorganizar esos siete valores para que queden en orden no decreciente,
+`[11, 12, 22, 25, 34, 64, 90]`, sin perder ni duplicar ninguno. Los seis algoritmos llegan a ese
+mismo resultado, pero difieren en tres preguntas que vas a responder para cada uno: cuántas
+comparaciones y movimientos hace en el mejor, el promedio y el peor de los casos, si conserva el
+orden relativo de dos elementos iguales, lo que se llama ser *estable*, y si necesita memoria extra
+proporcional al tamaño del arreglo o le basta con un puñado de variables, lo que se llama ordenar
+*en el lugar*, o *in-place*.
+
+## Burbuja: comparar vecinos y burbujear el mayor hacia el final
+
+El algoritmo de burbuja, o *bubble sort*, recorre el arreglo comparando cada pareja de elementos
+vecinos, y los intercambia si están en el orden incorrecto. Tras una pasada completa, el elemento
+más grande de todo el arreglo terminó desplazándose, comparación tras comparación, hasta la última
+posición, exactamente como una burbuja que sube hasta la superficie. Repetir esa pasada n menos uno
+veces garantiza que el arreglo completo quede ordenado, porque cada pasada nueva fija en su lugar
+final al menos un elemento más.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Burbuja sobre el arreglo de ejemplo: el arreglo inicial y el resultado de las pasadas 1 a 4, con el sufijo ya ordenado resaltado en verde y creciendo una posicion por pasada. La pasada 5 no hace ningun intercambio y el algoritmo termina antes de completar las seis pasadas teoricas" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Burbuja: el sufijo ordenado crece una posicion por pasada</text>
+  <g text-anchor="end" font-size="11" font-weight="700" fill="#5b6876"><text x="136" y="63">inicial</text><text x="136" y="111">pasada 1</text><text x="136" y="159">pasada 2</text><text x="136" y="207">pasada 3</text><text x="136" y="255">pasada 4</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="146" y="42" width="60" height="32" rx="5"/><rect x="214" y="42" width="60" height="32" rx="5"/><rect x="282" y="42" width="60" height="32" rx="5"/><rect x="350" y="42" width="60" height="32" rx="5"/><rect x="418" y="42" width="60" height="32" rx="5"/><rect x="486" y="42" width="60" height="32" rx="5"/><rect x="554" y="42" width="60" height="32" rx="5"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="176" y="64">64</text><text x="244" y="64">25</text><text x="312" y="64">12</text><text x="380" y="64">22</text><text x="448" y="64">11</text><text x="516" y="64">90</text><text x="584" y="64">34</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="146" y="90" width="60" height="32" rx="5"/><rect x="214" y="90" width="60" height="32" rx="5"/><rect x="282" y="90" width="60" height="32" rx="5"/><rect x="350" y="90" width="60" height="32" rx="5"/><rect x="418" y="90" width="60" height="32" rx="5"/><rect x="486" y="90" width="60" height="32" rx="5"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="554" y="90" width="60" height="32" rx="5"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="176" y="112">25</text><text x="244" y="112">12</text><text x="312" y="112">22</text><text x="380" y="112">11</text><text x="448" y="112">64</text><text x="516" y="112">34</text><text x="584" y="112">90</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="146" y="138" width="60" height="32" rx="5"/><rect x="214" y="138" width="60" height="32" rx="5"/><rect x="282" y="138" width="60" height="32" rx="5"/><rect x="350" y="138" width="60" height="32" rx="5"/><rect x="418" y="138" width="60" height="32" rx="5"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="486" y="138" width="60" height="32" rx="5"/><rect x="554" y="138" width="60" height="32" rx="5"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="176" y="160">12</text><text x="244" y="160">22</text><text x="312" y="160">11</text><text x="380" y="160">25</text><text x="448" y="160">34</text><text x="516" y="160">64</text><text x="584" y="160">90</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="146" y="186" width="60" height="32" rx="5"/><rect x="214" y="186" width="60" height="32" rx="5"/><rect x="282" y="186" width="60" height="32" rx="5"/><rect x="350" y="186" width="60" height="32" rx="5"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="418" y="186" width="60" height="32" rx="5"/><rect x="486" y="186" width="60" height="32" rx="5"/><rect x="554" y="186" width="60" height="32" rx="5"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="176" y="208">12</text><text x="244" y="208">11</text><text x="312" y="208">22</text><text x="380" y="208">25</text><text x="448" y="208">34</text><text x="516" y="208">64</text><text x="584" y="208">90</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="146" y="234" width="60" height="32" rx="5"/><rect x="214" y="234" width="60" height="32" rx="5"/><rect x="282" y="234" width="60" height="32" rx="5"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="350" y="234" width="60" height="32" rx="5"/><rect x="418" y="234" width="60" height="32" rx="5"/><rect x="486" y="234" width="60" height="32" rx="5"/><rect x="554" y="234" width="60" height="32" rx="5"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="176" y="256">11</text><text x="244" y="256">12</text><text x="312" y="256">22</text><text x="380" y="256">25</text><text x="448" y="256">34</text><text x="516" y="256">64</text><text x="584" y="256">90</text></g>
+  <text x="380" y="284" font-size="10.5" fill="#0e6f6c" text-anchor="middle">pasada 5: ningun intercambio, el algoritmo detecta que ya esta ordenado y termina antes</text>
+  <text x="380" y="300" font-size="10" fill="#5b6876" text-anchor="middle">verde: elementos que ya quedaron en su posicion final tras esa pasada</text>
+</svg>
+
+:::
+
+```java
+public static void burbuja(int[] a) {
+    int n = a.length;
+    for (int i = 0; i < n - 1; i++) {
+        boolean intercambio = false;
+        for (int j = 0; j < n - 1 - i; j++) {
+            if (a[j] > a[j + 1]) {
+                int temp = a[j];
+                a[j] = a[j + 1];
+                a[j + 1] = temp;
+                intercambio = true;
+            }
+        }
+        if (!intercambio) {
+            break;
+        }
+    }
+}
+```
+
+```python
+def burbuja(a):
+    n = len(a)
+    for i in range(n - 1):
+        intercambio = False
+        for j in range(n - 1 - i):
+            if a[j] > a[j + 1]:
+                a[j], a[j + 1] = a[j + 1], a[j]
+                intercambio = True
+        if not intercambio:
+            break
+```
+
+La bandera `intercambio` es lo que separa una burbuja bien escrita de una que siempre corre sus n
+menos uno pasadas completas sin importar el arreglo de entrada. Si una pasada entera no encuentra
+ninguna pareja fuera de orden, el arreglo ya está ordenado y seguir intentando es trabajo perdido,
+como muestra la pasada 5 del diagrama, que confirma el orden sin mover nada. Esa bandera es también
+la que explica por qué burbuja nunca intercambia dos elementos iguales entre sí, la condición
+`a[j] > a[j + 1]` usa estrictamente mayor que, así que dos valores iguales quedan donde estaban uno
+respecto al otro, lo que hace que burbuja sea estable.
+
+::: {.tabla-ancha}
+| Mejor caso | Caso promedio | Peor caso | Espacio extra | Estable | In-place |
+|---|---|---|---|---|---|
+| O(n), arreglo ya ordenado, una pasada sin intercambios | O(n^2) | O(n^2), arreglo en orden inverso | O(1) | Si | Si |
+:::
+
+::: {.callout-tip}
+## Reto 1. Cuántas pasadas necesita un arreglo ya ordenado
+
+El arreglo `[11, 12, 22, 25, 34, 64, 90]`, el resultado final del diagrama de arriba, se vuelve a
+pasar por `burbuja` con la bandera `intercambio`. Antes de seguir, decide cuántas pasadas completas
+hacen falta hasta que el algoritmo se detiene.
+
+<label><input type="checkbox"> Las seis pasadas completas, porque burbuja siempre revisa todo el arreglo sin importar el orden de entrada</label>
+<label><input type="checkbox"> Una sola pasada, la bandera detecta que no hubo ningun intercambio y el ciclo termina de inmediato</label>
+<label><input type="checkbox"> Ninguna pasada, el algoritmo revisa la longitud del arreglo y decide no entrar al ciclo</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La segunda es correcta. En la primera pasada, `burbuja` compara cada pareja de vecinos, 11 con 12,
+12 con 22, y así hasta 64 con 90, y ninguna comparación encuentra un par fuera de orden, así que
+`intercambio` se queda en `false` durante toda la pasada. Al terminar el ciclo interno, la condición
+`if (!intercambio) break;` corta el ciclo externo de inmediato, sin entrar a la segunda pasada. Este
+es exactamente el caso que produce la complejidad de mejor caso O(n), lineal, porque el algoritmo
+solo necesita las n menos uno comparaciones de una pasada para confirmar el orden, sin ningún
+intercambio de por medio.
+:::
+
+## Inserción: construir el prefijo ordenado uno a uno
+
+El algoritmo de inserción, o *insertion sort*, mantiene un prefijo del arreglo ya ordenado, que
+empieza siendo solo el primer elemento, y toma el siguiente elemento sin ordenar, la *clave*, para
+insertarlo en la posición que le corresponde dentro de ese prefijo, desplazando a la derecha a todo
+lo que sea mayor que ella. Funciona porque el prefijo `a[0..i-1]` es un invariante que se cumple
+antes de procesar cada índice `i`, ya está ordenado, y la inserción de `a[i]` en su lugar exacto
+extiende ese invariante un elemento más, hasta que el prefijo cubre el arreglo completo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Insercion sobre el arreglo de ejemplo: el estado del arreglo tras insertar cada uno de los seis elementos restantes en el prefijo ya ordenado, que crece de izquierda a derecha resaltado en verde, hasta cubrir el arreglo completo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Insercion: el prefijo ordenado crece de izquierda a derecha</text>
+  <g text-anchor="end" font-size="11" font-weight="700" fill="#5b6876"><text x="136" y="62">i=1 (25)</text><text x="136" y="104">i=2 (12)</text><text x="136" y="146">i=3 (22)</text><text x="136" y="188">i=4 (11)</text><text x="136" y="230">i=5 (90)</text><text x="136" y="272">i=6 (34)</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="42" width="60" height="30" rx="5"/><rect x="214" y="42" width="60" height="30" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="282" y="42" width="60" height="30" rx="5"/><rect x="350" y="42" width="60" height="30" rx="5"/><rect x="418" y="42" width="60" height="30" rx="5"/><rect x="486" y="42" width="60" height="30" rx="5"/><rect x="554" y="42" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="62">25</text><text x="244" y="62">64</text><text x="312" y="62">12</text><text x="380" y="62">22</text><text x="448" y="62">11</text><text x="516" y="62">90</text><text x="584" y="62">34</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="84" width="60" height="30" rx="5"/><rect x="214" y="84" width="60" height="30" rx="5"/><rect x="282" y="84" width="60" height="30" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="350" y="84" width="60" height="30" rx="5"/><rect x="418" y="84" width="60" height="30" rx="5"/><rect x="486" y="84" width="60" height="30" rx="5"/><rect x="554" y="84" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="104">12</text><text x="244" y="104">25</text><text x="312" y="104">64</text><text x="380" y="104">22</text><text x="448" y="104">11</text><text x="516" y="104">90</text><text x="584" y="104">34</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="126" width="60" height="30" rx="5"/><rect x="214" y="126" width="60" height="30" rx="5"/><rect x="282" y="126" width="60" height="30" rx="5"/><rect x="350" y="126" width="60" height="30" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="418" y="126" width="60" height="30" rx="5"/><rect x="486" y="126" width="60" height="30" rx="5"/><rect x="554" y="126" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="146">12</text><text x="244" y="146">22</text><text x="312" y="146">25</text><text x="380" y="146">64</text><text x="448" y="146">11</text><text x="516" y="146">90</text><text x="584" y="146">34</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="168" width="60" height="30" rx="5"/><rect x="214" y="168" width="60" height="30" rx="5"/><rect x="282" y="168" width="60" height="30" rx="5"/><rect x="350" y="168" width="60" height="30" rx="5"/><rect x="418" y="168" width="60" height="30" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="486" y="168" width="60" height="30" rx="5"/><rect x="554" y="168" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="188">11</text><text x="244" y="188">12</text><text x="312" y="188">22</text><text x="380" y="188">25</text><text x="448" y="188">64</text><text x="516" y="188">90</text><text x="584" y="188">34</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="210" width="60" height="30" rx="5"/><rect x="214" y="210" width="60" height="30" rx="5"/><rect x="282" y="210" width="60" height="30" rx="5"/><rect x="350" y="210" width="60" height="30" rx="5"/><rect x="418" y="210" width="60" height="30" rx="5"/><rect x="486" y="210" width="60" height="30" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="554" y="210" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="230">11</text><text x="244" y="230">12</text><text x="312" y="230">22</text><text x="380" y="230">25</text><text x="448" y="230">64</text><text x="516" y="230">90</text><text x="584" y="230">34</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="252" width="60" height="30" rx="5"/><rect x="214" y="252" width="60" height="30" rx="5"/><rect x="282" y="252" width="60" height="30" rx="5"/><rect x="350" y="252" width="60" height="30" rx="5"/><rect x="418" y="252" width="60" height="30" rx="5"/><rect x="486" y="252" width="60" height="30" rx="5"/><rect x="554" y="252" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="272">11</text><text x="244" y="272">12</text><text x="312" y="272">22</text><text x="380" y="272">25</text><text x="448" y="272">34</text><text x="516" y="272">64</text><text x="584" y="272">90</text></g>
+  <text x="380" y="300" font-size="10.5" fill="#0e6f6c" text-anchor="middle">i=5 (90) no desplaza nada: 90 ya es mayor que el ultimo del prefijo, se queda donde cayo</text>
+  <text x="380" y="316" font-size="10" fill="#5b6876" text-anchor="middle">verde: prefijo ya ordenado tras insertar ese elemento</text>
+</svg>
+
+:::
+
+```java
+public static void insercion(int[] a) {
+    for (int i = 1; i < a.length; i++) {
+        int clave = a[i];
+        int j = i - 1;
+        while (j >= 0 && a[j] > clave) {
+            a[j + 1] = a[j];
+            j--;
+        }
+        a[j + 1] = clave;
+    }
+}
+```
+
+```python
+def insercion(a):
+    for i in range(1, len(a)):
+        clave = a[i]
+        j = i - 1
+        while j >= 0 and a[j] > clave:
+            a[j + 1] = a[j]
+            j -= 1
+        a[j + 1] = clave
+```
+
+Fíjate en `i=5` del diagrama, insertar 90 no desplaza ningún elemento del prefijo, porque 90 ya es
+mayor que 64, el último elemento del prefijo, y el ciclo `while` termina en la primera comparación.
+Ese es el mejor caso de una inserción individual, O(1). En cambio, `i=4`, insertar 11, desplaza los
+cuatro elementos del prefijo completo, porque 11 es menor que todos ellos, el peor caso de una
+inserción individual, O(n). Igual que burbuja, la condición `a[j] > clave` usa estrictamente mayor
+que, así que dos valores iguales nunca intercambian su orden relativo, lo que hace que inserción sea
+estable.
+
+::: {.tabla-ancha}
+| Mejor caso | Caso promedio | Peor caso | Espacio extra | Estable | In-place |
+|---|---|---|---|---|---|
+| O(n), arreglo ya ordenado, cada clave se compara una sola vez y no se desplaza | O(n^2) | O(n^2), arreglo en orden inverso, cada clave desplaza todo el prefijo | O(1) | Si | Si |
+:::
+
+::: {.callout-tip}
+## Reto 2. Cuántos desplazamientos hace la peor inserción
+
+Al arreglo ya ordenado `[11, 12, 22, 25, 34, 64, 90]` se le agrega un octavo elemento al final, el
+valor 5, y se corre `insercion` de nuevo sobre las ocho posiciones. Antes de seguir, decide cuántos
+desplazamientos hace la inserción de ese último valor.
+
+<label><input type="checkbox"> Ninguno, 5 ya esta en la ultima posicion y no hace falta moverlo</label>
+<label><input type="checkbox"> Uno solo, se compara con 90 y se detiene ahi</label>
+<label><input type="checkbox"> Los siete elementos del prefijo completo se desplazan una posicion a la derecha</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La tercera es correcta. La clave 5 es menor que los siete elementos del prefijo `[11, 12, 22, 25,
+34, 64, 90]`, así que el ciclo `while j >= 0 and a[j] > clave` sigue siendo verdadero en cada
+comparación, desde 90 hasta 11, y desplaza los siete elementos una posición a la derecha antes de
+colocar 5 en el índice 0. Es exactamente el peor caso de una inserción individual, O(n), y es la
+razón por la que insertar sistemáticamente el elemento más pequeño al final de un arreglo ya
+ordenado produce el peor caso completo de inserción, O(n^2), el mismo patrón de desplazamiento
+masivo que ya viste con `insert(0, x)` sobre una lista de Python en la Unidad 2.
+:::
+
+## Selección: elegir el mínimo en cada pasada
+
+El algoritmo de selección, o *selection sort*, recorre la parte sin ordenar del arreglo buscando su
+elemento mínimo, y lo intercambia con el primer elemento de esa parte sin ordenar. Tras esa pasada,
+el prefijo ordenado creció un elemento, igual que en inserción, pero el mecanismo es el opuesto,
+inserción trae el siguiente elemento hacia el prefijo ya ordenado, selección trae el mínimo del
+resto hacia el borde del prefijo. El invariante es que `a[0..i-1]` contiene siempre los i elementos
+más pequeños del arreglo, ya ordenados, antes de procesar la posición `i`.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Seleccion sobre el arreglo de ejemplo: el estado del arreglo tras cada una de las seis pasadas, con el prefijo ya ordenado resaltado en verde. La pasada 4 no cambia nada visualmente porque el minimo de la parte sin ordenar ya estaba en su posicion, pero el algoritmo igual recorrio todo el resto para confirmarlo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Seleccion: se busca el minimo del resto y se trae al borde del prefijo</text>
+  <g text-anchor="end" font-size="11" font-weight="700" fill="#5b6876"><text x="136" y="62">pasada 1</text><text x="136" y="104">pasada 2</text><text x="136" y="146">pasada 3</text><text x="136" y="188">pasada 4</text><text x="136" y="230">pasada 5</text><text x="136" y="272">pasada 6</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="42" width="60" height="30" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="214" y="42" width="60" height="30" rx="5"/><rect x="282" y="42" width="60" height="30" rx="5"/><rect x="350" y="42" width="60" height="30" rx="5"/><rect x="418" y="42" width="60" height="30" rx="5"/><rect x="486" y="42" width="60" height="30" rx="5"/><rect x="554" y="42" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="62">11</text><text x="244" y="62">25</text><text x="312" y="62">12</text><text x="380" y="62">22</text><text x="448" y="62">64</text><text x="516" y="62">90</text><text x="584" y="62">34</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="84" width="60" height="30" rx="5"/><rect x="214" y="84" width="60" height="30" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="282" y="84" width="60" height="30" rx="5"/><rect x="350" y="84" width="60" height="30" rx="5"/><rect x="418" y="84" width="60" height="30" rx="5"/><rect x="486" y="84" width="60" height="30" rx="5"/><rect x="554" y="84" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="104">11</text><text x="244" y="104">12</text><text x="312" y="104">25</text><text x="380" y="104">22</text><text x="448" y="104">64</text><text x="516" y="104">90</text><text x="584" y="104">34</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="126" width="60" height="30" rx="5"/><rect x="214" y="126" width="60" height="30" rx="5"/><rect x="282" y="126" width="60" height="30" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="350" y="126" width="60" height="30" rx="5"/><rect x="418" y="126" width="60" height="30" rx="5"/><rect x="486" y="126" width="60" height="30" rx="5"/><rect x="554" y="126" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="146">11</text><text x="244" y="146">12</text><text x="312" y="146">22</text><text x="380" y="146">25</text><text x="448" y="146">64</text><text x="516" y="146">90</text><text x="584" y="146">34</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="168" width="60" height="30" rx="5"/><rect x="214" y="168" width="60" height="30" rx="5"/><rect x="282" y="168" width="60" height="30" rx="5"/><rect x="350" y="168" width="60" height="30" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="418" y="168" width="60" height="30" rx="5"/><rect x="486" y="168" width="60" height="30" rx="5"/><rect x="554" y="168" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="188">11</text><text x="244" y="188">12</text><text x="312" y="188">22</text><text x="380" y="188">25</text><text x="448" y="188">64</text><text x="516" y="188">90</text><text x="584" y="188">34</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="210" width="60" height="30" rx="5"/><rect x="214" y="210" width="60" height="30" rx="5"/><rect x="282" y="210" width="60" height="30" rx="5"/><rect x="350" y="210" width="60" height="30" rx="5"/><rect x="418" y="210" width="60" height="30" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="486" y="210" width="60" height="30" rx="5"/><rect x="554" y="210" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="230">11</text><text x="244" y="230">12</text><text x="312" y="230">22</text><text x="380" y="230">25</text><text x="448" y="230">34</text><text x="516" y="230">90</text><text x="584" y="230">64</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="252" width="60" height="30" rx="5"/><rect x="214" y="252" width="60" height="30" rx="5"/><rect x="282" y="252" width="60" height="30" rx="5"/><rect x="350" y="252" width="60" height="30" rx="5"/><rect x="418" y="252" width="60" height="30" rx="5"/><rect x="486" y="252" width="60" height="30" rx="5"/><rect x="554" y="252" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="176" y="272">11</text><text x="244" y="272">12</text><text x="312" y="272">22</text><text x="380" y="272">25</text><text x="448" y="272">34</text><text x="516" y="272">64</text><text x="584" y="272">90</text></g>
+  <text x="380" y="300" font-size="10.5" fill="#0e6f6c" text-anchor="middle">pasada 4: el minimo del resto, 25, ya estaba en su lugar; el intercambio no cambia nada pero igual se ejecuta</text>
+  <text x="380" y="316" font-size="10" fill="#5b6876" text-anchor="middle">verde: prefijo ya ordenado tras esa pasada</text>
+</svg>
+
+:::
+
+```java
+public static void seleccion(int[] a) {
+    int n = a.length;
+    for (int i = 0; i < n - 1; i++) {
+        int minimo = i;
+        for (int j = i + 1; j < n; j++) {
+            if (a[j] < a[minimo]) {
+                minimo = j;
+            }
+        }
+        int temp = a[i];
+        a[i] = a[minimo];
+        a[minimo] = temp;
+    }
+}
+```
+
+```python
+def seleccion(a):
+    n = len(a)
+    for i in range(n - 1):
+        minimo = i
+        for j in range(i + 1, n):
+            if a[j] < a[minimo]:
+                minimo = j
+        a[i], a[minimo] = a[minimo], a[i]
+```
+
+La pasada 4 del diagrama es la que más enseña de este algoritmo, el mínimo del resto, 25, ya estaba
+exactamente en la posición donde debía quedar, así que el intercambio `a[i], a[minimo] = a[minimo],
+a[i]` intercambia la posición 3 consigo misma, sin cambiar nada visible. Aun así, el ciclo interno
+recorrió las tres posiciones restantes completas para confirmar que 25 era el mínimo, porque
+selección no tiene ninguna forma de saber que el resto ya está ordenado sin revisarlo entero. Por
+eso selección hace siempre el mismo número de comparaciones sin importar si el arreglo de entrada ya
+viene ordenado o viene en el peor desorden posible, a diferencia de burbuja e inserción, que sí
+se adaptan a un arreglo casi ordenado. Ese intercambio que salta posiciones lejanas es también lo
+que rompe la estabilidad, mover un elemento igual a otro por encima de varias posiciones intermedias
+puede invertir el orden relativo que tenían dos elementos iguales al principio, así que selección no
+es estable en su forma clásica.
+
+::: {.tabla-ancha}
+| Mejor caso | Caso promedio | Peor caso | Espacio extra | Estable | In-place |
+|---|---|---|---|---|---|
+| O(n^2), siempre recorre el resto completo para confirmar el minimo | O(n^2) | O(n^2) | O(1) | No | Si |
+:::
+
+::: {.callout-tip}
+## Reto 3. Selección no se adapta al orden de entrada
+
+Se corre `seleccion` sobre dos arreglos de siete elementos, uno ya ordenado, `[11, 12, 22, 25, 34,
+64, 90]`, y otro en el peor desorden posible. Antes de seguir, decide qué pasa con el número de
+comparaciones que hace el algoritmo en los dos casos.
+
+<label><input type="checkbox"> El arreglo ya ordenado necesita muchas menos comparaciones, como burbuja e insercion</label>
+<label><input type="checkbox"> Los dos arreglos hacen exactamente el mismo numero de comparaciones, sin importar el orden de entrada</label>
+<label><input type="checkbox"> El arreglo ya ordenado necesita mas comparaciones, porque selection sort revisa dos veces cada posicion ya correcta</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+La segunda es correcta. El ciclo interno de `seleccion` siempre recorre `n - 1 - i` elementos en
+cada pasada `i`, sin ninguna condición que dependa del valor de esos elementos, así que la cantidad
+total de comparaciones, la suma de `n - 1` más `n - 2` hasta 1, es siempre la misma fórmula
+`n(n-1)/2`, sin importar si el arreglo llega ordenado, invertido o mezclado al azar. Esa es la
+diferencia central frente a burbuja, cuya bandera de intercambio le permite terminar en una sola
+pasada sobre un arreglo ya ordenado, y frente a inserción, cuyo ciclo `while` se detiene de
+inmediato cuando encuentra la posición correcta. Selección no tiene ningún mecanismo parecido, por
+lo que su complejidad de mejor caso es igual a la de peor caso, O(n^2) en los dos casos.
+:::
+
+## Quicksort: dividir alrededor de un pivote
+
+Quicksort elige un elemento del arreglo, el *pivote*, y reorganiza el resto alrededor de él, de
+modo que todos los elementos menores o iguales queden a su izquierda y todos los mayores queden a su
+derecha, una operación que se llama *partición*. Al terminar esa partición, el pivote ya está en su
+posición final definitiva, y el problema se redujo a ordenar por separado las dos mitades, que no se
+mezclan entre sí. Ese es el patrón de divide y vencerás que ya viste en la Unidad 1, la partición es
+el paso de dividir y el paso de combinar es trivial, no hace falta fusionar nada porque las dos
+mitades quedan ordenadas exactamente donde tienen que quedar. Este tema usa el esquema de partición
+de Lomuto, que fija el pivote como el último elemento del segmento.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Quicksort sobre el arreglo de ejemplo con el esquema de particion de Lomuto y pivote igual al ultimo elemento. La particion raiz usa pivote 34 y lo deja en el indice 4, dividiendo el arreglo en un segmento izquierdo de indices 0 a 3 y uno derecho de indices 5 a 6. El segmento izquierdo se particiona de nuevo con pivote 11, que resulta ser el minimo de ese segmento y produce una division muy desbalanceada, cero elementos a la izquierda y tres a la derecha, que se sigue particionando dos veces mas. El segmento derecho se resuelve en una sola particion mas con pivote 64" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Quicksort: arbol de particiones con pivote = ultimo elemento del segmento</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="270" y="34" width="220" height="34" rx="6"/></g>
+  <text x="380" y="55" font-size="11.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">particion(0,6) pivote=34 -&gt; indice 4</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="330" y1="68" x2="180" y2="104"/><line x1="430" y1="68" x2="600" y2="104"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="70" y="104" width="220" height="34" rx="6"/><rect x="490" y="104" width="220" height="34" rx="6"/></g>
+  <text x="180" y="125" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">particion(0,3) pivote=11 -&gt; indice 0</text>
+  <text x="600" y="125" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">particion(5,6) pivote=64 -&gt; indice 5</text>
+  <text x="600" y="155" font-size="10" fill="#5b6876" text-anchor="middle">hoja: indice 6 (valor 90) queda solo, ya ordenado</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="230" y1="138" x2="230" y2="174"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="120" y="174" width="220" height="34" rx="6"/></g>
+  <text x="230" y="195" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">particion(1,3) pivote=25 -&gt; indice 3</text>
+  <text x="60" y="195" font-size="10" fill="#5b6876" text-anchor="middle">izquierda vacia</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="180" y1="208" x2="180" y2="244"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="70" y="244" width="220" height="34" rx="6"/></g>
+  <text x="180" y="265" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">particion(1,2) pivote=22 -&gt; indice 2</text>
+  <text x="330" y="195" font-size="10" fill="#5b6876" text-anchor="middle">derecha vacia</text>
+  <text x="180" y="292" font-size="10" fill="#5b6876" text-anchor="middle">hoja: indice 1 (valor 12) queda solo, ya ordenado</text>
+  <text x="380" y="326" font-size="10.5" fill="#0e6f6c" text-anchor="middle">resultado final: [11, 12, 22, 25, 34, 64, 90], la misma raiz reparte 4 contra 2 elementos</text>
+  <text x="380" y="344" font-size="10" fill="#5b6876" text-anchor="middle">pero la rama izquierda vuelve a elegir su propio minimo como pivote y se desbalancea otra vez</text>
+</svg>
+
+:::
+
+```java
+public static void quicksort(int[] a) {
+    quicksort(a, 0, a.length - 1);
+}
+
+private static void quicksort(int[] a, int bajo, int alto) {
+    if (bajo < alto) {
+        int p = particion(a, bajo, alto);
+        quicksort(a, bajo, p - 1);
+        quicksort(a, p + 1, alto);
+    }
+}
+
+private static int particion(int[] a, int bajo, int alto) {
+    int pivote = a[alto];
+    int i = bajo - 1;
+    for (int j = bajo; j < alto; j++) {
+        if (a[j] <= pivote) {
+            i++;
+            int temp = a[i];
+            a[i] = a[j];
+            a[j] = temp;
+        }
+    }
+    int temp = a[i + 1];
+    a[i + 1] = a[alto];
+    a[alto] = temp;
+    return i + 1;
+}
+```
+
+```python
+def quicksort(a, bajo=0, alto=None):
+    if alto is None:
+        alto = len(a) - 1
+    if bajo < alto:
+        p = particion(a, bajo, alto)
+        quicksort(a, bajo, p - 1)
+        quicksort(a, p + 1, alto)
+
+
+def particion(a, bajo, alto):
+    pivote = a[alto]
+    i = bajo - 1
+    for j in range(bajo, alto):
+        if a[j] <= pivote:
+            i += 1
+            a[i], a[j] = a[j], a[i]
+    a[i + 1], a[alto] = a[alto], a[i + 1]
+    return i + 1
+```
+
+El puntero `i` de `particion` marca el final del bloque de elementos ya confirmados como menores o
+iguales al pivote, y cada vez que `a[j]` cumple esa condición, `i` avanza y el elemento entra al
+bloque con un intercambio. Al final del ciclo, intercambiar `a[i + 1]` con el pivote lo deja
+exactamente en la frontera entre el bloque de menores y el de mayores, su posición final. Fíjate en
+la raíz del árbol del diagrama, el pivote 34 reparte el arreglo de forma razonable, cuatro elementos
+a la izquierda contra dos a la derecha, pero la partición izquierda vuelve a elegir el último
+elemento de su propio segmento como pivote, que resulta ser 11, el mínimo de ese segmento, y produce
+una división de cero elementos contra tres, la peor partición posible dentro de ese segmento. Ese
+mismo patrón, elegir por accidente el elemento más pequeño o más grande como pivote, es justo lo que
+degenera por completo el rendimiento de quicksort cuando el arreglo de entrada ya viene ordenado,
+como vas a medir más adelante en esta guía.
+
+::: {.tabla-ancha}
+| Mejor caso | Caso promedio | Peor caso | Espacio extra | Estable | In-place |
+|---|---|---|---|---|---|
+| O(n log n), el pivote parte el segmento en dos mitades parejas en cada nivel | O(n log n) | O(n^2), el pivote resulta ser siempre el minimo o el maximo del segmento | O(log n), la pila de llamadas recursivas | No | Si |
+:::
+
+::: {.callout-tip}
+## Reto 4. Por qué la rama izquierda necesita más particiones
+
+Mirando el árbol de particiones del diagrama, la rama que arranca en `particion(0,3) pivote=11`
+necesita tres particiones anidadas más para terminar de ordenar sus cuatro elementos, mientras que
+la rama `particion(5,6) pivote=64` termina en una sola partición. Antes de seguir, decide por qué.
+
+<label><input type="checkbox"> Porque el segmento izquierdo tiene mas elementos que el derecho, y mas elementos siempre significan mas particiones</label>
+<label><input type="checkbox"> Porque el pivote de la particion izquierda, 11, resulto ser el minimo de su propio segmento, dejando cero elementos a un lado y todo el resto al otro</label>
+<label><input type="checkbox"> Porque Lomuto solo funciona bien en segmentos de tamano par</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+La segunda es correcta. `particion(0,3)` toma como pivote `a[3]`, que en ese segmento vale 11, el
+elemento más pequeño de los cuatro. Como ningún otro elemento del segmento es menor o igual a 11,
+la partición no mueve nada a la izquierda del pivote y deja los otros tres elementos completos a la
+derecha, la división más desbalanceada que puede producir una partición, cero contra el resto. Esa
+partición desperdiciada obliga a que la recursión siga trabajando sobre un segmento casi tan grande
+como el original, en vez de reducirlo a la mitad como pasaría con un pivote cercano a la mediana. La
+primera opción es una trampa común, cuatro elementos contra dos no es una diferencia tan grande como
+para explicar tres niveles extra de recursión, lo que realmente importa no es cuántos elementos tiene
+el segmento sino qué tan bien lo reparte el pivote elegido.
+:::
+
+## Shellsort: inserción con saltos que se acortan
+
+Shellsort mejora a inserción atacando su punto más débil, que un elemento pequeño extraviado cerca
+del final del arreglo tiene que desplazarse una posición a la vez hasta llegar al principio. En vez
+de comparar solo elementos vecinos, shellsort compara elementos separados por una distancia, el
+*salto* o *gap*, y ordena cada uno de esos subconjuntos entrelazados con una inserción normal. Al
+terminar con un salto, repite el proceso con un salto más pequeño, hasta terminar con un salto de 1,
+que es una inserción común y corriente, pero aplicada sobre un arreglo que ya quedó casi ordenado por
+los saltos anteriores, así que esa última pasada es mucho más barata que una inserción sobre el
+arreglo original. Este tema genera la secuencia de saltos con la fórmula de Knuth, `gap = gap * 3 +
+1`, que para siete elementos produce los saltos 4 y 1.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Shellsort sobre el arreglo de ejemplo con gaps 4 y 1. El gap 4 agrupa los indices en tres subsecuencias de dos elementos, indices 0 y 4, indices 1 y 5, indices 2 y 6, mas el indice 3 solo, y ordena cada subsecuencia de forma independiente con insercion. El gap 1 es una insercion normal sobre el resultado, que ya quedo casi ordenado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Shellsort: subsecuencias con gap=4, despues insercion normal con gap=1</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="146" y="42" width="60" height="32" rx="5"/><rect x="214" y="42" width="60" height="32" rx="5"/><rect x="282" y="42" width="60" height="32" rx="5"/><rect x="350" y="42" width="60" height="32" rx="5"/><rect x="418" y="42" width="60" height="32" rx="5"/><rect x="486" y="42" width="60" height="32" rx="5"/><rect x="554" y="42" width="60" height="32" rx="5"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="176" y="64">64</text><text x="244" y="64">25</text><text x="312" y="64">12</text><text x="380" y="64">22</text><text x="448" y="64">11</text><text x="516" y="64">90</text><text x="584" y="64">34</text></g>
+  <path d="M176,42 C176,10 448,10 448,42" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+  <path d="M244,42 C244,20 516,20 516,42" fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="5 4"/>
+  <path d="M312,42 C312,26 584,26 584,42" fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="2 3"/>
+  <text x="176" y="100" font-size="9.5" fill="#0e6f6c" text-anchor="middle">sub A: indices 0 y 4</text>
+  <text x="380" y="112" font-size="9.5" fill="#5b6876" text-anchor="middle">indice 3 (valor 22) no tiene pareja con gap=4, se queda solo</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="146" y="140" width="60" height="32" rx="5"/><rect x="214" y="140" width="60" height="32" rx="5"/><rect x="282" y="140" width="60" height="32" rx="5"/><rect x="350" y="140" width="60" height="32" rx="5"/><rect x="418" y="140" width="60" height="32" rx="5"/><rect x="486" y="140" width="60" height="32" rx="5"/><rect x="554" y="140" width="60" height="32" rx="5"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="176" y="162">11</text><text x="244" y="162">25</text><text x="312" y="162">12</text><text x="380" y="162">22</text><text x="448" y="162">64</text><text x="516" y="162">90</text><text x="584" y="162">34</text></g>
+  <text x="380" y="192" font-size="10.5" fill="#0e6f6c" text-anchor="middle">tras gap=4: cada subsecuencia quedo ordenada por separado, el arreglo completo todavia no</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="146" y="220" width="60" height="32" rx="5"/><rect x="214" y="220" width="60" height="32" rx="5"/><rect x="282" y="220" width="60" height="32" rx="5"/><rect x="350" y="220" width="60" height="32" rx="5"/><rect x="418" y="220" width="60" height="32" rx="5"/><rect x="486" y="220" width="60" height="32" rx="5"/><rect x="554" y="220" width="60" height="32" rx="5"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="176" y="242">11</text><text x="244" y="242">12</text><text x="312" y="242">22</text><text x="380" y="242">25</text><text x="448" y="242">34</text><text x="516" y="242">64</text><text x="584" y="242">90</text></g>
+  <text x="380" y="270" font-size="10.5" fill="#0e6f6c" text-anchor="middle">tras gap=1 (insercion normal): pocos elementos estaban lejos de su lugar, la pasada final es barata</text>
+</svg>
+
+:::
+
+```java
+public static void shellsort(int[] a) {
+    int n = a.length;
+    int gap = 1;
+    while (gap < n / 3) {
+        gap = gap * 3 + 1;
+    }
+    while (gap >= 1) {
+        for (int i = gap; i < n; i++) {
+            int temp = a[i];
+            int j = i;
+            while (j >= gap && a[j - gap] > temp) {
+                a[j] = a[j - gap];
+                j -= gap;
+            }
+            a[j] = temp;
+        }
+        gap /= 3;
+    }
+}
+```
+
+```python
+def shellsort(a):
+    n = len(a)
+    gap = 1
+    while gap < n // 3:
+        gap = gap * 3 + 1
+    while gap >= 1:
+        for i in range(gap, n):
+            temp = a[i]
+            j = i
+            while j >= gap and a[j - gap] > temp:
+                a[j] = a[j - gap]
+                j -= gap
+            a[j] = temp
+        gap //= 3
+```
+
+El código es literalmente el mismo bucle de `insercion`, con `gap` en vez de 1 como la distancia
+entre el elemento que se compara y el que se desplaza, así que shellsort no es un algoritmo distinto
+de inserción, es la misma idea aplicada primero a distancia y después de cerca. La subsecuencia A del
+diagrama, índices 0 y 4, con valores 64 y 11, se ordena sola en un solo intercambio, 11 pasa al
+índice 0 y 64 al índice 4, mientras que la pasada de `gap=1` que sigue ya no tiene que mover ningún
+elemento a más de una posición de distancia, porque el trabajo pesado ya lo hizo el `gap=4`. La
+complejidad exacta de shellsort depende de qué secuencia de saltos se use, algo que no le pasa a
+ningún otro algoritmo de este tema, la secuencia original de Shell, dividir entre dos cada vez,
+degrada al peor caso a O(n^2), mientras que la secuencia de Knuth de este tema, y otras como la de
+Hibbard, acotan el peor caso en O(n elevado a 3/2), sin que exista todavía una demostración cerrada
+del caso promedio exacto para la mayoría de las secuencias conocidas. Igual que selección, un
+elemento puede saltar por encima de otro igual a él durante una pasada de salto largo, así que
+shellsort no es estable.
+
+::: {.tabla-ancha}
+| Mejor caso | Caso promedio | Peor caso | Espacio extra | Estable | In-place |
+|---|---|---|---|---|---|
+| O(n log n), arreglo ya ordenado, cada pasada de salto no mueve nada | depende de la secuencia de saltos, con Knuth entre O(n^{4/3}) y O(n^{3/2}) | O(n^{3/2}) con la secuencia de Knuth, O(n^2) con la secuencia original de Shell | O(1) | No | Si |
+:::
+
+::: {.callout-tip}
+## Reto 5. Qué se pierde si se salta directo a gap=1
+
+Alguien propone simplificar `shellsort` corriendo directamente con `gap=1` desde el principio, sin
+ninguna pasada previa con `gap=4`. Antes de seguir, decide qué pasa con el resultado y con el costo.
+
+<label><input type="checkbox"> El resultado queda mal ordenado, porque las pasadas con gap mayor a 1 son las unicas que de verdad ordenan</label>
+<label><input type="checkbox"> El resultado queda igual de bien ordenado, pero el costo se vuelve el de una insercion normal sobre el arreglo original, sin el ahorro de las pasadas previas</label>
+<label><input type="checkbox"> El programa entra en un ciclo infinito porque gap nunca deja de valer 1</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+La segunda es correcta. La pasada final con `gap=1` es, por sí sola, una inserción completa y
+correcta, capaz de ordenar cualquier arreglo sin ayuda de nada más, así que el resultado sigue siendo
+el arreglo ordenado. Lo que se pierde es el ahorro, sin las pasadas previas con saltos mayores, el
+elemento 11 tendría que recorrer las cuatro posiciones que lo separan de su lugar correcto una por
+una, exactamente el mismo trabajo que haría `insercion` sobre el arreglo original. El valor de
+shellsort está completo en esas pasadas previas, que mueven los elementos lejanos grandes
+distancias de una sola vez y dejan cada vez menos trabajo para la pasada final, no en un mecanismo
+distinto al de inserción.
+:::
+
+## Radix sort: ordenar sin comparar, dígito por dígito
+
+Los cinco algoritmos anteriores deciden el orden comparando un elemento contra otro, `a[j] >
+a[j+1]`, `a[j] < a[minimo]`, `a[j] <= pivote`. Radix sort no compara ningún par de elementos entre
+sí, en cambio examina un dígito a la vez de cada número y los distribuye en diez *baldes*, uno por
+cada valor posible de dígito, del 0 al 9. Empieza por el dígito menos significativo, el de las
+unidades, y termina por el más significativo, reclasificando el arreglo completo en cada pasada. Esa
+variante, que procesa del dígito menos al más significativo, se llama *LSD* por las siglas en inglés
+de *least significant digit*.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Radix sort sobre el arreglo de ejemplo, dos pasadas de clasificacion por baldes del 0 al 9. La primera pasada clasifica por el digito de las unidades: el balde 0 recibe 90, el balde 1 recibe 11, el balde 2 recibe 12 y 22, el balde 4 recibe 64 y 34, y el balde 5 recibe 25, dando el orden intermedio 90, 11, 12, 22, 64, 34, 25. La segunda pasada clasifica ese resultado por el digito de las decenas: el balde 1 recibe 11 y 12, el balde 2 recibe 22 y 25, el balde 3 recibe 34, el balde 6 recibe 64 y el balde 9 recibe 90, dando el orden final ya ordenado 11, 12, 22, 25, 34, 64, 90" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Radix sort: dos pasadas de clasificacion por balde, unidades y despues decenas</text>
+  <text x="380" y="34" font-size="10.5" fill="#5b6876" text-anchor="middle">pasada 1: digito de las unidades</text>
+  <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="47" y="45">0</text><text x="121" y="45">1</text><text x="195" y="45">2</text><text x="269" y="45">3</text><text x="343" y="45">4</text><text x="417" y="45">5</text><text x="491" y="45">6</text><text x="565" y="45">7</text><text x="639" y="45">8</text><text x="713" y="45">9</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="13" y="52" width="68" height="52" rx="5"/><rect x="87" y="52" width="68" height="52" rx="5"/><rect x="161" y="52" width="68" height="52" rx="5"/><rect x="309" y="52" width="68" height="52" rx="5"/><rect x="383" y="52" width="68" height="52" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="235" y="52" width="68" height="52" rx="5"/><rect x="457" y="52" width="68" height="52" rx="5"/><rect x="531" y="52" width="68" height="52" rx="5"/><rect x="605" y="52" width="68" height="52" rx="5"/><rect x="679" y="52" width="68" height="52" rx="5"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="47" y="83">90</text><text x="121" y="83">11</text><text x="195" y="73">12</text><text x="195" y="93">22</text><text x="343" y="73">64</text><text x="343" y="93">34</text><text x="417" y="83">25</text></g>
+  <text x="380" y="122" font-size="10.5" fill="#0e6f6c" text-anchor="middle">recoleccion balde por balde, de 0 a 9: 90, 11, 12, 22, 64, 34, 25</text>
+  <text x="380" y="150" font-size="10.5" fill="#5b6876" text-anchor="middle">pasada 2: digito de las decenas, sobre el resultado de la pasada 1</text>
+  <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="47" y="161">0</text><text x="121" y="161">1</text><text x="195" y="161">2</text><text x="269" y="161">3</text><text x="343" y="161">4</text><text x="417" y="161">5</text><text x="491" y="161">6</text><text x="565" y="161">7</text><text x="639" y="161">8</text><text x="713" y="161">9</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="87" y="168" width="68" height="52" rx="5"/><rect x="161" y="168" width="68" height="52" rx="5"/><rect x="235" y="168" width="68" height="52" rx="5"/><rect x="457" y="168" width="68" height="52" rx="5"/><rect x="679" y="168" width="68" height="52" rx="5"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="13" y="168" width="68" height="52" rx="5"/><rect x="309" y="168" width="68" height="52" rx="5"/><rect x="383" y="168" width="68" height="52" rx="5"/><rect x="531" y="168" width="68" height="52" rx="5"/><rect x="605" y="168" width="68" height="52" rx="5"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="121" y="189">11</text><text x="121" y="207">12</text><text x="195" y="189">22</text><text x="195" y="207">25</text><text x="269" y="199">34</text><text x="491" y="199">64</text><text x="713" y="199">90</text></g>
+  <text x="380" y="238" font-size="10.5" fill="#0e6f6c" text-anchor="middle">recoleccion balde por balde, de 0 a 9: 11, 12, 22, 25, 34, 64, 90, ya ordenado</text>
+  <text x="380" y="264" font-size="10" fill="#5b6876" text-anchor="middle">dentro del balde 1, 11 sigue antes que 12 porque asi quedaron tras la pasada de unidades</text>
+  <text x="380" y="280" font-size="10" fill="#5b6876" text-anchor="middle">esa herencia de orden solo es correcta si cada pasada por balde es estable</text>
+</svg>
+
+:::
+
+```java
+public static void radix(int[] a) {
+    int maximo = a[0];
+    for (int v : a) {
+        if (v > maximo) {
+            maximo = v;
+        }
+    }
+    for (int exp = 1; maximo / exp > 0; exp *= 10) {
+        contarPorDigito(a, exp);
+    }
+}
+
+private static void contarPorDigito(int[] a, int exp) {
+    int n = a.length;
+    int[] salida = new int[n];
+    int[] conteo = new int[10];
+    for (int i = 0; i < n; i++) {
+        conteo[(a[i] / exp) % 10]++;
+    }
+    for (int d = 1; d < 10; d++) {
+        conteo[d] += conteo[d - 1];
+    }
+    for (int i = n - 1; i >= 0; i--) {
+        int digito = (a[i] / exp) % 10;
+        salida[conteo[digito] - 1] = a[i];
+        conteo[digito]--;
+    }
+    System.arraycopy(salida, 0, a, 0, n);
+}
+```
+
+```python
+def radix(a):
+    maximo = max(a)
+    exp = 1
+    while maximo // exp > 0:
+        baldes = [[] for _ in range(10)]
+        for num in a:
+            digito = (num // exp) % 10
+            baldes[digito].append(num)
+        a[:] = [num for balde in baldes for num in balde]
+        exp *= 10
+```
+
+Las dos versiones aplican la misma idea con una diferencia de estilo. La versión Python usa diez
+listas, una por cada balde, y agrega cada número a la lista de su dígito recorriendo el arreglo en
+orden, exactamente la técnica que se ve en el diagrama. La versión Java usa la técnica clásica de
+conteo con suma de prefijos, cuenta cuántos números caen en cada dígito, acumula esos conteos para
+saber en qué posición del arreglo de salida termina cada balde, y coloca cada número recorriendo el
+arreglo original de atrás hacia adelante para que los números con el mismo dígito conserven su orden
+relativo. Las dos técnicas cuestan lo mismo, O(n + b) por pasada, siendo b la base, diez en este
+caso, y las dos son estables, lo que resulta obligatorio para que radix sort funcione: la segunda
+pasada del diagrama solo produce el orden correcto porque 11 seguía apareciendo antes que 12 al
+entrar a esa pasada, un orden que la primera pasada por unidades ya había fijado y que una
+clasificación no estable podría haber roto sin ningún aviso. Aunque el código Python reasigna el
+mismo objeto lista con `a[:] = ...`, por dentro construye baldes auxiliares que ocupan espacio
+proporcional a n más la base en cada pasada, así que radix sort no ordena en el lugar según la
+definición que usa esta guía, la de un algoritmo que se las arregla con un número constante de
+celdas extra.
+
+::: {.tabla-ancha}
+| Mejor caso | Caso promedio | Peor caso | Espacio extra | Estable | In-place |
+|---|---|---|---|---|---|
+| O(d(n+b)) | O(d(n+b)) | O(d(n+b)) | O(n+b), los baldes auxiliares de cada pasada | Si | No |
+:::
+
+Ahí, `d` es el número de dígitos del valor máximo y `b` es la base, diez en el caso decimal. Con
+`b` fijo y `d` acotado, digamos números de a lo sumo diez dígitos, esa complejidad se comporta como
+O(n) para efectos prácticos, lineal en el tamaño del arreglo, algo que ningún algoritmo de los cinco
+anteriores puede prometer.
+
+### Por qué radix se sale de la cota O(n log n)
+
+Todo algoritmo de ordenamiento que decide el orden final comparando pares de elementos, que es
+exactamente lo que hacen burbuja, inserción, selección, quicksort y shellsort, tiene un límite
+teórico probado, ningún algoritmo de ese tipo puede ordenar n elementos en menos de
+aproximadamente n log n comparaciones en el peor caso, sin importar qué tan ingenioso sea. Radix
+sort no choca contra ese límite porque no lo compite, en ningún momento de sus dos pasadas compara
+un número contra otro, solo pregunta qué dígito tiene cada número y lo coloca en el balde
+correspondiente, una operación de clasificación, no de comparación. Por eso puede terminar en tiempo
+proporcional a n para un rango de dígitos acotado, más rápido que la cota de n log n que sí limita a
+los otros cinco algoritmos de este tema. La demostración formal de esa cota, con el argumento del
+árbol de decisión y las n factorial ordenaciones posibles, es justamente el tema con el que arranca
+el Tema 2 de esta unidad, que retoma los seis algoritmos de hoy para formalizar con notación Big-O
+por qué cada uno crece como crece.
+
+::: {.callout-tip}
+## Reto 6. Qué pasa con un número de más dígitos
+
+Al arreglo de ejemplo se le agrega un octavo número, 900, que tiene tres dígitos en vez de los dos
+que tienen los otros siete. Antes de seguir, decide cuántas pasadas necesita `radix` para ordenar
+el arreglo de ocho números.
+
+<label><input type="checkbox"> Sigue necesitando dos pasadas, porque la mayoria de los numeros tiene dos digitos</label>
+<label><input type="checkbox"> Necesita tres pasadas, una por cada digito del numero mas grande, y a los numeros de menos digitos se les trata el digito faltante como cero</label>
+<label><input type="checkbox"> El algoritmo falla, porque no todos los numeros tienen la misma cantidad de digitos</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+La segunda es correcta. El ciclo `while maximo // exp > 0` en Python, y su equivalente `maximo / exp
+> 0` en Java, sigue agregando pasadas mientras el número más grande, ahora 900, todavía tenga
+dígitos sin procesar en la posición `exp`, así que con `maximo = 900` el ciclo corre para `exp = 1`,
+`exp = 10` y `exp = 100`, tres pasadas en total. Para un número más corto, como 34, calcular `(34 //
+100) % 10` da cero, porque la división entera de 34 entre 100 es cero, así que 34 cae automáticamente
+en el balde 0 durante la pasada de las centenas, sin que el código necesite ningún caso especial ni
+ningún relleno explícito con ceros a la izquierda. La aritmética entera resuelve sola el problema de
+los números con menos dígitos.
+:::
+
+## Comparando los seis: un benchmark real
+
+Con los seis algoritmos ya implementados, la pregunta que sigue es cuánto se nota en la práctica la
+diferencia entre O(n^2) y algo más cercano a O(n log n). El siguiente script en Python corre los
+cinco primeros algoritmos, más shellsort, sobre el mismo arreglo de tres mil números generados al
+azar, midiendo el tiempo de cada uno. La versión de quicksort usada aquí elige el pivote al azar en
+cada partición, en vez de tomar siempre el último elemento como en la sección anterior, por razones
+que la siguiente sección explica en detalle.
+
+```python
+import random
+import time
+
+
+def burbuja(a):
+    a = a[:]
+    n = len(a)
+    for i in range(n - 1):
+        intercambio = False
+        for j in range(n - 1 - i):
+            if a[j] > a[j + 1]:
+                a[j], a[j + 1] = a[j + 1], a[j]
+                intercambio = True
+        if not intercambio:
+            break
+    return a
+
+
+def seleccion(a):
+    a = a[:]
+    n = len(a)
+    for i in range(n - 1):
+        minimo = i
+        for j in range(i + 1, n):
+            if a[j] < a[minimo]:
+                minimo = j
+        a[i], a[minimo] = a[minimo], a[i]
+    return a
+
+
+def insercion(a):
+    a = a[:]
+    for i in range(1, len(a)):
+        clave = a[i]
+        j = i - 1
+        while j >= 0 and a[j] > clave:
+            a[j + 1] = a[j]
+            j -= 1
+        a[j + 1] = clave
+    return a
+
+
+def quicksort_aleatorio(a):
+    a = a[:]
+    _quicksort(a, 0, len(a) - 1)
+    return a
+
+
+def _quicksort(a, bajo, alto):
+    while bajo < alto:
+        p = _particion(a, bajo, alto)
+        if p - bajo < alto - p:
+            _quicksort(a, bajo, p - 1)
+            bajo = p + 1
+        else:
+            _quicksort(a, p + 1, alto)
+            alto = p - 1
+
+
+def _particion(a, bajo, alto):
+    idx = random.randint(bajo, alto)
+    a[idx], a[alto] = a[alto], a[idx]
+    pivote = a[alto]
+    i = bajo - 1
+    for j in range(bajo, alto):
+        if a[j] <= pivote:
+            i += 1
+            a[i], a[j] = a[j], a[i]
+    a[i + 1], a[alto] = a[alto], a[i + 1]
+    return i + 1
+
+
+def shellsort(a):
+    a = a[:]
+    n = len(a)
+    gap = 1
+    while gap < n // 3:
+        gap = gap * 3 + 1
+    while gap >= 1:
+        for i in range(gap, n):
+            temp = a[i]
+            j = i
+            while j >= gap and a[j - gap] > temp:
+                a[j] = a[j - gap]
+                j -= gap
+            a[j] = temp
+        gap //= 3
+    return a
+
+
+random.seed(42)
+N = 3000
+datos = [random.randint(0, 1_000_000) for _ in range(N)]
+
+algoritmos = [
+    ("burbuja", burbuja),
+    ("seleccion", seleccion),
+    ("insercion", insercion),
+    ("quicksort", quicksort_aleatorio),
+    ("shellsort", shellsort),
+]
+
+print(f"N = {N} elementos aleatorios, mismo arreglo de entrada para los cinco")
+tiempos = {}
+for nombre, func in algoritmos:
+    inicio = time.perf_counter()
+    func(datos)
+    tiempos[nombre] = time.perf_counter() - inicio
+    print(f"{nombre:12s} {tiempos[nombre]:8.4f} s")
+
+base = tiempos["quicksort"]
+print("tiempo relativo contra quicksort (quicksort = 1.0x):")
+for nombre, t in tiempos.items():
+    print(f"{nombre:12s} {t / base:8.2f}x")
+```
+
+La salida real de esa ejecución fue esta:
+
+```
+N = 3000 elementos aleatorios, mismo arreglo de entrada para los cinco
+
+burbuja        0.3803 s
+seleccion      0.1563 s
+insercion      0.1695 s
+quicksort      0.0041 s
+shellsort      0.0046 s
+
+tiempo relativo contra quicksort (quicksort = 1.0x):
+burbuja         92.53x
+seleccion       38.04x
+insercion       41.25x
+quicksort        1.00x
+shellsort        1.12x
+```
+
+El resultado exacto varía según el equipo donde se ejecute, pero la proporción no cambia de forma
+sustancial, quicksort ordenó el arreglo de tres mil elementos en una fracción de segundo, mientras
+que burbuja tardó más de noventa veces ese tiempo sobre la misma entrada. Shellsort quedó apenas un
+doce por ciento más lento que quicksort, muy por delante de los tres algoritmos O(n^2), confirmando
+en la práctica que su complejidad subcuadrática no es solo una promesa teórica. Nota que selección e
+inserción, aunque los dos son O(n^2), no tardan lo mismo, inserción se beneficia de que el arreglo
+generado al azar no está tan lejos del orden final como el peor caso posible, mientras que selección,
+como ya viste en el Reto 3, hace siempre el mismo trabajo sin importar la entrada.
+
+## Cuando quicksort falla: el pivote mal elegido
+
+Quicksort promedio es rápido precisamente porque, en la mayoría de las entradas, un pivote elegido
+al azar cae cerca de la mediana del segmento y lo reparte en dos mitades parecidas. El Reto 4 ya
+mostró qué pasa cuando eso no ocurre, y el peor escenario posible para el esquema de este tema, con
+pivote igual al último elemento, es un arreglo que ya viene ordenado, cada partición elige como
+pivote al elemento más grande de lo que queda, deja todo el resto a un solo lado, y la recursión se
+convierte en una cadena de n particiones anidadas en vez de un árbol de altura log n. El siguiente
+script compara ese esquema fijo contra un esquema con pivote aleatorio, los dos sobre el mismo
+arreglo de mil quinientos números ya ordenados.
+
+```python
+import random
+import sys
+import time
+
+sys.setrecursionlimit(20000)
+comparaciones = 0
+
+
+def quicksort_pivote_fijo(a, bajo, alto):
+    global comparaciones
+    if bajo < alto:
+        p = particion_pivote_fijo(a, bajo, alto)
+        quicksort_pivote_fijo(a, bajo, p - 1)
+        quicksort_pivote_fijo(a, p + 1, alto)
+
+
+def particion_pivote_fijo(a, bajo, alto):
+    global comparaciones
+    pivote = a[alto]  # siempre el ultimo elemento, sin aleatorizar
+    i = bajo - 1
+    for j in range(bajo, alto):
+        comparaciones += 1
+        if a[j] <= pivote:
+            i += 1
+            a[i], a[j] = a[j], a[i]
+    a[i + 1], a[alto] = a[alto], a[i + 1]
+    return i + 1
+
+
+def quicksort_pivote_aleatorio(a, bajo, alto):
+    global comparaciones
+    if bajo < alto:
+        p = particion_pivote_aleatorio(a, bajo, alto)
+        quicksort_pivote_aleatorio(a, bajo, p - 1)
+        quicksort_pivote_aleatorio(a, p + 1, alto)
+
+
+def particion_pivote_aleatorio(a, bajo, alto):
+    global comparaciones
+    idx = random.randint(bajo, alto)
+    a[idx], a[alto] = a[alto], a[idx]
+    pivote = a[alto]
+    i = bajo - 1
+    for j in range(bajo, alto):
+        comparaciones += 1
+        if a[j] <= pivote:
+            i += 1
+            a[i], a[j] = a[j], a[i]
+    a[i + 1], a[alto] = a[alto], a[i + 1]
+    return i + 1
+
+
+N = 1500
+arreglo_ordenado = list(range(N))
+
+datos1 = arreglo_ordenado[:]
+comparaciones = 0
+inicio = time.perf_counter()
+quicksort_pivote_fijo(datos1, 0, len(datos1) - 1)
+tiempo_fijo = time.perf_counter() - inicio
+comparaciones_fijo = comparaciones
+
+datos2 = arreglo_ordenado[:]
+comparaciones = 0
+random.seed(7)
+inicio = time.perf_counter()
+quicksort_pivote_aleatorio(datos2, 0, len(datos2) - 1)
+tiempo_aleatorio = time.perf_counter() - inicio
+comparaciones_aleatorio = comparaciones
+
+print(f"N = {N} elementos, arreglo ya ordenado de entrada para los dos casos")
+print("quicksort con pivote fijo (ultimo elemento):")
+print(f"  comparaciones: {comparaciones_fijo}")
+print(f"  tiempo:        {tiempo_fijo:.4f} s")
+print("quicksort con pivote aleatorio:")
+print(f"  comparaciones: {comparaciones_aleatorio}")
+print(f"  tiempo:        {tiempo_aleatorio:.4f} s")
+n_cuadrado = N * (N - 1) // 2
+print(f"referencia: N*(N-1)/2 = {n_cuadrado} (comparaciones de un O(n^2) puro)")
+```
+
+La salida real de esa ejecución fue esta:
+
+```
+N = 1500 elementos, arreglo ya ordenado de entrada para los dos casos
+
+quicksort con pivote fijo (ultimo elemento):
+  comparaciones: 1124250
+  tiempo:        0.1328 s
+
+quicksort con pivote aleatorio:
+  comparaciones: 17634
+  tiempo:        0.0026 s
+
+referencia: N*(N-1)/2 = 1124250 (comparaciones de un O(n^2) puro)
+```
+
+El número de comparaciones del pivote fijo, 1 124 250, coincide exactamente con la fórmula N(N-1)/2
+del peor caso teórico de un algoritmo O(n^2) puro, no es una aproximación, es el mismo número. Cada
+partición sobre un arreglo ya ordenado con pivote igual al último elemento compara ese pivote contra
+todos los elementos que quedan, sin descartar ninguno, la misma cadena de particiones anidadas del
+Reto 4 pero llevada a mil quinientos elementos en vez de cuatro. El pivote aleatorio, sobre la misma
+entrada exacta, hizo sesenta y tres veces menos comparaciones y tardó una fracción del tiempo, porque
+elegir el pivote al azar hace que la probabilidad de repetir ese peor caso, aunque nunca sea cero,
+se vuelva insignificante en la práctica. Esta es la razón concreta por la que las implementaciones
+de quicksort de uso real, incluida la que corrió en el benchmark de la sección anterior, jamás fijan
+el pivote en una posición predecible del segmento.
+
+## Tabla comparativa completa
+
+::: {.tabla-ancha}
+| Algoritmo | Mejor caso | Caso promedio | Peor caso | Espacio extra | Estable | In-place | Basado en comparaciones |
+|---|---|---|---|---|---|---|---|
+| Burbuja | O(n) | O(n^2) | O(n^2) | O(1) | Si | Si | Si |
+| Inserción | O(n) | O(n^2) | O(n^2) | O(1) | Si | Si | Si |
+| Selección | O(n^2) | O(n^2) | O(n^2) | O(1) | No | Si | Si |
+| Quicksort | O(n log n) | O(n log n) | O(n^2) | O(log n) | No | Si | Si |
+| Shellsort | O(n log n) | entre O(n^{4/3}) y O(n^{3/2}) con Knuth | O(n^{3/2}) con Knuth, O(n^2) con la secuencia original | O(1) | No | Si | Si |
+| Radix (LSD) | O(d(n+b)) | O(d(n+b)) | O(d(n+b)) | O(n+b) | Si | No | No |
+:::
+
+Ningún algoritmo de esta tabla es universalmente el mejor. Burbuja e inserción, con su mejor caso
+lineal, sirven bien sobre datos casi ordenados, un registro al que se le agregan pocos elementos
+nuevos cada vez. Selección conviene cuando escribir en memoria es caro y leer es barato, porque hace
+como máximo n menos uno intercambios sin importar el tamaño del arreglo, contra los muchos más
+intercambios que puede hacer burbuja. Quicksort es, en la práctica, la opción por defecto para datos
+genéricos en memoria, siempre que el pivote se elija de forma aleatoria o con una técnica como la
+mediana de tres. Shellsort rinde bien cuando la memoria extra de otros algoritmos más rápidos no es
+aceptable, ordena en el lugar sin la recursión de quicksort. Radix sort gana cuando los datos tienen
+una cantidad acotada de dígitos, como identificadores numéricos o fechas, porque su costo no depende
+del logaritmo de n sino del número de dígitos, a costa de necesitar memoria auxiliar y de no servir
+directamente para comparar objetos generales, solo para claves que se puedan descomponer en dígitos
+o símbolos discretos.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] El mecanismo de los seis algoritmos, burbuja, inserción, selección, quicksort, shellsort y
+      radix, y por qué cada uno llega al mismo arreglo ordenado por un camino distinto
+- [ ] La complejidad de mejor, promedio y peor caso de cada uno, y por qué selección no se adapta al
+      orden de entrada mientras que burbuja e inserción sí
+- [ ] Cuáles de los seis son estables y cuáles no, y por qué un intercambio que salta posiciones
+      lejanas, como en selección y shellsort, es lo que rompe la estabilidad
+- [ ] Por qué el pivote de quicksort decide si el algoritmo corre en O(n log n) o degenera a O(n^2),
+      y por qué un pivote aleatorio hace que ese peor caso sea improbable en la práctica
+- [ ] Por qué radix sort no está sujeto a la cota O(n log n) de los algoritmos basados en
+      comparación, y qué papel juega la estabilidad de cada pasada por dígito para que el resultado
+      final quede correcto
+:::
+
+## Lo que sigue
+
+El Tema 2 de esta unidad retoma exactamente estos seis algoritmos, sin implementarlos de nuevo, para
+formalizar con notación Big-O el vocabulario que hoy solo se usó de forma intuitiva, qué significa
+O(n^2) con precisión matemática, de dónde sale la cota O(n log n) de los algoritmos basados en
+comparación que se mencionó en la sección de radix, y cómo se demuestra que un algoritmo pertenece a
+una clase de complejidad y no a otra. Los benchmarks de esta guía, con sus números reales de
+comparaciones y de tiempo, son el material concreto sobre el que esa formalización va a trabajar, en
+vez de partir de ejemplos nuevos que el estudiante todavía no conoce. Más adelante, el Tema 3 de esta
+unidad retoma `GrafoPonderado` de la Unidad 3 para resolver caminos más cortos con Dijkstra, Prim y
+Kruskal, y el Tema 4 cierra la unidad con los algoritmos de búsqueda, secuencial, binaria y secuencial
+con índices, que ya se compararon de forma preliminar en la Unidad 1.
+
+## Recursos
+
+- Weiss, M. A. *Data Structures and Algorithm Analysis.* Capítulo sobre ordenamiento, con especial
+  profundidad en shellsort, con la comparación entre secuencias de saltos, y en quicksort, con el
+  análisis de la elección de pivote y del esquema de partición.
+- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
+  sobre ordenamiento por conteo y radix sort, y el capítulo sobre la cota inferior de los algoritmos
+  de ordenamiento basados en comparación, con el argumento del árbol de decisión.
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo sobre algoritmos de
+  ordenamiento, con la comparación de las complejidades de mejor, promedio y peor caso de cada uno.
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. Los dos
+benchmarks, las trazas de cada algoritmo y el conteo de comparaciones de quicksort son ejecuciones
+reales hechas durante la preparación del material; el resultado exacto varía según el equipo que lo
+ejecute.
+:::

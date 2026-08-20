@@ -1,0 +1,835 @@
+---
+title: "Tema 3. Caminos más cortos y árboles de expansión mínima"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                |
+|--------|----------------------------------------------------------------|
+| Unidad | Unidad 4. Métodos de ordenamiento, búsqueda y eficiencia       |
+| Tema   | Tema 3. Caminos más cortos y árboles de expansión mínima       |
+:::
+
+El Tema 5 de la Unidad 3 dejó lista la clase `GrafoPonderado`, con cada vecino guardado junto al
+peso de la arista que lo conecta, y cerró con el Reto 5, sumar el peso de dos caminos entre el
+vértice 1 y el vértice 5 y decidir cuál sale más barato. Ese reto se resolvió a mano, sumando dos
+caminos concretos, `1-2-4-5` con doce de costo contra `1-3-4-5` con seis, pero la pregunta general,
+cuál es el camino más barato entre un vértice y cualquier otro, sin tener que enumerar cada camino
+posible, quedó abierta a propósito. Este tema la cierra con el algoritmo de Dijkstra, y de paso
+resuelve un problema relacionado pero distinto, cómo conectar todos los vértices de un grafo al
+menor costo total posible, con los algoritmos de Prim y de Kruskal. Los tres trabajan directamente
+sobre `GrafoPonderado`, sin ningún cambio a su representación, y los tres se analizan con el mismo
+vocabulario de notación asintótica que formalizó el Tema 2.
+
+## El algoritmo de Dijkstra: el camino más barato desde un origen
+
+Dijkstra resuelve el problema de caminos más cortos de origen único, encontrar la distancia mínima
+desde un vértice de partida hacia todos los demás vértices alcanzables del grafo. La idea central
+es voraz, en cada paso el algoritmo da por definitiva la distancia del vértice no visitado más
+barato que conoce hasta ese momento, y usa esa distancia para intentar mejorar la de sus vecinos.
+Esto funciona porque, en un grafo sin pesos negativos, ningún camino que pase por un vértice más
+caro puede terminar siendo más barato que uno que ya llegó por la ruta más económica conocida, así
+que una vez que un vértice se marca como definitivo, ninguna exploración posterior puede mejorar su
+distancia. Esa garantía, como se ve más adelante, es exactamente la que se rompe cuando aparece un
+peso negativo.
+
+### Cómo elegir el vértice más barato: la cola de prioridad
+
+Cada paso de Dijkstra necesita responder la misma pregunta, de todos los vértices que todavía no
+son definitivos, cuál tiene la distancia provisional más baja. Resolver esa pregunta recorriendo
+la lista completa cada vez funciona, pero cuesta caro, y una *cola de prioridad* es la estructura
+diseñada justo para esto, mantener un conjunto de elementos y devolver siempre el de menor valor sin
+tener que ordenarlos todos de nuevo en cada consulta.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de dos formas de implementar extraer el vertice con menor distancia. A la izquierda, una lista sin ordenar con las entradas distancia 2 vertice 3, distancia 4 vertice 2 y distancia 6 vertice 5, con una flecha que barre las tres para encontrar el minimo, costo O(n) por extraccion. A la derecha, un monticulo binario con la misma entrada distancia 2 vertice 3 en la raiz y las otras dos entradas como hijos, la raiz siempre es el minimo y extraerla cuesta O(log n)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="190" y="24" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Lista sin ordenar: O(n) por extraccion</text>
+  <text x="570" y="24" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Monticulo binario: O(log n) por extraccion</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="60" width="130" height="36" rx="6"/><rect x="60" y="106" width="130" height="36" rx="6"/><rect x="60" y="152" width="130" height="36" rx="6"/></g>
+  <g font-size="11" fill="#12324f" font-weight="600" text-anchor="middle"><text x="125" y="82">dist 2, v 3</text><text x="125" y="128">dist 4, v 2</text><text x="125" y="174">dist 6, v 5</text></g>
+  <path d="M220,78 C245,60 245,190 220,170" fill="none" stroke="#0e6f6c" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <text x="252" y="128" font-size="10" fill="#0e6f6c" text-anchor="start">hay que recorrer</text>
+  <text x="252" y="142" font-size="10" fill="#0e6f6c" text-anchor="start">las tres para saber</text>
+  <text x="252" y="156" font-size="10" fill="#0e6f6c" text-anchor="start">cual es la menor</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><circle cx="570" cy="75" r="34"/></g>
+  <text x="570" y="72" font-size="10.5" fill="#0e6f6c" font-weight="700" text-anchor="middle">dist 2</text>
+  <text x="570" y="86" font-size="10.5" fill="#0e6f6c" font-weight="700" text-anchor="middle">v 3</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="550" y1="100" x2="500" y2="150"/><line x1="590" y1="100" x2="640" y2="150"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="500" cy="180" r="30"/><circle cx="640" cy="180" r="30"/></g>
+  <text x="500" y="177" font-size="10" fill="#12324f" font-weight="600" text-anchor="middle">dist 4</text>
+  <text x="500" y="190" font-size="10" fill="#12324f" font-weight="600" text-anchor="middle">v 2</text>
+  <text x="640" y="177" font-size="10" fill="#12324f" font-weight="600" text-anchor="middle">dist 6</text>
+  <text x="640" y="190" font-size="10" fill="#12324f" font-weight="600" text-anchor="middle">v 5</text>
+  <text x="570" y="235" font-size="10" fill="#0e6f6c" text-anchor="middle">la raiz siempre es el minimo: extraerla solo pide reacomodar el arbol</text>
+</svg>
+
+:::
+
+Un montículo binario guarda sus elementos en un árbol donde cada nodo es siempre menor o igual que
+sus dos hijos, así que el elemento mínimo queda siempre en la raíz, consultarlo cuesta O(1) y
+extraerlo cuesta O(log n), porque tras quitar la raíz hay que mover el último elemento a su lugar y
+dejarlo hundirse hasta la posición donde vuelve a cumplirse esa regla, un recorrido de a lo sumo
+log2(n) niveles. Insertar un elemento nuevo cuesta también O(log n), por la misma razón, el
+elemento entra al final y sube burbujeando hasta su posición correcta. Implementar un montículo
+binario desde cero es un tema en sí mismo, así que esta guía usa la implementación ya lista de la
+biblioteca estándar, el módulo `heapq` en Python y la clase `PriorityQueue` en Java, una
+simplificación razonable de la operación de extraer el mínimo que no cambia ninguna idea del
+algoritmo, solo evita reescribir una estructura de datos que ya viene resuelta y probada.
+
+Ni `heapq` ni `PriorityQueue` ofrecen una operación directa para bajar la prioridad de un elemento
+que ya está adentro, lo que en la literatura se llama *decrease-key*. La solución práctica, y la
+que usa el código de esta guía, es insertar una entrada nueva cada vez que se mejora una distancia,
+sin quitar la entrada vieja, y descartarla como obsoleta si llega a salir de la cola después de que
+el vértice ya quedó definitivo. Esa entrada obsoleta no rompe el resultado, solo cuesta un poco de
+memoria y una comprobación extra al momento de extraerla, el precio de simplificar la
+implementación en vez de mantener un índice que permita localizar y actualizar cualquier entrada.
+
+### Traza de Dijkstra sobre el grafo ponderado
+
+Sobre la componente 1 del grafo de la Unidad 3, con las aristas `1-2=4`, `1-3=2`, `2-4=5`,
+`3-4=1`, `4-5=3` y `5-6=6`, Dijkstra desde el vértice 1 confirma justo lo que el Reto 5 del Tema 5
+ya había adelantado a mano, la distancia más barata hasta el vértice 5 es seis, y llega por el
+camino `1-3-4-5`, no por `1-2-4-5`.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Traza de Dijkstra desde el vertice 1 sobre la componente 1 del grafo ponderado. Orden de finalizacion marcado junto a cada vertice: 1 primero con distancia 0, 3 segundo con distancia 2, 4 tercero con distancia 3, 2 cuarto con distancia 4, 5 quinto con distancia 6, 6 sexto con distancia 12. A la derecha, la traza paso a paso de la cola de prioridad" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="150" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Dijkstra desde 1: orden 1, 3, 4, 2, 5, 6</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="55" x2="225" y2="120"/><line x1="75" y1="120" x2="150" y2="185"/><line x1="225" y1="120" x2="150" y2="185"/><line x1="150" y1="185" x2="150" y2="250"/><line x1="150" y1="250" x2="150" y2="315"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/><circle cx="150" cy="315" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text></g>
+  <g font-size="9.5" fill="#5b6876" font-weight="700" text-anchor="middle"><text x="105" y="90">4</text><text x="200" y="90">2</text><text x="105" y="156">5</text><text x="200" y="156">1</text><text x="165" y="221">3</text><text x="165" y="286">6</text></g>
+  <g text-anchor="middle" font-size="11" fill="#0e6f6c" font-weight="700"><text x="170" y="38">1o, dist 0</text><text x="30" y="103">4o, dist 4</text><text x="270" y="103">2o, dist 2</text><text x="98" y="168">3o, dist 3</text><text x="170" y="238">5o, dist 6</text><text x="170" y="303">6o, dist 12</text></g>
+  <text x="450" y="42" font-size="10.5" fill="#12324f" font-weight="700">paso a paso, con cola de prioridad:</text>
+  <g font-size="9.5" fill="#5b6876"><text x="450" y="60">1. cola=[(0,1)] -&gt; extrae 1, relaja 2 y 3</text><text x="450" y="76">   cola=[(2,3),(4,2)]</text><text x="450" y="92">2. extrae 3 (dist 2), relaja 4: dist(4)=3</text><text x="450" y="108">   cola=[(3,4),(4,2)]</text><text x="450" y="124">3. extrae 4 (dist 3), relaja 5: dist(5)=6</text><text x="450" y="140">   2 via 4 costaria 8, no mejora, se ignora</text><text x="450" y="156">   cola=[(4,2),(6,5)]</text><text x="450" y="172">4. extrae 2 (dist 4), sin mejoras nuevas</text><text x="450" y="188">   cola=[(6,5)]</text><text x="450" y="204">5. extrae 5 (dist 6), relaja 6: dist(6)=12</text><text x="450" y="220">   cola=[(12,6)]</text><text x="450" y="236">6. extrae 6 (dist 12), cola vacia: termina</text></g>
+  <text x="380" y="330" font-size="10" fill="#0e6f6c" text-anchor="middle">distancias finales desde 1: {1:0, 2:4, 3:2, 4:3, 5:6, 6:12}</text>
+</svg>
+
+:::
+
+El vértice 3 se finaliza antes que el 2 aunque el 2 sea vecino directo de 1, porque su distancia
+provisional, dos, es menor que la del 2, cuatro, y Dijkstra siempre extrae el vértice no definitivo
+más barato, sin importar cuántos saltos tiene desde el origen. Al finalizar el 4, la relajación hacia
+el 2 calcula un camino alternativo de ocho, `1-3-4-2`, que no mejora los cuatro ya conocidos de la
+arista directa `1-2`, así que esa relajación no cambia nada, un candidato descartado sin ceremonia,
+como pasa la mayor parte del tiempo dentro del algoritmo.
+
+Estos métodos se agregan directamente a la clase `GrafoPonderado` que ya tienes.
+
+```java
+public Map<Integer, Integer> dijkstra(int origen) {
+    Map<Integer, Integer> distancia = new HashMap<>();
+    for (int v : vertices()) {
+        distancia.put(v, Integer.MAX_VALUE);
+    }
+    distancia.put(origen, 0);
+
+    PriorityQueue<int[]> cola = new PriorityQueue<>((a, b) -> a[1] - b[1]);
+    cola.add(new int[]{origen, 0});
+    Set<Integer> finalizados = new HashSet<>();
+
+    while (!cola.isEmpty()) {
+        int[] actual = cola.poll();
+        int u = actual[0], distU = actual[1];
+        if (finalizados.contains(u)) {
+            continue; // entrada obsoleta: ya se proceso este vertice con una distancia mejor
+        }
+        finalizados.add(u);
+        for (int[] par : vecinos(u)) {
+            int v = par[0], peso = par[1];
+            int nuevaDistancia = distU + peso;
+            if (nuevaDistancia < distancia.get(v)) {
+                distancia.put(v, nuevaDistancia);
+                cola.add(new int[]{v, nuevaDistancia});
+            }
+        }
+    }
+    return distancia;
+}
+```
+
+```python
+import heapq
+
+def dijkstra(self, origen):
+    distancia = {v: float('inf') for v in self.vertices()}
+    distancia[origen] = 0
+    cola = [(0, origen)]
+    finalizados = set()
+
+    while cola:
+        dist_u, u = heapq.heappop(cola)
+        if u in finalizados:
+            continue  # entrada obsoleta: ya se proceso este vertice con una distancia mejor
+        finalizados.add(u)
+        for v, peso in self.vecinos(u):
+            nueva_distancia = dist_u + peso
+            if nueva_distancia < distancia[v]:
+                distancia[v] = nueva_distancia
+                heapq.heappush(cola, (nueva_distancia, v))
+    return distancia
+```
+
+La comprobación `if u in finalizados: continue` es justo la que descarta las entradas obsoletas que
+deja la falta de `decrease-key`, sin ese chequeo el algoritmo seguiría dando el resultado correcto
+en distancia, porque procesar un vértice ya finalizado con una distancia peor no cambia nada, pero
+haría trabajo de más innecesario cada vez que una entrada vieja sale de la cola.
+
+::: {.callout-tip}
+## Reto 1. Traza Dijkstra desde otro origen
+
+Sobre el mismo grafo ponderado, corres `dijkstra(4)` en vez de `dijkstra(1)`. Antes de seguir,
+calcula la distancia final de 4 a 6.
+
+<label><input type="checkbox"> 8</label>
+<label><input type="checkbox"> 9</label>
+<label><input type="checkbox"> 12</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La segunda es correcta, nueve. Desde 4 el algoritmo finaliza primero 3 con distancia 1, porque la
+arista `3-4` pesa 1. Desde 3 relaja 1 con distancia 1 + 2 = 3. El siguiente en extraerse es 1, con
+distancia 3, porque hay empate con el 5 (que también quedó en 3) y el desempate por número de
+vértice favorece al menor. Desde 1 se intenta relajar 2 con 3 + 4 = 7, peor que el 5 que ya tenía
+por la arista directa `4-2`, así que no mejora. Se extrae 5 con distancia 3, y desde ahí se relaja 6
+con 3 + 6 = 9. Por último se extrae 2 con distancia 5, sin relajaciones nuevas, y 6 con distancia 9.
+El resultado final es `{4:0, 3:1, 1:3, 5:3, 2:5, 6:9}`.
+:::
+
+### Por qué Dijkstra falla con pesos negativos
+
+Todo el argumento de Dijkstra depende de una idea, una vez que un vértice queda finalizado con su
+distancia mínima, ningún camino descubierto después puede mejorarla, porque cualquier camino
+alternativo tendría que pasar por un vértice todavía no finalizado, que por construcción tiene una
+distancia provisional mayor o igual, y sumarle el peso de al menos una arista más solo puede
+aumentar el costo. Esa garantía se rompe en cuanto una arista puede restar en vez de sumar, un
+camino que en apariencia era más caro puede terminar siendo más barato después de cruzar una arista
+de peso negativo, y para entonces Dijkstra ya dio por cerrado un vértice que en realidad no tenía la
+distancia correcta.
+
+Un grafo no dirigido con una arista de peso negativo no sirve para ilustrar esto, porque esa sola
+arista ya forma un *ciclo de peso negativo*, ir y volver por ella reduce el costo sin límite cada
+vez que se repite, y ningún algoritmo de camino más corto está definido sobre un grafo así, la
+respuesta correcta sería menos infinito. Por eso el contraejemplo que sigue usa un grafo dirigido,
+donde cada arista solo se recorre en un sentido y no hay forma de generar un ciclo con una sola
+arista.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafo dirigido con cuatro vertices A, B, C y D, usado para mostrar que Dijkstra falla con pesos negativos. La arista A a B pesa 2, la arista A a C pesa 1, la arista B a C pesa menos 3, la arista C a D pesa 1. El camino directo A a C a D cuesta 1 mas 1 igual a 2, pero el camino A a B a C a D cuesta 2 mas menos 3 mas 1, es decir 0, mas barato que el directo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="t3neg1" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="390" y="22" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Grafo dirigido con una arista de peso negativo</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#t3neg1)"><line x1="110" y1="70" x2="570" y2="70"/><line x1="108" y1="79" x2="322" y2="181"/><line x1="572" y1="79" x2="358" y2="181"/><line x1="360" y1="190" x2="670" y2="190"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="90" cy="70" r="20"/><circle cx="590" cy="70" r="20"/><circle cx="340" cy="190" r="20"/><circle cx="690" cy="190" r="20"/></g>
+  <g text-anchor="middle" font-size="14" fill="#12324f" font-weight="700"><text x="90" y="75">A</text><text x="590" y="75">B</text><text x="340" y="195">C</text><text x="690" y="195">D</text></g>
+  <g fill="#ffffff"><rect x="332" y="46" width="16" height="14"/><rect x="200" y="118" width="16" height="14"/><rect x="450" y="118" width="30" height="14"/><rect x="507" y="166" width="16" height="14"/></g>
+  <g font-size="11" fill="#0e6f6c" font-weight="700" text-anchor="middle"><text x="340" y="57">2</text><text x="208" y="129">1</text><text x="465" y="129">-3</text><text x="515" y="177">1</text></g>
+  <text x="380" y="235" font-size="10.5" fill="#0e6f6c" text-anchor="middle">camino directo A-C-D cuesta 1+1=2; camino A-B-C-D cuesta 2+(-3)+1=0, mas barato</text>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Reto 2. Predice si Dijkstra acierta
+
+Sobre el grafo dirigido de arriba, con `A-&gt;B=2`, `A-&gt;C=1`, `B-&gt;C=-3` y `C-&gt;D=1`, corres
+`dijkstra(A)` para calcular la distancia más corta hasta `D`. Antes de seguir, decide si el
+resultado va a ser correcto.
+
+<label><input type="checkbox"> Si, Dijkstra siempre encuentra el camino mas corto sin importar el signo de los pesos</label>
+<label><input type="checkbox"> No, Dijkstra reporta distancia 2 para D, cuando el camino real mas barato cuesta 0</label>
+<label><input type="checkbox"> No, Dijkstra entra en un ciclo infinito y nunca termina</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La segunda es correcta. Dijkstra extrae primero `A` con distancia 0, y relaja sus dos vecinos,
+`B` queda en 2 y `C` queda en 1. El siguiente en extraerse es el más barato de los dos no
+finalizados, `C` con distancia 1, así que `C` queda marcado como definitivo ahí mismo, y desde `C`
+se relaja `D`, que queda en `1 + 1 = 2`. Cuando después se extrae `B` con distancia 2 y se intenta
+relajar `C` con `2 + (-3) = -1`, la entrada nueva sí se agrega a la cola porque `-1` es menor que el
+`1` guardado, pero `C` ya está en `finalizados`, así que cuando esa entrada vuelve a salir de la
+cola, el chequeo `if u in finalizados: continue` la descarta sin volver a explorar los vecinos de
+`C` con la distancia corregida. El resultado es que `distancia[C]` puede terminar mostrando `-1` en
+el diccionario final, un efecto secundario de que la actualización sí ocurre antes del descarte,
+pero `distancia[D]` se queda en `2`, calculado con la distancia vieja e incorrecta de `C`, porque `D`
+nunca vuelve a relajarse desde el `C` corregido. El resultado real más barato de `A` a `D` es `0`, por
+el camino `A-&gt;B-&gt;C-&gt;D`. El problema no es un detalle de esta implementación en particular, es
+estructural, cualquier Dijkstra que deje de reexplorar un vértice una vez que lo trata como
+definitivo puede arrastrar un error así hacia cualquier vértice que dependa de él, incluso si el
+propio vértice afectado llega a mostrar, por accidente, un número que parece correcto.
+:::
+
+El algoritmo de Bellman-Ford resuelve este mismo problema sin esa limitación, porque en vez de
+finalizar un vértice apenas se extrae el más barato, relaja las `V - 1` aristas del grafo completo,
+`V - 1` veces, dejando que cualquier mejora se propague sin importar en qué orden se descubran los
+caminos, a costa de una complejidad mayor, `O(V * E)` frente al `O((V + E) log V)` de Dijkstra con
+montículo binario. Sobre el contraejemplo de arriba, Bellman-Ford sí calcula `distancia[D] = 0`,
+el resultado correcto. Esta guía no implementa Bellman-Ford, el capítulo de caminos más cortos de
+Cormen, Leiserson, Rivest y Stein lo cubre en detalle, junto con la forma de detectar si el propio
+grafo tiene un ciclo de peso negativo, caso en el que ningún camino más corto está definido.
+
+### Complejidad de Dijkstra según la cola de prioridad
+
+La complejidad total de Dijkstra depende de cuánto cuesta cada extracción del mínimo y cada
+relajación, y eso cambia según qué estructura de datos implemente la cola de prioridad.
+
+::: {.tabla-ancha}
+| Implementación de la cola | Extraer mínimo | Insertar o relajar | Complejidad total |
+|---|---|---|---|
+| Lista sin ordenar | O(V) | O(1) | O(V^2 + E) = O(V^2) |
+| Montículo binario (`heapq`, `PriorityQueue`) | O(log V) | O(log V) | O((V + E) log V) |
+| Montículo de Fibonacci (teórico) | O(log V) amortizado | O(1) amortizado | O(E + V log V) |
+:::
+
+La lista sin ordenar hace `V` extracciones a `O(V)` cada una, `O(V^2)` en total, más `O(E)` de
+relajaciones a costo constante cada una, y como `E` nunca pasa de `V * (V-1) / 2`, el término `V^2`
+domina siempre, así que esta versión conviene solo en grafos densos donde de todas formas `E` se
+acerca a `V^2`. El montículo binario paga `O(log V)` por cada una de las `V` extracciones y por cada
+una de las `E` relajaciones que empujan una entrada nueva a la cola, `O((V + E) log V)` en total, la
+opción de uso general y la que implementa el código de esta guía con `heapq` y `PriorityQueue`. El
+montículo de Fibonacci logra `decrease-key` en `O(1)` amortizado en vez de reinsertar una entrada
+nueva, lo que baja la cota teórica a `O(E + V log V)`, la mejor de las tres, pero su implementación
+real es compleja y sus constantes ocultas son grandes, así que en la práctica casi ninguna
+biblioteca estándar la ofrece, ni Python ni Java la traen lista para usar, y esta guía la menciona
+solo como referencia de qué tan lejos llega la cota teórica.
+
+## El algoritmo de Prim: árbol de expansión mínima por vértices
+
+Dijkstra responde cuál es el camino más barato desde un origen hasta cada otro vértice. Prim
+responde una pregunta distinta, cuál es el subconjunto de aristas más barato que conecta todos los
+vértices del grafo entre sí, sin dejar ninguno aislado y sin formar ningún ciclo, un *árbol de
+expansión mínima*. Los dos algoritmos comparten la misma estructura, en cada paso extraen de una
+cola de prioridad el elemento más barato y lo usan para actualizar a sus vecinos, pero el criterio
+que ordena la cola es distinto, Dijkstra prioriza la distancia acumulada desde el origen, mientras
+que Prim prioriza solo el peso de la arista que conecta un vértice nuevo al árbol que ya se
+construyó, sin importar cuántos saltos separan a ese vértice del punto de partida.
+
+Esa diferencia de criterio hace que los dos árboles resultantes puedan ser distintos incluso sobre
+el mismo grafo, porque minimizar la distancia de cada vértice al origen y minimizar el costo total
+de conectar todos los vértices son objetivos que no siempre coinciden.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion sobre un triangulo de tres vertices S, P y Q con S-P peso 2, S-Q peso 2 y P-Q peso 1. Panel izquierdo: el arbol de caminos mas cortos de Dijkstra desde S usa las dos aristas S-P y S-Q, peso total 4, porque cada nodo llega por su ruta directa mas barata, dejando P-Q sin usar. Panel derecho: el arbol de expansion minima de Prim usa P-Q y S-P, peso total 3, mas barato en conjunto, pero la distancia de S a Q dentro de ese arbol pasa a ser 2 mas 1 igual a 3, peor que los 2 que daba Dijkstra" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Mismo triangulo, dos arboles distintos segun el objetivo</text>
+  <text x="190" y="38" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">Dijkstra desde S: arbol de caminos mas cortos</text>
+  <g fill="none" stroke="#0e6f6c" stroke-width="2"><line x1="190" y1="60" x2="110" y2="130"/><line x1="190" y1="60" x2="270" y2="130"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="4 3"><line x1="110" y1="130" x2="270" y2="130"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="190" cy="60" r="18"/><circle cx="110" cy="130" r="18"/><circle cx="270" cy="130" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="700"><text x="190" y="65">S</text><text x="110" y="135">P</text><text x="270" y="135">Q</text></g>
+  <g font-size="10.5" fill="#0e6f6c" font-weight="700" text-anchor="middle"><text x="135" y="90">2</text><text x="245" y="90">2</text><text x="190" y="150">1, sin usar</text></g>
+  <text x="190" y="185" font-size="10.5" fill="#0e6f6c" text-anchor="middle">dist(P)=2, dist(Q)=2, peso total del arbol=4</text>
+  <text x="570" y="38" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">Prim: arbol de expansion minima</text>
+  <g fill="none" stroke="#0e6f6c" stroke-width="2"><line x1="570" y1="60" x2="490" y2="130"/><line x1="490" y1="130" x2="650" y2="130"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="4 3"><line x1="570" y1="60" x2="650" y2="130"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="570" cy="60" r="18"/><circle cx="490" cy="130" r="18"/><circle cx="650" cy="130" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="700"><text x="570" y="65">S</text><text x="490" y="135">P</text><text x="650" y="135">Q</text></g>
+  <g font-size="10.5" fill="#0e6f6c" font-weight="700" text-anchor="middle"><text x="515" y="90">2</text><text x="570" y="150">1</text><text x="625" y="90">2, sin usar</text></g>
+  <text x="570" y="185" font-size="10.5" fill="#0e6f6c" text-anchor="middle">peso total del arbol=3, pero la distancia de S a Q en este arbol es 2+1=3</text>
+</svg>
+
+:::
+
+Sobre el triángulo `S`, `P`, `Q`, con `S-P=2`, `S-Q=2` y `P-Q=1`, Dijkstra desde `S` usa las dos
+aristas directas y deja `P-Q` sin tocar, porque cada vértice ya llega por su ruta más barata posible
+sin necesidad de pasar por el otro. Prim, en cambio, prefiere `P-Q` sobre una de las dos aristas
+directas, porque construye el árbol más barato en total, y usar la arista de peso uno en vez de
+repetir dos aristas de peso dos ahorra una unidad en el total, aunque eso signifique que, dentro de
+ese árbol, llegar de `S` a `Q` ahora cuesta `2 + 1 = 3` en vez de los dos directos. Ningún resultado
+es incorrecto, cada algoritmo optimiza una cosa distinta, y confundir "el árbol más barato en total"
+con "el camino más corto a cada vértice" es el error más común al mezclar los dos algoritmos.
+
+::: {.callout-tip}
+## Reto 3. Qué arista deja fuera cada árbol
+
+Sobre el mismo triángulo `S`, `P`, `Q` de arriba, con `S-P=2`, `S-Q=2` y `P-Q=1`, decide qué arista
+deja fuera el árbol de expansión mínima de Prim, y qué arista deja fuera el árbol de caminos más
+cortos de Dijkstra desde `S`.
+
+<label><input type="checkbox"> Prim deja fuera P-Q, Dijkstra deja fuera S-Q</label>
+<label><input type="checkbox"> Prim deja fuera S-Q, Dijkstra deja fuera P-Q</label>
+<label><input type="checkbox"> Los dos dejan fuera la misma arista, P-Q</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+La segunda es correcta. Prim construye el árbol más barato en total, así que prefiere la arista de
+peso uno, `P-Q`, sobre una de las dos de peso dos, y deja fuera `S-Q`, porque conectar `Q` a través
+de `P` ya cuesta menos en conjunto. Dijkstra, en cambio, nunca usa `P-Q` en este caso, porque cada
+vértice ya tiene una ruta directa desde `S` tan barata como la que ofrecería pasar por el otro
+vértice, así que no hay ninguna razón para preferir el camino indirecto y la arista `P-Q` queda sin
+usar en el árbol de caminos más cortos.
+:::
+
+### Traza de Prim sobre el grafo ponderado
+
+Sobre la componente 1 completa, arrancando en el vértice 1, Prim construye el árbol agregando en
+cada paso la arista más barata que conecta un vértice ya incluido con uno todavía afuera.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Traza de Prim desde el vertice 1 sobre la componente 1 del grafo ponderado. Las aristas del arbol de expansion minima se resaltan en verde en el orden en que se agregan: 1-3 primero, 3-4 segundo, 4-5 tercero, 1-2 cuarto, 5-6 quinto. La arista 2-4 aparece en gris punteado porque se descarta, sus dos extremos ya estaban en el arbol y agregarla formaria un ciclo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="150" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Prim desde 1: arbol de expansion minima, peso total 16</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="4 3"><line x1="75" y1="120" x2="150" y2="185"/></g>
+  <g fill="none" stroke="#0e6f6c" stroke-width="2.2"><line x1="150" y1="55" x2="225" y2="120"/><line x1="225" y1="120" x2="150" y2="185"/><line x1="150" y1="185" x2="150" y2="250"/><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="250" x2="150" y2="315"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/><circle cx="150" cy="315" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text></g>
+  <g font-size="9.5" fill="#5b6876" font-weight="700" text-anchor="middle"><text x="105" y="90">4o: 4</text><text x="200" y="90">1o: 2</text><text x="105" y="156">descartada</text><text x="200" y="156">2o: 1</text><text x="165" y="221">3o: 3</text><text x="165" y="286">5o: 6</text></g>
+  <text x="450" y="42" font-size="10.5" fill="#12324f" font-weight="700">paso a paso, con cola de prioridad de aristas:</text>
+  <g font-size="9.5" fill="#5b6876"><text x="450" y="60">1. arbol={1}, candidatas 1-2(4), 1-3(2)</text><text x="450" y="76">   agrega 1-3(2), arbol={1,3}</text><text x="450" y="92">2. candidatas 1-2(4), 3-4(1)</text><text x="450" y="108">   agrega 3-4(1), arbol={1,3,4}</text><text x="450" y="124">3. candidatas 1-2(4), 2-4(5), 4-5(3)</text><text x="450" y="140">   agrega 4-5(3), arbol={1,3,4,5}</text><text x="450" y="156">4. candidatas 1-2(4), 2-4(5), 5-6(6)</text><text x="450" y="172">   agrega 1-2(4), arbol={1,2,3,4,5}</text><text x="450" y="188">   2-4 ya conecta dos vertices del arbol:</text><text x="450" y="204">   se descarta al aparecer despues</text><text x="450" y="220">5. agrega 5-6(6), arbol completo</text></g>
+</svg>
+
+:::
+
+La arista `2-4`, de peso cinco, nunca entra al árbol, porque para cuando le toca salir de la cola,
+tanto el 2 como el 4 ya están adentro, agregarla conectaría dos vértices que el árbol ya conecta por
+otro camino y formaría un ciclo, algo que un árbol, por definición, no puede tener. Esa es la razón
+concreta por la que el peso total del árbol, dieciséis, coincide con la suma de las otras cinco
+aristas, `2 + 1 + 3 + 4 + 6`, la componente completa menos justo la más cara de las cuatro que
+formaban el único ciclo del grafo original.
+
+```java
+public List<int[]> prim(int origen) {
+    List<int[]> arbol = new ArrayList<>(); // cada elemento: [origen, destino, peso]
+    Set<Integer> enArbol = new HashSet<>();
+    PriorityQueue<int[]> cola = new PriorityQueue<>((a, b) -> a[2] - b[2]);
+    enArbol.add(origen);
+    for (int[] par : vecinos(origen)) {
+        cola.add(new int[]{origen, par[0], par[1]});
+    }
+
+    while (!cola.isEmpty() && enArbol.size() < vertices().size()) {
+        int[] arista = cola.poll();
+        int destino = arista[1];
+        if (enArbol.contains(destino)) {
+            continue; // los dos extremos ya estan en el arbol: agregarla formaria un ciclo
+        }
+        enArbol.add(destino);
+        arbol.add(arista);
+        for (int[] par : vecinos(destino)) {
+            if (!enArbol.contains(par[0])) {
+                cola.add(new int[]{destino, par[0], par[1]});
+            }
+        }
+    }
+    return arbol;
+}
+```
+
+```python
+def prim(self, origen):
+    arbol = []
+    en_arbol = {origen}
+    cola = [(peso, origen, v) for v, peso in self.vecinos(origen)]
+    heapq.heapify(cola)
+
+    total_vertices = len(list(self.vertices()))
+    while cola and len(en_arbol) < total_vertices:
+        peso, u, v = heapq.heappop(cola)
+        if v in en_arbol:
+            continue  # los dos extremos ya estan en el arbol: agregarla formaria un ciclo
+        en_arbol.add(v)
+        arbol.append((u, v, peso))
+        for w, p in self.vecinos(v):
+            if w not in en_arbol:
+                heapq.heappush(cola, (p, v, w))
+    return arbol
+```
+
+El patrón es idéntico al de `dijkstra`, una cola de prioridad, un conjunto de lo ya definitivo y una
+comprobación que descarta entradas obsoletas, solo cambia qué número ordena la cola, el peso puro de
+la arista candidata en vez de la distancia acumulada desde el origen. Esa cercanía en el código es la
+misma que explica por qué los dos algoritmos comparten complejidad, `O((V + E) log V)` con montículo
+binario y `O(V^2)` con una lista sin ordenar, las mismas cotas de la tabla de la sección anterior,
+solo que aquí "relajar" significa comparar el peso de una arista nueva contra el mejor candidato
+conocido para conectar un vértice, no acumular una distancia.
+
+::: {.callout-tip}
+## Reto 4. Prim desde otro vértice
+
+Si `prim` arranca en el vértice 6 en vez del vértice 1, sobre el mismo grafo ponderado. Antes de
+seguir, decide si el árbol de expansión mínima resultante cambia.
+
+<label><input type="checkbox"> Si, el peso total cambia porque el punto de partida importa</label>
+<label><input type="checkbox"> No, el arbol final tiene las mismas aristas y el mismo peso total, 16, solo cambia el orden en que se agregan</label>
+<label><input type="checkbox"> No se puede saber sin correr el algoritmo de nuevo</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+La segunda es correcta. Los seis pesos del grafo, `4, 2, 5, 1, 3, 6`, son todos distintos entre sí,
+así que no hay ningún empate que un vértice de partida distinto pueda resolver de otra forma, el
+árbol de expansión mínima de un grafo con pesos únicos es siempre el mismo sin importar por dónde
+arranque Prim. Lo único que cambia al arrancar en 6 es el orden en que las cinco aristas entran al
+árbol, la cola de prioridad explora el grafo en otra secuencia, pero termina agregando exactamente
+las mismas cinco aristas, `1-3`, `3-4`, `4-5`, `1-2` y `5-6`, con el mismo peso total de dieciséis.
+Cuando sí hay pesos empatados, distintos puntos de partida pueden producir árboles distintos, pero
+todos con el mismo peso total mínimo, la propiedad que le da nombre al algoritmo se conserva aunque
+el árbol concreto no sea único.
+:::
+
+## El algoritmo de Kruskal: árbol de expansión mínima por aristas
+
+Prim construye el árbol de expansión mínima creciendo desde un vértice, agregando siempre la arista
+más barata que toca el árbol actual. Kruskal llega al mismo tipo de resultado por un camino
+distinto, ordena todas las aristas del grafo de menor a mayor peso y las va agregando una por una,
+sin importar si tocan el árbol que ya existe, con una sola condición, que agregarla no forme un
+ciclo. Los dos algoritmos son *voraces* en el mismo sentido que ya usó el Tema 4 de la Unidad 1 para
+selección de actividades, cada uno toma en cada paso la decisión que parece mejor en ese momento, la
+arista más barata disponible, y la teoría detrás de los dos garantiza que esa sucesión de decisiones
+locales produce el óptimo global, el árbol de expansión mínima real, no solo una aproximación.
+
+### Detectar ciclos: conjuntos disjuntos
+
+La parte que Kruskal necesita y Prim no, es una forma barata de responder, para cada arista
+candidata, si sus dos extremos ya están conectados por aristas agregadas antes, porque conectarlos
+de nuevo formaría un ciclo. La estructura diseñada para esa pregunta es *conjuntos disjuntos*, o
+union-find, que mantiene una partición del conjunto de vértices en grupos, y ofrece dos operaciones,
+encontrar a qué grupo pertenece un vértice, y unir dos grupos en uno solo cuando una arista los
+conecta por primera vez.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Conjuntos disjuntos con compresion de camino sobre cuatro elementos genericos a, b, c, d. Panel izquierdo: arbol despues de unir a con b, c con d, y despues a con c, con a como raiz, b y c como hijos directos de a, y d como hijo de c. Panel derecho: el mismo conjunto despues de llamar a encontrar sobre d, que aplica compresion de camino y hace que d pase a ser hijo directo de la raiz a en vez de hijo de c" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Conjuntos disjuntos: union y compresion de camino</text>
+  <text x="190" y="216" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">tras unir(a,b), unir(c,d), unir(a,c)</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="190" y1="55" x2="110" y2="115"/><line x1="190" y1="55" x2="270" y2="115"/><line x1="270" y1="115" x2="270" y2="175"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="190" cy="55" r="17"/><circle cx="110" cy="115" r="17"/><circle cx="270" cy="115" r="17"/><circle cx="270" cy="175" r="17"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f" font-weight="700"><text x="190" y="60">a</text><text x="110" y="120">b</text><text x="270" y="120">c</text><text x="270" y="180">d</text></g>
+  <text x="570" y="216" font-size="10.5" font-weight="600" fill="#12324f" text-anchor="middle">tras encontrar(d): d ya apunta directo a a</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="570" y1="55" x2="490" y2="115"/><line x1="570" y1="55" x2="650" y2="115"/></g>
+  <g fill="none" stroke="#0e6f6c" stroke-width="1.6" stroke-dasharray="4 3"><line x1="570" y1="55" x2="570" y2="175"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="570" cy="55" r="17"/><circle cx="490" cy="115" r="17"/><circle cx="650" cy="115" r="17"/><circle cx="570" cy="175" r="17"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f" font-weight="700"><text x="570" y="60">a</text><text x="490" y="120">b</text><text x="650" y="120">c</text><text x="570" y="180">d</text></g>
+  <text x="380" y="240" font-size="10" fill="#0e6f6c" text-anchor="middle">sin compresion, cada encontrar(d) tendria que subir d, luego c, luego a; con compresion sube una sola vez</text>
+</svg>
+
+:::
+
+Cada grupo se representa como un árbol donde cada nodo guarda un puntero a su padre, y la raíz apunta
+a sí misma. Encontrar el grupo de un elemento significa subir por esos punteros hasta llegar a la
+raíz, y unir dos grupos significa hacer que la raíz de uno pase a ser hijo de la raíz del otro. La
+*compresión de camino* es la mejora que evita que ese árbol crezca en línea recta, cada vez que
+`encontrar` sube hasta la raíz, aprovecha el viaje para hacer que todos los nodos que visitó apunten
+directamente a esa raíz, así que la próxima consulta sobre cualquiera de ellos es inmediata en vez de
+repetir la subida completa. Con compresión de camino, y una regla adicional para decidir cuál raíz
+queda arriba al unir dos grupos, cada operación cuesta en la práctica un tiempo tan cercano a
+constante que se describe como `O(alfa(V))`, donde alfa es la función inversa de Ackermann, una
+función que crece tan despacio que para cualquier cantidad de vértices que se pueda representar en un
+computador real su valor nunca pasa de cuatro o cinco, así que en la práctica cada operación de
+conjuntos disjuntos cuesta esencialmente `O(1)`.
+
+```java
+public class ConjuntosDisjuntos {
+    private Map<Integer, Integer> padre = new HashMap<>();
+    private Map<Integer, Integer> tamano = new HashMap<>();
+
+    public void agregar(int v) {
+        padre.putIfAbsent(v, v);
+        tamano.putIfAbsent(v, 1);
+    }
+
+    public int encontrar(int x) {
+        if (padre.get(x) != x) {
+            padre.put(x, encontrar(padre.get(x))); // compresion de camino
+        }
+        return padre.get(x);
+    }
+
+    public boolean unir(int x, int y) {
+        int raizX = encontrar(x);
+        int raizY = encontrar(y);
+        if (raizX == raizY) {
+            return false; // ya estan en el mismo conjunto: formaria un ciclo
+        }
+        if (tamano.get(raizX) < tamano.get(raizY)) {
+            int temp = raizX; raizX = raizY; raizY = temp;
+        }
+        padre.put(raizY, raizX);
+        tamano.put(raizX, tamano.get(raizX) + tamano.get(raizY));
+        return true;
+    }
+}
+```
+
+```python
+class ConjuntosDisjuntos:
+    def __init__(self):
+        self.padre = {}
+        self.tamano = {}
+
+    def agregar(self, v):
+        self.padre.setdefault(v, v)
+        self.tamano.setdefault(v, 1)
+
+    def encontrar(self, x):
+        if self.padre[x] != x:
+            self.padre[x] = self.encontrar(self.padre[x])  # compresion de camino
+        return self.padre[x]
+
+    def unir(self, x, y):
+        raiz_x = self.encontrar(x)
+        raiz_y = self.encontrar(y)
+        if raiz_x == raiz_y:
+            return False  # ya estan en el mismo conjunto: formaria un ciclo
+        if self.tamano[raiz_x] < self.tamano[raiz_y]:
+            raiz_x, raiz_y = raiz_y, raiz_x
+        self.padre[raiz_y] = raiz_x
+        self.tamano[raiz_x] += self.tamano[raiz_y]
+        return True
+```
+
+`unir` compara el tamaño de los dos grupos antes de decidir cuál raíz queda arriba, y siempre cuelga
+el grupo más pequeño debajo del más grande, la regla que en la literatura se llama unión por tamaño.
+Sin esa regla, unir siempre en el mismo sentido puede producir un árbol degenerado en forma de
+cadena, el mismo problema de profundidad que ya vio la Unidad 3 con un árbol binario de búsqueda mal
+balanceado, y la combinación de unión por tamaño con compresión de camino es justo lo que mantiene la
+estructura casi plana y las operaciones casi constantes.
+
+### Traza de Kruskal sobre el grafo ponderado
+
+Ordenadas de menor a mayor peso, las seis aristas de la componente 1 quedan `3-4(1)`, `1-3(2)`,
+`4-5(3)`, `1-2(4)`, `2-4(5)` y `5-6(6)`. Kruskal las procesa en ese orden exacto.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Traza de Kruskal sobre la componente 1 del grafo ponderado. Las aristas se procesan en orden de peso ascendente: 3-4 peso 1, 1-3 peso 2, 4-5 peso 3, 1-2 peso 4, 2-4 peso 5, 5-6 peso 6. Todas se agregan al arbol de expansion minima excepto 2-4, marcada en gris punteado, que se descarta porque 2 y 4 ya estan en el mismo conjunto disjunto y agregarla formaria un ciclo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="150" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Kruskal: aristas en orden de peso ascendente</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="4 3"><line x1="75" y1="120" x2="150" y2="185"/></g>
+  <g fill="none" stroke="#0e6f6c" stroke-width="2.2"><line x1="225" y1="120" x2="150" y2="185"/><line x1="150" y1="55" x2="225" y2="120"/><line x1="150" y1="185" x2="150" y2="250"/><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="250" x2="150" y2="315"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/><circle cx="150" cy="315" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text></g>
+  <g font-size="9.5" fill="#5b6876" font-weight="700" text-anchor="middle"><text x="105" y="90">4a: 4</text><text x="200" y="90">2a: 2</text><text x="105" y="156">5a: 5, ciclo</text><text x="200" y="156">1a: 1</text><text x="165" y="221">3a: 3</text><text x="165" y="286">6a: 6</text></g>
+  <text x="450" y="42" font-size="10.5" fill="#12324f" font-weight="700">paso a paso, con conjuntos disjuntos:</text>
+  <g font-size="9.5" fill="#5b6876"><text x="450" y="60">1. edges ordenadas: 3-4, 1-3, 4-5, 1-2, 2-4, 5-6</text><text x="450" y="76">2. 3-4(1): conjuntos distintos, une, agrega</text><text x="450" y="92">3. 1-3(2): conjuntos distintos, une, agrega</text><text x="450" y="108">4. 4-5(3): conjuntos distintos, une, agrega</text><text x="450" y="124">5. 1-2(4): conjuntos distintos, une, agrega</text><text x="450" y="140">6. 2-4(5): 2 y 4 ya en el mismo conjunto</text><text x="450" y="156">   (los une el camino 1-2 y 1-3-4), se</text><text x="450" y="172">   descarta para no formar un ciclo</text><text x="450" y="188">7. 5-6(6): conjuntos distintos, une, agrega</text><text x="450" y="204">arbol final: mismas 5 aristas que Prim,</text><text x="450" y="220">peso total 16</text></g>
+</svg>
+
+:::
+
+El árbol que arma Kruskal termina siendo exactamente el mismo que armó Prim, `1-3`, `3-4`, `4-5`,
+`1-2` y `5-6`, con el mismo peso total, dieciséis, aunque el orden en que cada algoritmo llegó a él
+sea completamente distinto, uno creciendo desde un vértice hacia afuera y el otro procesando aristas
+sin importar en qué parte del grafo estén. Esa coincidencia no es casualidad, cuando el árbol de
+expansión mínima de un grafo es único, como pasa aquí porque los seis pesos son todos distintos,
+cualquier algoritmo correcto tiene que llegar al mismo resultado, sin importar la estrategia que use
+para construirlo.
+
+```java
+public List<int[]> kruskal() {
+    List<int[]> aristas = new ArrayList<>(); // cada elemento: [origen, destino, peso]
+    Set<String> vistas = new HashSet<>();
+    for (int u : vertices()) {
+        for (int[] par : vecinos(u)) {
+            int v = par[0], peso = par[1];
+            String clave = Math.min(u, v) + "-" + Math.max(u, v);
+            if (!vistas.contains(clave)) {
+                vistas.add(clave);
+                aristas.add(new int[]{u, v, peso});
+            }
+        }
+    }
+    aristas.sort((a, b) -> a[2] - b[2]);
+
+    ConjuntosDisjuntos cd = new ConjuntosDisjuntos();
+    for (int v : vertices()) {
+        cd.agregar(v);
+    }
+
+    List<int[]> mst = new ArrayList<>();
+    for (int[] arista : aristas) {
+        if (cd.unir(arista[0], arista[1])) {
+            mst.add(arista);
+        }
+    }
+    return mst;
+}
+```
+
+```python
+def kruskal(self):
+    aristas = []
+    vistas = set()
+    for u in self.vertices():
+        for v, peso in self.vecinos(u):
+            clave = (min(u, v), max(u, v))
+            if clave not in vistas:
+                vistas.add(clave)
+                aristas.append((peso, u, v))
+    aristas.sort()
+
+    cd = ConjuntosDisjuntos()
+    for v in self.vertices():
+        cd.agregar(v)
+
+    mst = []
+    for peso, u, v in aristas:
+        if cd.unir(u, v):
+            mst.append((u, v, peso))
+    return mst
+```
+
+El bucle que arma la lista `aristas` recorre `vecinos(u)` para cada vértice `u`, y como
+`GrafoPonderado` guarda cada arista no dirigida dos veces, una desde cada extremo, el conjunto
+`vistas` evita agregarla dos veces a la lista antes de ordenarla, quedándose con la clave
+`(min(u,v), max(u,v))` para que `3-4` y `4-3` cuenten como la misma arista. `cd.unir(arista[0],
+arista[1])` hace las dos cosas a la vez, decide si la arista forma un ciclo y, si no, ejecuta la
+unión, así que la condición del `if` sirve como filtro y como efecto secundario en la misma línea,
+un patrón compacto que vale la pena reconocer porque aparece seguido en código que usa conjuntos
+disjuntos.
+
+::: {.callout-tip}
+## Reto 5. Por qué se rechaza 2-4
+
+Cuando Kruskal procesa la arista `2-4`, de peso cinco, la rechaza. Antes de seguir, decide qué
+verificación exacta de `ConjuntosDisjuntos` es la que provoca ese rechazo.
+
+<label><input type="checkbox"> encontrar(2) y encontrar(4) devuelven raices distintas</label>
+<label><input type="checkbox"> encontrar(2) y encontrar(4) devuelven la misma raiz, porque el camino 1-2 y 1-3-4 ya los conecta</label>
+<label><input type="checkbox"> tamano.get(2) es mayor que tamano.get(4)</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+La segunda es correcta. Para cuando le toca el turno a `2-4`, ya se procesaron `3-4`, `1-3` y `1-2`,
+así que 1, 2, 3 y 4 quedaron unidos en un solo conjunto, 2 por la arista directa `1-2` y 4 por la
+cadena `1-3-4`. `unir(2, 4)` llama primero a `encontrar(2)` y a `encontrar(4)`, y como las dos
+devuelven la misma raíz, la condición `raizX == raizY` se cumple y la función devuelve `false` sin
+tocar ningún puntero, la señal exacta que usa `kruskal` para descartar la arista sin agregarla al
+árbol.
+:::
+
+### Complejidad de Kruskal y cuándo preferirlo sobre Prim
+
+El costo de Kruskal lo domina por completo el paso de ordenar las aristas, `O(E log E)`, porque las
+`E` operaciones de conjuntos disjuntos que siguen cuestan casi `O(1)` cada una gracias a la
+compresión de camino y a la unión por tamaño, un total de `O(E * alfa(V))`, una cantidad tan pequeña
+frente al costo del ordenamiento que se descarta en la notación final. Como ninguna arista se repite
+más de `V^2` veces, `log E` nunca es mayor que `2 * log V`, así que la cota se suele escribir también
+como `O(E log V)`, equivalente en la práctica.
+
+::: {.tabla-ancha}
+| Algoritmo | Complejidad típica | Cuándo conviene |
+|---|---|---|
+| Prim, con lista sin ordenar | O(V^2) | Grafos densos, donde E se acerca a V^2 |
+| Prim, con montículo binario | O((V + E) log V) | Uso general, sobre todo grafos dispersos |
+| Kruskal | O(E log E) = O(E log V) | Grafos dispersos, o cuando las aristas ya llegan como lista plana |
+:::
+
+En un grafo denso, donde `E` se acerca a `V^2`, `O(E log V)` de Kruskal se acerca a `O(V^2 log V)`,
+peor que el `O(V^2)` de Prim con una simple lista sin ordenar, porque ordenar una cantidad de aristas
+cercana a `V^2` cuesta ese logaritmo extra que Prim no paga. En un grafo disperso, donde `E` es
+apenas proporcional a `V`, `O(E log V)` se acerca a `O(V log V)`, comparable al `O((V + E) log V)` de
+Prim con montículo, y ahí la elección suele depender más de cómo llegan los datos, si las aristas ya
+están disponibles como una lista plana, sin necesidad de construir una lista de adyacencia completa,
+Kruskal se implementa más directo, mientras que si el grafo ya vive como `GrafoPonderado` con sus
+listas de vecinos, Prim aprovecha esa estructura sin ningún paso adicional de ordenamiento.
+
+::: {.callout-tip}
+## Reto 6. Elige el algoritmo según la densidad
+
+Tienes dos grafos para construir un árbol de expansión mínima. El primero es disperso, diez mil
+vértices y quince mil aristas. El segundo es casi completo, doscientos vértices y cerca de
+diecinueve mil aristas, casi todos los pares posibles conectados. Antes de seguir, decide qué
+algoritmo conviene para cada uno.
+
+<label><input type="checkbox"> Kruskal para los dos casos, porque ordenar aristas siempre es mas rapido</label>
+<label><input type="checkbox"> Kruskal para el disperso, Prim con lista sin ordenar para el casi completo</label>
+<label><input type="checkbox"> Prim para los dos casos, porque usa la misma estructura que Dijkstra</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+La segunda es correcta. El grafo disperso tiene `E` apenas mayor que `V`, así que ordenar sus quince
+mil aristas cuesta poco, `O(E log V)` se mantiene manejable y Kruskal resuelve el problema sin
+complicaciones. El grafo casi completo tiene `V = 200`, tan pequeño que `O(V^2)` de Prim con una
+simple lista sin ordenar es apenas `40 000` operaciones, mientras que `O(E log E)` de Kruskal sobre
+diecinueve mil aristas ronda las `270 000` operaciones, varias veces más caro, porque ordenar una
+cantidad de aristas cercana al máximo posible para ese `V` paga el logaritmo completo sin ninguna
+ventaja a cambio. La densidad del grafo, no una preferencia general por un algoritmo sobre otro, es
+la que decide cuál conviene en cada caso concreto.
+:::
+
+## Los tres algoritmos, uno al lado del otro
+
+::: {.tabla-ancha}
+| Algoritmo | Qué resuelve | Estructura auxiliar | Complejidad con montículo |
+|---|---|---|---|
+| Dijkstra | Camino más corto desde un origen a todos los demás vértices | Cola de prioridad de vértices | O((V + E) log V) |
+| Prim | Árbol de expansión mínima, creciendo desde un vértice | Cola de prioridad de aristas candidatas | O((V + E) log V) |
+| Kruskal | Árbol de expansión mínima, procesando aristas ordenadas | Conjuntos disjuntos | O(E log V) |
+:::
+
+Los tres son algoritmos voraces que nunca reconsideran una decisión ya tomada, y los tres dependen de
+que el grafo no tenga pesos negativos, Dijkstra porque su prueba de correctitud asume que ningún
+camino futuro puede mejorar uno ya finalizado, y Prim y Kruskal porque, aunque sí toleran pesos
+negativos sin romperse, el problema de árbol de expansión mínima está definido igual con o sin
+negativos, la única de las tres nociones de esta guía que de verdad se rompe con un peso negativo es
+la de camino más corto de Dijkstra.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] Cómo Dijkstra usa una cola de prioridad para extraer siempre el vértice no finalizado más
+      barato, y por qué esa elección voraz da el camino más corto correcto cuando no hay pesos
+      negativos
+- [ ] Trazar Dijkstra a mano sobre un grafo ponderado pequeño, incluida la relajación de vecinos y
+      el descarte de entradas obsoletas en la cola
+- [ ] Por qué una arista de peso negativo rompe la garantía de Dijkstra, con un ejemplo concreto
+      donde el algoritmo reporta una distancia incorrecta, y qué algoritmo la corrige
+- [ ] La diferencia entre Dijkstra y Prim, dos algoritmos con la misma estructura de código que
+      resuelven problemas distintos, camino más corto desde un origen contra árbol más barato que
+      conecta todos los vértices
+- [ ] Cómo Kruskal usa conjuntos disjuntos con compresión de camino para detectar si una arista
+      formaría un ciclo antes de agregarla
+- [ ] Cuándo conviene Prim sobre Kruskal y viceversa, según qué tan denso sea el grafo
+:::
+
+## Lo que sigue
+
+El Tema 4 cierra la unidad y el curso con los algoritmos de búsqueda, secuencial, binaria y
+secuencial con índices, implementados con programación orientada a objetos. La búsqueda binaria
+retoma directamente la recurrencia `T(n) = T(n/2) + O(1)` que el Tema 2 ya resolvió en su Reto 4, el
+mismo patrón de descartar una mitad en cada paso que hoy usó la cola de prioridad para descartar
+entradas obsoletas, y la comparación entre las tres formas de buscar se apoya en el mismo vocabulario
+de notación O, Omega y Theta que se usó para analizar Dijkstra, Prim y Kruskal.
+
+## Recursos
+
+- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
+  "Single-Source Shortest Paths", con el algoritmo de Dijkstra, el algoritmo de Bellman-Ford y la
+  detección de ciclos de peso negativo, y capítulo "Minimum Spanning Trees", con los algoritmos de
+  Prim y de Kruskal y el análisis de conjuntos disjuntos con compresión de camino.
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Capítulo sobre grafos, con la
+  sección de caminos más cortos con Dijkstra y la sección de árboles de expansión mínima con Prim y
+  Kruskal.
+- Weiss, M. A. *Data Structures and Algorithm Analysis.* Capítulo "Graphs", con la implementación de
+  Dijkstra usando una cola de prioridad y el análisis de complejidad según la estructura elegida.
+- [Documentación oficial de Python sobre `heapq`](https://docs.python.org/3/library/heapq.html), el
+  módulo que implementa la cola de prioridad usada en el código de esta guía.
+- [Javadoc de `PriorityQueue` en Java SE](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/PriorityQueue.html),
+  la clase equivalente en Java, con la advertencia oficial de que no garantiza ningún orden entre
+  elementos con la misma prioridad.
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. Las trazas
+de Dijkstra, Prim y Kruskal sobre el grafo de ejemplo se verificaron calculando cada paso con
+código, no a mano.
+:::
+

@@ -1,0 +1,967 @@
+---
+title: "Tema 4. El árbol que se corrige solo"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                    |
+|--------|----------------------------------------------------|
+| Unidad | Unidad 3. Estructuras dinámicas                    |
+| Tema   | Tema 4. Árboles 2-3 y árboles AVL                   |
+:::
+
+El Tema 3 cerró con una medición que no deja lugar a dudas, el mismo árbol binario de búsqueda que
+ordena mientras almacena se degrada a una cadena de 7999 enlaces con solo insertar ocho mil valores
+ya ordenados, mientras que esos mismos ocho mil valores insertados en un orden distinto dejan la
+altura en 35. El contenido final del árbol es idéntico en los dos casos, lo que cambia por completo
+es la forma, y esa forma la decide el orden de llegada de los datos, algo que ningún programa
+controla. Este tema resuelve ese problema desde dos ángulos distintos. El árbol AVL sigue siendo un
+árbol binario, con un nodo y dos hijos como el del Tema 3, pero después de cada inserción revisa si
+algún nodo quedó demasiado inclinado hacia un lado y lo corrige con una rotación local. El árbol 2-3
+cambia la pieza misma, un nodo ya no guarda un solo valor sino uno o dos, y esa holgura extra le
+permite absorber una inserción sin necesitar bajar un nivel más, así que nunca llega a desbalancearse
+porque su forma no lo permite desde el diseño.
+
+## Árboles AVL: rebalancear después de cada inserción
+
+Un árbol AVL, llamado así por los apellidos de sus inventores, Georgy Adelson-Velsky y Evgenii
+Landis, es un árbol binario de búsqueda con una regla adicional que se cumple en cada nodo, no solo
+en la raíz, la altura de su subárbol derecho y la de su subárbol izquierdo nunca difieren en más de
+uno. Esa diferencia tiene nombre propio, el factor de balanceo de un nodo, que se calcula como la
+altura del subárbol derecho menos la altura del subárbol izquierdo. Un factor de balanceo fuera del
+conjunto {-1, 0, 1} rompe el invariante AVL, y es exactamente lo que dispara una rotación.
+
+Esta guía usa la misma convención que las implementaciones de referencia, la altura de un subárbol
+vacío es -1 y la de una hoja es 0, así que el factor de balanceo de una hoja siempre es 0, sin
+importar en qué árbol esté.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El arbol de siete nodos del Tema 3, raiz 50 con hijos 30 y 70 y hojas 20, 40, 60 y 80, anotado con el factor de balanceo y la altura de cada nodo: todos los factores son 0, dentro del rango permitido de -1 a 1" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd34a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El factor de balanceo de cada nodo, ya dentro de {-1, 0, 1}</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd34a)"><path d="M368,78 L242,122"/><path d="M392,78 L518,122"/><path d="M222,158 L152,202"/><path d="M238,158 L308,202"/><path d="M522,158 L452,202"/><path d="M538,158 L608,202"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="357" y="42" width="46" height="36"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="207" y="122" width="46" height="36"/><rect x="507" y="122" width="46" height="36"/><rect x="117" y="202" width="46" height="36"/><rect x="297" y="202" width="46" height="36"/><rect x="417" y="202" width="46" height="36"/><rect x="597" y="202" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="65">50</text><text x="230" y="145">30</text><text x="530" y="145">70</text><text x="140" y="225">20</text><text x="320" y="225">40</text><text x="440" y="225">60</text><text x="620" y="225">80</text></g>
+  <g text-anchor="middle" font-size="10" fill="#0e6f6c" font-weight="700"><text x="380" y="92">f=0, h=2</text><text x="230" y="172">f=0, h=1</text><text x="530" y="172">f=0, h=1</text><text x="140" y="252">f=0, h=0</text><text x="320" y="252">f=0, h=0</text><text x="440" y="252">f=0, h=0</text><text x="620" y="252">f=0, h=0</text></g>
+</svg>
+
+:::
+
+El árbol de siete nodos que construiste en el Tema 3 ya cumple el invariante AVL sin que hiciera
+falta ninguna rotación, el factor de cada nodo es 0 porque las dos mitades quedaron perfectamente
+parejas. Eso no es el resultado garantizado de cualquier inserción, es la excepción que confirma que
+un ABB puede quedar balanceado por casualidad. Lo que el AVL agrega no es esa casualidad, es la
+garantía de que se mantenga así pase lo que pase.
+
+### La clase NodoAVL
+
+Guardar el factor de balanceo en cada consulta recorriendo el árbol completo sería demasiado costoso,
+así que `NodoAVL` agrega un campo más frente al `NodoArbol` del Tema 3, `altura`, que cada nodo
+mantiene actualizado sobre la marcha después de cada inserción. Con la altura de los dos hijos a la
+mano, calcular el factor de balanceo de un nodo es una sola resta.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de clase UML de NodoAVL, con atributos dato, izquierdo, derecho y altura sin metodos publicos, junto a ArbolAVL, con el atributo raiz y los metodos insertar, buscar, altura, rotarDerecha, rotarIzquierda y balancear" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">NodoAVL agrega altura frente a NodoArbol del Tema 3</text>
+  <rect x="30" y="40" width="280" height="170" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g stroke="#8fc9c5"><line x1="30" y1="76" x2="310" y2="76"/></g>
+  <text x="170" y="64" font-size="14.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">NodoAVL</text>
+  <g font-size="11.5" fill="#12324f"><text x="44" y="98">- dato: int</text><text x="44" y="120">- izquierdo: NodoAVL</text><text x="44" y="142">- derecho: NodoAVL</text><text x="44" y="164">- altura: int</text></g>
+  <text x="44" y="190" font-size="10.5" fill="#5b6876">sin metodos publicos, igual que NodoArbol</text>
+  <rect x="360" y="40" width="370" height="230" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <g stroke="#c7d6e6"><line x1="360" y1="76" x2="730" y2="76"/><line x1="360" y1="108" x2="730" y2="108"/></g>
+  <text x="545" y="64" font-size="14.5" font-weight="700" fill="#12324f" text-anchor="middle">ArbolAVL</text>
+  <text x="374" y="98" font-size="11.5" fill="#12324f">- raiz: NodoAVL</text>
+  <g font-size="11.5" fill="#12324f"><text x="374" y="128">+ insertar(dato: int): void</text><text x="374" y="148">+ buscar(dato: int): boolean</text><text x="374" y="168">+ altura(): int</text><text x="374" y="188">- rotarDerecha(nodo): NodoAVL</text><text x="374" y="208">- rotarIzquierda(nodo): NodoAVL</text><text x="374" y="228">- balancear(nodo): NodoAVL</text></g>
+  <text x="374" y="256" font-size="10" fill="#5b6876">eliminar sigue la misma logica de balancear</text>
+</svg>
+
+:::
+
+```java
+public class NodoAVL {
+    int dato;
+    NodoAVL izquierdo;
+    NodoAVL derecho;
+    int altura;
+
+    public NodoAVL(int dato) {
+        this.dato = dato;
+        this.izquierdo = null;
+        this.derecho = null;
+        this.altura = 0;
+    }
+}
+
+public class ArbolAVL {
+    private NodoAVL raiz;
+
+    private int altura(NodoAVL nodo) {
+        return nodo == null ? -1 : nodo.altura;
+    }
+
+    private int factor(NodoAVL nodo) {
+        return altura(nodo.derecho) - altura(nodo.izquierdo);
+    }
+
+    private void actualizarAltura(NodoAVL nodo) {
+        nodo.altura = 1 + Math.max(altura(nodo.izquierdo), altura(nodo.derecho));
+    }
+}
+```
+
+```python
+class NodoAVL:
+    def __init__(self, dato):
+        self.dato = dato
+        self.izquierdo = None
+        self.derecho = None
+        self.altura = 0
+
+
+class ArbolAVL:
+    def __init__(self):
+        self.raiz = None
+
+    def _altura(self, nodo):
+        return nodo.altura if nodo is not None else -1
+
+    def _factor(self, nodo):
+        return self._altura(nodo.derecho) - self._altura(nodo.izquierdo)
+
+    def _actualizar_altura(self, nodo):
+        nodo.altura = 1 + max(self._altura(nodo.izquierdo), self._altura(nodo.derecho))
+```
+
+### Las cuatro rotaciones
+
+Una rotación reorganiza tres nodos y sus subárboles sin tocar el invariante de orden del ABB, ningún
+valor cambia de lugar respecto a sus vecinos en el recorrido inorden, lo único que cambia es cuál de
+los tres queda arriba. Hay cuatro formas en que un nodo puede quedar desbalanceado según de qué lado
+venga el exceso de altura, y cada una tiene su propia rotación para corregirla.
+
+#### Caso izquierda-izquierda (LL)
+
+El exceso de altura viene del hijo izquierdo del hijo izquierdo. La corrección es una sola rotación a
+la derecha sobre el nodo desbalanceado, que promueve a su hijo izquierdo al lugar que él ocupaba.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rotacion caso izquierda-izquierda: antes, cadena con 30 en la raiz, 20 como hijo izquierdo y 10 como nieto izquierdo, factor de 30 es -2, invariante roto; despues de rotar a la derecha en 30, la nueva raiz del subarbol es 20, con 10 a la izquierda y 30 a la derecha, factor 0 en los tres nodos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd34c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Caso izquierda-izquierda (LL): antes</text>
+  <text x="590" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">despues de rotarDerecha(30)</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd34c)"><path d="M130,70 L95,95"/><path d="M95,125 L60,150"/><path d="M590,70 L550,95"/><path d="M590,70 L630,95"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="109" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="74" y="95" width="42" height="30"/><rect x="39" y="150" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="130" y="59">30</text><text x="95" y="114">20</text><text x="60" y="169">10</text></g>
+  <text x="130" y="200" font-size="10.5" fill="#0e6f6c" text-anchor="middle">factor(30) = -2, viola el invariante</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="569" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="529" y="95" width="42" height="30"/><rect x="609" y="95" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="590" y="59">20</text><text x="550" y="114">10</text><text x="630" y="114">30</text></g>
+  <text x="590" y="200" font-size="10.5" fill="#0e6f6c" text-anchor="middle">factor 0 en los tres, invariante restaurado</text>
+</svg>
+
+:::
+
+```java
+private NodoAVL rotarDerecha(NodoAVL nodo) {
+    NodoAVL nuevaRaiz = nodo.izquierdo;
+    nodo.izquierdo = nuevaRaiz.derecho;
+    nuevaRaiz.derecho = nodo;
+    actualizarAltura(nodo);
+    actualizarAltura(nuevaRaiz);
+    return nuevaRaiz;
+}
+```
+
+```python
+def _rotar_derecha(self, nodo):
+    nueva_raiz = nodo.izquierdo
+    nodo.izquierdo = nueva_raiz.derecho
+    nueva_raiz.derecho = nodo
+    self._actualizar_altura(nodo)
+    self._actualizar_altura(nueva_raiz)
+    return nueva_raiz
+```
+
+`nodo.izquierdo` sube a ocupar el lugar de `nodo`, `nodo` pasa a ser el hijo derecho de quien antes
+era su propio hijo izquierdo, y el subárbol derecho de la nueva raíz, que antes colgaba de ella, se
+reubica como hijo izquierdo del nodo que bajó. Ningún valor cambió de posición relativa en el
+recorrido inorden, solo cambió qué nodo queda arriba.
+
+#### Caso derecha-derecha (RR)
+
+El caso simétrico, el exceso de altura viene del hijo derecho del hijo derecho, y la corrección es una
+rotación a la izquierda.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rotacion caso derecha-derecha: antes, cadena con 10 en la raiz, 20 como hijo derecho y 30 como nieto derecho, factor de 10 es 2, invariante roto; despues de rotar a la izquierda en 10, la nueva raiz del subarbol es 20, con 10 a la izquierda y 30 a la derecha, factor 0 en los tres nodos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd34d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Caso derecha-derecha (RR): antes</text>
+  <text x="590" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">despues de rotarIzquierda(10)</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd34d)"><path d="M60,70 L95,95"/><path d="M95,125 L130,150"/><path d="M590,70 L550,95"/><path d="M590,70 L630,95"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="39" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="74" y="95" width="42" height="30"/><rect x="109" y="150" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="60" y="59">10</text><text x="95" y="114">20</text><text x="130" y="169">30</text></g>
+  <text x="130" y="200" font-size="10.5" fill="#0e6f6c" text-anchor="middle">factor(10) = 2, viola el invariante</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="569" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="529" y="95" width="42" height="30"/><rect x="609" y="95" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="590" y="59">20</text><text x="550" y="114">10</text><text x="630" y="114">30</text></g>
+  <text x="590" y="200" font-size="10.5" fill="#0e6f6c" text-anchor="middle">factor 0 en los tres, invariante restaurado</text>
+</svg>
+
+:::
+
+```java
+private NodoAVL rotarIzquierda(NodoAVL nodo) {
+    NodoAVL nuevaRaiz = nodo.derecho;
+    nodo.derecho = nuevaRaiz.izquierdo;
+    nuevaRaiz.izquierdo = nodo;
+    actualizarAltura(nodo);
+    actualizarAltura(nuevaRaiz);
+    return nuevaRaiz;
+}
+```
+
+```python
+def _rotar_izquierda(self, nodo):
+    nueva_raiz = nodo.derecho
+    nodo.derecho = nueva_raiz.izquierdo
+    nueva_raiz.izquierdo = nodo
+    self._actualizar_altura(nodo)
+    self._actualizar_altura(nueva_raiz)
+    return nueva_raiz
+```
+
+#### Caso izquierda-derecha (LR)
+
+Aquí el exceso de altura no viene en línea recta, viene del hijo derecho del hijo izquierdo, un
+zigzag. Una sola rotación a la derecha sobre el nodo desbalanceado no lo arregla, más adelante esta
+guía muestra exactamente por qué. La corrección necesita dos rotaciones, primero una rotación a la
+izquierda sobre el hijo izquierdo, que convierte el zigzag en una línea recta LL, y después la
+rotación a la derecha ya conocida sobre el nodo original.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rotacion caso izquierda-derecha en tres pasos: antes, 30 en la raiz con hijo izquierdo 10 y el hijo derecho de 10 es 20, un zigzag, factor de 30 es -2; paso intermedio, tras rotarIzquierda(10), 20 pasa a ser el hijo izquierdo de 30 y 10 el hijo izquierdo de 20, ya en linea recta; paso final, tras rotarDerecha(30), 20 queda como raiz del subarbol con 10 a la izquierda y 30 a la derecha, factor 0" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd34e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="110" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">1. antes: zigzag, factor(30) = -2</text>
+  <text x="380" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">2. rotarIzquierda(10): ya es LL</text>
+  <text x="630" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">3. rotarDerecha(30): balanceado</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd34e)"><path d="M110,65 L75,90"/><path d="M75,120 L110,145"/><path d="M380,65 L345,90"/><path d="M345,120 L320,145"/><path d="M630,65 L595,90"/><path d="M630,65 L665,90"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="89" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="54" y="105" width="42" height="30"/><rect x="89" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="110" y="69">30</text><text x="75" y="124">10</text><text x="110" y="179">20</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="359" y="50" width="42" height="30"/><rect x="324" y="105" width="42" height="30"/><rect x="299" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="380" y="69">30</text><text x="345" y="124">20</text><text x="320" y="179">10</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="609" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="574" y="105" width="42" height="30"/><rect x="644" y="105" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="630" y="69">20</text><text x="595" y="124">10</text><text x="665" y="124">30</text></g>
+</svg>
+
+:::
+
+#### Caso derecha-izquierda (RL)
+
+El caso simétrico del anterior, el exceso de altura viene del hijo izquierdo del hijo derecho. La
+corrección es la misma idea reflejada, primero una rotación a la derecha sobre el hijo derecho, y
+después una rotación a la izquierda sobre el nodo original.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rotacion caso derecha-izquierda en tres pasos: antes, 10 en la raiz con hijo derecho 30 y el hijo izquierdo de 30 es 20, un zigzag, factor de 10 es 2; paso intermedio, tras rotarDerecha(30), 20 pasa a ser el hijo derecho de 10 y 30 el hijo derecho de 20, ya en linea recta; paso final, tras rotarIzquierda(10), 20 queda como raiz del subarbol con 10 a la izquierda y 30 a la derecha, factor 0" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd34f" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="110" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">1. antes: zigzag, factor(10) = 2</text>
+  <text x="380" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">2. rotarDerecha(30): ya es RR</text>
+  <text x="630" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">3. rotarIzquierda(10): balanceado</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd34f)"><path d="M110,65 L145,90"/><path d="M145,120 L110,145"/><path d="M380,65 L415,90"/><path d="M415,120 L450,145"/><path d="M630,65 L595,90"/><path d="M630,65 L665,90"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="89" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="124" y="105" width="42" height="30"/><rect x="89" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="110" y="69">10</text><text x="145" y="124">30</text><text x="110" y="179">20</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="359" y="50" width="42" height="30"/><rect x="394" y="105" width="42" height="30"/><rect x="429" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="380" y="69">10</text><text x="415" y="124">20</text><text x="450" y="179">30</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="609" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="574" y="105" width="42" height="30"/><rect x="644" y="105" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="630" y="69">20</text><text x="595" y="124">10</text><text x="665" y="124">30</text></g>
+</svg>
+
+:::
+
+Las cuatro rotaciones, junto con la decisión de cuál aplicar, se resumen en un solo método que revisa
+el factor de balanceo del nodo y el de su hijo pesado para distinguir el caso simple del caso zigzag.
+
+```java
+private NodoAVL balancear(NodoAVL nodo) {
+    actualizarAltura(nodo);
+    int factor = factor(nodo);
+    if (factor < -1) {
+        if (factor(nodo.izquierdo) > 0) {
+            nodo.izquierdo = rotarIzquierda(nodo.izquierdo); // LR: primero deshace el zigzag
+        }
+        return rotarDerecha(nodo);
+    }
+    if (factor > 1) {
+        if (factor(nodo.derecho) < 0) {
+            nodo.derecho = rotarDerecha(nodo.derecho); // RL: primero deshace el zigzag
+        }
+        return rotarIzquierda(nodo);
+    }
+    return nodo; // ya esta dentro de {-1, 0, 1}, nada que hacer
+}
+```
+
+```python
+def _balancear(self, nodo):
+    self._actualizar_altura(nodo)
+    factor = self._factor(nodo)
+    if factor < -1:
+        if self._factor(nodo.izquierdo) > 0:
+            nodo.izquierdo = self._rotar_izquierda(nodo.izquierdo)  # LR: deshace el zigzag primero
+        return self._rotar_derecha(nodo)
+    if factor > 1:
+        if self._factor(nodo.derecho) < 0:
+            nodo.derecho = self._rotar_derecha(nodo.derecho)  # RL: deshace el zigzag primero
+        return self._rotar_izquierda(nodo)
+    return nodo  # ya esta dentro de {-1, 0, 1}, nada que hacer
+
+
+```
+
+La condición `factor(nodo.izquierdo) > 0` es la que distingue LL de LR, si el hijo izquierdo está a
+su vez inclinado hacia la derecha es un zigzag y hace falta la rotación extra antes de la principal.
+La condición simétrica `factor(nodo.derecho) < 0` distingue RR de RL de la misma forma.
+
+### Cuando se aplica la rotación equivocada
+
+Diagnosticar mal cuál de los cuatro casos aplica es el error más común al implementar un AVL, así que
+vale la pena ver qué pasa cuando se aplica la rotación simple donde hacía falta la doble. Retoma el
+caso izquierda-derecha de arriba, 30 con hijo izquierdo 10 y el hijo derecho de 10 es 20, factor de 30
+igual a -2. Si en vez de reconocer el zigzag se aplica directamente `rotarDerecha(30)`, tratándolo como
+si fuera un caso LL simple, el resultado no arregla el árbol.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion entre aplicar la rotacion equivocada y la correcta sobre el mismo caso izquierda-derecha: antes, 30 con hijo izquierdo 10 y el hijo derecho de 10 es 20, factor -2; si se aplica por error una sola rotarDerecha(30), tratandolo como LL, el resultado es 10 como nueva raiz con 30 a la derecha y 20 como hijo izquierdo de 30, factor de 10 termina en 2, el invariante sigue roto; la rotacion doble correcta si deja 20 como raiz, con 10 y 30 como hijos, factor 0" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd34h" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="110" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">antes: zigzag, factor(30) = -2</text>
+  <text x="380" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">rotarDerecha(30) sola: incorrecta</text>
+  <text x="630" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">rotacion doble: correcta</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd34h)"><path d="M110,65 L75,90"/><path d="M75,120 L110,145"/><path d="M380,65 L415,90"/><path d="M415,120 L450,145"/><path d="M630,65 L595,90"/><path d="M630,65 L665,90"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="89" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="54" y="105" width="42" height="30"/><rect x="89" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="110" y="69">30</text><text x="75" y="124">10</text><text x="110" y="179">20</text></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="359" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="394" y="105" width="42" height="30"/><rect x="429" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="380" y="69">10</text><text x="415" y="124">30</text><text x="450" y="179">20</text></g>
+  <text x="380" y="205" font-size="10" fill="#0e6f6c" text-anchor="middle">factor(10) = 2, sigue violando el invariante</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="609" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="574" y="105" width="42" height="30"/><rect x="644" y="105" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="630" y="69">20</text><text x="595" y="124">10</text><text x="665" y="124">30</text></g>
+  <text x="630" y="205" font-size="10" fill="#0e6f6c" text-anchor="middle">factor 0 en los tres, invariante restaurado</text>
+</svg>
+
+:::
+
+`rotarDerecha(30)` promueve a 10 al lugar de 30, y el hijo derecho de 10, que era 20, se reubica como
+hijo izquierdo de 30, exactamente lo que el código de la rotación simple hace siempre, sin mirar si el
+caso era zigzag. El resultado deja a 10 como raíz del subárbol, con 30 como su único hijo, a la
+derecha, y 20 colgando del propio 30. La altura de 30 es 1 y la de su hijo izquierdo, que no existe,
+es -1, así que el factor de 10 termina en 2, todavía fuera del rango permitido. La rotación simple no
+arregló el árbol, lo dejó desbalanceado hacia el otro lado. La razón de fondo es que una sola rotación
+solo puede enderezar una línea recta, y un caso zigzag necesita primero convertirse en línea recta con
+la rotación del hijo antes de que la rotación del nodo principal tenga algo que enderezar.
+
+::: {.callout-tip}
+## Reto 1. El caso derecha-derecha, en el árbol de ejemplo
+
+Sobre el árbol de siete nodos de esta guía, raíz 50, con 30 y 70 como hijos, y 20, 40, 60 y 80 como
+hojas, vas a insertar 85 y después 90. Antes de seguir, decide en qué nodo se dispara una rotación y
+cuál de los cuatro casos es.
+
+<label><input type="checkbox"> Se dispara en el nodo 70, caso izquierda-izquierda</label>
+<label><input type="checkbox"> Se dispara en el nodo 80, caso derecha-derecha</label>
+<label><input type="checkbox"> No se dispara ninguna rotación, el árbol se mantiene balanceado</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La segunda es correcta. Insertar 85 baja por 50, 70 y 80, y cuelga como hijo derecho de 80, una hoja
+sin hijos hasta ese momento, así que no rompe nada todavía, el factor de 80 queda en 1. Insertar 90
+baja por el mismo camino, 50, 70, 80, y ahora sigue hacia 85, donde cuelga como su hijo derecho. Con
+ese segundo nodo nuevo, 80 pasa a tener altura -1 a la izquierda, porque no tiene hijo izquierdo, y
+altura 1 a la derecha, por la cadena 85 a 90, así que su factor queda en 2, fuera de rango. El exceso
+de altura viene del hijo derecho del hijo derecho, exactamente el caso derecha-derecha, y se corrige
+con `rotarIzquierda(80)`, que deja a 85 como nueva raíz de ese subárbol, con 80 a la izquierda y 90 a
+la derecha. El resto del árbol, 50, 30, 70 y las hojas 20, 40 y 60, no cambia nada.
+:::
+
+### Insertar con rebalanceo
+
+Insertar en un AVL empieza exactamente igual que insertar en el ABB del Tema 3, bajar comparando hasta
+encontrar el hueco vacío y colgar ahí el nodo nuevo. La diferencia está en el camino de vuelta, cada
+llamada recursiva, al regresar, pasa por `balancear` antes de devolver el resultado, así que el árbol
+se corrige de abajo hacia arriba, empezando por el nodo más cercano al que se insertó y subiendo hasta
+la raíz si hace falta.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Insertar 10 y luego 5 en el arbol de ejemplo, dentro del subarbol de 30: antes, 30 con hijos 20 y 40, y 20 con hijo izquierdo 10, que a su vez tiene hijo izquierdo 5, factor de 20 es -2; despues de la rotacion, el hijo izquierdo de 30 pasa a ser 10, con 5 a la izquierda y 20 a la derecha, sin hijos; el hijo derecho de 30, 40, no cambia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd34g" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="16" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">antes: insertar 10 y 5, factor(20) = -2</text>
+  <text x="580" y="16" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">despues: rotarDerecha(20) dentro de balancear(30)</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd34g)"><path d="M150,55 L95,80"/><path d="M150,55 L210,80"/><path d="M75,110 L60,135"/><path d="M60,165 L30,190"/><path d="M560,55 L500,80"/><path d="M560,55 L620,80"/><path d="M500,110 L465,135"/><path d="M500,110 L535,135"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="129" y="40" width="42" height="30"/><rect x="209" y="80" width="42" height="30"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="69" y="80" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="39" y="135" width="42" height="30"/><rect x="9" y="190" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f" font-weight="600"><text x="150" y="59">30</text><text x="230" y="99">40</text><text x="90" y="99">20</text><text x="60" y="154">10</text><text x="30" y="209">5</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="539" y="40" width="42" height="30"/><rect x="599" y="80" width="42" height="30"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="479" y="80" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="444" y="135" width="42" height="30"/><rect x="514" y="135" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f" font-weight="600"><text x="560" y="59">30</text><text x="620" y="99">40</text><text x="500" y="99">10</text><text x="465" y="154">5</text><text x="535" y="154">20</text></g>
+</svg>
+
+:::
+
+```java
+public void insertar(int dato) {
+    raiz = insertar(raiz, dato);
+}
+
+private NodoAVL insertar(NodoAVL nodo, int dato) {
+    if (nodo == null) {
+        return new NodoAVL(dato); // caso base: aqui va el nodo nuevo
+    }
+    if (dato < nodo.dato) {
+        nodo.izquierdo = insertar(nodo.izquierdo, dato);
+    } else if (dato > nodo.dato) {
+        nodo.derecho = insertar(nodo.derecho, dato);
+    } else {
+        return nodo; // valor repetido, no se hace nada
+    }
+    return balancear(nodo); // en la vuelta de cada nivel, corrige si hace falta
+}
+
+public boolean buscar(int dato) {
+    return buscar(raiz, dato);
+}
+
+private boolean buscar(NodoAVL nodo, int dato) {
+    if (nodo == null) {
+        return false;
+    }
+    if (dato == nodo.dato) {
+        return true;
+    }
+    return dato < nodo.dato ? buscar(nodo.izquierdo, dato) : buscar(nodo.derecho, dato);
+}
+
+public int altura() {
+    return altura(raiz);
+}
+```
+
+```python
+def insertar(self, dato):
+    self.raiz = self._insertar(self.raiz, dato)
+
+def _insertar(self, nodo, dato):
+    if nodo is None:
+        return NodoAVL(dato)  # caso base: aqui va el nodo nuevo
+    if dato < nodo.dato:
+        nodo.izquierdo = self._insertar(nodo.izquierdo, dato)
+    elif dato > nodo.dato:
+        nodo.derecho = self._insertar(nodo.derecho, dato)
+    else:
+        return nodo  # valor repetido, no se hace nada
+    return self._balancear(nodo)  # en la vuelta de cada nivel, corrige si hace falta
+
+def buscar(self, dato):
+    return self._buscar(self.raiz, dato)
+
+def _buscar(self, nodo, dato):
+    if nodo is None:
+        return False
+    if dato == nodo.dato:
+        return True
+    return self._buscar(nodo.izquierdo, dato) if dato < nodo.dato else self._buscar(nodo.derecho, dato)
+
+def altura(self):
+    return self._altura(self.raiz)
+```
+
+Fíjate que `insertar` tiene exactamente la misma forma que en el Tema 3, un caso base para el hueco
+vacío y un caso recursivo que reasigna `nodo.izquierdo` o `nodo.derecho`. Lo único que cambia es una
+línea, `return balancear(nodo)` en vez de `return nodo`, porque cada nivel que la recursión atraviesa
+de vuelta hacia la raíz es una oportunidad para que ese nivel específico haya quedado desbalanceado por
+la inserción, y `balancear` revisa y corrige antes de seguir subiendo. `eliminar` en un AVL sigue la
+misma idea aplicada al camino de eliminación del Tema 3, cada nivel llama a `balancear` en la vuelta,
+esta guía no repite esa implementación completa porque la lógica de rebalanceo ya quedó cubierta aquí.
+
+### Por qué la altura queda garantizada en O(log n)
+
+La demostración formal de por qué un AVL nunca supera una altura de aproximadamente `1.44 * log2(n)`
+sale de acotar cuántos nodos hace falta como mínimo para construir un AVL de una altura dada, un
+argumento que Adelson-Velsky y Landis publicaron junto con la estructura y que Weiss desarrolla en el
+capítulo de árboles balanceados. Esta guía no repite esa demostración completa, en cambio la comprueba
+igual que el Tema 3 comprobó el caso degenerado, insertando en un AVL el mismo conjunto de datos que
+degeneró al ABB simple.
+
+```python
+import random
+import time
+import math
+
+N = 8000
+datos_ordenados = list(range(N))
+
+arbol_avl = ArbolAVL()
+for x in datos_ordenados:
+    arbol_avl.insertar(x)
+
+print(f"N = {N} valores insertados, ya ordenados")
+print(f"altura del AVL: {arbol_avl.altura()}")
+print(f"log2(N) de referencia: {math.log2(N):.1f}")
+print(f"altura del ABB degenerado con el mismo N (Tema 3): {N - 1}")
+
+random.seed(42)
+busquedas = random.sample(range(N), 3000)
+
+inicio = time.perf_counter()
+for x in busquedas:
+    arbol_avl.buscar(x)
+tiempo_avl = time.perf_counter() - inicio
+
+print(f"tiempo de busqueda en AVL (3000 busquedas): {tiempo_avl:.4f} s")
+```
+
+Esta es la salida real de correr ese script:
+
+```
+N = 8000 valores insertados, ya ordenados
+altura del AVL: 12
+log2(N) de referencia: 13.0
+altura del ABB degenerado con el mismo N (Tema 3): 7999
+tiempo de busqueda en AVL (3000 busquedas): 0.0030 s
+```
+
+El resultado exacto varía según el equipo donde se ejecute, lo que importa es la magnitud. Los mismos
+ocho mil valores que en el Tema 3 produjeron un ABB de altura 7999 producen aquí un AVL de altura 12,
+por debajo incluso del `log2(8000)` de referencia, 13.0, gracias a que las rotaciones evitan la
+degeneración sin importar el orden de llegada. Es más, esta altura de 12 queda por debajo de los 35
+que el Tema 3 midió al insertar esos mismos valores en orden aleatorio sobre un ABB simple, la garantía
+del AVL no es solo mejor que el peor caso del ABB, es mejor que su caso promedio. El tiempo de
+búsqueda, 0.0030 segundos para tres mil consultas, es del mismo orden de magnitud que el tiempo medido
+en el Tema 3 sobre el ABB con inserción aleatoria, y muy por debajo de los 0.4898 segundos que costó
+buscar en el árbol degenerado. Además, insertar y buscar aquí siguen usando la versión recursiva sin
+ningún problema, porque la altura nunca se acerca al límite de recursión de Python, a diferencia del
+`RecursionError` que el Tema 3 encontró al insertar en orden ascendente sobre un ABB simple.
+
+## Árboles 2-3: crecer sin desbalancearse nunca
+
+Un árbol AVL sigue siendo binario y corrige el desbalance después de que aparece. Un árbol 2-3 ataca el
+problema desde otro ángulo, cambia la forma del nodo para que la inserción nunca produzca un
+desbalance que corregir. La pieza básica ya no es "un valor con hasta dos hijos", es "uno o dos valores
+con hasta tres hijos".
+
+### Nodo de 2 y nodo de 3
+
+Un nodo de 2 guarda un único valor y tiene hasta dos hijos, uno con todo lo menor que ese valor y otro
+con todo lo mayor, exactamente como un nodo del ABB del Tema 3. Un nodo de 3 guarda dos valores,
+ordenados, y tiene hasta tres hijos, uno con todo lo menor que el primer valor, otro con todo lo que
+queda entre los dos valores, y un tercero con todo lo mayor que el segundo valor.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anatomia de un nodo de 2, con un valor 20 y dos hijos posibles, uno con valores menores que 20 y otro con valores mayores, junto a un nodo de 3, con dos valores 20 y 40 y tres hijos posibles, uno con valores menores que 20, otro con valores entre 20 y 40, y otro con valores mayores que 40" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd34i" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="150" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Nodo de 2: un valor, hasta dos hijos</text>
+  <text x="570" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Nodo de 3: dos valores, hasta tres hijos</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd34i)"><path d="M135,78 L90,140"/><path d="M165,78 L210,140"/><path d="M535,78 L460,140"/><path d="M570,78 L570,140"/><path d="M605,78 L640,140"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="115" y="42" width="70" height="36"/></g>
+  <text x="150" y="65" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">20</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="140" width="60" height="30"/><rect x="180" y="140" width="60" height="30"/></g>
+  <g text-anchor="middle" font-size="10" fill="#12324f"><text x="90" y="159">menor</text><text x="210" y="159">mayor</text></g>
+  <text x="90" y="185" font-size="9.5" fill="#5b6876" text-anchor="middle">que 20</text>
+  <text x="210" y="185" font-size="9.5" fill="#5b6876" text-anchor="middle">que 20</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="510" y="42" width="120" height="36"/></g>
+  <g stroke="#8fc9c5"><line x1="570" y1="42" x2="570" y2="78"/></g>
+  <text x="540" y="65" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">20</text>
+  <text x="600" y="65" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">40</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="430" y="140" width="60" height="30"/><rect x="540" y="140" width="60" height="30"/><rect x="610" y="140" width="60" height="30"/></g>
+  <g text-anchor="middle" font-size="10" fill="#12324f"><text x="460" y="159">menor</text><text x="570" y="159">entre 20</text><text x="640" y="159">mayor</text></g>
+  <text x="460" y="185" font-size="9.5" fill="#5b6876" text-anchor="middle">que 20</text>
+  <text x="570" y="185" font-size="9.5" fill="#5b6876" text-anchor="middle">y 40</text>
+  <text x="640" y="185" font-size="9.5" fill="#5b6876" text-anchor="middle">que 40</text>
+</svg>
+
+:::
+
+Buscar un valor en un árbol 2-3 se parece a buscar en el ABB del Tema 3, en cada nodo comparas el valor
+buscado contra las claves que el nodo guarda, una o dos, y bajas por el hijo que corresponde según en
+qué rango cae. La diferencia con el ABB no está en cómo se busca, está en cómo se inserta.
+
+### El invariante: todas las hojas a la misma profundidad
+
+Un árbol 2-3 mantiene una regla que ningún ABB ni AVL garantiza por diseño, todas sus hojas están
+exactamente a la misma profundidad, sin excepción. No es que queden "razonablemente parejas" como en
+un AVL, es que no existe forma de que una quede más profunda que otra mientras el árbol respete cómo se
+construye. La razón de esa garantía está en cómo funciona la inserción, que el resto de esta sección
+explica.
+
+### Insertar: división y propagación hacia arriba
+
+Insertar en un árbol 2-3 baja por el árbol comparando contra las claves de cada nodo, igual que
+buscar, hasta llegar a una hoja. Ahí el valor nuevo se agrega a las claves de esa hoja, ordenado junto a
+las que ya tenía. Si la hoja tenía una clave, ahora tiene dos, cabe sin problema en un nodo de 3. Si la
+hoja ya tenía dos claves, ahora tendría tres, y un nodo de 3 no admite tres claves, así que el nodo se
+divide, la clave del medio sube al padre, y las otras dos quedan como dos nodos nuevos, cada uno con
+una sola clave e hijos de la mitad correspondiente.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Division de un nodo desbordado en tres pasos: paso 1, una hoja con dos claves, 10 y 20; paso 2, se inserta 30 y la hoja queda con tres claves, 10, 20 y 30, desbordada; paso 3, se divide, 20 sube al padre, y 10 y 30 quedan como dos hojas nuevas, cada una con una sola clave" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd34j" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="110" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">1. hoja con dos claves</text>
+  <text x="380" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">2. insertar 30: desborda a tres</text>
+  <text x="630" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">3. se divide, 20 sube</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="80" width="100" height="34"/></g>
+  <text x="110" y="102" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">10 | 20</text>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6" stroke-dasharray="4 3"><rect x="310" y="80" width="140" height="34"/></g>
+  <text x="380" y="102" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">10 | 20 | 30</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd34j)"><path d="M630,80 L595,110"/><path d="M630,80 L665,110"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="605" y="50" width="50" height="30"/></g>
+  <text x="630" y="70" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">20</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="570" y="110" width="50" height="30"/><rect x="640" y="110" width="50" height="30"/></g>
+  <text x="595" y="130" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">10</text>
+  <text x="665" y="130" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">30</text>
+  <text x="630" y="160" font-size="10" fill="#0e6f6c" text-anchor="middle">si el padre ya tenia dos claves, el se divide igual, propagando hacia arriba</text>
+</svg>
+
+:::
+
+Si el nodo que recibe la clave promovida es a su vez un nodo de 3, ese nodo también se desborda a tres
+claves, y el mismo proceso se repite un nivel más arriba, la clave del medio sube y el nodo se divide en
+dos. Esa propagación puede llegar hasta la raíz, y cuando la raíz misma se divide, aparece una raíz
+nueva con una sola clave, la que subió desde la raíz anterior, y sus dos mitades como hijos. Ese es el
+único momento en que un árbol 2-3 crece en altura, y crece desde arriba, no desde abajo como una lista o
+un ABB, así que el crecimiento afecta a todas las hojas por igual, ninguna se queda más profunda que las
+demás.
+
+```java
+public class Nodo23 {
+    java.util.List<Integer> claves = new java.util.ArrayList<>();
+    java.util.List<Nodo23> hijos = new java.util.ArrayList<>();
+    boolean hoja = true;
+}
+
+public class Arbol23 {
+    private Nodo23 raiz;
+
+    private static class Division {
+        int claveSubida;
+        Nodo23 izquierdo;
+        Nodo23 derecho;
+
+        Division(int claveSubida, Nodo23 izquierdo, Nodo23 derecho) {
+            this.claveSubida = claveSubida;
+            this.izquierdo = izquierdo;
+            this.derecho = derecho;
+        }
+    }
+
+    public void insertar(int valor) {
+        if (raiz == null) {
+            raiz = new Nodo23();
+            raiz.claves.add(valor);
+            return;
+        }
+        Division division = insertar(raiz, valor);
+        if (division != null) {
+            Nodo23 nuevaRaiz = new Nodo23();
+            nuevaRaiz.hoja = false;
+            nuevaRaiz.claves.add(division.claveSubida);
+            nuevaRaiz.hijos.add(division.izquierdo);
+            nuevaRaiz.hijos.add(division.derecho);
+            raiz = nuevaRaiz;
+        }
+    }
+
+    private Division insertar(Nodo23 nodo, int valor) {
+        int pos = 0;
+        while (pos < nodo.claves.size() && nodo.claves.get(pos) < valor) {
+            pos++;
+        }
+        if (nodo.hoja) {
+            nodo.claves.add(pos, valor);
+            return nodo.claves.size() <= 2 ? null : dividirHoja(nodo);
+        }
+        Division division = insertar(nodo.hijos.get(pos), valor);
+        if (division == null) {
+            return null;
+        }
+        nodo.claves.add(pos, division.claveSubida);
+        nodo.hijos.set(pos, division.izquierdo);
+        nodo.hijos.add(pos + 1, division.derecho);
+        return nodo.claves.size() <= 2 ? null : dividirInterno(nodo);
+    }
+
+    private Division dividirHoja(Nodo23 nodo) {
+        Nodo23 izquierdo = new Nodo23();
+        izquierdo.claves.add(nodo.claves.get(0));
+        Nodo23 derecho = new Nodo23();
+        derecho.claves.add(nodo.claves.get(2));
+        return new Division(nodo.claves.get(1), izquierdo, derecho);
+    }
+
+    private Division dividirInterno(Nodo23 nodo) {
+        Nodo23 izquierdo = new Nodo23();
+        izquierdo.hoja = false;
+        izquierdo.claves.add(nodo.claves.get(0));
+        izquierdo.hijos.add(nodo.hijos.get(0));
+        izquierdo.hijos.add(nodo.hijos.get(1));
+        Nodo23 derecho = new Nodo23();
+        derecho.hoja = false;
+        derecho.claves.add(nodo.claves.get(2));
+        derecho.hijos.add(nodo.hijos.get(2));
+        derecho.hijos.add(nodo.hijos.get(3));
+        return new Division(nodo.claves.get(1), izquierdo, derecho);
+    }
+}
+```
+
+```python
+class Nodo23:
+    def __init__(self):
+        self.claves = []   # una o dos, ordenadas
+        self.hijos = []    # cero, o len(claves) + 1
+        self.hoja = True
+
+
+class Arbol23:
+    def __init__(self):
+        self.raiz = None
+
+    def insertar(self, valor):
+        if self.raiz is None:
+            nodo = Nodo23()
+            nodo.claves = [valor]
+            self.raiz = nodo
+            return
+        resultado = self._insertar(self.raiz, valor)
+        if resultado is not None:
+            clave_subida, izquierdo, derecho = resultado
+            nueva_raiz = Nodo23()
+            nueva_raiz.claves = [clave_subida]
+            nueva_raiz.hijos = [izquierdo, derecho]
+            nueva_raiz.hoja = False
+            self.raiz = nueva_raiz
+
+    def _insertar(self, nodo, valor):
+        pos = 0
+        while pos < len(nodo.claves) and nodo.claves[pos] < valor:
+            pos += 1
+        if nodo.hoja:
+            nodo.claves.insert(pos, valor)
+            return None if len(nodo.claves) <= 2 else self._dividir_hoja(nodo)
+        resultado = self._insertar(nodo.hijos[pos], valor)
+        if resultado is None:
+            return None
+        clave_subida, izquierdo, derecho = resultado
+        nodo.claves.insert(pos, clave_subida)
+        nodo.hijos[pos] = izquierdo
+        nodo.hijos.insert(pos + 1, derecho)
+        return None if len(nodo.claves) <= 2 else self._dividir_interno(nodo)
+
+    def _dividir_hoja(self, nodo):
+        izquierdo = Nodo23()
+        izquierdo.claves = [nodo.claves[0]]
+        derecho = Nodo23()
+        derecho.claves = [nodo.claves[2]]
+        return (nodo.claves[1], izquierdo, derecho)
+
+    def _dividir_interno(self, nodo):
+        izquierdo = Nodo23()
+        izquierdo.hoja = False
+        izquierdo.claves = [nodo.claves[0]]
+        izquierdo.hijos = nodo.hijos[0:2]
+        derecho = Nodo23()
+        derecho.hoja = False
+        derecho.claves = [nodo.claves[2]]
+        derecho.hijos = nodo.hijos[2:4]
+        return (nodo.claves[1], izquierdo, derecho)
+```
+
+`_insertar` devuelve `None` cuando el nodo no se desbordó, y una tupla con la clave que subió y las dos
+mitades cuando sí, exactamente el mismo dato que la versión Java devuelve como un objeto `Division`.
+Quien recibe esa tupla, ya sea `insertar` en la raíz o el nivel de arriba dentro de `_insertar`, decide
+si la incorpora sin desbordarse o si tiene que dividirse a su vez, la propagación hacia arriba es esa
+cadena de decisiones repetidas.
+
+::: {.callout-tip}
+## Reto 2. Insertar sin dividir
+
+Sobre el árbol 2-3 con raíz `[20, 40]` e hijos `[10]`, `[30]`, `[50]`, el resultado de insertar 10, 20,
+30, 40 y 50 en ese orden, vas a insertar 25. Antes de seguir, decide en qué hoja cae y si dispara
+alguna división.
+
+<label><input type="checkbox"> Cae en la hoja [30], que pasa a ser [25, 30], sin dividirse</label>
+<label><input type="checkbox"> Cae en la hoja [10], que pasa a ser [10, 25], sin dividirse</label>
+<label><input type="checkbox"> Cae en la raíz directamente y la divide de inmediato</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La primera es correcta. La raíz tiene las claves 20 y 40, así que 25 cae en el rango intermedio, entre
+20 y 40, que corresponde al segundo hijo, la hoja `[30]`. Insertar 25 ahí la deja con dos claves,
+`[25, 30]`, y un nodo de 3 admite dos claves sin ningún problema, así que no hace falta dividir nada.
+La inserción solo dispara una división cuando la hoja de destino ya tenía dos claves antes de insertar
+la nueva, este caso no llega a eso.
+:::
+
+### El árbol 2-3 sobre el mismo caso que degeneró al ABB
+
+El Tema 3 insertó 10, 20, 30, 40 y 50 ya ordenados en un ABB simple y obtuvo una cadena de altura 4, el
+peor caso posible. Insertar esos mismos cinco valores, en ese mismo orden ascendente, en un árbol 2-3
+produce el resultado que el diagrama de la división de arriba ya mostró en su tercer paso, una raíz
+`[20]` con dos hijas, `[10]` y `[30]`, sin necesitar insertar más valores para volver a dividirse hasta
+llegar a 40 y 50. Si sigues insertando en el mismo orden hasta llegar a 70, la secuencia completa
+10, 20, 30, 40, 50, 60, 70 produce este árbol.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol 2-3 resultante de insertar 10, 20, 30, 40, 50, 60 y 70 en ese orden ascendente, el mismo orden que en el Tema 3 degeneraba el ABB a una cadena de altura 4: raiz 40, hijos 20 y 60, y cuatro hojas, 10, 30, 50 y 70, todas exactamente a la misma profundidad" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="esd34k" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">2-3 tras insertar 10..70 ascendente: altura 2, cuatro hojas a la misma profundidad</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#esd34k)"><path d="M380,60 L250,100"/><path d="M380,60 L510,100"/><path d="M250,130 L180,170"/><path d="M250,130 L320,170"/><path d="M510,130 L440,170"/><path d="M510,130 L580,170"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="355" y="30" width="50" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="225" y="100" width="50" height="30"/><rect x="485" y="100" width="50" height="30"/><rect x="155" y="170" width="50" height="30"/><rect x="295" y="170" width="50" height="30"/><rect x="415" y="170" width="50" height="30"/><rect x="555" y="170" width="50" height="30"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="49">40</text><text x="250" y="119">20</text><text x="510" y="119">60</text><text x="180" y="189">10</text><text x="320" y="189">30</text><text x="440" y="189">50</text><text x="580" y="189">70</text></g>
+</svg>
+
+:::
+
+Todas las hojas quedan a profundidad 2, sin excepción, y ningún nodo tuvo que reorganizarse con una
+rotación, cada nodo se creó ya en su posición final o se dividió una sola vez. En este resultado
+concreto cada nodo terminó siendo un nodo de 2, con una sola clave, una coincidencia del orden exacto
+en que se insertaron estos siete valores, no una regla general, el diagrama de la división de arriba ya
+mostró un nodo de 3 con dos claves en un paso intermedio de la misma construcción.
+
+### Por qué el balanceo es perfecto por construcción
+
+Un ABB, incluso un AVL, cuelga cada nodo nuevo justo debajo de una hoja existente, así que la
+profundidad de esa hoja concreta crece uno mientras el resto del árbol se queda igual, y solo las
+rotaciones del AVL evitan que esa diferencia se acumule sin control. Un árbol 2-3 nunca cuelga un nodo
+nuevo debajo de una hoja, un valor nuevo siempre se incorpora a las claves de una hoja que ya existe.
+La única forma en que el árbol gana profundidad es que una división se propague hasta la raíz y la
+raíz misma se divida, y cuando eso pasa, la raíz nueva queda por encima de todo el árbol anterior, así
+que la profundidad de cada hoja existente aumenta en uno, todas a la vez, en el mismo instante. No hay
+ningún paso del algoritmo que pueda dejar una hoja más profunda que otra, la construcción misma lo
+impide, a diferencia del AVL, que sí permite un desbalance temporal y lo corrige después con una
+rotación.
+
+## AVL y 2-3, comparados
+
+Los dos árboles de este tema resuelven el mismo problema, que insertar datos en cualquier orden nunca
+deje una altura mayor que un múltiplo pequeño de `log2(n)`, pero llegan ahí por caminos distintos. El
+AVL conserva la forma binaria del Tema 3 y corrige el desbalance después de que aparece, con una
+rotación local que dura un tiempo constante por nivel. El árbol 2-3 cambia la forma del nodo para que
+el desbalance nunca llegue a existir, absorbe una inserción de más en el mismo nodo antes de dividirse,
+y cuando se divide, crece siempre desde la raíz hacia abajo, nunca desde una hoja hacia arriba. El AVL
+necesita el campo extra `altura` en cada nodo para decidir cuándo rotar, el árbol 2-3 no necesita
+ningún campo de contabilidad, su invariante de profundidad uniforme es una consecuencia directa de
+cómo se construye, no algo que haya que medir aparte.
+
+Ninguno de los dos es la última palabra en árboles balanceados. El árbol rojo-negro, que la mayoría de
+las bibliotecas estándar de Java y C++ usan por dentro para sus mapas y conjuntos ordenados, es una
+forma distinta de representar la misma idea del árbol 2-3, cada nodo del 2-3 se descompone en uno o dos
+nodos binarios con un color asociado, rojo o negro, que codifica si ese nodo forma parte de un nodo de 2
+o de un nodo de 3 del árbol original. El B-tree, que usan la mayoría de los motores de bases de datos
+para organizar sus índices en disco, generaliza la misma idea de los árboles 2-3 permitiendo muchas más
+claves por nodo, para que cada nodo ocupe exactamente una página de disco y minimizar cuántas veces hay
+que leer del disco para encontrar un dato. Esta guía no implementa ninguno de los dos, quedan como el
+siguiente paso natural una vez que el mecanismo de división y el de rotación, los dos pilares que hoy
+viste, ya son claros.
+
+::: {.callout-tip}
+## Reto 3. Sin ejecutar nada
+
+Vas a insertar mil valores ya ordenados, del 1 al 1000, primero en un árbol 2-3 vacío y después en un
+árbol AVL vacío. Antes de seguir, decide qué le pasa a la altura final de cada uno, comparada con la
+que tendría un ABB simple con esos mismos mil valores.
+
+<label><input type="checkbox"> Las dos, la del 2-3 y la del AVL, quedan cerca de log2(1000), unas 10</label>
+<label><input type="checkbox"> El ABB simple queda con altura 999, una cadena, igual que en el Tema 3</label>
+<label><input type="checkbox"> El AVL también degenera a una cadena porque los datos llegan ordenados</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+La primera y la segunda son correctas, la tercera es el error de pensar que el orden de llegada afecta
+al AVL igual que afecta al ABB simple. El ABB simple del Tema 3 no tiene ninguna defensa contra datos
+ya ordenados, así que mil valores ascendentes producen una cadena de altura 999, exactamente `n - 1`.
+El AVL parte de la misma estructura binaria, pero cada inserción pasa por `balancear` en la vuelta de
+la recursión, así que cualquier intento de formar una cadena se corta con una rotación antes de llegar
+muy lejos, la altura se queda cerca de `log2(1000)`, unos 10 niveles. El árbol 2-3 nunca cuelga un nodo
+nuevo debajo de una hoja, así que ni siquiera necesita corregir nada, la altura también se queda cerca
+de `log2(1000)` por construcción. El orden de llegada de los datos, que era la variable que decidía
+todo en el Tema 3, deja de importar en los dos árboles de este tema.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía:
+
+- [ ] Qué es el factor de balanceo de un nodo AVL, en qué rango tiene que quedarse, y qué campo extra
+      necesita `NodoAVL` frente al `NodoArbol` del Tema 3 para calcularlo sin recorrer el árbol
+- [ ] Distinguir los cuatro casos de rotación, izquierda-izquierda, derecha-derecha,
+      izquierda-derecha y derecha-izquierda, y explicar por qué los dos últimos necesitan dos
+      rotaciones en vez de una
+- [ ] Trazar qué pasa si se aplica una rotación simple donde hacía falta una doble, y por qué el
+      resultado sigue violando el invariante AVL
+- [ ] Explicar por qué `insertar` en un AVL agrega una sola llamada a `balancear` en la vuelta de la
+      recursión, y qué relación tiene eso con que la altura se mantenga en O(log n)
+- [ ] Explicar cuándo un nodo de un árbol 2-3 se divide, qué clave sube al padre, y por qué esa
+      propagación hacia arriba nunca deja una hoja más profunda que otra
+- [ ] Comparar las dos estrategias de balanceo de este tema, corregir después con rotaciones contra
+      evitar el desbalance por diseño, y nombrar qué estructuras reales generalizan cada una
+:::
+
+## Lo que sigue
+
+El Tema 5, el último de esta unidad, deja atrás la jerarquía de padres e hijos que compartieron listas
+y árboles y pasa a modelar relaciones sin una dirección obligatoria, los grafos. Un nodo de un grafo
+puede conectarse con cualquier cantidad de otros nodos, sin distinguir izquierda de derecha ni padre de
+hijo, y esa libertad exige representarlo de una forma distinta a un `NodoArbol` o un `NodoAVL`, con una
+lista o una matriz de adyacencia. El vocabulario de nodo y enlace que arrancó en el Tema 1 de esta
+unidad sigue siendo el mismo, lo que cambia es la forma que esas conexiones pueden tomar.
+
+## Recursos
+
+- Weiss, M. A. *Estructuras de datos en Java.* Capítulo sobre árboles, secciones dedicadas al árbol AVL,
+  el factor de balanceo, las rotaciones simples y dobles, y la cota de altura `O(log n)`.
+- Cormen, T. H., Leiserson, C. E., Rivest, R. L. y Stein, C. *Introduction to Algorithms.* Capítulo
+  sobre árboles de búsqueda balanceados, con la construcción de árboles rojo-negro como generalización
+  binaria de la idea de los árboles 2-3.
+- Goodrich, M. T. y Tamassia, R. *Estructuras de datos y algoritmos.* Sección sobre árboles (2, 4), la
+  familia general a la que pertenece el árbol 2-3, con el mecanismo de división y propagación.
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. La medición
+de altura y tiempos del árbol AVL es una ejecución real del script publicado, hecha durante la
+preparación del material; el resultado exacto varía según el equipo que lo ejecute.
+:::
