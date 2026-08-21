@@ -1,0 +1,312 @@
+---
+title: "Tema 2. El teléfono de Ana, resuelto en cuatro pasos"
+subtitle: "Base de datos (DBA03). Unidad 3"
+author: "Oscar Leonel Sánchez Conde"
+format:
+  revealjs:
+    theme: [default, ../../../estilos/presentacion.scss]
+    slide-number: true
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Hoy {.center}
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Las tres anomalías]{.titulo}
+
+Sobre la tabla de pedidos, con filas y columnas concretas.
+:::
+
+::: {.tarjeta}
+[Dependencia funcional]{.titulo}
+
+El concepto que sostiene las cuatro formas normales.
+:::
+
+::: {.clave}
+[1FN a 4FN]{.titulo}
+
+Cuatro pasos, cada uno más exigente que el anterior.
+:::
+
+::: {.tarjeta}
+[Qué corrige cada forma]{.titulo}
+
+El mapa completo, de la redundancia del precio a las tres anomalías clásicas.
+:::
+:::
+
+::: {.pie-diapositiva}
+Base de datos (DBA03). Semestre 2026-02.
+:::
+
+## De un diagrama a una tabla ya construida {.center}
+
+::: {.destacado}
+El Tema 1 mapeó un diagrama entidad-relación ya bien pensado. Hoy el punto de partida es una tabla
+que alguien más ya construyó, con datos ya cargados.
+:::
+
+Mapear bien y normalizar pueden terminar parecido, pero no son el mismo ejercicio.
+
+## La tabla de siempre {.center}
+
+| Pedido | Cliente | Teléfono | Producto | Valor |
+|---|---|---|---|---|
+| 1001 | Ana Ruiz | 300 111 2233 | Café | 4500 |
+| 1002 | Ana Ruiz | 300 111 2233 | Torta | 23400 |
+| 1003 | Luis Pena | 301 444 5566 | Café | 4500 |
+| 1004 | Ana Ruiz | 300 111 2233 | Jugo | 6800 |
+
+## Tres anomalías, con nombre técnico {.center}
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Actualización]{.titulo}
+
+El teléfono de Ana está en tres filas. Corregir dos y olvidar la tercera deja el sistema en
+contradicción.
+:::
+
+::: {.tarjeta}
+[Inserción]{.titulo}
+
+Un cliente nuevo del programa de fidelización no cabe en ninguna fila sin un pedido.
+:::
+
+::: {.tarjeta}
+[Borrado]{.titulo}
+
+Borrar el pedido 1003 borra también el único registro de Luis Pena como cliente.
+:::
+:::
+
+## Qué es una dependencia funcional {.center}
+
+::: {.destacado}
+X determina a Y si dos filas con el mismo valor de X tienen, siempre, el mismo valor de Y. Es una
+regla de negocio, no una coincidencia de los datos que tienes delante.
+:::
+
+Silberschatz, Korth y Sudarshan; Elmasri y Navathe.
+
+## El mapa de dependencias {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapa de dependencias funcionales de la tabla de pedidos: la llave primaria compuesta por Pedido y Producto determina a Cliente y a Valor respectivamente, y Cliente determina además a Teléfono, lo que crea una dependencia transitiva de Pedido hacia Teléfono" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="dba3t2a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cada atributo depende de una parte distinta de la llave compuesta</text>
+  <rect x="50" y="30" width="650" height="86" rx="10" fill="none" stroke="#cfd8e3" stroke-dasharray="4 4"/>
+  <text x="375" y="46" font-size="12" font-weight="600" fill="#5b6876" text-anchor="middle">llave primaria: (Pedido, Producto)</text>
+  <rect x="70" y="54" width="160" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="150" y="84" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <rect x="500" y="54" width="160" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="580" y="84" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Producto</text>
+  <path d="M150,104 L150,160" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t2a)"/>
+  <path d="M580,104 L580,160" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t2a)"/>
+  <rect x="70" y="162" width="160" height="50" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="150" y="192" font-size="13.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Cliente</text>
+  <rect x="500" y="162" width="160" height="50" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="580" y="192" font-size="13.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Valor</text>
+  <text x="260" y="140" font-size="11" fill="#5b6876" text-anchor="middle">Pedido determina Cliente</text>
+  <text x="660" y="140" font-size="11" fill="#5b6876" text-anchor="middle">Producto determina Valor</text>
+  <path d="M150,212 L150,258" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t2a)"/>
+  <rect x="60" y="260" width="180" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="150" y="290" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Teléfono</text>
+  <text x="380" y="300" font-size="11" fill="#5b6876" text-anchor="middle">Cliente determina Teléfono; por transitividad, Pedido también lo determina</text>
+</svg>
+
+:::
+
+## Reto. Regla o coincidencia {.center}
+
+::: {.pasos}
+1. `Teléfono` determina a `Cliente`, en esta muestra sí, como regla nunca
+2. `Valor` determina a `Producto`, en esta muestra sí, como regla nunca
+3. `Cliente` determina a `Pedido`, falso incluso en esta muestra: Ana tiene tres pedidos
+:::
+
+::: {.destacado}
+Una dependencia funcional es una regla que el negocio sostiene siempre, no un patrón que coincide
+con los datos de hoy.
+:::
+
+## 1FN: valores atómicos y una llave real {.center}
+
+::: {.neutro}
+`Pedido` solo no alcanza. Nada impide que un mismo pedido incluya más de un producto, como ya viste
+en la Unidad 2 con el pedido 1002 de Ana.
+:::
+
+La llave real de la tabla plana es `(Pedido, Producto)`.
+
+## 2FN: nada depende de una parte de la llave {.center}
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Cliente y Teléfono]{.titulo}
+
+Dependen solo de `Pedido`, no de `Producto`.
+:::
+
+::: {.tarjeta}
+[Valor]{.titulo}
+
+Depende solo de `Producto`, no de `Pedido`.
+:::
+
+::: {.clave}
+[Ninguno]{.titulo}
+
+Ningún atributo depende de la llave completa a la vez.
+:::
+:::
+
+## La descomposición en 2FN {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La tabla plana en primera forma normal se descompone en tres tablas: Pedido con Cliente y Teléfono porque dependen solo de Pedido, Pedido_Producto como tabla de unión sin atributos propios, y Producto con Valor porque depende solo de Producto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="dba3t2c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cada atributo se agrupa con la parte de la llave de la que depende</text>
+  <rect x="220" y="30" width="320" height="56" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="52" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedidos, tras la 1FN</text>
+  <text x="380" y="70" font-size="11" fill="#5b6876" text-anchor="middle">llave: (Pedido, Producto)</text>
+  <path d="M340,86 C280,110 200,130 150,166" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t2c)"/>
+  <path d="M380,86 L380,166" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t2c)"/>
+  <path d="M420,86 C480,110 560,130 610,166" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t2c)"/>
+  <text x="220" y="132" font-size="10.5" fill="#5b6876" text-anchor="middle">Cliente y Teléfono</text>
+  <text x="220" y="145" font-size="10.5" fill="#5b6876" text-anchor="middle">dependen solo de Pedido</text>
+  <text x="545" y="132" font-size="10.5" fill="#5b6876" text-anchor="middle">Valor depende</text>
+  <text x="545" y="145" font-size="10.5" fill="#5b6876" text-anchor="middle">solo de Producto</text>
+  <rect x="30" y="168" width="230" height="66" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="145" y="190" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="145" y="207" font-size="11" fill="#5b6876" text-anchor="middle">Cliente, Teléfono</text>
+  <text x="145" y="222" font-size="10" fill="#5b6876" text-anchor="middle">llave: Pedido</text>
+  <rect x="290" y="168" width="200" height="66" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="390" y="190" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedido_Producto</text>
+  <text x="390" y="207" font-size="11" fill="#5b6876" text-anchor="middle">sin atributos propios</text>
+  <text x="390" y="222" font-size="10" fill="#5b6876" text-anchor="middle">llave: (Pedido, Producto)</text>
+  <rect x="520" y="168" width="210" height="66" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="625" y="190" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Producto</text>
+  <text x="625" y="207" font-size="11" fill="#5b6876" text-anchor="middle">Valor</text>
+  <text x="625" y="222" font-size="10" fill="#5b6876" text-anchor="middle">llave: Producto</text>
+  <text x="380" y="268" font-size="11.5" fill="#5b6876" text-anchor="middle">El café ya no repite su precio en cada pedido que lo incluye: vive una sola vez en la tabla Producto</text>
+</svg>
+
+:::
+
+## 3FN: nada depende de un atributo que no es la llave {.center}
+
+::: {.destacado}
+En `Pedido(Pedido, Cliente, Teléfono)`, el teléfono de Ana sigue repetido tres veces. La 2FN no lo
+resolvió, porque el problema no está entre la llave y los atributos, está entre dos atributos que no
+son llave.
+:::
+
+`Cliente` determina a `Teléfono`, una dependencia transitiva.
+
+## Tres anomalías, resueltas {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.neutro}
+**Antes**
+
+- Actualizar el teléfono, tres filas
+- Un cliente nuevo no cabe sin pedido
+- Borrar un pedido borra el contacto
+:::
+:::
+::: {.column width="50%"}
+::: {.neutro}
+**Después de la 3FN**
+
+- Una sola fila en `Cliente`
+- `Cliente` es tabla propia
+- `Cliente` sobrevive al pedido
+:::
+:::
+:::
+
+## 4FN: dos hechos independientes {.center}
+
+::: {.destacado}
+Marta domina dos habilidades y habla dos idiomas, sin relación entre unas y otros. Guardar las tres
+columnas juntas multiplica las combinaciones.
+:::
+
+Definida por Ronald Fagin, 1977, ACM Transactions on Database Systems.
+
+## El ejemplo de Marta {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Marta domina dos habilidades, análisis de datos y diseño UX, y habla dos idiomas, inglés y francés, de forma independiente entre sí; una sola tabla que junte las tres columnas necesita las cuatro combinaciones posibles, mientras que separar habilidad e idioma en dos tablas evita esa multiplicación" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="dba3t2e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Dos hechos independientes sobre Marta, multiplicados en una sola tabla</text>
+  <rect x="140" y="32" width="480" height="100" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="50" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">Empleado_Habilidad_Idioma (Empleado, Habilidad, Idioma)</text>
+  <text x="380" y="68" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Análisis de datos, Inglés</text>
+  <text x="380" y="84" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Análisis de datos, Francés</text>
+  <text x="380" y="100" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Diseño UX, Inglés</text>
+  <text x="380" y="116" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Diseño UX, Francés</text>
+  <path d="M380,132 L380,164" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t2e)"/>
+  <text x="470" y="152" font-size="10.5" fill="#5b6876" text-anchor="start">4FN separa las dos dependencias multivaluadas</text>
+  <rect x="110" y="170" width="260" height="70" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="240" y="192" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Empleado_Habilidad</text>
+  <text x="240" y="210" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Análisis de datos</text>
+  <text x="240" y="226" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Diseño UX</text>
+  <rect x="390" y="170" width="260" height="70" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="520" y="192" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Empleado_Idioma</text>
+  <text x="520" y="210" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Inglés</text>
+  <text x="520" y="226" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Francés</text>
+  <text x="380" y="270" font-size="11.5" fill="#5b6876" text-anchor="middle">Agregar un tercer idioma ahora agrega una sola fila, no una por cada habilidad</text>
+</svg>
+
+:::
+
+## Qué anomalía corrige cada forma {.center}
+
+| Forma | Corrige |
+|---|---|
+| 1FN | Valores no atómicos y llave sin ambigüedad |
+| 2FN | Dependencia parcial de una parte de la llave |
+| 3FN | Dependencia transitiva, las tres anomalías clásicas |
+| 4FN | Dependencias multivaluadas independientes |
+
+::: {.destacado}
+La 2FN corrigió una redundancia silenciosa, el precio del producto. Las tres anomalías clásicas de
+la Unidad 1 solo se resolvieron del todo al llegar a la 3FN.
+:::
+
+## Para la próxima sesión {.center}
+
+::: {.pasos}
+1. Con las cuatro tablas de hoy, `Cliente`, `Pedido`, `Producto` y `Pedido_Producto`, anota qué tipo
+   de dato le pondrías a cada atributo
+2. Marca cuál llave usarías para `Cliente`, el nombre o un identificador propio
+3. El Tema 3 formaliza tipos de dato, llaves y restricciones sobre esta misma base
+:::
+
+::: {.pie-diapositiva}
+Base de datos (DBA03). Semestre 2026-02.
+:::

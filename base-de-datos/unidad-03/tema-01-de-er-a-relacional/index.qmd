@@ -1,0 +1,595 @@
+---
+title: "Tema 1. Seis reglas para convertir el diagrama en tablas"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                |
+|--------|----------------------------------------------------------------|
+| Unidad | Unidad 3. Modelo relacional                                   |
+| Tema   | Tema 1. Del modelo entidad relación al modelo relacional      |
+:::
+
+[Diapositivas de la sesión](presentacion.qmd)
+
+La Unidad 2 cerró con el diagrama entidad relación completo de la cafetería, tres entidades,
+`Cliente`, `Pedido` y `Producto`, conectadas por la relación `Realiza`, uno a muchos, y la relación
+`Contiene`, muchos a muchos con la cantidad de cada producto como atributo propio de esa relación.
+Ese dibujo resuelve, sobre el papel, la redundancia del teléfono repetido con la que abrió el curso.
+Pero un dibujo no guarda datos, y ningún motor de base de datos ejecuta un rombo ni un óvalo. Hoy
+tomas ese mismo diagrama y lo conviertes en el vocabulario que sí ejecuta un motor, las tablas, sus
+llaves primarias y sus llaves foráneas, siguiendo seis reglas de mapeo que cubren cualquier
+combinación de entidad y relación que puedas dibujar con la notación de la Unidad 2. Cada regla se
+aplica primero sobre el modelo ya publicado de la cafetería, y donde ese modelo no alcanza a mostrar
+una regla, el tema la ilustra con una extensión nueva del mismo negocio, nunca con un negocio
+distinto.
+
+Las sentencias `CREATE TABLE` de este tema se escriben en SQL, la sigla en inglés de *structured
+query language*, el lenguaje estándar de definición y consulta de bases de datos relacionales. El
+estándar internacional que lo rige es el ISO/IEC 9075, y todo ejemplo de esta guía usa solo la parte
+de ese estándar que casi cualquier motor implementa igual, tipos de datos comunes, `PRIMARY KEY`,
+`REFERENCES`, `NOT NULL` y llaves compuestas, sin ninguna función exclusiva de un producto. Como el
+docente todavía no decide el motor concreto del curso, la sintaxis exacta puede variar un poco de un
+motor a otro, y la documentación de PostgreSQL es la referencia que se usa aquí porque implementa ese
+núcleo común con precisión y es de acceso libre.
+
+## Seis reglas cubren cualquier diagrama binario
+
+Elmasri y Navathe formalizan el paso de un diagrama entidad relación a un esquema relacional como un
+algoritmo de varios pasos, cada uno dedicado a un tipo de elemento del diagrama, y Connolly y Begg
+describen el mismo procedimiento con una idea que resume bien la actitud correcta frente a este tema,
+tratarlo como una receta de cocina que se sigue en orden, no como un conjunto de decisiones libres.
+Silberschatz, Korth y Sudarshan cubren el mismo terreno en el capítulo dedicado al diseño con el
+modelo entidad relación, bajo el nombre de reducción a esquemas relacionales. Las tres fuentes
+coinciden en el fondo, aunque numeren los pasos distinto, así que este tema los agrupa en seis reglas
+que cubren cualquier diagrama binario, el único tipo de relación que trabajaste en la Unidad 2.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Seis tarjetas con las reglas de mapeo del modelo entidad relación al modelo relacional: entidad fuerte a tabla con su propia llave primaria, entidad débil a tabla cuya llave primaria incluye la del dueño, atributo multivaluado a tabla propia con llave foránea al dueño, relación uno a uno a fusión o llave foránea única, relación uno a muchos a llave foránea en el lado muchos, y relación muchos a muchos a tabla puente con llave primaria compuesta" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Seis reglas cubren cualquier diagrama entidad relación binario</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="34" width="230" height="112" rx="10"/><rect x="265" y="34" width="230" height="112" rx="10"/><rect x="510" y="34" width="230" height="112" rx="10"/><rect x="20" y="164" width="230" height="112" rx="10"/><rect x="265" y="164" width="230" height="112" rx="10"/><rect x="510" y="164" width="230" height="112" rx="10"/></g>
+  <g text-anchor="middle">
+    <g font-size="10.5" fill="#5b6876"><text x="135" y="52">Regla 1</text><text x="380" y="52">Regla 2</text><text x="625" y="52">Regla 3</text><text x="135" y="182">Regla 4</text><text x="380" y="182">Regla 5</text><text x="625" y="182">Regla 6</text></g>
+    <g font-size="12.5" font-weight="700" fill="#12324f"><text x="135" y="72">Entidad fuerte</text><text x="380" y="72">Entidad débil</text><text x="625" y="72">Atributo multivaluado</text><text x="135" y="202">Relación uno a uno</text><text x="380" y="202">Relación uno a muchos</text><text x="625" y="202">Relación muchos a muchos</text></g>
+    <g font-size="11" fill="#0e6f6c"><text x="135" y="104">Una tabla con su propia</text><text x="135" y="120">llave primaria</text><text x="380" y="104">Tabla cuya llave primaria</text><text x="380" y="120">incluye la del dueño</text><text x="625" y="104">Tabla propia con llave</text><text x="625" y="120">foránea hacia el dueño</text><text x="135" y="234">Se fusiona en una tabla, o</text><text x="135" y="250">llave foránea única</text><text x="380" y="234">Llave foránea en la tabla</text><text x="380" y="250">del lado muchos</text><text x="625" y="234">Tabla puente con llave</text><text x="625" y="250">primaria compuesta</text></g>
+  </g>
+</svg>
+
+:::
+
+Las seis reglas se aplican en un orden que conviene respetar, primero las entidades, después las
+relaciones, porque una relación necesita que las tablas de sus dos entidades ya existan antes de
+poder agregarles una llave foránea. Ese es exactamente el orden que sigue el resto del tema.
+
+## Regla 1. Entidad fuerte a tabla
+
+Toda entidad fuerte del diagrama se convierte en una tabla que incluye todos sus atributos simples, y
+la clave primaria de la entidad se convierte en la clave primaria de la tabla. `Cliente`, `Pedido` y
+`Producto` son las tres entidades fuertes de la cafetería, cada una con su propio identificador que
+basta por sí solo para distinguir a cualquiera de sus filas.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las entidades Cliente, Pedido y Producto arriba, cada una con flecha hacia abajo hacia su tabla resultante; Cliente y Producto llegan a una tabla completa con sus atributos, mientras que Pedido queda pendiente porque su llave foránea hacia Cliente todavía no está resuelta" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="dba3t1b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Toda entidad fuerte se traduce en una tabla con sus propios atributos</text>
+  <rect x="30" y="32" width="190" height="56" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="125" y="55" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <text x="125" y="74" font-size="11" fill="#5b6876" text-anchor="middle">id_cliente, nombre, teléfono</text>
+  <rect x="285" y="32" width="190" height="56" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="55" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="380" y="74" font-size="11" fill="#5b6876" text-anchor="middle">id_pedido, fecha</text>
+  <rect x="540" y="32" width="190" height="56" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="635" y="55" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Producto</text>
+  <text x="635" y="74" font-size="11" fill="#5b6876" text-anchor="middle">id_producto, nombre, precio</text>
+  <path d="M125,88 L125,138" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t1b)"/>
+  <path d="M380,88 L380,138" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t1b)"/>
+  <path d="M635,88 L635,138" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t1b)"/>
+  <rect x="30" y="140" width="190" height="70" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="125" y="162" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">CREATE TABLE Cliente</text>
+  <text x="125" y="180" font-size="11" fill="#3c7d7a" text-anchor="middle">id_cliente PRIMARY KEY</text>
+  <text x="125" y="196" font-size="11" fill="#3c7d7a" text-anchor="middle">nombre, teléfono</text>
+  <rect x="285" y="140" width="190" height="70" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="164" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Pedido, pendiente</text>
+  <text x="380" y="184" font-size="11" fill="#5b6876" text-anchor="middle">la llave foránea hacia</text>
+  <text x="380" y="200" font-size="11" fill="#5b6876" text-anchor="middle">Cliente llega en la Regla 5</text>
+  <rect x="540" y="140" width="190" height="70" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="635" y="162" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">CREATE TABLE Producto</text>
+  <text x="635" y="180" font-size="11" fill="#3c7d7a" text-anchor="middle">id_producto PRIMARY KEY</text>
+  <text x="635" y="196" font-size="11" fill="#3c7d7a" text-anchor="middle">nombre, precio</text>
+</svg>
+
+:::
+
+`Cliente` y `Producto` ya quedan completas con esta regla sola, porque ninguna de las dos tiene una
+llave foránea pendiente de otra tabla. `Pedido` sí la tiene, hacia `Cliente`, así que su tabla queda
+abierta hasta la Regla 5, cuando la relación `Realiza` agrega esa columna.
+
+```sql
+CREATE TABLE Cliente (
+    id_cliente  INT PRIMARY KEY,
+    nombre      VARCHAR(80) NOT NULL,
+    telefono    VARCHAR(20)
+);
+
+CREATE TABLE Producto (
+    id_producto INT PRIMARY KEY,
+    nombre      VARCHAR(80) NOT NULL,
+    precio      DECIMAL(10,2) NOT NULL
+);
+```
+
+## Regla 2. Entidad débil a tabla con la llave prestada
+
+Toda entidad débil se convierte también en una tabla, pero su clave primaria no nace solo de sus
+propios atributos, se arma combinando la clave primaria completa de su entidad propietaria con el
+discriminador propio de la entidad débil, y esa clave prestada se declara además como llave foránea
+hacia el propietario. La cafetería de la Unidad 2 no incluyó ninguna entidad débil en su modelo final,
+así que conviene extender el negocio con un caso nuevo, sin tocar nada de lo que ya construiste.
+Imagina que la cafetería empieza a registrar los pagos de cada pedido, y que un mismo pedido puede
+pagarse en más de un abono, parte en efectivo y parte con tarjeta. Cada abono solo tiene sentido
+dentro del pedido al que pertenece, ningún abono existe suelto, así que `Pago` es una entidad débil
+cuyo propietario es `Pedido`, identificada por el `id_pedido` del propietario más un discriminador
+propio, el `numero_abono`, que solo necesita ser único dentro de cada pedido.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pedido, entidad fuerte, conectado por la relación identificadora Recibe, en doble rombo, a Pago, entidad débil dibujada con doble rectángulo, cuyo discriminador numero_abono se subraya con línea punteada; abajo las dos tablas resultantes, Pedido con su propia llave primaria y Pago con llave primaria compuesta por pedido_id y numero_abono, además de la llave foránea hacia Pedido" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="dba3t1c" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">La entidad débil carga, en su llave primaria, la llave completa del dueño</text>
+  <rect x="30" y="46" width="170" height="60" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="115" y="70" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="115" y="90" font-size="11" fill="#5b6876" text-anchor="middle">id_pedido, fecha</text>
+  <polygon points="290,52 350,76 290,100 230,76" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <polygon points="298,60 342,76 298,92 254,76" fill="none" stroke="#8fc9c5"/>
+  <text x="290" y="80" font-size="11" font-weight="700" fill="#0e6f6c" text-anchor="middle">Recibe</text>
+  <line x1="200" y1="76" x2="230" y2="76" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="350" y1="72" x2="410" y2="72" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="350" y1="80" x2="410" y2="80" stroke="#8fb3d1" stroke-width="1.8"/>
+  <rect x="410" y="42" width="190" height="70" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="416" y="48" width="178" height="58" rx="6" fill="none" stroke="#c7d6e6"/>
+  <text x="505" y="68" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Pago</text>
+  <text x="505" y="86" font-size="11" fill="#12324f" text-anchor="middle">numero_abono</text>
+  <line x1="465" y1="90" x2="545" y2="90" stroke="#12324f" stroke-width="1.2" stroke-dasharray="3 2"/>
+  <text x="505" y="104" font-size="10.5" fill="#5b6876" text-anchor="middle">monto, medio_pago</text>
+  <text x="290" y="126" font-size="11" fill="#0e6f6c" text-anchor="middle">total, identificadora</text>
+  <path d="M115,106 L115,180" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t1c)"/>
+  <path d="M505,112 L505,180" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t1c)"/>
+  <rect x="30" y="182" width="180" height="66" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="120" y="204" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">CREATE TABLE Pedido</text>
+  <text x="120" y="222" font-size="11" fill="#3c7d7a" text-anchor="middle">id_pedido PRIMARY KEY</text>
+  <text x="120" y="238" font-size="11" fill="#3c7d7a" text-anchor="middle">fecha</text>
+  <rect x="400" y="182" width="230" height="98" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="515" y="204" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">CREATE TABLE Pago</text>
+  <text x="515" y="222" font-size="11" fill="#3c7d7a" text-anchor="middle">pedido_id NOT NULL (FK a Pedido)</text>
+  <text x="515" y="238" font-size="11" fill="#3c7d7a" text-anchor="middle">numero_abono NOT NULL</text>
+  <text x="515" y="254" font-size="11" fill="#3c7d7a" text-anchor="middle">monto, medio_pago</text>
+  <text x="515" y="270" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">PK: (pedido_id, numero_abono)</text>
+</svg>
+
+:::
+
+```sql
+CREATE TABLE Pago (
+    pedido_id     INT NOT NULL REFERENCES Pedido(id_pedido),
+    numero_abono  INT NOT NULL,
+    monto         DECIMAL(10,2) NOT NULL,
+    medio_pago    VARCHAR(20) NOT NULL,
+    PRIMARY KEY (pedido_id, numero_abono)
+);
+```
+
+Fíjate en que `pedido_id` cumple dos papeles a la vez dentro de `Pago`, es llave foránea porque
+apunta a `Pedido`, y es parte de la llave primaria porque sin él dos abonos de pedidos distintos
+podrían compartir el mismo `numero_abono` sin que nada los distinga. Esa doble función es la firma de
+cualquier entidad débil mapeada correctamente.
+
+## Regla 3. Atributo multivaluado a tabla propia
+
+Un atributo multivaluado nunca cabe en una sola columna, porque una columna guarda un valor por fila,
+no una lista de valores. La regla lo saca de la tabla de su entidad y lo lleva a una tabla propia, que
+incluye el atributo multivaluado más la clave primaria de la entidad dueña como llave foránea, y la
+clave primaria de esa tabla nueva combina las dos cosas. En el modelo actual de la cafetería,
+`telefono` es un atributo monovaluado de `Cliente`, cada cliente guarda un solo número, así que la
+Regla 1 ya lo resolvió dentro de la propia tabla `Cliente`. Pero el Tema 1 de la Unidad 2 dejó
+planteado un escenario que conviene formalizar ahora, qué pasaría si la cafetería necesitara guardar
+más de un teléfono vigente por cliente, un celular y un fijo, los dos activos a la vez.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Escenario hipotético: la entidad Cliente con el atributo telefono dibujado como óvalo de doble borde porque pasaría a ser multivaluado; abajo dos tablas resultantes, Cliente sin la columna telefono y Cliente_Telefono con una fila por cada número, con llave primaria compuesta por id_cliente y telefono" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="dba3t1d" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Si teléfono fuera multivaluado, no cabría en una sola columna de Cliente</text>
+  <rect x="30" y="36" width="160" height="56" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="110" y="60" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <text x="110" y="78" font-size="10.5" fill="#5b6876" text-anchor="middle">id_cliente, nombre</text>
+  <ellipse cx="330" cy="64" rx="62" ry="26" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <ellipse cx="330" cy="64" rx="50" ry="18" fill="none" stroke="#8fc9c5"/>
+  <text x="330" y="68" font-size="11.5" fill="#0e6f6c" text-anchor="middle">teléfono</text>
+  <line x1="190" y1="64" x2="268" y2="64" stroke="#8fb3d1" stroke-width="1.7"/>
+  <path d="M110,92 L110,150" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t1d)"/>
+  <path d="M330,90 C330,120 200,140 130,150" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t1d)"/>
+  <rect x="30" y="152" width="180" height="66" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="120" y="174" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">CREATE TABLE Cliente</text>
+  <text x="120" y="192" font-size="11" fill="#3c7d7a" text-anchor="middle">id_cliente PRIMARY KEY</text>
+  <text x="120" y="208" font-size="11" fill="#3c7d7a" text-anchor="middle">nombre (sin teléfono)</text>
+  <rect x="440" y="152" width="230" height="82" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="555" y="174" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">CREATE TABLE Cliente_Telefono</text>
+  <text x="555" y="192" font-size="11" fill="#3c7d7a" text-anchor="middle">id_cliente NOT NULL (FK a Cliente)</text>
+  <text x="555" y="208" font-size="11" fill="#3c7d7a" text-anchor="middle">telefono NOT NULL</text>
+  <text x="555" y="224" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">PK: (id_cliente, telefono)</text>
+</svg>
+
+:::
+
+```sql
+CREATE TABLE Cliente_Telefono (
+    id_cliente  INT NOT NULL REFERENCES Cliente(id_cliente),
+    telefono    VARCHAR(20) NOT NULL,
+    PRIMARY KEY (id_cliente, telefono)
+);
+```
+
+En este escenario hipotético, la columna `telefono` sale por completo de `Cliente`, que se queda solo
+con `id_cliente` y `nombre`, y cada número vigente de un cliente ocupa su propia fila en
+`Cliente_Telefono`. Esto es exactamente lo que evita el problema que viste en la Unidad 1 con el
+teléfono aplanado en una sola columna separado por comas, cada valor queda en su propia fila, buscable
+y borrable por separado, sin tocar el resto. Para la cafetería tal como está modelada hoy, con un solo
+teléfono por cliente, esta tabla extra no hace falta, la Regla 1 ya bastó. La regla del atributo
+multivaluado solo entra en juego el día que el negocio de verdad necesite guardar más de un valor por
+instancia.
+
+## Regla 4. Relación uno a uno, fusionar o mantener separado
+
+Una relación uno a uno se puede resolver de dos formas válidas, y la elección depende de la
+participación de cada lado. Si las dos entidades tienen participación total, la opción más simple es
+fusionarlas en una sola tabla, porque toda fila de una siempre tiene su pareja en la otra. Si alguna de
+las dos tiene participación parcial, lo habitual es mantener las tablas separadas y poner la llave
+foránea del lado con participación total, marcada además como única con `UNIQUE`, para que el motor
+impida que dos filas de esa tabla apunten a la misma fila del otro lado.
+
+La cafetería tampoco incluyó una relación uno a uno en su modelo final de la Unidad 2, aunque el Reto
+3 del último tema ya dejó planteada la posibilidad, un cliente puede registrarse con una tarjeta de
+fidelidad antes de hacer su primer pedido. Retómala ahora como una entidad propia, `TarjetaFidelidad`,
+con su `numero_tarjeta` y su `fecha_activacion`. Cada tarjeta pertenece a exactamente un cliente, así
+que la participación de `TarjetaFidelidad` en la relación `Tiene` es total, pero no todo cliente saca
+una tarjeta, así que la participación de `Cliente` es parcial.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cliente y TarjetaFidelidad conectados por la relación Tiene, uno a uno, con línea simple del lado Cliente por participación parcial y línea doble del lado TarjetaFidelidad por participación total; abajo dos opciones de mapeo, la opción A fusiona las dos entidades en una sola tabla Cliente con columnas de tarjeta que admiten nulos, y la opción B mantiene dos tablas con id_cliente como llave primaria y foránea a la vez en TarjetaFidelidad" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="dba3t1e" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Uno a uno con participación parcial: dos tablas, con llave foránea única</text>
+  <rect x="40" y="36" width="160" height="52" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="120" y="66" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <polygon points="270,42 320,62 270,82 220,62" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="270" y="66" font-size="10.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Tiene</text>
+  <rect x="400" y="36" width="180" height="52" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="490" y="66" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">TarjetaFidelidad</text>
+  <line x1="200" y1="62" x2="220" y2="62" stroke="#8fb3d1" stroke-width="1.7"/>
+  <line x1="320" y1="59" x2="396" y2="59" stroke="#8fb3d1" stroke-width="1.7"/>
+  <line x1="320" y1="65" x2="396" y2="65" stroke="#8fb3d1" stroke-width="1.7"/>
+  <text x="210" y="102" font-size="10.5" fill="#5b6876" text-anchor="middle">parcial</text>
+  <text x="360" y="102" font-size="10.5" fill="#0e6f6c" text-anchor="middle">total</text>
+  <rect x="30" y="130" width="330" height="94" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="195" y="150" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Opción A. Fusionar en Cliente</text>
+  <text x="195" y="170" font-size="10.5" fill="#5b6876" text-anchor="middle">id_cliente PK, nombre, teléfono</text>
+  <text x="195" y="186" font-size="10.5" fill="#5b6876" text-anchor="middle">numero_tarjeta UNIQUE, admite nulo</text>
+  <text x="195" y="202" font-size="10.5" fill="#5b6876" text-anchor="middle">fecha_activacion, admite nulo</text>
+  <rect x="420" y="130" width="310" height="94" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="575" y="150" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Opción B. Tabla separada</text>
+  <text x="575" y="170" font-size="10.5" fill="#3c7d7a" text-anchor="middle">TarjetaFidelidad: id_cliente PK y FK</text>
+  <text x="575" y="186" font-size="10.5" fill="#3c7d7a" text-anchor="middle">numero_tarjeta NOT NULL UNIQUE</text>
+  <text x="575" y="202" font-size="10.5" fill="#3c7d7a" text-anchor="middle">fecha_activacion NOT NULL</text>
+  <text x="380" y="252" font-size="11" fill="#12324f" text-anchor="middle">Este tema usa la Opción B para la cafetería, porque separa lo que solo aplica a</text>
+  <text x="380" y="270" font-size="11" fill="#12324f" text-anchor="middle">quien de verdad tiene tarjeta, sin llenar de columnas nulas a todo el resto de clientes</text>
+</svg>
+
+:::
+
+```sql
+CREATE TABLE TarjetaFidelidad (
+    id_cliente        INT PRIMARY KEY REFERENCES Cliente(id_cliente),
+    numero_tarjeta    VARCHAR(20) NOT NULL UNIQUE,
+    fecha_activacion  DATE NOT NULL
+);
+```
+
+Fíjate en que `id_cliente` cumple aquí un papel distinto al que cumplía en `Pago`. En `Pago`,
+`pedido_id` era una parte de una llave primaria compuesta con otra columna. En `TarjetaFidelidad`,
+`id_cliente` es la llave primaria completa por sí sola, y al mismo tiempo es llave foránea hacia
+`Cliente`. Esa técnica, usar la misma columna como llave primaria y como llave foránea, es la forma
+habitual de mapear el lado con participación total de una relación uno a uno cuando se decide no
+fusionar las tablas, y garantiza, sin ninguna restricción adicional, que ningún cliente pueda tener dos
+tarjetas a la vez, porque `id_cliente` no se puede repetir como llave primaria.
+
+## Regla 5. Relación uno a muchos, la llave foránea del lado muchos
+
+En toda relación uno a muchos, la tabla del lado que puede repetirse, el lado muchos, recibe una
+columna de llave foránea que apunta a la clave primaria de la tabla del lado uno. Si la participación
+del lado muchos es total, esa columna se declara `NOT NULL`, y si es parcial, la columna admite
+valores nulos. Esta es exactamente la regla que la Unidad 2 ya adelantó con el ejemplo de instructor y
+estudiante, y ahora la aplicas sobre `Realiza`, la relación entre `Cliente` y `Pedido`. Un cliente
+realiza varios pedidos, pero cada pedido pertenece a un único cliente, así que `Pedido` es el lado
+muchos, y con la participación total que fijó la Unidad 2 para este caso, la columna nueva no admite
+nulos.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cliente conectado por la relación Realiza a Pedido, uno a muchos, con la flecha de cardinalidad apuntando hacia Cliente; abajo la tabla Pedido completa con id_pedido como llave primaria, fecha y cliente_id como llave foránea obligatoria hacia Cliente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="dba3t1f" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">La llave foránea siempre vive en la tabla del lado muchos</text>
+  <rect x="40" y="36" width="160" height="52" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="120" y="66" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <polygon points="270,42 320,62 270,82 220,62" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="270" y="66" font-size="10.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Realiza</text>
+  <rect x="400" y="36" width="160" height="52" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="480" y="66" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <line x1="200" y1="62" x2="220" y2="62" stroke="#8fb3d1" stroke-width="1.7"/>
+  <path d="M320,60 L226,60" fill="none" stroke="#8fb3d1" stroke-width="1.7" marker-end="url(#dba3t1f)"/>
+  <line x1="320" y1="65" x2="396" y2="65" stroke="#8fb3d1" stroke-width="1.7"/>
+  <text x="360" y="102" font-size="10.5" fill="#0e6f6c" text-anchor="middle">Pedido es el lado muchos</text>
+  <path d="M480,88 L480,140" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t1f)"/>
+  <rect x="330" y="142" width="300" height="88" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="480" y="164" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">CREATE TABLE Pedido, ahora completa</text>
+  <text x="480" y="184" font-size="11" fill="#3c7d7a" text-anchor="middle">id_pedido PRIMARY KEY, fecha NOT NULL</text>
+  <text x="480" y="202" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">cliente_id NOT NULL REFERENCES Cliente</text>
+  <text x="480" y="218" font-size="10.5" fill="#5b6876" text-anchor="middle">NOT NULL porque la participación de Pedido es total</text>
+</svg>
+
+:::
+
+```sql
+CREATE TABLE Pedido (
+    id_pedido   INT PRIMARY KEY,
+    fecha       DATE NOT NULL,
+    cliente_id  INT NOT NULL REFERENCES Cliente(id_cliente)
+);
+```
+
+Con esta sentencia, `Pedido` queda completa, y es idéntica a la que ya viste al cierre de la Unidad 2,
+solo que ahora sabes exactamente de qué regla nace cada columna, `id_pedido` y `fecha` de la Regla 1,
+`cliente_id` de esta Regla 5.
+
+## Regla 6. Relación muchos a muchos, la tabla puente
+
+Una relación muchos a muchos no cabe en ninguna llave foránea sencilla, porque ninguna de las dos
+tablas originales puede guardar más de un valor en una sola columna. La regla crea una tabla nueva,
+llamada tabla puente o tabla de asociación, cuya clave primaria combina las llaves foráneas hacia las
+dos entidades que participan, y que además carga cualquier atributo propio de la relación. `Contiene`,
+entre `Pedido` y `Producto`, es la relación muchos a muchos de la cafetería, un pedido incluye varios
+productos y un mismo producto aparece en varios pedidos, con `cantidad` como atributo propio de cada
+combinación concreta de pedido y producto.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pedido y Producto conectados por la relación Contiene, muchos a muchos, con el atributo cantidad colgando de la relación; abajo la tabla puente Detalle_Pedido con llave primaria compuesta por pedido_id y producto_id, ambas además llaves foráneas, y la columna cantidad" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="dba3t1g" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Muchos a muchos siempre necesita una tabla propia</text>
+  <rect x="40" y="46" width="160" height="52" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="120" y="76" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <polygon points="270,52 320,72 270,92 220,72" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="270" y="76" font-size="10.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Contiene</text>
+  <rect x="400" y="46" width="160" height="52" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="480" y="76" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Producto</text>
+  <line x1="200" y1="72" x2="220" y2="72" stroke="#8fb3d1" stroke-width="1.7"/>
+  <line x1="320" y1="72" x2="396" y2="72" stroke="#8fb3d1" stroke-width="1.7"/>
+  <ellipse cx="270" cy="128" rx="46" ry="22" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="270" y="132" font-size="11" fill="#12324f" text-anchor="middle">cantidad</text>
+  <line x1="270" y1="92" x2="270" y2="106" stroke="#8fb3d1" stroke-width="1.6"/>
+  <path d="M120,98 L120,158" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t1g)"/>
+  <path d="M480,98 L480,158" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t1g)"/>
+  <rect x="220" y="160" width="320" height="94" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="182" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">CREATE TABLE Detalle_Pedido</text>
+  <text x="380" y="200" font-size="11" fill="#3c7d7a" text-anchor="middle">pedido_id NOT NULL REFERENCES Pedido</text>
+  <text x="380" y="216" font-size="11" fill="#3c7d7a" text-anchor="middle">producto_id NOT NULL REFERENCES Producto</text>
+  <text x="380" y="232" font-size="11" fill="#3c7d7a" text-anchor="middle">cantidad NOT NULL</text>
+  <text x="380" y="248" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">PK: (pedido_id, producto_id)</text>
+</svg>
+
+:::
+
+```sql
+CREATE TABLE Detalle_Pedido (
+    pedido_id   INT NOT NULL REFERENCES Pedido(id_pedido),
+    producto_id INT NOT NULL REFERENCES Producto(id_producto),
+    cantidad    INT NOT NULL,
+    PRIMARY KEY (pedido_id, producto_id)
+);
+```
+
+Esta sentencia es idéntica a la que la Unidad 2 ya adelantó, y con las seis reglas de hoy ya sabes
+justificar cada una de sus piezas, no solo copiarla. `Cliente` y `Producto` nacen de la Regla 1,
+`Pedido` combina la Regla 1 con la Regla 5, y `Detalle_Pedido` nace completa de la Regla 6, sin que
+ninguna de sus columnas dependa de otra regla distinta.
+
+## Mapear bien no es lo mismo que normalizar
+
+Las seis reglas de este tema garantizan que ningún dato de la relación muchos a muchos se pierda y que
+ninguna llave foránea quede mal ubicada, pero no garantizan que la tabla resultante esté libre de
+redundancia, porque esa redundancia puede venir de un problema que las reglas de mapeo no revisan,
+cómo dependen entre sí los atributos que no son la clave dentro de una misma entidad. Imagina que la
+cafetería agrega dos columnas nuevas a `Producto`, la `categoria` de cada producto, bebida caliente,
+postre, bebida fría, y el `impuesto_categoria`, la tarifa de impuesto que aplica a esa categoría
+completa.
+
+| id_producto | nombre | categoria | impuesto_categoria |
+|---|---|---|---|
+| 1 | Café | Bebida caliente | 0.08 |
+| 2 | Torta | Postre | 0.19 |
+| 3 | Chocolate | Bebida caliente | 0.08 |
+
+La Regla 1, aplicada al pie de la letra, dice que todo atributo simple de la entidad `Producto` va
+dentro de la tabla `Producto`, y `categoria` e `impuesto_categoria` sí son atributos de esa entidad
+según el diagrama, así que la tabla queda correctamente mapeada. Pero fíjate en las filas 1 y 3, las
+dos comparten la categoría bebida caliente, y las dos repiten exactamente el mismo `0.08`, porque el
+impuesto en realidad no depende del producto, depende de la categoría, y la categoría se repite cada
+vez que dos productos comparten ese mismo valor. Si mañana la tarifa de bebida caliente cambia, hay
+que corregirla en cada producto de esa categoría, la misma anomalía de actualización que ya viste con
+el teléfono repetido en la Unidad 1, solo que esta vez apareció después de seguir las reglas de mapeo
+correctamente, no por saltárselas.
+
+Esa dependencia entre columnas que no son la llave, `impuesto_categoria` depende de `categoria` y no
+directamente de `id_producto`, es exactamente el tipo de problema que el Tema 2 de esta unidad va a
+nombrar y corregir con las formas de normalización. El diseño de este tema, el de `Cliente`, `Pedido`,
+`Producto`, `Pago`, `TarjetaFidelidad` y `Detalle_Pedido`, no tiene ese problema, porque el diagrama
+entidad relación del que parte ya estaba bien pensado desde la Unidad 2, cada atributo vive en la
+entidad de la que de verdad depende. El Tema 2 no va a normalizar ese diseño, porque ya nace limpio,
+va a normalizar la tabla plana original de la Unidad 1, la de los pedidos con el teléfono repetido,
+que nunca pasó por un diagrama entidad relación antes de convertirse en tabla.
+
+::: {.callout-tip}
+## Reto 1. Encuentra la regla
+
+La cafetería quiere agregar tres cosas nuevas a su negocio. Para cada una, marca qué regla de las seis
+usarías antes de seguir leyendo.
+
+<label><input type="checkbox"> Un empleado que atiende varios pedidos, y cada pedido lo atiende un único empleado</label><br>
+<label><input type="checkbox"> Un correo electrónico por cliente, sabiendo que un mismo cliente puede tener más de uno vigente a la vez</label><br>
+<label><input type="checkbox"> Una promoción que se aplica a lo sumo a un pedido, y no todo pedido tiene una promoción activa</label>
+
+Para cada situación, escribe el número de la regla y el nombre de la tabla o tablas que resultarían.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La primera situación es la Regla 5, relación uno a muchos entre `Empleado` y `Pedido`. `Pedido` es el
+lado muchos, así que recibe una columna nueva, `empleado_id`, como llave foránea hacia `Empleado`.
+
+La segunda situación es la Regla 3, atributo multivaluado. Un correo por cliente no cabe en una sola
+columna si puede haber varios vigentes a la vez, así que hace falta una tabla propia,
+`Cliente_Correo`, con `id_cliente` y `correo` combinados como llave primaria, igual que se hizo con
+`Cliente_Telefono`.
+
+La tercera situación es la Regla 4, relación uno a uno. Cada pedido tiene a lo sumo una promoción, y
+cada promoción se aplica a lo sumo a un pedido, así que es uno a uno. Como no todo pedido tiene
+promoción, la participación de `Pedido` es parcial, así que conviene una tabla separada
+`PedidoPromocion` con `pedido_id` como llave primaria y foránea a la vez, en vez de fusionarla dentro
+de `Pedido` y llenar de nulos los pedidos sin promoción.
+:::
+
+::: {.callout-tip}
+## Reto 2. Encuentra el error en este Pago
+
+Un compañero de curso mapea la entidad débil `Pago` así, sin llave primaria compuesta:
+
+```sql
+CREATE TABLE Pago (
+    numero_abono  INT PRIMARY KEY,
+    pedido_id     INT NOT NULL REFERENCES Pedido(id_pedido),
+    monto         DECIMAL(10,2) NOT NULL,
+    medio_pago    VARCHAR(20) NOT NULL
+);
+```
+
+Antes de leer la solución, responde en un párrafo, qué obliga esta tabla a garantizar que el diseño
+correcto de una entidad débil no exige, y qué pasa el día que el pedido 1001 y el pedido 1002 registran
+cada uno su propio abono número 1.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+Con `numero_abono` como llave primaria por sí solo, el motor exige que ese número sea único en toda la
+tabla `Pago`, entre todos los pedidos a la vez, no solo dentro de un mismo pedido. Eso es más de lo que
+el discriminador de una entidad débil necesita, ya que `numero_abono` solo tenía que distinguir a los
+abonos de un mismo pedido entre sí.
+
+El día que el pedido 1001 registra su primer abono con `numero_abono = 1`, y el pedido 1002 también
+intenta registrar su primer abono con `numero_abono = 1`, el motor rechaza la segunda inserción, porque
+ya existe una fila con esa llave primaria, aunque los dos abonos pertenezcan a pedidos distintos y no
+deberían chocar entre sí. La corrección es la llave primaria compuesta, `PRIMARY KEY (pedido_id,
+numero_abono)`, que ya viste en la Regla 2, y que deja que el número 1 se repita libremente entre
+pedidos distintos, mientras no se repita dos veces dentro del mismo pedido.
+:::
+
+::: {.callout-tip}
+## Reto 3. Bien mapeado, pero no bien diseñado
+
+Vuelve a la tabla `Producto` con `categoria` e `impuesto_categoria` de la sección anterior. Responde en
+un párrafo, si esa tabla sigue correctamente la Regla 1, y si eso alcanza para decir que el diseño está
+libre de redundancia. Justifica tu respuesta señalando qué fila concreta de la tabla de ejemplo
+demuestra el problema.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+Sí, la tabla sigue correctamente la Regla 1, porque `categoria` e `impuesto_categoria` son atributos
+simples de la entidad `Producto` según el diagrama, y todo atributo simple de una entidad fuerte va
+dentro de su propia tabla. Seguir la regla al pie de la letra no alcanza para decir que el diseño está
+libre de redundancia.
+
+Las filas de `id_producto` 1 y 3, Café y Chocolate, comparten la categoría bebida caliente y repiten el
+mismo valor de `impuesto_categoria`, 0.08. Ese valor no depende del producto concreto, depende de la
+categoría, así que se repite una vez por cada producto de esa categoría, y corregirlo exige tocar todas
+las filas de esa categoría a la vez si la tarifa cambia. El mapeo fue correcto, el diseño del que partió
+tenía un atributo que dependía de otro atributo no clave, y eso es justo lo que el Tema 2 va a resolver
+formalmente.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía, los siguientes puntos:
+
+- [ ] Las seis reglas de mapeo, entidad fuerte, entidad débil, atributo multivaluado, relación uno a
+      uno, relación uno a muchos y relación muchos a muchos
+- [ ] Por qué la llave primaria de una entidad débil combina la llave del propietario con su propio
+      discriminador, y por qué esa columna cumple dos papeles a la vez
+- [ ] Por qué un atributo multivaluado necesita su propia tabla, con la llave del dueño más el
+      atributo como llave primaria compuesta
+- [ ] Las dos formas válidas de mapear una relación uno a uno, fusionar o separar con llave foránea
+      única, y cuándo conviene cada una según la participación
+- [ ] Por qué la llave foránea de una relación uno a muchos siempre va en la tabla del lado muchos
+- [ ] Por qué una relación muchos a muchos siempre necesita una tabla puente con llave primaria
+      compuesta
+- [ ] Por qué mapear correctamente un diagrama entidad relación no garantiza, por sí solo, que la
+      tabla resultante esté libre de redundancia
+:::
+
+## Lo que sigue
+
+Hoy tomaste el diagrama entidad relación de la cafetería, ya bien diseñado desde la Unidad 2, y lo
+convertiste en tablas siguiendo seis reglas que se pueden aplicar a cualquier diagrama binario que
+dibujes de aquí en adelante. El resultado es limpio porque el diagrama de partida ya lo era, cada
+atributo vivía en la entidad de la que de verdad dependía antes de que se escribiera la primera
+sentencia `CREATE TABLE`.
+
+El Tema 2 de esta unidad cambia el punto de partida. En vez de un diagrama ya pensado, retoma la tabla
+plana original de la Unidad 1, la de los pedidos de la cafetería con el teléfono del cliente repetido
+en cada línea, y la normaliza paso a paso, de la primera a la cuarta forma normal, mostrando qué pasa
+cuando el mapeo se hace directamente desde datos desordenados en vez de partir de un buen modelo
+entidad relación como el de hoy. El Tema 3 cierra la unidad con el diseño físico completo de estas
+tablas, tipos de datos, restricciones y reglas de negocio.
+
+## Recursos
+
+- Elmasri, R. y Navathe, S. B. *Fundamentals of Database Systems.* Capítulo de diseño de bases de
+  datos relacionales mediante el algoritmo de mapeo del modelo entidad relación al modelo relacional,
+  con un paso dedicado a cada tipo de entidad, relación y atributo multivaluado.
+- Connolly, T. M. y Begg, C. E. *Database Systems: A Practical Approach to Design, Implementation, and
+  Management.* Capítulo de diseño lógico de bases de datos, reglas de transformación del modelo
+  entidad relación al modelo relacional.
+- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Fundamentos de bases de datos.* Capítulo 6, diseño
+  de bases de datos usando el modelo entidad relación, sección de reducción a esquemas relacionales.
+  Material de apoyo oficial de los autores en [db-book.com](https://www.db-book.com).
+- International Organization for Standardization e International Electrotechnical Commission.
+  *ISO/IEC 9075. Information technology, Database languages, SQL.*
+  [Ficha del estándar](https://www.iso.org/standard/76583.html).
+- PostgreSQL Global Development Group. *CREATE TABLE.* Documentación oficial, sintaxis de
+  `PRIMARY KEY`, `REFERENCES` y llaves compuestas usada como referencia de un motor real que
+  implementa el núcleo común del estándar.
+  [postgresql.org/docs/current/sql-createtable.html](https://www.postgresql.org/docs/current/sql-createtable.html).
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

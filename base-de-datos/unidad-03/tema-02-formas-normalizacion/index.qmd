@@ -1,0 +1,628 @@
+---
+title: "Tema 2. El teléfono de Ana, resuelto en cuatro pasos"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                          |
+|--------|--------------------------------------------------------------------------------|
+| Unidad | Unidad 3. Modelo relacional                                                    |
+| Tema   | Tema 2. Formas de normalización, de la primera a la cuarta                     |
+:::
+
+[Diapositivas de la sesión](presentacion.qmd)
+
+El Tema 1 de esta unidad tomó el diagrama entidad-relación de la cafetería que armaste en la Unidad
+2, ya bien pensado, con sus entidades separadas y su cardinalidad marcada, y lo tradujo al
+vocabulario de tablas del modelo relacional aplicando reglas de mapeo concretas, cada entidad se
+convierte en una tabla, cada relación se resuelve con una llave foránea o con una tabla propia. Ese
+procedimiento parte de un diagrama que ya está bien diseñado, así que el resultado hereda
+automáticamente esa calidad. Hoy el punto de partida es distinto y, en la práctica profesional, más
+frecuente, porque casi nunca vas a heredar un diagrama entidad-relación limpio recién dibujado, vas
+a heredar una tabla que alguien más ya construyó, con datos ya cargados adentro, la misma tabla
+plana de pedidos de la cafetería que abrió la Unidad 1, con el teléfono del cliente repetido en
+cada fila. Tu trabajo hoy es auditar esa tabla con un procedimiento formal en vez de con un
+diagrama, y ese procedimiento se llama normalización.
+
+Mapear bien un modelo entidad-relación y normalizar una tabla plana pueden terminar en una
+estructura de tablas parecida, pero no son el mismo ejercicio. Mapear bien no garantiza por sí solo
+que el resultado cumpla las formas normales que vas a estudiar hoy, porque las reglas de mapeo
+resuelven cardinalidad y participación, no dependencias funcionales entre atributos. Y normalizar
+una tabla plana no exige haber dibujado antes ningún diagrama, porque el procedimiento trabaja
+directo sobre las columnas y las filas que ya existen. Las dos rutas conviven en este curso porque
+en la vida profesional te vas a encontrar con las dos situaciones, un negocio nuevo que se puede
+modelar desde cero y un negocio con años de datos sueltos que hay que ordenar.
+
+El tema cierra con la cuarta forma normal, que corrige un tipo de redundancia distinto al que
+arreglan las tres primeras, y con un mapa completo de qué anomalía corrige cada forma. El Tema 3, el
+último de esta unidad, toma las tablas que vas a terminar de construir hoy y les asigna tipos de
+dato, llaves y restricciones concretas.
+
+## La jerarquía que vas a recorrer
+
+Cada forma normal que viene a continuación es más exigente que la anterior, y cumplir la más
+exigente obliga a cumplir todas las que están debajo. La 2FN exige primero cumplir la 1FN, la 3FN
+exige primero cumplir la 2FN, y así sucesivamente, lo que convierte la normalización en un
+procedimiento de pasos acumulados, no en cuatro reglas sueltas que se puedan aplicar en cualquier
+orden.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro rectángulos anidados que representan la jerarquía de las formas normales, el más grande es primera forma normal y contiene a segunda forma normal, que contiene a tercera forma normal, que contiene a cuarta forma normal en el centro, cada anillo visible lleva la etiqueta de la forma normal correspondiente y la anomalía que corrige" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cada forma normal exige cumplir primero todas las anteriores</text>
+  <rect x="20" y="34" width="720" height="266" rx="14" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="56" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">1FN. valores atómicos y una llave real</text>
+  <text x="380" y="72" font-size="10.5" fill="#5b6876" text-anchor="middle">evita que varios hechos se compriman en una sola fila o una sola columna</text>
+  <rect x="60" y="86" width="640" height="200" rx="12" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="108" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">2FN. nada depende de una parte de la llave</text>
+  <text x="380" y="124" font-size="10.5" fill="#5b6876" text-anchor="middle">corrige la redundancia de un atributo que solo depende de una parte de una llave compuesta</text>
+  <rect x="100" y="138" width="560" height="132" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="160" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">3FN. nada depende de un atributo que no es la llave</text>
+  <text x="380" y="176" font-size="10.5" fill="#3c7d7a" text-anchor="middle">corrige las tres anomalías clásicas: inserción, actualización y borrado</text>
+  <rect x="150" y="192" width="460" height="60" rx="9" fill="#cfe6e3" stroke="#6bb0ab"/>
+  <text x="380" y="216" font-size="12.5" font-weight="700" fill="#0e4a48" text-anchor="middle">4FN. hechos independientes en tablas separadas</text>
+  <text x="380" y="234" font-size="10.5" fill="#0e4a48" text-anchor="middle">corrige la redundancia de mezclar dos dependencias multivaluadas</text>
+</svg>
+
+:::
+
+Con ese mapa en mente, el resto del tema recorre las cuatro formas en orden, y para las tres
+primeras el hilo conductor es siempre la misma tabla, la de los pedidos de la cafetería.
+
+## Las tres anomalías, otra vez, con la tabla completa delante
+
+Esta es la misma tabla que abrió la Unidad 1, la que un empleado de la cafetería armó juntando
+pedido, cliente, teléfono, producto y valor en una sola fila por línea de venta.
+
+::: {.tabla-ancha}
+| Pedido | Cliente | Teléfono | Producto | Valor |
+|---|---|---|---|---|
+| 1001 | Ana Ruiz | 300 111 2233 | Café | 4500 |
+| 1002 | Ana Ruiz | 300 111 2233 | Torta | 23400 |
+| 1003 | Luis Pena | 301 444 5566 | Café | 4500 |
+| 1004 | Ana Ruiz | 300 111 2233 | Jugo | 6800 |
+:::
+
+Ya viste en la Unidad 1 que esta tabla falla de tres formas concretas, y hoy conviene repasarlas con
+la vista puesta en la causa, no solo en el síntoma, porque esa causa es la que las formas normales
+van a corregir una por una a lo largo del tema.
+
+La primera falla aparece si Ana cambia de teléfono. Su número actual, 300 111 2233, está escrito
+tres veces, en las filas 1001, 1002 y 1004, porque Ana hizo tres pedidos distintos. Corregir el
+número exige tocar las tres filas, y si alguien corrige dos y olvida la tercera, la tabla termina
+con dos números de teléfono distintos para la misma persona, sin que ninguna regla dentro de la
+tabla avise de esa contradicción. Ese es el nombre técnico completo de lo que en la Unidad 1 se
+presentó de forma intuitiva, la *anomalía de actualización*, y ocurre porque el mismo dato, el
+teléfono de Ana, vive repetido en varias filas en vez de vivir una sola vez en un solo lugar.
+
+La segunda falla aparece si la cafetería quiere registrar a un cliente nuevo que todavía no ha hecho
+ningún pedido, alguien que se acaba de inscribir al programa de fidelización, por ejemplo. La tabla
+no tiene ninguna fila donde quepa solo un nombre y un teléfono, porque cada fila exige también un
+número de pedido, un producto y un valor. Ese cliente se queda sin registrar hasta que compre algo,
+aunque ya sea un cliente real desde el momento en que se inscribió. Esa es la *anomalía de
+inserción*, y ocurre porque la tabla obliga a que dos hechos independientes, que exista un cliente y
+que exista un pedido, aparezcan siempre juntos en la misma fila.
+
+La tercera falla aparece si se anula el pedido 1003 y se borra esa fila. Luis Pena solo aparece ahí,
+así que borrar su único pedido borra también el único registro de que Luis Pena es cliente de la
+cafetería, con todo y su teléfono, aunque el pedido y el cliente sean conceptualmente dos cosas
+distintas. Esa es la *anomalía de borrado*, y ocurre por la misma razón que la de inserción, dos
+hechos independientes atados a la misma fila, de modo que borrar uno arrastra al otro.
+
+Las tres anomalías comparten una causa común, que un solo atributo, el teléfono de Ana o los datos
+de contacto de Luis, termina mezclado en una fila que en realidad debería contener otra cosa, un
+pedido. El resto del tema formaliza esa intuición con un concepto preciso, el de dependencia
+funcional, y usa ese concepto para decidir, paso a paso, qué atributo pertenece a qué tabla.
+
+## Qué es una dependencia funcional
+
+Una *dependencia funcional* es una regla de negocio que dice que el valor de un atributo, o de un
+conjunto de atributos, determina de forma única el valor de otro. Silberschatz, Korth y Sudarshan lo
+formalizan así en *Database System Concepts*, dado un esquema de relación con atributos X y Y, se
+dice que X determina funcionalmente a Y, o que Y depende funcionalmente de X, si para dos filas
+cualesquiera de la tabla que tengan el mismo valor de X, esas dos filas también tienen que tener el
+mismo valor de Y. Elmasri y Navathe llegan a la misma idea con otra frase en *Fundamentals of
+Database Systems*, la dependencia funcional es una restricción entre dos conjuntos de atributos que
+se deriva del significado y de la interrelación real de los datos, no de la casualidad con que esos
+datos aparecen en un momento dado.
+
+Esa última precisión importa porque separa dos cosas que se confunden con facilidad, una regla de
+negocio verdadera y una coincidencia que solo se cumple en los datos que tienes delante en este
+momento. Antes de listar las dependencias de la tabla de pedidos conviene verlas dibujadas, porque
+el mapa completo deja claro de un vistazo cuáles atributos dependen de cuáles.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapa de dependencias funcionales de la tabla de pedidos: la llave primaria compuesta por Pedido y Producto determina a Cliente y a Valor respectivamente, y Cliente determina además a Teléfono, lo que crea una dependencia transitiva de Pedido hacia Teléfono" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="dba3t2a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cada atributo depende de una parte distinta de la llave compuesta</text>
+  <rect x="50" y="30" width="650" height="86" rx="10" fill="none" stroke="#cfd8e3" stroke-dasharray="4 4"/>
+  <text x="375" y="46" font-size="12" font-weight="600" fill="#5b6876" text-anchor="middle">llave primaria: (Pedido, Producto)</text>
+  <rect x="70" y="54" width="160" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="150" y="84" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <rect x="500" y="54" width="160" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="580" y="84" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Producto</text>
+  <path d="M150,104 L150,160" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t2a)"/>
+  <path d="M580,104 L580,160" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t2a)"/>
+  <rect x="70" y="162" width="160" height="50" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="150" y="192" font-size="13.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Cliente</text>
+  <rect x="500" y="162" width="160" height="50" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="580" y="192" font-size="13.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Valor</text>
+  <text x="260" y="140" font-size="11" fill="#5b6876" text-anchor="middle">Pedido determina Cliente</text>
+  <text x="660" y="140" font-size="11" fill="#5b6876" text-anchor="middle">Producto determina Valor</text>
+  <path d="M150,212 L150,258" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t2a)"/>
+  <rect x="60" y="260" width="180" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="150" y="290" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Teléfono</text>
+  <text x="380" y="300" font-size="11" fill="#5b6876" text-anchor="middle">Cliente determina Teléfono; por transitividad, Pedido también lo determina</text>
+</svg>
+
+:::
+
+Escritas en prosa, las dependencias funcionales de la tabla de pedidos son estas cuatro. Un `Pedido`
+determina a `Cliente`, porque cada pedido pertenece a un único cliente, nunca a dos a la vez. Un
+`Cliente` determina a `Teléfono`, porque la cafetería guarda un solo número de contacto por cliente.
+Un `Producto` determina a `Valor`, porque el precio de un producto en el catálogo no cambia de un
+pedido a otro. Y por una propiedad de las dependencias funcionales llamada transitividad, si `Pedido`
+determina a `Cliente` y `Cliente` determina a `Teléfono`, entonces `Pedido` también determina a
+`Teléfono`, aunque esa dependencia sea indirecta y pase por `Cliente` en el camino. Esa última
+dependencia, indirecta, es justo la que va a resolver la tercera forma normal más adelante.
+
+::: {.callout-tip}
+## Reto 1. Regla de negocio o coincidencia
+
+Para cada afirmación, marca si te parece una dependencia funcional real, una regla que la cafetería
+sostendría siempre, o si te parece que solo coincide con los cuatro pedidos de la tabla de arriba,
+sin que sea una regla garantizada.
+
+<label><input type="checkbox"> `Pedido` determina a `Cliente`</label><br>
+<label><input type="checkbox"> `Cliente` determina a `Teléfono`</label><br>
+<label><input type="checkbox"> `Teléfono` determina a `Cliente`</label><br>
+<label><input type="checkbox"> `Producto` determina a `Valor`</label><br>
+<label><input type="checkbox"> `Valor` determina a `Producto`</label><br>
+<label><input type="checkbox"> `Cliente` determina a `Pedido`</label>
+
+Para las que consideres coincidencia, describe en una frase una situación futura, sin cambiar la
+tabla de columnas, en la que esa afirmación dejaría de cumplirse.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+`Pedido` determina a `Cliente` es una dependencia funcional real, porque un pedido siempre pertenece
+a un único cliente, esa es una regla del negocio y no una coincidencia de esta muestra de datos.
+
+`Cliente` determina a `Teléfono` también es real, en la medida en que la cafetería decide guardar un
+solo número de contacto por cliente, así que mientras esa política se mantenga, esta dependencia se
+sostiene.
+
+`Teléfono` determina a `Cliente` es una coincidencia, no una regla. En esta muestra cada número de
+teléfono aparece asociado a un único cliente, pero nada impide que dos clientes distintos compartan
+un mismo número, por ejemplo una pareja que registra el teléfono de la casa para los dos, así que
+esta dependencia se rompería el día que eso ocurra.
+
+`Producto` determina a `Valor` es real si se asume que el precio del producto viene de un catálogo
+fijo y no cambia de un pedido a otro, que es la lectura más razonable de esta tabla.
+
+`Valor` determina a `Producto` es una coincidencia. En esta muestra cada valor corresponde a un
+producto distinto, café y torta y jugo cuestan cifras distintas, pero nada impide que dos productos
+distintos cuesten lo mismo, por ejemplo si la cafetería agrega una galleta que también cueste 4500,
+el mismo valor del café.
+
+`Cliente` determina a `Pedido` es falso incluso dentro de esta misma muestra, porque Ana Ruiz ya
+aparece asociada a tres pedidos distintos, el 1001, el 1002 y el 1004, así que un mismo valor de
+`Cliente` no determina un único valor de `Pedido`.
+:::
+
+## Primera forma normal: valores atómicos y una llave que sea de verdad
+
+La *primera forma normal*, o 1FN, exige dos cosas a la vez, según la formalización de Codd retomada
+por Elmasri y Navathe, que cada atributo contenga solo valores atómicos, es decir un único dato por
+celda y no una lista ni un grupo repetido, y que la tabla tenga definida una llave primaria capaz de
+identificar cada fila sin ambigüedad. La tabla de pedidos cumple la primera condición sin ningún
+cambio, cada celda guarda un único valor, ningún cliente aparece con dos teléfonos en la misma celda
+ni ningún pedido aparece con una lista de productos separados por comas. El trabajo real de esta
+sección está en la segunda condición, encontrar la llave primaria correcta.
+
+A primera vista, el atributo `Pedido` parece suficiente como llave, porque en esta muestra de cuatro
+filas cada número de pedido aparece una sola vez. Pero nada en el diseño de la tabla garantiza eso.
+Ya viste en la Unidad 2, en el Reto 2 de aquel tema, qué pasaría si el pedido 1002 de Ana hubiera
+incluido a la vez una torta y un jugo, con una tabla como esta, sin una columna que solo admita un
+producto por fila, la única forma de registrar los dos productos es repetir la fila completa del
+pedido 1002 dos veces, una por cada producto, cambiando solo `Producto` y `Valor`. Ese mismo caso
+hipotético revela algo sobre la llave de esta tabla, si dos filas pueden compartir el mismo número
+de pedido, `Pedido` por sí solo no alcanza para identificar una fila sin ambigüedad.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos filas hipotéticas con el mismo número de pedido, 1002, pero productos distintos, torta y jugo, el pedido se repite idéntico en las dos filas mientras que el producto cambia, lo que muestra que Pedido por sí solo no es una llave candidata y hace falta agregar Producto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Nada impide que un mismo pedido incluya más de un producto</text>
+  <rect x="200" y="40" width="360" height="52" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="62" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Pedido = 1002</text>
+  <text x="380" y="80" font-size="12" fill="#5b6876" text-anchor="middle">Producto = Torta</text>
+  <rect x="200" y="102" width="360" height="52" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="124" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Pedido = 1002</text>
+  <text x="380" y="142" font-size="12" fill="#5b6876" text-anchor="middle">Producto = Jugo</text>
+  <text x="380" y="180" font-size="11.5" fill="#5b6876" text-anchor="middle">Dos filas con el mismo Pedido, pero un Producto distinto: Pedido por sí solo no es candidata a llave</text>
+  <rect x="220" y="200" width="320" height="46" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="228" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">llave candidata real: (Pedido, Producto)</text>
+</svg>
+
+:::
+
+La llave primaria correcta de la tabla plana, entonces, es la combinación de `Pedido` y `Producto`,
+no `Pedido` solo. Con esa combinación como llave, la tabla ya cumple la 1FN completa, valores
+atómicos y una llave que identifica cada fila sin ambigüedad, aunque en la muestra concreta de
+cuatro filas cada pedido siga apareciendo una sola vez. La llave compuesta es la que hace posible,
+en las dos secciones siguientes, hablar con precisión de qué atributo depende de qué parte de esa
+llave.
+
+## Segunda forma normal: nada depende de una parte de la llave
+
+La *segunda forma normal*, o 2FN, exige que la tabla ya esté en 1FN y que, además, ningún atributo
+que no forme parte de la llave dependa de solo una parte de una llave compuesta, tiene que depender
+de la llave completa. Codd definió esta forma en 1971, en el artículo *Further Normalization of the
+Data Base Relational Model*, con el objetivo explícito de que la colección de tablas resultante fuera
+más fácil de entender y de mantener. Cuando un atributo depende de una parte de la llave nada más,
+se dice que tiene una *dependencia parcial*, y esa dependencia parcial es justo el problema que la
+2FN corrige.
+
+Con la llave `(Pedido, Producto)` ya establecida, toca revisar cada atributo que no es llave, que son
+`Cliente`, `Teléfono` y `Valor`, y preguntar de qué parte de la llave depende cada uno. `Cliente`
+depende solo de `Pedido`, no de `Producto`, porque el cliente de un pedido no cambia según qué
+producto se esté mirando. `Teléfono` depende también solo de `Pedido`, por la misma razón, y de forma
+transitiva por `Cliente`, como ya viste en el mapa de dependencias. `Valor` depende solo de
+`Producto`, no de `Pedido`, porque el precio de un producto es el mismo sin importar en cuál pedido
+aparezca, el café cuesta 4500 tanto en el pedido 1001 como en el 1003. Ningún atributo de la tabla
+depende de la llave completa `(Pedido, Producto)` a la vez, así que los tres violan la 2FN.
+
+::: {.callout-tip}
+## Reto 2. Encuentra la dependencia parcial
+
+Antes de seguir leyendo, revisa la tabla de pedidos ya con la llave `(Pedido, Producto)` en mente y
+responde en un párrafo corto. De los tres atributos que no son llave, `Cliente`, `Teléfono` y
+`Valor`, cuáles dependen de todo `Pedido` junto con todo `Producto` a la vez, y cuáles dependen de
+uno solo de los dos. Si el pedido 1002 de Ana incluyera también un jugo, además de la torta, qué
+valor tendría que repetirse en la nueva fila, y por qué eso es justo la definición de una
+dependencia parcial.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+Ninguno de los tres atributos depende de `Pedido` y `Producto` juntos, los tres dependen de uno solo
+de los dos. `Cliente` y `Teléfono` dependen únicamente de `Pedido`, mientras que `Valor` depende
+únicamente de `Producto`.
+
+Si el pedido 1002 de Ana incluyera también un jugo, la nueva fila repetiría el nombre de Ana y su
+teléfono, exactamente igual que en la fila de la torta, porque esos dos datos no tienen nada que ver
+con qué producto se está registrando en esa fila puntual, dependen solo del pedido. Esa repetición
+del mismo valor cada vez que cambia la parte de la llave que no lo determina es exactamente la
+dependencia parcial que corrige la 2FN, el atributo no necesita las dos partes de la llave para
+quedar determinado, le sobra una.
+:::
+
+Corregir la dependencia parcial exige separar la tabla en tres, agrupando cada atributo con la parte
+de la llave de la que depende.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La tabla plana en primera forma normal se descompone en tres tablas: Pedido con Cliente y Teléfono porque dependen solo de Pedido, Pedido_Producto como tabla de unión sin atributos propios, y Producto con Valor porque depende solo de Producto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="dba3t2c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cada atributo se agrupa con la parte de la llave de la que depende</text>
+  <rect x="220" y="30" width="320" height="56" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="52" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedidos, tras la 1FN</text>
+  <text x="380" y="70" font-size="11" fill="#5b6876" text-anchor="middle">llave: (Pedido, Producto)</text>
+  <path d="M340,86 C280,110 200,130 150,166" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t2c)"/>
+  <path d="M380,86 L380,166" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t2c)"/>
+  <path d="M420,86 C480,110 560,130 610,166" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t2c)"/>
+  <text x="220" y="132" font-size="10.5" fill="#5b6876" text-anchor="middle">Cliente y Teléfono</text>
+  <text x="220" y="145" font-size="10.5" fill="#5b6876" text-anchor="middle">dependen solo de Pedido</text>
+  <text x="545" y="132" font-size="10.5" fill="#5b6876" text-anchor="middle">Valor depende</text>
+  <text x="545" y="145" font-size="10.5" fill="#5b6876" text-anchor="middle">solo de Producto</text>
+  <rect x="30" y="168" width="230" height="66" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="145" y="190" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="145" y="207" font-size="11" fill="#5b6876" text-anchor="middle">Cliente, Teléfono</text>
+  <text x="145" y="222" font-size="10" fill="#5b6876" text-anchor="middle">llave: Pedido</text>
+  <rect x="290" y="168" width="200" height="66" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="390" y="190" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedido_Producto</text>
+  <text x="390" y="207" font-size="11" fill="#5b6876" text-anchor="middle">sin atributos propios</text>
+  <text x="390" y="222" font-size="10" fill="#5b6876" text-anchor="middle">llave: (Pedido, Producto)</text>
+  <rect x="520" y="168" width="210" height="66" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="625" y="190" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Producto</text>
+  <text x="625" y="207" font-size="11" fill="#5b6876" text-anchor="middle">Valor</text>
+  <text x="625" y="222" font-size="10" fill="#5b6876" text-anchor="middle">llave: Producto</text>
+  <text x="380" y="268" font-size="11.5" fill="#5b6876" text-anchor="middle">El café ya no repite su precio en cada pedido que lo incluye: vive una sola vez en la tabla Producto</text>
+</svg>
+
+:::
+
+La tabla `Pedido_Producto` queda sin ningún atributo propio, solo con la pareja de llaves foráneas
+que la forman, porque en esta tabla plana no hay ningún dato adicional, como una cantidad, que
+dependa de la combinación completa de pedido y producto. Si la cafetería quisiera registrar cuántas
+unidades de un producto lleva cada pedido, ese dato de cantidad sí dependería de las dos partes de la
+llave a la vez, y por eso se quedaría precisamente en esta tabla, no en ninguna de las otras dos, tal
+como ya viste con el atributo `cantidad` de `Detalle_Pedido` en el caso de la cafetería de la Unidad
+2.
+
+## Tercera forma normal: nada depende de un atributo que no es la llave
+
+La *tercera forma normal*, o 3FN, exige que la tabla ya esté en 2FN y que, además, ningún atributo
+que no es llave dependa de otro atributo que tampoco es llave. Cuando eso ocurre, se dice que hay una
+*dependencia transitiva*, un atributo A determina a un atributo B, que a su vez determina a un
+atributo C, así que C termina dependiendo de A de forma indirecta, pasando por B en el camino. Codd
+definió también esta forma en el mismo artículo de 1971, con la conjetura de que una tabla en 3FN
+extiende la vida útil de los programas que la usan, porque cambiar un atributo transitivo ya no
+obliga a tocar filas que en realidad hablan de otra cosa.
+
+La tabla `Pedido` que quedó tras la 2FN, con los atributos `Pedido`, `Cliente` y `Teléfono`, todavía
+tiene ese problema. `Pedido` determina a `Cliente`, eso es correcto y esperado, un pedido pertenece a
+un cliente. Pero `Cliente` determina a su vez a `Teléfono`, y ese `Teléfono` no depende directamente
+de `Pedido`, depende de `Cliente`, que tampoco es la llave de esta tabla. `Teléfono` termina
+dependiendo de `Pedido` solo de forma transitiva, pasando por `Cliente`, y esa es exactamente la
+dependencia transitiva que la 3FN prohíbe.
+
+::: {.callout-tip}
+## Reto 3. Cuenta las repeticiones
+
+Con la tabla `Pedido(Pedido, Cliente, Teléfono)` que quedó tras la 2FN, todavía con una fila por cada
+uno de los cuatro pedidos originales, responde antes de seguir leyendo. Cuántas veces aparece el
+número de teléfono de Ana Ruiz en esta tabla, y si Ana cambia de número, cuántas filas hay que
+corregir con esta estructura. Explica con tus palabras por qué la 2FN, por sí sola, no alcanzó a
+resolver esa repetición.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+El teléfono de Ana Ruiz aparece tres veces en la tabla `Pedido`, una por cada uno de sus tres
+pedidos, el 1001, el 1002 y el 1004, exactamente la misma cantidad de veces que en la tabla plana
+original. Si Ana cambia de número, hay que corregir las tres filas.
+
+La 2FN no resolvió esta repetición porque su regla solo mira la relación entre los atributos y la
+llave de la tabla, que en `Pedido(Pedido, Cliente, Teléfono)` es `Pedido` solamente. Tanto `Cliente`
+como `Teléfono` dependen de esa llave completa, así que ninguno de los dos viola la 2FN dentro de
+esta tabla. El problema real no está entre estos atributos y la llave, está entre dos atributos que
+no son llave, `Cliente` determina a `Teléfono`, y ese tipo de dependencia solo lo detecta la 3FN.
+:::
+
+La corrección separa `Cliente` y `Teléfono` en su propia tabla, dejando en `Pedido` solo una llave
+foránea hacia `Cliente`.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La tabla Pedido con Cliente y Teléfono, tras la segunda forma normal, tiene una dependencia transitiva porque Teléfono depende de Cliente y no directamente de Pedido, se descompone en una tabla Pedido con Cliente como llave foránea y una tabla Cliente con Teléfono, unidas por esa llave foránea" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="dba3t2d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Teléfono depende de Cliente, no directamente de Pedido</text>
+  <rect x="30" y="40" width="260" height="150" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="160" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedido, tras la 2FN</text>
+  <rect x="60" y="76" width="200" height="34" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="160" y="98" font-size="11.5" fill="#12324f" text-anchor="middle">Pedido (llave)</text>
+  <path d="M160,110 L160,124" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t2d)"/>
+  <rect x="60" y="126" width="200" height="34" rx="6" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="160" y="148" font-size="11.5" fill="#12324f" text-anchor="middle">Cliente</text>
+  <path d="M160,160 L160,174" fill="none" stroke="#0e6f6c" stroke-width="1.6" stroke-dasharray="3 3" marker-end="url(#dba3t2d)"/>
+  <text x="270" y="170" font-size="10" fill="#0e6f6c" text-anchor="start">transitiva</text>
+  <rect x="330" y="90" width="110" height="30" rx="6" fill="none" stroke="none"/>
+  <text x="385" y="108" font-size="11.5" font-weight="700" fill="#5b6876" text-anchor="middle">3FN separa</text>
+  <path d="M300,120 L440,120" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t2d)"/>
+  <rect x="470" y="40" width="170" height="60" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="555" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="555" y="80" font-size="11" fill="#5b6876" text-anchor="middle">Cliente (llave foránea)</text>
+  <rect x="560" y="140" width="170" height="60" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="645" y="162" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Cliente</text>
+  <text x="645" y="180" font-size="11" fill="#3c7d7a" text-anchor="middle">Teléfono</text>
+  <path d="M580,100 C590,120 610,130 620,138" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t2d)"/>
+  <text x="380" y="232" font-size="11.5" fill="#5b6876" text-anchor="middle">El teléfono de Ana ya vive una sola vez, en su fila de la tabla Cliente</text>
+</svg>
+
+:::
+
+Con esta última separación, la tabla de pedidos originales queda convertida en cuatro tablas, `Cliente`
+con `Teléfono`, `Pedido` con una llave foránea hacia `Cliente`, `Producto` con `Valor`, y
+`Pedido_Producto` como tabla de unión entre `Pedido` y `Producto`. Este resultado es equivalente en
+espíritu al diagrama entidad-relación completo que armaste en la Unidad 2 para el mismo negocio, tres
+entidades, `Cliente`, `Pedido` y `Producto`, conectadas por una relación uno a muchos y una relación
+muchos a muchos resuelta con tabla propia. Hay dos diferencias honestas que vale la pena marcar. La
+primera es que esta tabla plana nunca tuvo una columna de fecha, así que el `Pedido` que resulta de
+la normalización no la incluye, aunque el modelo entidad-relación de la Unidad 2 sí la tenía. La
+segunda es que, sin una columna de cantidad en los datos originales, `Pedido_Producto` queda sin
+atributos propios, mientras que `Detalle_Pedido` en la Unidad 2 sí llevaba `cantidad`. Ninguna de las
+dos diferencias es un error, son la consecuencia lógica de partir de datos distintos, un diagrama
+diseñado desde cero contra una tabla que ya existía con las columnas que alguien decidió guardarle en
+su momento. También queda pendiente, a propósito, decidir si `Cliente` debería identificarse por su
+nombre o por un identificador propio como el `id_cliente` de la Unidad 2, una decisión de llave que
+el Tema 3 va a formalizar junto con los tipos de dato y las restricciones de cada tabla.
+
+Con esta última tabla, ya puedes volver a las tres anomalías de la apertura del tema y confirmar que
+las tres desaparecieron. Cambiar el teléfono de Ana corrige una sola fila, la de `Cliente`, y sus
+tres pedidos siguen apuntando a ese mismo cliente sin que el teléfono se repita en ningún lado.
+Registrar un cliente nuevo del programa de fidelización ya no exige que tenga un pedido, porque
+`Cliente` es su propia tabla, independiente de `Pedido`. Y borrar el pedido 1003 ya no borra el
+teléfono de Luis Pena, porque ese dato vive en la tabla `Cliente`, no en la fila del pedido que se
+elimina.
+
+## Cuarta forma normal: dos hechos independientes no comparten tabla
+
+Las tres formas anteriores corrigen problemas causados por dependencias funcionales, un atributo
+determina a otro con un único valor posible. La *cuarta forma normal*, o 4FN, corrige un problema
+distinto, causado por una *dependencia multivaluada*, cuando un atributo determina, no un único
+valor de otro atributo, sino un conjunto entero de valores, y ese conjunto no depende de un tercer
+atributo que también esté en la misma tabla. Ronald Fagin definió este concepto y esta forma normal
+en 1977, en el artículo *Multivalued Dependencies and a New Normal Form for Relational Databases*,
+publicado en ACM Transactions on Database Systems. Una tabla está en 4FN cuando, para toda
+dependencia multivaluada no trivial que contenga, el atributo que determina es, por sí solo, una
+llave capaz de identificar cada fila.
+
+La tabla de pedidos de la cafetería no tiene, con las columnas que trae, ningún caso de dependencia
+multivaluada, así que conviene un ejemplo aparte, simple y distinto, para ver el problema con
+claridad. Imagina que la cafetería registra, para cada empleado de cocina, las habilidades que
+domina y los idiomas que habla, sin relación alguna entre unas y otros, un empleado puede saber
+preparar postres y hablar inglés, sin que eso tenga nada que ver con si también habla francés.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Marta domina dos habilidades, análisis de datos y diseño UX, y habla dos idiomas, inglés y francés, de forma independiente entre sí; una sola tabla que junte las tres columnas necesita las cuatro combinaciones posibles, mientras que separar habilidad e idioma en dos tablas evita esa multiplicación" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="dba3t2e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/>
+    </marker>
+  </defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Dos hechos independientes sobre Marta, multiplicados en una sola tabla</text>
+  <rect x="140" y="32" width="480" height="100" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="50" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">Empleado_Habilidad_Idioma (Empleado, Habilidad, Idioma)</text>
+  <text x="380" y="68" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Análisis de datos, Inglés</text>
+  <text x="380" y="84" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Análisis de datos, Francés</text>
+  <text x="380" y="100" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Diseño UX, Inglés</text>
+  <text x="380" y="116" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Diseño UX, Francés</text>
+  <path d="M380,132 L380,164" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#dba3t2e)"/>
+  <text x="470" y="152" font-size="10.5" fill="#5b6876" text-anchor="start">4FN separa las dos dependencias multivaluadas</text>
+  <rect x="110" y="170" width="260" height="70" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="240" y="192" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Empleado_Habilidad</text>
+  <text x="240" y="210" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Análisis de datos</text>
+  <text x="240" y="226" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Diseño UX</text>
+  <rect x="390" y="170" width="260" height="70" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="520" y="192" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Empleado_Idioma</text>
+  <text x="520" y="210" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Inglés</text>
+  <text x="520" y="226" font-size="11" fill="#5b6876" text-anchor="middle">Marta, Francés</text>
+  <text x="380" y="270" font-size="11.5" fill="#5b6876" text-anchor="middle">Agregar un tercer idioma ahora agrega una sola fila, no una por cada habilidad</text>
+</svg>
+
+:::
+
+Guardar las dos cosas en una sola tabla `Empleado_Habilidad_Idioma`, con las tres columnas juntas,
+obliga a escribir una fila por cada combinación posible entre las habilidades y los idiomas de un
+mismo empleado, aunque las dos cosas no tengan relación entre sí. Marta domina dos habilidades y
+habla dos idiomas, así que su información ocupa cuatro filas, dos por cada habilidad multiplicadas
+por los dos idiomas. Si Marta aprende un tercer idioma, portugués por ejemplo, hay que agregar dos
+filas nuevas, una por cada habilidad que ya tenía, para mantener el registro de todas las
+combinaciones, aunque el hecho nuevo, que habla portugués, no tenga nada que ver con sus habilidades.
+Esa es la redundancia que corrige la 4FN, separar `Habilidad` e `Idioma` en dos tablas propias, cada
+una con `Empleado` como parte de su llave, deja que agregar un idioma nuevo agregue exactamente una
+fila, sin tocar las habilidades para nada.
+
+::: {.callout-tip}
+## Reto 4. Otro caso de hechos independientes
+
+La cafetería también registra, para cada cliente frecuente, las formas de pago que suele usar
+(efectivo, tarjeta, aplicación del celular) y los apodos con los que el personal lo reconoce (su
+nombre, un apodo cariñoso, una seña particular), sin que unas cosas tengan relación con las otras.
+
+Si alguien propone guardar las tres columnas, `Cliente`, `FormaPago` y `Apodo`, en una sola tabla,
+explica en un párrafo qué le pasaría a esa tabla si un cliente tiene dos formas de pago registradas y
+dos apodos con los que lo conocen, y cómo la separarías en dos tablas siguiendo el mismo patrón del
+ejemplo de Marta.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+Con las tres columnas juntas, un cliente con dos formas de pago y dos apodos necesitaría cuatro
+filas, una por cada combinación entre una forma de pago y un apodo, exactamente igual que Marta con
+sus habilidades e idiomas, aunque la forma en que paga ese cliente no tenga ninguna relación con el
+apodo que usa el personal para reconocerlo. Agregar una tercera forma de pago, por ejemplo si empieza
+a pagar con una billetera digital nueva, obligaría a agregar una fila por cada apodo que ya tuviera
+registrado, una redundancia idéntica a la del ejemplo de Marta.
+
+La corrección separa las dos dependencias multivaluadas en dos tablas propias, `Cliente_FormaPago`
+con `Cliente` y `FormaPago`, y `Cliente_Apodo` con `Cliente` y `Apodo`, cada una con su propia llave
+compuesta por esos dos atributos. Agregar una forma de pago nueva entonces agrega una sola fila en
+`Cliente_FormaPago`, sin tocar `Cliente_Apodo` para nada.
+:::
+
+## Qué anomalía corrige cada forma normal
+
+Con las cuatro formas ya recorridas, conviene cerrar con el mapa completo, qué elimina cada una y qué
+anomalía concreta corrige en el caso de la cafetería.
+
+| Forma normal | Qué elimina | Anomalía que corrige en el caso de la cafetería |
+|---|---|---|
+| 1FN | Valores no atómicos y la falta de una llave que identifique cada fila sin ambigüedad | Evita que un pedido con varios productos se comprima en una fila con una lista de productos, lo que impediría agregar un producto sin reescribir la fila entera |
+| 2FN | Dependencia parcial de un atributo no clave sobre una parte de una llave compuesta | El precio de un producto deja de repetirse cada vez que ese producto aparece en un pedido distinto, como el café en los pedidos 1001 y 1003 |
+| 3FN | Dependencia transitiva de un atributo no clave sobre otro atributo no clave | Las tres anomalías clásicas sobre el teléfono de Ana, ya no hay que corregirlo en varias filas, ya se puede registrar un cliente sin pedidos, y borrar un pedido ya no borra el teléfono de nadie |
+| 4FN | Dependencias multivaluadas independientes mezcladas en la misma tabla | En el ejemplo de Marta, agregar un idioma nuevo ya no obliga a repetir una fila por cada habilidad que domina |
+
+Fíjate en un patrón dentro de esta tabla, la 2FN corrigió una redundancia real pero silenciosa, la
+del precio del producto, que ni siquiera estaba entre las tres anomalías con las que abrió el tema.
+Las tres anomalías clásicas de la Unidad 1, las que sí estaban ahí desde el principio, resultaron
+depender de una dependencia transitiva, así que hizo falta llegar hasta la 3FN para resolverlas del
+todo. Ese es justamente el motivo por el que la normalización se recorre en orden y no se detiene en
+la primera forma que parece razonable, un diseño puede parecer correcto y seguir escondiendo una
+anomalía que solo aparece al aplicar la siguiente regla.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía, los siguientes puntos:
+
+- [ ] Las tres anomalías clásicas, inserción, actualización y borrado, señaladas sobre filas y
+      columnas concretas de la tabla de pedidos
+- [ ] Qué es una dependencia funcional y la diferencia entre una regla de negocio real y una
+      coincidencia de los datos que tienes delante
+- [ ] Por qué `Pedido` por sí solo no es una llave candidata válida para la tabla plana, y por qué
+      `(Pedido, Producto)` sí lo es
+- [ ] La primera forma normal, valores atómicos más una llave que identifique cada fila sin
+      ambigüedad
+- [ ] La segunda forma normal, sin dependencia parcial de una llave compuesta, y por qué el precio
+      del producto violaba esa regla
+- [ ] La tercera forma normal, sin dependencia transitiva, y por qué resolvió las tres anomalías
+      clásicas que la 2FN dejó intactas
+- [ ] La cuarta forma normal, sin dependencias multivaluadas independientes mezcladas en la misma
+      tabla, con el ejemplo de las habilidades y los idiomas
+- [ ] La jerarquía completa de las cuatro formas normales y qué anomalía corrige cada una
+:::
+
+## Lo que sigue
+
+Hoy terminaste de construir cuatro tablas, `Cliente`, `Pedido`, `Producto` y `Pedido_Producto`,
+partiendo de una sola tabla plana con anomalías y aplicando un procedimiento formal en vez de un
+diagrama. El resultado es equivalente en espíritu al modelo entidad-relación que armaste en la
+Unidad 2 para el mismo negocio, y coherente con el mapeo que el Tema 1 de esta unidad aplicó sobre
+ese mismo diagrama, dos caminos distintos que llegan a una estructura de tablas parecida.
+
+Lo que todavía falta es precisar cada tabla al nivel de detalle con el que de verdad se construye una
+base de datos, qué tipo de dato guarda cada columna, cuál es la llave primaria exacta de cada tabla,
+cuáles son las llaves foráneas y qué restricciones garantizan que los datos se mantengan correctos.
+Ese es el trabajo del Tema 3, el último de esta unidad, que toma exactamente las tablas normalizadas
+de hoy como punto de partida.
+
+## Recursos
+
+- Codd, E. F. (1970). *A Relational Model of Data for Large Shared Data Banks.* Communications of the
+  ACM, 13(6). [Copia en la Universidad de Pensilvania](https://www.engineering.upenn.edu/~zives/03f/cis550/codd.pdf).
+- Codd, E. F. (1971). *Further Normalization of the Data Base Relational Model.* IBM Research Report
+  RJ909, San Jose, California. Artículo donde se definen formalmente la segunda y la tercera forma
+  normal. [Ficha bibliográfica en sigmod.org](http://www.sigmod.org/publications/dblp/db/labs/ibm/RJ909.html).
+- Fagin, R. (1977). *Multivalued Dependencies and a New Normal Form for Relational Databases.* ACM
+  Transactions on Database Systems, 2(3), 262 a 278. DOI:
+  [10.1145/320557.320571](https://doi.org/10.1145/320557.320571).
+- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Database System Concepts* (7.a ed.). Capítulo sobre
+  diseño de bases de datos relacionales, dependencias funcionales y formas normales. Material de
+  apoyo oficial de los autores en [db-book.com](https://www.db-book.com).
+- Elmasri, R. y Navathe, S. B. *Fundamentals of Database Systems.* Capítulo sobre fundamentos de
+  dependencias funcionales y normalización, y capítulo sobre algoritmos de diseño relacional y
+  formas normales adicionales.
+- Connolly, T. M. y Begg, C. E. *Database Systems: A Practical Approach to Design, Implementation,
+  and Management.* Capítulo sobre normalización, dependencias funcionales y anomalías de
+  actualización.
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

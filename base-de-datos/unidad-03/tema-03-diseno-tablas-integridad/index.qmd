@@ -1,0 +1,593 @@
+---
+title: "Tema 3. La tabla que vigila sus propias reglas, y las que se le escapan"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                |
+|--------|----------------------------------------------------------------|
+| Unidad | Unidad 3. Modelo relacional                                   |
+| Tema   | Tema 3. Tipos de datos, llaves, restricciones e integridad de los datos |
+:::
+
+[Diapositivas de la sesión](presentacion.qmd)
+
+Sea que llegaste hasta aquí trasladando directamente el diagrama entidad relación de la cafetería a
+sentencias `CREATE TABLE` básicas, como hizo el Tema 1, o normalizando paso a paso la tabla plana de
+pedidos hasta separarla en tablas limpias, como hizo el Tema 2, terminaste en los dos casos con el
+mismo resultado, un conjunto de tablas sin información repetida, cada dato en su lugar. Lo que ese
+resultado todavía no dice es de qué tipo exacto es cada columna, ni qué reglas obliga el propio motor
+de base de datos a cumplir para que esos datos limpios sigan siendo correctos con el tiempo, cuando
+alguien intente guardar un precio negativo, un pedido sin cliente o un cliente duplicado. Hoy cierras
+la Unidad 3 completando ese trabajo, con los tipos de datos que ofrece el estándar SQL, con las
+llaves que ya nombraste de pasada en temas anteriores llevadas a su definición completa, con las
+restricciones que declaran una regla de negocio directamente en la tabla, y con la frontera real entre
+lo que el motor puede vigilar solo y lo que sigue siendo trabajo de la aplicación.
+
+Todavía no hay un motor de base de datos elegido para este curso, así que toda la sintaxis de este
+tema es SQL estándar de referencia, la misma que documenta de forma pública y detallada PostgreSQL,
+uno de los motores más consistentes con el estándar y con su documentación abierta. Es sintaxis
+portable, que vas a poder ejecutar prácticamente igual sin importar cuál motor termine eligiendo el
+curso, y la práctica sobre un motor concreto sigue pendiente de esa decisión.
+
+## Los tipos de datos que ofrece SQL estándar
+
+Declarar una columna no es solo ponerle nombre, es decidir qué valores puede guardar, y esa decisión
+tiene consecuencias que aparecen meses después, cuando alguien descubre que un total no cuadra por un
+error de redondeo o que un nombre se cortó a la mitad porque la columna era demasiado angosta. El
+estándar SQL agrupa los tipos de datos en cuatro familias que cubren casi todo lo que una tabla de
+negocio necesita guardar, los números, el texto, la fecha y la hora, y el valor de verdadero o falso.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro categorías de tipos de datos SQL: numéricos, con entero, decimal exacto y punto flotante; texto, con longitud fija y longitud variable; fecha y hora; y booleano" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro categorías, la misma pregunta en cada una: qué valores caben aquí</text>
+  <rect x="16" y="38" width="172" height="182" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="200" y="38" width="172" height="182" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="384" y="38" width="172" height="182" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="568" y="38" width="172" height="182" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="102" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Numéricos</text>
+  <text x="102" y="86" font-size="10.6" fill="#5b6876" text-anchor="middle">entero</text>
+  <text x="102" y="102" font-size="10.6" fill="#5b6876" text-anchor="middle">SMALLINT, INTEGER</text>
+  <text x="102" y="126" font-size="10.6" fill="#0e6f6c" text-anchor="middle">decimal exacto</text>
+  <text x="102" y="142" font-size="10.6" fill="#3c7d7a" text-anchor="middle">DECIMAL(p,s)</text>
+  <text x="102" y="166" font-size="10.6" fill="#5b6876" text-anchor="middle">punto flotante</text>
+  <text x="102" y="182" font-size="10.6" fill="#5b6876" text-anchor="middle">REAL, DOUBLE PRECISION</text>
+  <text x="286" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Texto</text>
+  <text x="286" y="86" font-size="10.6" fill="#5b6876" text-anchor="middle">longitud fija</text>
+  <text x="286" y="102" font-size="10.6" fill="#5b6876" text-anchor="middle">CHAR(n)</text>
+  <text x="286" y="126" font-size="10.6" fill="#5b6876" text-anchor="middle">longitud variable</text>
+  <text x="286" y="142" font-size="10.6" fill="#5b6876" text-anchor="middle">VARCHAR(n)</text>
+  <text x="470" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Fecha y hora</text>
+  <text x="470" y="86" font-size="10.6" fill="#5b6876" text-anchor="middle">DATE, TIME</text>
+  <text x="470" y="102" font-size="10.6" fill="#5b6876" text-anchor="middle">TIMESTAMP</text>
+  <text x="654" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Booleano</text>
+  <text x="654" y="86" font-size="10.6" fill="#5b6876" text-anchor="middle">BOOLEAN</text>
+  <text x="654" y="102" font-size="10.6" fill="#5b6876" text-anchor="middle">true o false</text>
+  <text x="380" y="240" font-size="11" fill="#5b6876" text-anchor="middle">El decimal exacto, en verde, es la excepción dentro de los numéricos: guarda el valor tal cual, sin aproximar</text>
+</svg>
+
+:::
+
+Dentro de los numéricos hay tres subtipos que resuelven problemas distintos, y confundirlos es el
+error de tipo de dato que más se repite en estudiantes que recién empiezan. Un *entero*, declarado
+como `SMALLINT` o `INTEGER` según cuánto rango necesite, guarda cantidades sin parte decimal, como el
+identificador de un cliente o la cantidad de unidades de un pedido. Un *decimal exacto*, declarado
+como `DECIMAL(precision, escala)` o su sinónimo `NUMERIC(precision, escala)`, guarda un número con
+parte decimal donde la precisión es la cantidad total de dígitos significativos a ambos lados del
+punto y la escala es cuántos de esos dígitos van después del punto, así que `DECIMAL(10,2)` admite
+hasta ocho dígitos enteros y dos decimales, exactamente el molde de un valor de dinero en pesos con
+centavos. Un *punto flotante*, declarado como `REAL` o `DOUBLE PRECISION`, guarda un número aproximado
+que sacrifica exactitud a cambio de representar un rango mucho más amplio con menos espacio, la
+documentación de PostgreSQL lo describe sin rodeos, los valores de estos dos tipos son inexactos
+porque algunos números no se pueden convertir con exactitud al formato interno y quedan guardados
+como una aproximación.
+
+Esa palabra, inexacto, no es un detalle menor cuando la columna guarda dinero. Un experimento sencillo
+lo deja ver sin necesidad de ningún caso hipotético, sumar diez veces el valor 0.10 en un tipo de
+punto flotante de doble precisión y comparar el resultado contra 1.00.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparación verificada: sumar diez veces 0.10 en un tipo decimal exacto da 1.00 exacto, pero sumar diez veces 0.10 en un tipo de punto flotante de doble precisión da 0.9999999999999999, un resultado distinto de 1.00" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">La misma suma, dos tipos de dato, dos resultados</text>
+  <rect x="30" y="42" width="320" height="150" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="410" y="42" width="320" height="150" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="190" y="66" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">DECIMAL(10,2), diez pagos de 0.10</text>
+  <text x="190" y="102" font-size="20" font-weight="700" fill="#0e6f6c" text-anchor="middle">1.00</text>
+  <text x="190" y="124" font-size="10.6" fill="#3c7d7a" text-anchor="middle">cada 0.10 se guarda tal cual,</text>
+  <text x="190" y="140" font-size="10.6" fill="#3c7d7a" text-anchor="middle">la suma da exacto</text>
+  <text x="190" y="168" font-size="10.4" fill="#0e6f6c" text-anchor="middle">resultado correcto</text>
+  <text x="570" y="66" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">DOUBLE PRECISION, diez pagos de 0.10</text>
+  <text x="570" y="102" font-size="15.5" font-weight="700" fill="#12324f" text-anchor="middle">0.9999999999999999</text>
+  <text x="570" y="124" font-size="10.6" fill="#5b6876" text-anchor="middle">cada 0.10 se aproxima al</text>
+  <text x="570" y="140" font-size="10.6" fill="#5b6876" text-anchor="middle">binario más cercano</text>
+  <text x="570" y="168" font-size="10.4" fill="#5b6876" text-anchor="middle">distinto de 1.00</text>
+  <text x="380" y="222" font-size="11" fill="#5b6876" text-anchor="middle">Verificado en Python 3: sum([0.10] * 10) == 1.0 da False; con un tipo decimal, la misma suma da exacto</text>
+</svg>
+
+:::
+
+Ese resultado no es un capricho de Python, es el mismo problema que arrastra cualquier lenguaje o
+motor que use punto flotante binario, porque el valor 0.10 en base diez no tiene una representación
+exacta en base dos, así que cada suma acumula un pequeño error de redondeo que va creciendo. La
+documentación de PostgreSQL lo dice de forma explícita para el tipo decimal, se recomienda en
+especial para guardar cantidades de dinero y otras cantidades donde la exactitud es indispensable,
+porque sus cálculos, sumar, restar, multiplicar, dan resultados exactos siempre que sea posible. Un
+precio, un total de pedido o cualquier columna de dinero de este curso se declara `DECIMAL`, nunca
+`REAL` ni `DOUBLE PRECISION`, y el punto flotante queda reservado para cantidades donde un margen de
+error diminuto no cambia ninguna decisión, una medición de sensor o un promedio estadístico.
+
+Para el texto, la diferencia entre `CHAR(n)` y `VARCHAR(n)` está en qué pasa con el espacio que sobra.
+Un valor guardado en `CHAR(n)` se completa con espacios hasta llegar exactamente a `n` caracteres,
+aunque esos espacios de relleno no cuentan al comparar dos valores, mientras que un valor guardado en
+`VARCHAR(n)` ocupa solo el espacio que su contenido necesita, hasta un máximo de `n` caracteres, y
+cualquier espacio final que el usuario haya escrito sí se conserva. Esa diferencia hace que `CHAR`
+tenga sentido solo para campos de longitud verdaderamente fija, como un código de dos letras de país,
+y que `VARCHAR` sea la elección por defecto para nombres, direcciones o cualquier texto de longitud
+variable, que es la inmensa mayoría de las columnas de texto de una base de datos de negocio.
+
+Fecha y hora se declaran con tres tipos independientes según qué parte del tiempo importa, `DATE`
+guarda solo el día sin ninguna hora, `TIME` guarda solo la hora del día sin ninguna fecha, y
+`TIMESTAMP` guarda los dos datos juntos, la fecha completa con su hora. El booleano, declarado como
+`BOOLEAN`, guarda únicamente verdadero o falso, y reemplaza con una lectura mucho más clara la vieja
+costumbre de usar un entero 0 o 1 para lo mismo, una columna `activo BOOLEAN` se entiende sin
+necesitar ningún comentario, mientras que una columna `activo INTEGER` obliga a recordar qué número
+significa qué cosa.
+
+::: {.callout-tip}
+## Reto 1. Elige el tipo de dato correcto
+
+Para cada columna de la cafetería, marca el tipo de dato SQL que le corresponde antes de seguir
+leyendo, y para la primera explica además por qué el tipo que descartaste sería un error.
+
+<label><input type="checkbox"> El precio de un producto, con dos decimales de centavos</label><br>
+<label><input type="checkbox"> La cantidad de unidades de un producto dentro de un pedido</label><br>
+<label><input type="checkbox"> El nombre completo de un cliente, de longitud variable</label><br>
+<label><input type="checkbox"> Si un producto sigue disponible en el menú o se retiró</label><br>
+<label><input type="checkbox"> La fecha en la que se hizo un pedido, sin hora</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+El precio de un producto se declara `DECIMAL(10,2)`, nunca `REAL` ni `DOUBLE PRECISION`, porque es
+dinero, y un punto flotante puede acumular un error de redondeo como el de 0.9999999999999999 en vez
+de 1.00 que ya viste verificado arriba, un error que en un precio real se traduce en un total de
+venta que no cuadra con la suma de sus líneas.
+
+La cantidad de unidades es un entero, `INTEGER` o `SMALLINT` si el rango es pequeño, porque no tiene
+sentido pedir 2.5 unidades de un café. El nombre del cliente es `VARCHAR(80)` o una longitud similar,
+porque varía mucho de una persona a otra y `CHAR` desperdiciaría espacio rellenando con blancos los
+nombres cortos. La disponibilidad de un producto es `BOOLEAN`, disponible o no disponible sin ningún
+valor intermedio. La fecha del pedido es `DATE`, porque el negocio no necesita la hora exacta de cada
+pedido para nada de lo que se ha descrito hasta ahora.
+:::
+
+## Llaves, todas las que hacen falta
+
+Los Temas 1 y 2 de esta unidad ya usaron la palabra llave primaria y llave foránea sin detenerse en
+su definición completa, y con las tablas ya normalizadas es el momento de cerrar ese vocabulario. Una
+*llave candidata* es cualquier columna, o conjunto de columnas, cuyo valor identifica sin ambigüedad a
+una fila de la tabla, sin repetirse nunca entre dos filas distintas. Una tabla puede tener varias
+llaves candidatas a la vez, la cafetería, por ejemplo, podría identificar a un cliente tanto por un
+identificador interno que genera el sistema como por su número de documento de identidad, los dos
+sirven igual de bien para distinguir un cliente de otro.
+
+De todas las llaves candidatas que tenga una tabla, el diseño elige exactamente una para ser la
+*llave primaria*, y esa elección no es solo una etiqueta, trae consigo dos garantías que el propio
+motor hace cumplir sin que el diseñador tenga que pedirlas aparte, que su valor nunca se repite entre
+filas y que su valor nunca queda vacío. La documentación de PostgreSQL lo resume con una equivalencia
+exacta, declarar una columna como `PRIMARY KEY` es lo mismo que declararla `UNIQUE NOT NULL` a la
+vez. Las llaves candidatas que no se eligieron como primaria no desaparecen ni pierden su papel de
+identificar filas de forma única, siguen protegidas con la restricción `UNIQUE`, que exige valores
+sin repetir pero sí permite nulos, a diferencia de la llave primaria.
+
+Una *llave foránea* es la columna, o conjunto de columnas, que en una tabla guarda el valor de la
+llave primaria de otra tabla, para expresar que una fila de la primera está relacionada con una fila
+concreta de la segunda. La columna `cliente_id` de `Pedido` es la llave foránea que conecta cada
+pedido con el cliente que lo hizo, y su tipo de dato tiene que coincidir con el de la columna que
+referencia, un entero contra un entero, nunca un entero contra un texto.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tabla Cliente con id_cliente como llave primaria subrayada y documento como llave candidata marcada UNIQUE; tabla Pedido con id_pedido como llave primaria y cliente_id como llave foránea, con una flecha que conecta cliente_id con id_cliente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="dba3t3c" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro llaves, repartidas en dos tablas</text>
+  <rect x="30" y="42" width="290" height="200" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="175" y="64" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <text x="175" y="90" font-size="11.3" fill="#0e6f6c" text-anchor="middle" text-decoration="underline">id_cliente, llave primaria</text>
+  <text x="175" y="112" font-size="11.3" fill="#3c7d7a" text-anchor="middle">documento, llave candidata (UNIQUE)</text>
+  <text x="175" y="134" font-size="11.3" fill="#5b6876" text-anchor="middle">nombre</text>
+  <text x="175" y="154" font-size="11.3" fill="#5b6876" text-anchor="middle">teléfono</text>
+  <text x="175" y="174" font-size="11.3" fill="#5b6876" text-anchor="middle">activo</text>
+  <text x="175" y="204" font-size="10.4" fill="#5b6876" text-anchor="middle">dos llaves candidatas en esta tabla,</text>
+  <text x="175" y="220" font-size="10.4" fill="#5b6876" text-anchor="middle">solo una elegida primaria</text>
+  <rect x="440" y="42" width="290" height="150" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="585" y="64" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="585" y="90" font-size="11.3" fill="#0e6f6c" text-anchor="middle" text-decoration="underline">id_pedido, llave primaria</text>
+  <text x="585" y="112" font-size="11.3" fill="#5b6876" text-anchor="middle">fecha</text>
+  <text x="585" y="134" font-size="11.3" fill="#12324f" text-anchor="middle">cliente_id, llave foránea</text>
+  <path d="M440,117 C400,117 360,110 320,100" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t3c)"/>
+  <text x="380" y="252" font-size="11" fill="#5b6876" text-anchor="middle">cliente_id, en Pedido, guarda el mismo valor y el mismo tipo de dato que id_cliente, en Cliente</text>
+</svg>
+
+:::
+
+En sentencias `CREATE TABLE` se declara con la cláusula `REFERENCES`, escrita directamente en la
+columna cuando la llave foránea es una sola columna, o como una cláusula `FOREIGN KEY` aparte cuando
+son varias columnas a la vez, tal como sucede con `Detalle_Pedido`, cuya llave primaria compuesta,
+`pedido_id` y `producto_id`, referencia dos tablas distintas a la vez.
+
+```sql
+CREATE TABLE Cliente (
+    id_cliente  INT PRIMARY KEY,
+    documento   VARCHAR(20) NOT NULL UNIQUE,
+    nombre      VARCHAR(80) NOT NULL,
+    telefono    VARCHAR(20)
+);
+
+CREATE TABLE Pedido (
+    id_pedido   INT PRIMARY KEY,
+    cliente_id  INT NOT NULL REFERENCES Cliente(id_cliente)
+);
+```
+
+## Restricciones, lo que el motor exige en cada fila
+
+Una *restricción*, en inglés *constraint*, es una regla que el motor evalúa en cada fila antes de
+dejarla entrar o cambiar, y que rechaza la operación completa si la regla no se cumple. Además de
+`PRIMARY KEY`, `UNIQUE` y `REFERENCES`, que ya viste como formas de proteger una llave, hay dos
+restricciones más de uso constante en cualquier tabla de negocio.
+
+`NOT NULL` obliga a que una columna siempre tenga un valor, nunca vacío, y es la forma directa de
+traducir a SQL la participación total que estudiaste en la Unidad 2, una columna que representa el
+lado de una relación con participación total lleva `NOT NULL`, y una que representa participación
+parcial admite nulos por omisión. `CHECK` es la restricción más general de todas, porque acepta
+cualquier expresión booleana sobre los valores de la fila, y la documentación de PostgreSQL la
+describe con precisión, una restricción `CHECK` se satisface cuando la expresión se evalúa como
+verdadera o como nula, así que sirve para reglas de negocio simples que el motor puede comprobar
+mirando solo esa fila, un precio mayor que cero, una cantidad mayor que cero, una fecha de entrega
+posterior a la fecha del pedido.
+
+`DEFAULT` no rechaza ningún valor, resuelve el caso contrario, qué valor asignarle a una columna
+cuando quien inserta la fila no especificó ninguno. Un pedido nuevo cuya fecha nadie escribió a mano
+puede tomar la fecha del día con `DEFAULT CURRENT_DATE`, y un cliente nuevo puede nacer activo por
+defecto con `DEFAULT TRUE`, sin que la aplicación tenga que calcular ni enviar esos valores en cada
+inserción.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres restricciones que el motor evalua fila por fila antes de aceptarla, NOT NULL que exige un valor, CHECK que exige que una expresion booleana sea verdadera, y DEFAULT que rellena el valor cuando nadie lo escribio, las tres conviven en la misma columna" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="360" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Tres restricciones, tres momentos de la misma fila</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="44" width="200" height="92" rx="10"/><rect x="260" y="44" width="200" height="92" rx="10"/><rect x="500" y="44" width="200" height="92" rx="10"/></g>
+  <g text-anchor="middle" font-size="13.5" font-weight="700" fill="#12324f"><text x="120" y="70">NOT NULL</text><text x="360" y="70">CHECK</text><text x="600" y="70">DEFAULT</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876">
+    <text x="120" y="92">rechaza la fila si</text><text x="120" y="107">la columna llega</text><text x="120" y="122">vacia</text>
+    <text x="360" y="92">rechaza la fila si</text><text x="360" y="107">la expresion booleana</text><text x="360" y="122">es falsa</text>
+    <text x="600" y="92">rellena la columna</text><text x="600" y="107">si nadie envio</text><text x="600" y="122">un valor</text>
+  </g>
+  <rect x="210" y="166" width="300" height="40" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="360" y="191" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">se evaluan juntas sobre la misma columna</text>
+</svg>
+
+:::
+
+```sql
+CREATE TABLE Producto (
+    id_producto INT PRIMARY KEY,
+    nombre      VARCHAR(80) NOT NULL,
+    precio      DECIMAL(10,2) NOT NULL CHECK (precio > 0)
+);
+
+CREATE TABLE Pedido (
+    id_pedido   INT PRIMARY KEY,
+    fecha       DATE NOT NULL DEFAULT CURRENT_DATE,
+    cliente_id  INT NOT NULL REFERENCES Cliente(id_cliente)
+);
+```
+
+::: {.callout-tip}
+## Reto 2. Encuentra el error de este diseño
+
+Un compañero de curso propone esta forma de guardar el total de cada pedido de la cafetería:
+
+```sql
+CREATE TABLE Pedido (
+    id_pedido   INT PRIMARY KEY,
+    fecha       DATE NOT NULL DEFAULT CURRENT_DATE,
+    cliente_id  INT NOT NULL REFERENCES Cliente(id_cliente),
+    total       REAL
+);
+```
+
+Antes de leer la solución, responde en un párrafo corto qué tipo de dato usarías en vez de `REAL`
+para la columna `total`, y qué restricción le agregarías además del tipo, para que la tabla rechace
+un total que nunca debería existir.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La columna `total` guarda dinero, así que debería ser `DECIMAL(10,2)` y no `REAL`, por la misma razón
+que ya viste con el precio de un producto, un punto flotante puede acumular un error de redondeo que
+haga que el total guardado no coincida exactamente con la suma real de las líneas del pedido. Además
+del cambio de tipo, conviene agregar una restricción `CHECK (total >= 0)`, porque un total negativo no
+tiene ningún sentido de negocio y el motor puede rechazarlo sin que la aplicación tenga que
+verificarlo por su cuenta.
+
+```sql
+total DECIMAL(10,2) NOT NULL CHECK (total >= 0)
+```
+:::
+
+## Integridad de entidad y referencial, qué garantiza cada una
+
+Con las llaves y las restricciones ya definidas, dos nombres reúnen lo que el modelo relacional
+garantiza sobre una base de datos bien diseñada. La *integridad de entidad* dice que la llave primaria
+de una tabla nunca queda nula y nunca se repite entre dos filas, la misma garantía que ya viste al
+definir `PRIMARY KEY` como equivalente a `UNIQUE NOT NULL`. La *integridad referencial* dice que toda
+llave foránea que tiene un valor apunta a una fila que de verdad existe en la tabla referenciada, así
+que nunca hay un `cliente_id` en `Pedido` que no corresponda a ningún cliente real, el motor rechaza
+esa inserción antes de que ocurra.
+
+Lo que la integridad referencial no resuelve por sí sola es qué pasa en la dirección contraria, cuando
+alguien intenta borrar o modificar la fila referenciada mientras todavía existen filas que dependen de
+ella. Para eso, la declaración de una llave foránea acepta una política explícita con `ON DELETE` y
+`ON UPDATE`, con tres opciones de uso frecuente. `RESTRICT` impide el borrado o la modificación
+mientras existan filas que dependan de esa fila, y deja la decisión final en manos de quien opera la
+base de datos. `CASCADE` propaga el cambio, si se borra la fila referenciada se borran también todas
+las filas que dependían de ella, y si se actualiza su llave, el nuevo valor se copia a todas las
+llaves foráneas que la referenciaban. `SET NULL` deja huérfana la fila dependiente en vez de borrarla,
+poniendo su llave foránea en nulo, una opción que solo es posible si esa columna admite nulos, es
+decir si no lleva `NOT NULL`.
+
+Elegir entre las tres no es una decisión técnica aislada, es una decisión de negocio, y el caso de un
+cliente de la cafetería que ya tiene pedidos registrados sirve para verlo con claridad.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Qué pasa si se intenta borrar un cliente que ya tiene pedidos, según la política de la llave foránea: con CASCADE se borran también sus pedidos y se pierde el historial de ventas; con SET NULL la columna cliente_id no puede quedar nula porque es NOT NULL, así que esta opción no aplica aquí; con RESTRICT el motor rechaza el borrado del cliente mientras existan pedidos suyos, que es la política elegida" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Borrar un cliente con pedidos: tres políticas, tres resultados</text>
+  <rect x="16" y="38" width="228" height="176" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="266" y="38" width="228" height="176" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="516" y="38" width="228" height="176" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="130" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">ON DELETE CASCADE</text>
+  <text x="130" y="88" font-size="10.6" fill="#5b6876" text-anchor="middle">se borran también los</text>
+  <text x="130" y="104" font-size="10.6" fill="#5b6876" text-anchor="middle">pedidos de ese cliente</text>
+  <text x="130" y="132" font-size="10.6" fill="#b23b3b" text-anchor="middle">se pierde el historial</text>
+  <text x="130" y="148" font-size="10.6" fill="#b23b3b" text-anchor="middle">real de ventas</text>
+  <text x="380" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">ON DELETE SET NULL</text>
+  <text x="380" y="88" font-size="10.6" fill="#5b6876" text-anchor="middle">cliente_id quedaría nulo</text>
+  <text x="380" y="104" font-size="10.6" fill="#5b6876" text-anchor="middle">en cada pedido</text>
+  <text x="380" y="132" font-size="10.6" fill="#b23b3b" text-anchor="middle">no aplica: cliente_id</text>
+  <text x="380" y="148" font-size="10.6" fill="#b23b3b" text-anchor="middle">es NOT NULL</text>
+  <text x="630" y="62" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">ON DELETE RESTRICT</text>
+  <text x="630" y="88" font-size="10.6" fill="#3c7d7a" text-anchor="middle">el motor rechaza el</text>
+  <text x="630" y="104" font-size="10.6" fill="#3c7d7a" text-anchor="middle">borrado del cliente</text>
+  <text x="630" y="132" font-size="10.6" fill="#0e6f6c" text-anchor="middle">el historial de ventas</text>
+  <text x="630" y="148" font-size="10.6" fill="#0e6f6c" text-anchor="middle">queda protegido</text>
+  <text x="630" y="176" font-size="10.4" fill="#0e6f6c" text-anchor="middle">política elegida</text>
+  <text x="380" y="252" font-size="11" fill="#5b6876" text-anchor="middle">CASCADE borra historial real; SET NULL exige que la columna admita nulos, y aquí no los admite</text>
+  <text x="380" y="270" font-size="11" fill="#5b6876" text-anchor="middle">RESTRICT es la política que respeta la participación total de Pedido en la relación (Unidad 2)</text>
+</svg>
+
+:::
+
+`CASCADE` queda descartada porque borraría el historial real de ventas de la cafetería junto con el
+cliente, `SET NULL` queda descartada porque `cliente_id` es `NOT NULL`, exactamente la misma
+participación total que la Unidad 2 ya había marcado para esa relación, así que la política que
+corresponde es `RESTRICT`, que impide borrar un cliente mientras existan pedidos suyos y obliga a
+quien administra la base de datos a decidir explícitamente qué hacer con esos pedidos antes de poder
+borrarlo. La relación entre `Detalle_Pedido` y `Pedido` es distinta, porque una línea de detalle no
+tiene ningún sentido de negocio sin el pedido al que pertenece, así que borrar un pedido sí debe
+arrastrar el borrado de sus líneas de detalle, ahí `CASCADE` es la política correcta.
+
+::: {.callout-tip}
+## Reto 3. Elige la política para una tabla nueva
+
+La cafetería agrega una tabla `Empleado`, con `id_empleado` como llave primaria, y la tabla `Pedido`
+gana una columna nueva, `empleado_id`, la llave foránea que registra quién atendió cada pedido. Un
+empleado puede dejar de trabajar en la cafetería sin que eso borre los pedidos que atendió mientras
+trabajaba ahí.
+
+Responde en un párrafo, cuál de las tres políticas de `ON DELETE` le pondrías a `empleado_id`, y si
+esa columna debería declararse `NOT NULL` o admitir nulos, sabiendo que el negocio sí necesita poder
+borrar el registro de un empleado que ya no trabaja ahí.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+Aquí la política correcta es `SET NULL`, distinta del caso de `Cliente`. El negocio sí quiere poder
+borrar el registro de un empleado que se fue, sin que eso le impida borrarlo ni le borre los pedidos
+que atendió, así que la columna `empleado_id` debe admitir nulos, sin `NOT NULL`, para que al borrar
+el empleado el pedido conserve su historial con `empleado_id` en blanco en vez de desaparecer o de
+bloquear el borrado. `RESTRICT` sería un error aquí porque le impediría a la cafetería borrar el
+registro de cualquier empleado que alguna vez haya atendido un pedido, y `CASCADE` sería un error
+todavía peor, porque borraría pedidos reales solo porque el empleado que los atendió ya no trabaja
+ahí. La diferencia con `Cliente` está en la participación, `Pedido` participa de forma total en su
+relación con `Cliente`, pero nada obliga a que todo pedido tenga un empleado identificado para
+siempre, así que aquí sí tiene sentido dejar la columna en nulo.
+:::
+
+## Lo que el motor puede vigilar y lo que le toca a la aplicación
+
+No toda regla de negocio cabe dentro de una restricción `CHECK`. La propia documentación de
+PostgreSQL marca el límite con precisión, una restricción `CHECK` no puede referenciar datos de la
+tabla distintos de la fila nueva o actualizada que se está revisando, así que solo puede mirar los
+valores de esa misma fila, nunca el contenido de otra tabla ni un cálculo que dependa de varias filas
+a la vez. `CHECK (precio > 0)` funciona porque compara la columna `precio` contra un número fijo,
+sin necesitar mirar nada fuera de esa fila.
+
+Una regla que sí necesita mirar otras filas, y que por lo tanto el motor no puede vigilar solo con un
+`CHECK`, aparece si la cafetería decidiera ofrecer crédito a sus clientes frecuentes, con un límite de
+crédito fijo por cliente, y una regla que diga que la suma de los pedidos pendientes de pago de un
+cliente nunca puede superar ese límite. Comprobar esa regla exige sumar el valor de todos los pedidos
+pendientes de ese cliente en la tabla `Pedido` en el momento exacto de insertar un pedido nuevo, un
+cálculo sobre muchas filas de otra tabla, no un valor fijo dentro de la misma fila que se está
+insertando.
+
+Caso de estudio. Un cliente de la cafetería tiene un límite de crédito de cierto valor fijado por el
+negocio, y ya acumula pedidos pendientes de pago cercanos a ese límite. Llega un pedido nuevo que, sumado
+a los pendientes, superaría el límite. ¿Puede una restricción `CHECK` sobre la tabla `Pedido`
+rechazar ese pedido por sí sola?
+
+No puede, porque el valor que hay que comparar contra el límite no vive en la fila que se está
+insertando, vive repartido en todas las filas anteriores de `Pedido` que pertenecen a ese cliente, y
+una restricción `CHECK` no tiene forma estándar de sumar filas de la propia tabla ni de otra tabla
+para decidir si deja pasar la fila nueva. Esa regla necesita código que corra antes o durante la
+inserción, en la aplicación que atiende al cajero, o en un mecanismo del motor más avanzado que un
+`CHECK` simple, como un disparador, que queda fuera del alcance de este curso. La línea que separa las
+dos cosas es exactamente esa, un `CHECK` vigila una fila contra un valor fijo o contra otras columnas
+de la misma fila, y todo lo que dependa de sumar, contar o consultar otras filas se queda del lado de
+la aplicación.
+
+## Las tablas finales de la cafetería, completas
+
+Con los tipos de datos, las llaves, las restricciones y las políticas de borrado ya decididas, este
+es el mapa completo de integridad que van a seguir las cuatro tablas de la cafetería, listo para
+convertirse en las sentencias `CREATE TABLE` que va a usar la Unidad 4 para escribir sus primeras
+consultas.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapa final de integridad de las cuatro tablas de la cafetería: Cliente y Producto sin llaves foráneas propias; Pedido con cliente_id NOT NULL referenciando a Cliente con política RESTRICT; Detalle_Pedido con pedido_id referenciando a Pedido con política CASCADE y producto_id referenciando a Producto con política RESTRICT" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="dba3t3e" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El mapa completo de integridad, antes del CREATE TABLE final</text>
+  <rect x="20" y="38" width="180" height="66" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="110" y="58" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <text x="110" y="76" font-size="10.8" fill="#5b6876" text-anchor="middle">id_cliente (PK)</text>
+  <text x="110" y="92" font-size="10.8" fill="#5b6876" text-anchor="middle">documento (UNIQUE)</text>
+  <rect x="290" y="38" width="190" height="66" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="385" y="58" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Pedido</text>
+  <text x="385" y="76" font-size="10.8" fill="#3c7d7a" text-anchor="middle">id_pedido (PK), fecha</text>
+  <text x="385" y="92" font-size="10.8" fill="#3c7d7a" text-anchor="middle">cliente_id NOT NULL (FK)</text>
+  <path d="M290,71 L200,71" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t3e)"/>
+  <text x="245" y="122" font-size="10.4" fill="#0e6f6c" text-anchor="middle">RESTRICT</text>
+  <rect x="580" y="38" width="160" height="66" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="660" y="58" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Producto</text>
+  <text x="660" y="76" font-size="10.8" fill="#5b6876" text-anchor="middle">id_producto (PK)</text>
+  <text x="660" y="92" font-size="10.8" fill="#5b6876" text-anchor="middle">precio, CHECK &gt; 0</text>
+  <rect x="240" y="200" width="290" height="80" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="385" y="220" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Detalle_Pedido</text>
+  <text x="385" y="238" font-size="10.8" fill="#5b6876" text-anchor="middle">pedido_id, producto_id NOT NULL</text>
+  <text x="385" y="254" font-size="10.8" fill="#5b6876" text-anchor="middle">cantidad, CHECK &gt; 0, DEFAULT 1</text>
+  <text x="385" y="270" font-size="10.4" fill="#0e6f6c" text-anchor="middle">clave primaria compuesta</text>
+  <path d="M385,198 L385,110" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t3e)"/>
+  <text x="405" y="160" font-size="10.4" fill="#0e6f6c" text-anchor="middle">CASCADE</text>
+  <path d="M530,225 C600,225 650,150 660,108" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t3e)"/>
+  <text x="600" y="180" font-size="10.4" fill="#0e6f6c" text-anchor="middle">RESTRICT</text>
+</svg>
+
+:::
+
+```sql
+CREATE TABLE Cliente (
+    id_cliente  INT PRIMARY KEY,
+    documento   VARCHAR(20) NOT NULL UNIQUE,
+    nombre      VARCHAR(80) NOT NULL,
+    telefono    VARCHAR(20),
+    activo      BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE Producto (
+    id_producto INT PRIMARY KEY,
+    nombre      VARCHAR(80) NOT NULL,
+    precio      DECIMAL(10,2) NOT NULL CHECK (precio > 0)
+);
+
+CREATE TABLE Pedido (
+    id_pedido   INT PRIMARY KEY,
+    fecha       DATE NOT NULL DEFAULT CURRENT_DATE,
+    cliente_id  INT NOT NULL REFERENCES Cliente(id_cliente)
+                    ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE Detalle_Pedido (
+    pedido_id   INT NOT NULL REFERENCES Pedido(id_pedido)
+                    ON DELETE CASCADE ON UPDATE CASCADE,
+    producto_id INT NOT NULL REFERENCES Producto(id_producto)
+                    ON DELETE RESTRICT ON UPDATE CASCADE,
+    cantidad    INT NOT NULL DEFAULT 1 CHECK (cantidad > 0),
+    PRIMARY KEY (pedido_id, producto_id)
+);
+```
+
+Fíjate en cuánto cambió cada tabla frente a la versión básica del Tema 1, sin que ninguna columna
+haya cambiado de lugar ni de nombre. `Cliente` ganó `documento` como llave candidata protegida con
+`UNIQUE`, y `activo` con su valor por defecto. `Producto` ganó su `CHECK` de precio positivo. `Pedido`
+ganó la política `RESTRICT` que protege el historial de ventas frente a un borrado de cliente, y una
+fecha que se completa sola si nadie la especifica. `Detalle_Pedido` ganó la política `CASCADE` hacia
+`Pedido`, porque una línea de detalle no sobrevive a su pedido, la política `RESTRICT` hacia
+`Producto`, porque un producto que ya se vendió no se puede borrar sin perder ese historial, y un
+`CHECK` que impide una cantidad de cero o negativa. Ninguna de estas reglas depende de qué motor
+termine eligiendo el curso, todas son sintaxis SQL estándar.
+
+## Cierre de la Unidad 3
+
+Con este tema se cierra la Unidad 3. El Tema 1 tomó el diagrama entidad relación de la cafetería que
+había quedado dibujado al final de la Unidad 2 y lo tradujo a sentencias `CREATE TABLE` básicas, cada
+entidad convertida en tabla, cada relación resuelta con una llave foránea o con una tabla propia. El
+Tema 2 tomó la tabla plana de pedidos con la que había arrancado la Unidad 1 y la llevó, forma por
+forma, de la primera a la cuarta forma normal, hasta demostrar con reglas explícitas que el diseño
+final elimina la redundancia y no solo la esconde mejor. Hoy completaste ese trabajo con los tipos de
+datos exactos de cada columna, las cuatro llaves que protegen la identidad de cada fila y la relación
+entre tablas, las restricciones que declaran una regla de negocio directamente en el esquema, y la
+frontera real entre lo que el motor puede vigilar solo y lo que sigue necesitando código en la
+aplicación.
+
+Las cuatro tablas de la cafetería que quedaron completas en este tema, `Cliente`, `Producto`,
+`Pedido` y `Detalle_Pedido`, son exactamente las que la Unidad 4 va a usar para escribir las primeras
+consultas SQL del curso, cómo se procesa una consulta, cómo se comparan conjuntos de filas entre
+tablas, y cómo se agrupan y se resumen datos con `GROUP BY` y `HAVING`. El diseño de hoy no es un
+ejercicio aparte, es la base de datos exacta sobre la que va a correr cada consulta de la unidad
+siguiente.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía, los siguientes puntos:
+
+- [ ] Las cuatro categorías de tipos de datos SQL, numéricos, texto, fecha y hora, y booleano, con
+      al menos dos subtipos dentro de los numéricos
+- [ ] Por qué un decimal exacto y no un punto flotante es la elección correcta para guardar dinero,
+      con el error de redondeo verificado de 0.9999999999999999 como evidencia
+- [ ] La diferencia entre llave candidata, llave primaria, llave foránea y restricción `UNIQUE`
+- [ ] Qué garantizan `NOT NULL`, `CHECK` y `DEFAULT`, y en qué se diferencia cada una de las tres
+- [ ] Qué garantiza la integridad de entidad y qué garantiza la integridad referencial
+- [ ] Las tres políticas de una llave foránea ante un borrado o una actualización, `CASCADE`,
+      `RESTRICT` y `SET NULL`, con un criterio claro para elegir entre ellas
+- [ ] Por qué una restricción `CHECK` puede vigilar un precio positivo pero no puede vigilar una
+      regla que dependa de sumar filas de otra tabla, como un límite de crédito
+:::
+
+## Recursos
+
+- [PostgreSQL 17, Numeric Types](https://www.postgresql.org/docs/current/datatype-numeric.html).
+  Documentación oficial sobre tipos enteros, decimal exacto y punto flotante, y la recomendación
+  explícita de usar `numeric` para cantidades de dinero.
+- [PostgreSQL 17, Character Types](https://www.postgresql.org/docs/current/datatype-character.html).
+  Diferencia documentada entre `character(n)`, `character varying(n)` y `text`.
+- [PostgreSQL 17, Date/Time Types](https://www.postgresql.org/docs/current/datatype-datetime.html).
+  Los tipos `date`, `time`, `timestamp` y `timestamp with time zone`.
+- [PostgreSQL 17, Constraints](https://www.postgresql.org/docs/current/ddl-constraints.html).
+  Sintaxis y semántica completa de `NOT NULL`, `CHECK`, `UNIQUE`, `PRIMARY KEY` y `FOREIGN KEY`, con
+  las políticas `ON DELETE` y `ON UPDATE`.
+- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Database System Concepts* (7.a ed.). Capítulos sobre
+  el modelo relacional, restricciones de integridad y definición de esquemas en SQL. Material de
+  apoyo oficial en [db-book.com](https://www.db-book.com).
+- Elmasri, R. y Navathe, S. B. *Fundamentals of Database Systems.* Capítulo sobre restricciones del
+  modelo relacional e integridad referencial.
+- Connolly, T. M. y Begg, C. E. *Database Systems: A Practical Approach to Design, Implementation, and
+  Management.* Capítulo sobre SQL de definición de datos, restricciones y reglas de negocio.
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

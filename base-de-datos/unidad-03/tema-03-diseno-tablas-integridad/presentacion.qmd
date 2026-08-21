@@ -1,0 +1,294 @@
+---
+title: "Tema 3. La tabla que vigila sus propias reglas, y las que se le escapan"
+subtitle: "Base de datos (DBA03). Unidad 3"
+author: "Oscar Leonel Sánchez Conde"
+format:
+  revealjs:
+    theme: [default, ../../../estilos/presentacion.scss]
+    slide-number: true
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Hoy {.center}
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Tipos de datos]{.titulo}
+
+Numéricos, texto, fecha y hora, booleano. Por qué el dinero exige un decimal exacto.
+:::
+
+::: {.tarjeta}
+[Llaves]{.titulo}
+
+Candidata, primaria, foránea, y la restricción UNIQUE para la que no se eligió.
+:::
+
+::: {.clave}
+[Restricciones e integridad]{.titulo}
+
+NOT NULL, CHECK, DEFAULT, y las políticas CASCADE, RESTRICT, SET NULL.
+:::
+
+::: {.tarjeta}
+[El límite del motor]{.titulo}
+
+Qué puede vigilar un CHECK y qué le toca a la aplicación.
+:::
+:::
+
+::: {.pie-diapositiva}
+Base de datos (DBA03). Semestre 2026-02.
+:::
+
+## De tablas limpias a tablas completas {.center}
+
+::: {.destacado}
+El Tema 1 tradujo el diagrama entidad relación a `CREATE TABLE` básicas. El Tema 2 normalizó la
+tabla plana de pedidos. Ninguno de los dos definió todavía tipos de dato ni restricciones.
+:::
+
+Hoy cierras la Unidad 3 con eso, sobre las mismas tablas de la cafetería.
+
+## Sin motor decidido, sintaxis estándar {.center}
+
+::: {.neutro}
+La sintaxis de hoy es SQL estándar, documentada de forma pública por PostgreSQL. Es portable entre
+motores. La práctica sobre un motor concreto sigue pendiente de esa decisión.
+:::
+
+## Cuatro categorías de tipos {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro categorías de tipos de datos SQL: numéricos, con entero, decimal exacto y punto flotante; texto, con longitud fija y longitud variable; fecha y hora; y booleano" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro categorías, la misma pregunta en cada una: qué valores caben aquí</text>
+  <rect x="16" y="38" width="172" height="182" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="200" y="38" width="172" height="182" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="384" y="38" width="172" height="182" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="568" y="38" width="172" height="182" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="102" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Numéricos</text>
+  <text x="102" y="86" font-size="10.6" fill="#5b6876" text-anchor="middle">entero</text>
+  <text x="102" y="102" font-size="10.6" fill="#5b6876" text-anchor="middle">SMALLINT, INTEGER</text>
+  <text x="102" y="126" font-size="10.6" fill="#0e6f6c" text-anchor="middle">decimal exacto</text>
+  <text x="102" y="142" font-size="10.6" fill="#3c7d7a" text-anchor="middle">DECIMAL(p,s)</text>
+  <text x="102" y="166" font-size="10.6" fill="#5b6876" text-anchor="middle">punto flotante</text>
+  <text x="102" y="182" font-size="10.6" fill="#5b6876" text-anchor="middle">REAL, DOUBLE PRECISION</text>
+  <text x="286" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Texto</text>
+  <text x="286" y="86" font-size="10.6" fill="#5b6876" text-anchor="middle">longitud fija</text>
+  <text x="286" y="102" font-size="10.6" fill="#5b6876" text-anchor="middle">CHAR(n)</text>
+  <text x="286" y="126" font-size="10.6" fill="#5b6876" text-anchor="middle">longitud variable</text>
+  <text x="286" y="142" font-size="10.6" fill="#5b6876" text-anchor="middle">VARCHAR(n)</text>
+  <text x="470" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Fecha y hora</text>
+  <text x="470" y="86" font-size="10.6" fill="#5b6876" text-anchor="middle">DATE, TIME</text>
+  <text x="470" y="102" font-size="10.6" fill="#5b6876" text-anchor="middle">TIMESTAMP</text>
+  <text x="654" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Booleano</text>
+  <text x="654" y="86" font-size="10.6" fill="#5b6876" text-anchor="middle">BOOLEAN</text>
+  <text x="654" y="102" font-size="10.6" fill="#5b6876" text-anchor="middle">true o false</text>
+  <text x="380" y="240" font-size="11" fill="#5b6876" text-anchor="middle">El decimal exacto, en verde, es la excepción dentro de los numéricos: guarda el valor tal cual, sin aproximar</text>
+</svg>
+
+:::
+
+## El error que sí se puede medir {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparación verificada: sumar diez veces 0.10 en un tipo decimal exacto da 1.00 exacto, pero sumar diez veces 0.10 en un tipo de punto flotante de doble precisión da 0.9999999999999999, un resultado distinto de 1.00" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">La misma suma, dos tipos de dato, dos resultados</text>
+  <rect x="30" y="42" width="320" height="150" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="410" y="42" width="320" height="150" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="190" y="66" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">DECIMAL(10,2), diez pagos de 0.10</text>
+  <text x="190" y="102" font-size="20" font-weight="700" fill="#0e6f6c" text-anchor="middle">1.00</text>
+  <text x="190" y="124" font-size="10.6" fill="#3c7d7a" text-anchor="middle">cada 0.10 se guarda tal cual,</text>
+  <text x="190" y="140" font-size="10.6" fill="#3c7d7a" text-anchor="middle">la suma da exacto</text>
+  <text x="190" y="168" font-size="10.4" fill="#0e6f6c" text-anchor="middle">resultado correcto</text>
+  <text x="570" y="66" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">DOUBLE PRECISION, diez pagos de 0.10</text>
+  <text x="570" y="102" font-size="15.5" font-weight="700" fill="#12324f" text-anchor="middle">0.9999999999999999</text>
+  <text x="570" y="124" font-size="10.6" fill="#5b6876" text-anchor="middle">cada 0.10 se aproxima al</text>
+  <text x="570" y="140" font-size="10.6" fill="#5b6876" text-anchor="middle">binario más cercano</text>
+  <text x="570" y="168" font-size="10.4" fill="#5b6876" text-anchor="middle">distinto de 1.00</text>
+  <text x="380" y="222" font-size="11" fill="#5b6876" text-anchor="middle">Verificado en Python 3: sum([0.10] * 10) == 1.0 da False; con un tipo decimal, la misma suma da exacto</text>
+</svg>
+
+:::
+
+## Reto. Elige el tipo correcto {.center}
+
+::: {.pasos}
+1. El precio de un producto, con centavos
+2. La cantidad de unidades de un pedido
+3. Si un producto sigue disponible en el menú
+4. **Para el primero, di por qué el tipo que descartaste sería un error**
+:::
+
+## Cuatro llaves, dos tablas {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tabla Cliente con id_cliente como llave primaria subrayada y documento como llave candidata marcada UNIQUE; tabla Pedido con id_pedido como llave primaria y cliente_id como llave foránea, con una flecha que conecta cliente_id con id_cliente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="dba3t3c" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro llaves, repartidas en dos tablas</text>
+  <rect x="30" y="42" width="290" height="200" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="175" y="64" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cliente</text>
+  <text x="175" y="90" font-size="11.3" fill="#0e6f6c" text-anchor="middle" text-decoration="underline">id_cliente, llave primaria</text>
+  <text x="175" y="112" font-size="11.3" fill="#3c7d7a" text-anchor="middle">documento, llave candidata (UNIQUE)</text>
+  <text x="175" y="134" font-size="11.3" fill="#5b6876" text-anchor="middle">nombre</text>
+  <text x="175" y="154" font-size="11.3" fill="#5b6876" text-anchor="middle">teléfono</text>
+  <text x="175" y="174" font-size="11.3" fill="#5b6876" text-anchor="middle">activo</text>
+  <text x="175" y="204" font-size="10.4" fill="#5b6876" text-anchor="middle">dos llaves candidatas en esta tabla,</text>
+  <text x="175" y="220" font-size="10.4" fill="#5b6876" text-anchor="middle">solo una elegida primaria</text>
+  <rect x="440" y="42" width="290" height="150" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="585" y="64" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Pedido</text>
+  <text x="585" y="90" font-size="11.3" fill="#0e6f6c" text-anchor="middle" text-decoration="underline">id_pedido, llave primaria</text>
+  <text x="585" y="112" font-size="11.3" fill="#5b6876" text-anchor="middle">fecha</text>
+  <text x="585" y="134" font-size="11.3" fill="#12324f" text-anchor="middle">cliente_id, llave foránea</text>
+  <path d="M440,117 C400,117 360,110 320,100" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#dba3t3c)"/>
+  <text x="380" y="252" font-size="11" fill="#5b6876" text-anchor="middle">cliente_id, en Pedido, guarda el mismo valor y el mismo tipo de dato que id_cliente, en Cliente</text>
+</svg>
+
+:::
+
+## NOT NULL, CHECK y DEFAULT {.center}
+
+::: {.columns}
+::: {.column width="33%"}
+::: {.neutro}
+**NOT NULL**
+
+Traduce la participación total de la Unidad 2 a una columna obligatoria.
+:::
+:::
+::: {.column width="33%"}
+::: {.neutro}
+**CHECK**
+
+Una regla sobre la propia fila. `precio > 0`, `cantidad > 0`.
+:::
+:::
+::: {.column width="33%"}
+::: {.neutro}
+**DEFAULT**
+
+Qué valor toma la columna si nadie lo especifica.
+:::
+:::
+:::
+
+## Borrar un cliente con pedidos {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Qué pasa si se intenta borrar un cliente que ya tiene pedidos, según la política de la llave foránea: con CASCADE se borran también sus pedidos y se pierde el historial de ventas; con SET NULL la columna cliente_id no puede quedar nula porque es NOT NULL, así que esta opción no aplica aquí; con RESTRICT el motor rechaza el borrado del cliente mientras existan pedidos suyos, que es la política elegida" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Borrar un cliente con pedidos: tres políticas, tres resultados</text>
+  <rect x="16" y="38" width="228" height="176" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="266" y="38" width="228" height="176" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="516" y="38" width="228" height="176" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="130" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">ON DELETE CASCADE</text>
+  <text x="130" y="88" font-size="10.6" fill="#5b6876" text-anchor="middle">se borran también los</text>
+  <text x="130" y="104" font-size="10.6" fill="#5b6876" text-anchor="middle">pedidos de ese cliente</text>
+  <text x="130" y="132" font-size="10.6" fill="#b23b3b" text-anchor="middle">se pierde el historial</text>
+  <text x="130" y="148" font-size="10.6" fill="#b23b3b" text-anchor="middle">real de ventas</text>
+  <text x="380" y="62" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">ON DELETE SET NULL</text>
+  <text x="380" y="88" font-size="10.6" fill="#5b6876" text-anchor="middle">cliente_id quedaría nulo</text>
+  <text x="380" y="104" font-size="10.6" fill="#5b6876" text-anchor="middle">en cada pedido</text>
+  <text x="380" y="132" font-size="10.6" fill="#b23b3b" text-anchor="middle">no aplica: cliente_id</text>
+  <text x="380" y="148" font-size="10.6" fill="#b23b3b" text-anchor="middle">es NOT NULL</text>
+  <text x="630" y="62" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">ON DELETE RESTRICT</text>
+  <text x="630" y="88" font-size="10.6" fill="#3c7d7a" text-anchor="middle">el motor rechaza el</text>
+  <text x="630" y="104" font-size="10.6" fill="#3c7d7a" text-anchor="middle">borrado del cliente</text>
+  <text x="630" y="132" font-size="10.6" fill="#0e6f6c" text-anchor="middle">el historial de ventas</text>
+  <text x="630" y="148" font-size="10.6" fill="#0e6f6c" text-anchor="middle">queda protegido</text>
+  <text x="630" y="176" font-size="10.4" fill="#0e6f6c" text-anchor="middle">política elegida</text>
+  <text x="380" y="252" font-size="11" fill="#5b6876" text-anchor="middle">CASCADE borra historial real; SET NULL exige que la columna admita nulos, y aquí no los admite</text>
+  <text x="380" y="270" font-size="11" fill="#5b6876" text-anchor="middle">RESTRICT es la política que respeta la participación total de Pedido en la relación (Unidad 2)</text>
+</svg>
+
+:::
+
+## Reto. Empleado que se retira {.center}
+
+::: {.destacado}
+`Pedido` gana `empleado_id`. Un empleado puede dejar de trabajar sin que eso borre sus pedidos
+atendidos. ¿Qué política, y admite nulos o no?
+:::
+
+## Lo que un CHECK no puede ver {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.neutro}
+**Sí puede vigilar**
+
+`CHECK (precio > 0)`
+
+Compara la columna contra un valor fijo, en la misma fila.
+:::
+:::
+::: {.column width="50%"}
+::: {.letra-pequena}
+**No puede vigilar**
+
+Que la suma de pedidos pendientes de un cliente no supere su límite de crédito.
+:::
+:::
+:::
+
+::: {.destacado}
+Eso exige sumar filas de otra tabla. Le toca a la aplicación, o a un mecanismo más avanzado que un
+CHECK simple.
+:::
+
+## Las cuatro tablas, completas {.center}
+
+```sql
+CREATE TABLE Pedido (
+    id_pedido   INT PRIMARY KEY,
+    fecha       DATE NOT NULL DEFAULT CURRENT_DATE,
+    cliente_id  INT NOT NULL REFERENCES Cliente(id_cliente)
+                    ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE Detalle_Pedido (
+    pedido_id   INT NOT NULL REFERENCES Pedido(id_pedido)
+                    ON DELETE CASCADE ON UPDATE CASCADE,
+    producto_id INT NOT NULL REFERENCES Producto(id_producto)
+                    ON DELETE RESTRICT ON UPDATE CASCADE,
+    cantidad    INT NOT NULL DEFAULT 1 CHECK (cantidad > 0),
+    PRIMARY KEY (pedido_id, producto_id)
+);
+```
+
+## Cierre de la Unidad 3 {.center}
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Tema 1]{.titulo}
+
+Del diagrama entidad relación al `CREATE TABLE` básico.
+:::
+
+::: {.tarjeta}
+[Tema 2]{.titulo}
+
+Normalización, de la primera a la cuarta forma.
+:::
+
+::: {.clave}
+[Tema 3, hoy]{.titulo}
+
+Tipos, llaves, restricciones e integridad, completas.
+:::
+:::
+
+::: {.destacado}
+La Unidad 4 usa estas mismas cuatro tablas para escribir las primeras consultas SQL del curso.
+:::
+
+::: {.pie-diapositiva}
+Base de datos (DBA03). Semestre 2026-02.
+:::
