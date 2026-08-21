@@ -1,0 +1,410 @@
+---
+title: "Tema 1. Verificar el producto correctamente, validar el producto correcto"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                             |
+|--------|-----------------------------------------------------------------------------|
+| Unidad | Unidad 4. Validación y verificación                                         |
+| Tema   | Tema 1. Verificar el producto correctamente, validar el producto correcto  |
+:::
+
+[Diapositivas de la sesión](presentacion.qmd)
+
+La Unidad 3 cerró mostrando que los cuatro estándares que vio el curso, IEEE, ISO, SPICE y CMMI,
+comparten un mismo trasfondo, porque ninguno certifica por sí solo que el software funcione bien,
+sino que certifican que la organización siguió un proceso capaz de producir software que funcione
+bien, una garantía distinta y más débil de lo que muchas empresas venden al cliente final. Este tema
+abre la Unidad 4 entrando de lleno a esa brecha, a los métodos concretos con los que un equipo
+comprueba que el software que construyó cumple lo que prometió, sin importar en qué nivel de
+madurez certificada esté la organización que lo construyó. Para comprobarlo hace falta separar dos
+preguntas que a primera vista parecen la misma pregunta hecha dos veces, pero que casi nunca
+comparten la misma respuesta, y esa separación es el hilo que atraviesa todo lo que sigue, el
+estándar IEEE 1012, el modelo en V, las técnicas estáticas y dinámicas, y la independencia
+organizacional de quien verifica y valida.
+
+## La distinción de Boehm: verificar y validar son preguntas distintas
+
+Barry Boehm, uno de los autores más citados de la ingeniería de software, publicó en 1979 el
+artículo *Guidelines for Verifying and Validating Software Requirements and Design Specifications*
+en las actas de la conferencia Euro IFIP 79, donde planteó por primera vez una separación que hoy
+parece obvia pero que en ese momento no lo era, la de tratar la verificación y la validación como
+dos actividades distintas con objetivos distintos, en lugar de usar los dos términos como sinónimos
+de "comprobar que el software funciona". La formulación breve con la que casi todo el mundo cita a
+Boehm hoy, la de reducir cada actividad a una pregunta de una sola frase, aparece de forma explícita
+en la versión ampliada de ese mismo trabajo que Boehm publicó después en la revista *IEEE Software*,
+en enero de 1984. Conviene citar esta distinción con el mismo cuidado con el que la Unidad 1 trató
+las cifras de Boehm que cuestionó Bossavit, así que esta guía atribuye la idea original al artículo
+de 1979 y la formulación exacta de la pregunta a su versión de 1984, en vez de tratarlas como si
+fueran el mismo texto.
+
+La *verificación* pregunta si el equipo está construyendo el producto correctamente, lo que en la
+práctica significa comprobar que cada producto de trabajo, un módulo de código, un componente, un
+sistema completo, cumple con la especificación que se acordó para él en la fase anterior. La
+*validación* pregunta si el equipo está construyendo el producto correcto, lo que significa
+comprobar que el sistema completo, ya integrado, satisface las necesidades reales del usuario y es
+apto para el uso que se pensaba darle, más allá de que cumpla al pie de la letra una especificación
+que alguien redactó meses o años antes. La especificación es el punto de referencia de la
+verificación, mientras que el uso previsto en el mundo real es el punto de referencia de la
+validación, y esa diferencia de referencia es la que explica por qué un sistema puede pasar toda su
+verificación y aun así fallar en la validación, si la especificación original describía con
+precisión algo que no era lo que el usuario necesitaba.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos preguntas distintas frente al mismo software, verificacion que pregunta si se construyo el producto correctamente frente a la especificacion, y validacion que pregunta si se construyo el producto correcto para el uso previsto, las dos convergen en el mismo software entregado que puede pasar una y fallar la otra" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds41a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Dos preguntas distintas sobre el mismo software</text>
+  <rect x="20" y="40" width="330" height="130" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="410" y="40" width="330" height="130" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="185" y="64" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Verificación</text>
+  <text x="185" y="84" font-size="11.5" fill="#5b6876" text-anchor="middle">Se construyó el producto</text>
+  <text x="185" y="100" font-size="11.5" fill="#5b6876" text-anchor="middle">correctamente</text>
+  <text x="185" y="122" font-size="10.8" fill="#12324f" text-anchor="middle">Conformidad con la especificación</text>
+  <text x="185" y="140" font-size="10.8" fill="#12324f" text-anchor="middle">revisiones, inspecciones, pruebas</text>
+  <text x="185" y="156" font-size="10.8" fill="#12324f" text-anchor="middle">contra el diseño documentado</text>
+  <text x="575" y="64" font-size="13.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Validación</text>
+  <text x="575" y="84" font-size="11.5" fill="#3c7d7a" text-anchor="middle">Se construyó el producto</text>
+  <text x="575" y="100" font-size="11.5" fill="#3c7d7a" text-anchor="middle">correcto</text>
+  <text x="575" y="122" font-size="10.8" fill="#0e6f6c" text-anchor="middle">Aptitud para el uso previsto</text>
+  <text x="575" y="140" font-size="10.8" fill="#0e6f6c" text-anchor="middle">pruebas de aceptación y</text>
+  <text x="575" y="156" font-size="10.8" fill="#0e6f6c" text-anchor="middle">retroalimentación real del usuario</text>
+  <rect x="230" y="205" width="300" height="52" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="228" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">El mismo software entregado</text>
+  <text x="380" y="246" font-size="10.5" fill="#5b6876" text-anchor="middle">puede pasar una y fallar la otra</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds41a)"><path d="M220,170 C260,185 280,195 300,205"/><path d="M540,170 C500,185 480,195 460,205"/></g>
+</svg>
+
+:::
+
+Caso de estudio. Un banco contrata la construcción de un módulo que calcula el cupo de crédito
+disponible de cada cliente, con una especificación de requisitos detallada que el equipo de negocio
+firmó antes de empezar a programar. El equipo de desarrollo construye el módulo siguiendo esa
+especificación al pie de la letra, y el equipo de pruebas verifica cada regla de negocio contra el
+documento de requisitos, caso por caso, sin encontrar una sola discrepancia. El módulo pasa a
+producción con esa verificación completa y sin defectos abiertos. Un mes después, el área comercial
+reporta que los asesores de crédito no pueden usar el módulo en la conversación real con el cliente,
+porque el sistema exige capturar cinco datos financieros distintos antes de mostrar cualquier
+resultado, mientras que en la sucursal el cliente casi nunca tiene esos cinco datos a la mano en el
+momento de la consulta. ¿Qué falló, la programación del módulo o algo anterior a la programación?
+
+La programación no falló, porque el módulo hace exactamente lo que la especificación decía que
+tenía que hacer, y por eso pasó toda su verificación sin encontrar un solo defecto de conformidad.
+Lo que falló fue la validación, porque nadie confirmó, antes ni durante la construcción, que ese
+flujo de cinco datos obligatorios fuera realmente apto para el uso que los asesores de crédito le
+iban a dar en la sucursal. La especificación describía con precisión un producto que no era el
+producto correcto para su contexto de uso real, y ese tipo de falla no la detecta ninguna cantidad
+de pruebas que solo comparen el sistema contra su propia especificación, porque la especificación es
+justamente la pieza que estaba mal desde el principio.
+
+## IEEE 1012: el estándar que gradúa cuánta V&V hace falta
+
+El IEEE publicó por primera vez en 1986 un estándar dedicado por completo a la verificación y
+validación de software, revisado después en 1998, y desde entonces ha vuelto a revisarlo varias
+veces, ampliando su alcance en el camino. Las ediciones de 2012 llevaban el título *IEEE Standard for
+System and Software Verification and Validation*, centrado en sistemas y software, y desde la
+edición de 2016 el estándar pasó a llamarse *IEEE Standard for System, Software, and Hardware
+Verification and Validation*, sumando de forma explícita el hardware al alcance que ya cubría, con
+una revisión más reciente publicada en 2024. El estándar define un conjunto de procesos de V&V que
+determinan si los productos que resultan de cada actividad del desarrollo cumplen los requisitos de
+esa actividad, y si el producto final satisface su uso previsto y las necesidades reales de quien lo
+va a usar, la misma distinción entre verificación y validación que planteó Boehm, ya convertida en
+requisito de norma.
+
+Lo que distingue a IEEE 1012 de un simple listado de buenas prácticas es que no exige la misma
+cantidad de V&V para cualquier sistema. El estándar cruza cuatro niveles de probabilidad de que algo
+falle con cuatro niveles de consecuencia si esa falla ocurre, y con ese cruce ubica a cada sistema en
+uno de cuatro *niveles de integridad de software*, en inglés *software integrity level*, sigla SIL,
+del nivel 1, con el riesgo más bajo, al nivel 4, con consecuencias potencialmente catastróficas. El
+nivel de integridad que le corresponde a un sistema es el que determina cuánta V&V formal exige el
+propio estándar, un sistema de nivel 1 se conforma con actividades mínimas de verificación y
+validación, mientras que un sistema de nivel 4 exige el conjunto más exigente de tareas de V&V que
+define la norma, con más independencia organizacional, más documentación y más rigor en cada
+revisión. La lógica de fondo es que invertir el mismo esfuerzo de V&V en un sistema de bajo riesgo
+que en uno de alto riesgo desperdicia recursos en el primero y deja peligrosamente corto al segundo,
+así que el estándar hace explícito que el nivel de V&V debe crecer con el riesgo real del sistema, no
+con el tamaño del proyecto ni con el presupuesto disponible.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El estandar IEEE 1012 cruza la probabilidad de falla con la consecuencia de la falla para ubicar un sistema en uno de cuatro niveles de integridad de software, del nivel 1 con el V&amp;V mas ligero al nivel 4 con el V&amp;V mas exigente, y el nivel exigido crece con el riesgo real del sistema" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds41b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Como IEEE 1012 fija cuanta V&amp;V hace falta</text>
+  <rect x="20" y="36" width="320" height="60" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="180" y="58" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Probabilidad de la falla</text>
+  <text x="180" y="76" font-size="10.3" fill="#5b6876" text-anchor="middle">razonable, probable, ocasional, improbable</text>
+  <rect x="420" y="36" width="320" height="60" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="580" y="58" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Consecuencia de la falla</text>
+  <text x="580" y="76" font-size="10.3" fill="#5b6876" text-anchor="middle">catastrófica, crítica, marginal, despreciable</text>
+  <rect x="270" y="138" width="220" height="56" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="161" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Nivel de integridad</text>
+  <text x="380" y="179" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">de software (1 a 4)</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds41b)"><path d="M200,96 C230,112 260,122 300,138"/><path d="M560,96 C520,112 490,122 460,138"/><path d="M380,194 L380,216"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="57" y="222" width="150" height="46" rx="8"/><rect x="222" y="222" width="150" height="46" rx="8"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="387" y="222" width="150" height="46" rx="8"/><rect x="552" y="222" width="150" height="46" rx="8"/></g>
+  <g text-anchor="middle" font-size="11.5" font-weight="600" fill="#12324f"><text x="132" y="242">Nivel 1</text><text x="297" y="242">Nivel 2</text></g>
+  <g text-anchor="middle" font-size="11.5" font-weight="600" fill="#0e6f6c"><text x="462" y="242">Nivel 3</text><text x="627" y="242">Nivel 4</text></g>
+  <g text-anchor="middle" font-size="10" fill="#5b6876"><text x="132" y="258">V&amp;V mínimo</text><text x="297" y="258">V&amp;V básico</text></g>
+  <g text-anchor="middle" font-size="10" fill="#3c7d7a"><text x="462" y="258">V&amp;V amplio</text><text x="627" y="258">V&amp;V exhaustivo</text></g>
+  <text x="380" y="290" font-size="11.5" fill="#5b6876" text-anchor="middle">El nivel exigido crece con el riesgo del sistema, no con el tamaño del proyecto</text>
+</svg>
+
+:::
+
+## El modelo en V: cuándo se planea cada prueba
+
+El *modelo en V* representa el desarrollo de software como una letra V, con las fases de
+construcción bajando por el lado izquierdo y las fases de prueba subiendo por el lado derecho, de
+forma que cada fase de construcción queda emparejada con la fase de prueba que le corresponde.
+Requisitos se empareja con pruebas de aceptación, diseño de arquitectura o de sistema se empareja
+con pruebas de sistema, diseño detallado se empareja con pruebas de integración, y codificación, en
+el vértice inferior de la V, se empareja con pruebas unitarias, el primer nivel de prueba que se
+ejecuta apenas termina de escribirse el código. El valor del modelo no está en el dibujo en sí, sino
+en lo que ese dibujo hace explícito, cada plan de pruebas se redacta durante la misma fase que la
+fase de construcción con la que está emparejado, no al final del proyecto cuando ya hay código para
+ejecutar, así que el plan de pruebas de aceptación se escribe mientras se están levantando los
+requisitos, y el plan de pruebas de sistema se escribe mientras se está diseñando la arquitectura.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El modelo en V empareja cada fase de construccion en el lado izquierdo con su fase de prueba correspondiente en el lado derecho, requisitos con aceptacion, diseno de arquitectura con pruebas de sistema, diseno detallado con pruebas de integracion, y codificacion en el vertice inferior con pruebas unitarias" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds41c" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El modelo en V, construcción a la izquierda, prueba a la derecha</text>
+  <g fill="none" stroke="#c7d6e6" stroke-width="1.6" stroke-dasharray="4 4"><path d="M165,45 L595,45"/><path d="M250,110 L510,110"/><path d="M335,175 L425,175"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2"><path d="M95,45 L185,110 L275,175 L350,235"/><path d="M410,235 L485,175 L575,110 L665,45"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="25" y="26" width="140" height="42" rx="8"/><rect x="115" y="90" width="140" height="42" rx="8"/><rect x="205" y="154" width="140" height="42" rx="8"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="595" y="26" width="140" height="42" rx="8"/><rect x="505" y="90" width="140" height="42" rx="8"/><rect x="415" y="154" width="140" height="42" rx="8"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="315" y="216" width="130" height="42" rx="8"/></g>
+  <g text-anchor="middle" font-size="10.8" font-weight="600" fill="#12324f">
+    <text x="95" y="52">Requisitos</text>
+    <text x="185" y="116">Diseño de</text><text x="185" y="129">arquitectura</text>
+    <text x="275" y="180">Diseño detallado</text>
+  </g>
+  <g text-anchor="middle" font-size="10.8" font-weight="600" fill="#12324f">
+    <text x="665" y="52">Pruebas de</text><text x="665" y="65">aceptación</text>
+    <text x="575" y="116">Pruebas de</text><text x="575" y="129">sistema</text>
+    <text x="485" y="180">Pruebas de integración</text>
+  </g>
+  <text x="380" y="241" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Codificación y pruebas unitarias</text>
+  <text x="380" y="280" font-size="11" fill="#5b6876" text-anchor="middle">Cada plan de prueba se escribe junto con su fase de construcción, no al terminar el proyecto</text>
+</svg>
+
+:::
+
+## Técnicas estáticas y técnicas dinámicas: cada una encuentra un defecto distinto
+
+Un programa de V&V completo combina dos familias de técnicas que examinan el software de formas muy
+distintas. Las *técnicas estáticas* examinan un producto de trabajo sin ejecutarlo, con revisiones de
+pares, inspecciones formales y análisis estático de código, la misma familia de actividades que la
+Unidad 2 desarrolló en detalle con IEEE 1028, así que esta guía no la repite aquí más allá de
+recordar que su fortaleza es encontrar defectos de especificación y de diseño antes de que exista
+código que ejecutar. Las *técnicas dinámicas*, en cambio, ejecutan el software con datos reales o
+simulados y observan qué respuesta produce, con los distintos niveles de prueba que ya apareció en el
+modelo en V, las pruebas unitarias, que examinan un componente aislado, las pruebas de integración,
+que examinan cómo se comunican varios componentes entre sí, las pruebas de sistema, que examinan el
+sistema completo ya integrado, y las pruebas de aceptación, que examinan si ese sistema completo
+satisface a quien lo va a usar.
+
+Ningún programa de V&V puede apoyarse solo en una de las dos familias, porque cada una encuentra un
+tipo de defecto que la otra deja pasar. Una revisión estática puede leer con cuidado la lógica de un
+algoritmo y encontrar que una condición está mal escrita antes de que nadie compile una sola línea,
+pero no puede predecir con certeza cómo se va a comportar ese algoritmo bajo una carga real de miles
+de usuarios simultáneos, algo que sí revela una prueba de sistema dinámica. Al revés, una prueba
+dinámica puede confirmar que un módulo produce la salida correcta para los casos de prueba que
+alguien pensó, pero no examina el código que nadie ejecutó porque ningún caso de prueba llegó hasta
+ahí, un hueco que sí puede detectar una inspección de código bien hecha. Combinar las dos familias no
+es redundancia, es cobertura de dos tipos de riesgo que no se solapan.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las tecnicas estaticas examinan el producto sin ejecutarlo, con revisiones, inspecciones y analisis estatico de codigo, y las tecnicas dinamicas ejecutan el software con pruebas unitarias, de integracion, de sistema y de aceptacion, ambas familias alimentan un programa completo de V&amp;V porque cada una encuentra un tipo de defecto distinto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds41d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Técnicas estáticas y dinámicas, dos tipos de defecto distintos</text>
+  <rect x="20" y="36" width="330" height="126" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="410" y="36" width="330" height="126" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="185" y="58" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Técnicas estáticas</text>
+  <text x="185" y="76" font-size="10.5" fill="#5b6876" text-anchor="middle">no ejecutan el software</text>
+  <text x="185" y="98" font-size="10.5" fill="#12324f" text-anchor="middle">revisión de pares</text>
+  <text x="185" y="114" font-size="10.5" fill="#12324f" text-anchor="middle">inspección formal (IEEE 1028)</text>
+  <text x="185" y="130" font-size="10.5" fill="#12324f" text-anchor="middle">análisis estático de código</text>
+  <text x="185" y="150" font-size="10" fill="#5b6876" text-anchor="middle">encuentran defectos de diseño temprano</text>
+  <text x="575" y="58" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Técnicas dinámicas</text>
+  <text x="575" y="76" font-size="10.5" fill="#3c7d7a" text-anchor="middle">ejecutan el software</text>
+  <text x="575" y="98" font-size="10.5" fill="#0e6f6c" text-anchor="middle">pruebas unitarias e integración</text>
+  <text x="575" y="114" font-size="10.5" fill="#0e6f6c" text-anchor="middle">pruebas de sistema</text>
+  <text x="575" y="130" font-size="10.5" fill="#0e6f6c" text-anchor="middle">pruebas de aceptación</text>
+  <text x="575" y="150" font-size="10" fill="#3c7d7a" text-anchor="middle">encuentran defectos de comportamiento real</text>
+  <rect x="235" y="205" width="290" height="52" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="228" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Programa completo de V&amp;V</text>
+  <text x="380" y="246" font-size="10.3" fill="#5b6876" text-anchor="middle">ninguna de las dos familias sobra</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds41d)"><path d="M220,162 C260,180 280,192 300,205"/><path d="M540,162 C500,180 480,192 460,205"/></g>
+</svg>
+
+:::
+
+## Verificación y validación independiente (IV&V)
+
+Casi todo lo anterior puede ejecutarlo el mismo equipo que construyó el software, un desarrollador
+puede revisar el código de otro desarrollador y un equipo de pruebas puede pertenecer a la misma
+organización que escribió el sistema. La *verificación y validación independiente*, conocida por su
+sigla en inglés IV&V (*independent verification and validation*), añade una condición adicional,
+que quien verifica y valida no dependa organizacionalmente de quien construyó el software, y esa
+independencia suele describirse en tres planos distintos que conviene separar. La *independencia
+técnica* significa que el equipo de IV&V decide con criterio propio qué evaluar y cómo, sin que el
+equipo de desarrollo le dicte el alcance de la revisión. La *independencia gerencial* significa que
+el equipo de IV&V responde a una línea de mando distinta de la del proyecto que evalúa, así que un
+gerente del proyecto de desarrollo no puede presionar ni redirigir el trabajo del equipo de IV&V. La
+*independencia financiera* significa que el presupuesto del equipo de IV&V no sale del presupuesto
+del proyecto que evalúa, para que nadie pueda amenazar con recortar fondos si los hallazgos de la
+IV&V resultan incómodos para el cronograma o el costo del proyecto.
+
+::: {.callout-tip}
+## Reto 1. Clasifica cada actividad
+
+Antes de mirar la solución, clasifica cada una de estas cuatro actividades como verificación o como
+validación, según la pregunta que responde cada una.
+
+1. Un revisor compara el código de un módulo de facturación contra el documento de diseño detallado
+   para confirmar que implementa cada regla tal como quedó especificada.
+2. Un grupo de usuarios reales de una clínica prueba el nuevo sistema de citas médicas durante una
+   semana y reporta si logra agendar una cita sin ayuda de nadie.
+3. Un analista ejecuta los casos de prueba unitaria de una función de cálculo de impuestos y confirma
+   que cada caso produce el resultado que el diseño esperaba.
+4. El área comercial de una empresa revisa una maqueta del nuevo sistema antes de que se construya y
+   confirma que ese flujo de trabajo sí resuelve el problema que el negocio tiene hoy.
+
+<label><input type="checkbox"> 1 y 3 son verificación, 2 y 4 son validación</label><br>
+<label><input type="checkbox"> 1 y 2 son verificación, 3 y 4 son validación</label><br>
+<label><input type="checkbox"> Las cuatro son verificación</label><br>
+<label><input type="checkbox"> Las cuatro son validación</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La opción correcta es la primera, 1 y 3 son verificación, 2 y 4 son validación. Las actividades 1 y 3
+comparan un producto de trabajo contra una especificación ya escrita, un documento de diseño o un
+resultado esperado que alguien definió de antemano, así que las dos responden la pregunta de si el
+producto se construyó correctamente. Las actividades 2 y 4 comparan el sistema, o una maqueta de él,
+contra la necesidad real de quien lo va a usar, sin que el punto de referencia sea un documento de
+especificación sino la experiencia real del usuario o del negocio, así que las dos responden la
+pregunta de si el producto que se está construyendo es el producto correcto. Fíjate en que la
+actividad 4 ocurre antes de construir nada, lo que confirma que la validación no tiene que esperar a
+que exista un sistema terminado, una maqueta o un prototipo también se puede validar.
+:::
+
+Un proyecto no necesita IV&V solo porque el cliente lo pida, la exigen sobre todo los proyectos de
+*alto riesgo*, aquellos donde una falla del software puede costar vidas humanas, dinero público en
+grandes cantidades o el cumplimiento de una misión completa. El ejemplo mejor documentado es el
+Programa de IV&V de la NASA, que exige verificación y validación independiente en proyectos de vuelo
+humano tripulado, en proyectos cuyo costo total del ciclo de vida supera cierto umbral definido por
+la agencia, o en proyectos que la propia dirección de la misión decide incluir por su nivel de
+riesgo, precisamente porque una falla de software en una misión espacial no se puede corregir con
+una actualización rápida una vez la nave ya despegó. Fuera del sector espacial, la exigencia de IV&V
+aparece también en estándares de otros sectores de misión crítica, como la aviación civil, y en
+contratos gubernamentales de defensa donde el cliente necesita una garantía objetiva de que el
+software cumple, sin depender solo de la palabra del mismo contratista que lo construyó. La propia
+idea de una revisión independiente de software no es nueva, la literatura sitúa uno de sus primeros
+programas formales en la década de 1970, cuando el Ejército de Estados Unidos financió un programa de
+este tipo para el sistema antimisiles Safeguard, un antecedente que anticipa por décadas la exigencia
+que hoy formaliza IEEE 1012.
+
+::: {.callout-tip}
+## Reto 2. Decide si un proyecto necesita IV&V
+
+Lee la situación completa antes de responder. Una empresa de software desarrolla, para un banco
+mediano, un sistema interno de generación de reportes contables que solo usan quince empleados del
+área financiera para producir informes que después revisa un supervisor humano antes de enviarlos.
+Si el sistema falla un día, el equipo puede generar el reporte a mano en un par de horas mientras se
+corrige el problema, y ningún cliente externo del banco depende de ese sistema en tiempo real.
+
+Con lo que aprendiste sobre integridad de software en IEEE 1012 y sobre cuándo se exige IV&V,
+¿qué tan alto sería el nivel de integridad de este sistema y necesitaría verificación y validación
+independiente?
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+Este sistema tiene un nivel de integridad bajo, probablemente el nivel 1 o 2 de los cuatro que define
+IEEE 1012, porque tanto la probabilidad de un impacto grave como la consecuencia de una falla son
+bajas, hay un supervisor humano que revisa cada reporte antes de enviarlo, existe un mecanismo manual
+de respaldo que no depende del sistema, y ningún cliente externo ni ninguna operación en tiempo real
+depende de que el sistema nunca falle. Con ese nivel de integridad, el sistema no necesita
+verificación y validación independiente, le basta con las técnicas estáticas y dinámicas normales que
+puede ejecutar el mismo equipo que lo construyó, revisiones de código internas y pruebas unitarias, de
+integración y de aceptación con los propios usuarios del área financiera. Exigir IV&V aquí sería
+gastar el esfuerzo de independencia organizacional, técnica, gerencial y financiera que reserva
+IEEE 1012 para sistemas de nivel 4, en un sistema cuyo peor escenario de falla es un par de horas de
+trabajo manual, exactamente el desperdicio de recursos que la sección anterior de esta guía advirtió
+que produce no graduar la V&V según el riesgo real.
+:::
+
+## Lo que sigue: controlar y costear la calidad
+
+Este tema definió la pregunta de fondo, si el software se construyó correctamente y si se construyó
+lo correcto, el estándar IEEE 1012 que gradúa cuánta V&V hace falta según el riesgo, el modelo en V
+que ubica cada prueba en el momento del ciclo de vida donde se planea, las técnicas estáticas y
+dinámicas que se necesitan juntas para cubrir tipos de defecto distintos, y la independencia
+organizacional que exige un proyecto de alto riesgo. El Tema 2 de esta unidad toma esa misma
+distinción entre verificar y validar y la convierte en algo operativo dentro de un proyecto real, con
+puntos de control concretos a lo largo del desarrollo, con criterios de aceptación explícitos, y con
+un modelo que reparte el costo de la calidad entre prevenir un defecto, evaluar si apareció, y pagar
+las consecuencias si ya se le entregó al cliente sin detectarlo.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía
+
+- [ ] La diferencia entre verificación y validación según la distinción de Boehm, y un ejemplo de un
+      sistema que pasa toda su verificación y aun así falla en la validación
+- [ ] Qué son los niveles de integridad de software de IEEE 1012, qué dos factores los determinan y
+      por qué el nivel de V&V debe crecer con el riesgo real del sistema
+- [ ] Cómo empareja el modelo en V cada fase de construcción con su fase de prueba correspondiente, y
+      por qué eso implica planear las pruebas desde el requisito, no al final del proyecto
+- [ ] La diferencia entre técnicas estáticas y técnicas dinámicas de V&V, y por qué un programa
+      completo necesita las dos
+- [ ] Qué significa que un equipo de V&V sea independiente en lo técnico, lo gerencial y lo
+      financiero, y en qué tipo de proyecto se exige esa independencia
+:::
+
+## Recursos
+
+- Boehm, B. W. (1979). *Guidelines for Verifying and Validating Software Requirements and Design
+  Specifications.* Euro IFIP 79, North-Holland, pp. 711-719. Primer planteamiento de la distinción
+  entre verificación y validación.
+- Boehm, B. W. (1984). "Verifying and Validating Software Requirements and Design Specifications."
+  *IEEE Software*, 1(1), 75-88. [doi.org, MS.1984.233702](https://doi.org/10.1109/MS.1984.233702).
+  Versión donde aparece la formulación breve de las dos preguntas.
+- IEEE Standards Association. [IEEE Standard for System, Software, and Hardware Verification and
+  Validation (1012)](https://standards.ieee.org/ieee/1012/5609/). El texto completo es de pago, esta
+  guía se apoya en el catálogo público del estándar y en fuentes secundarias que lo explican.
+- IEEE Standards Association. [1012-2016, edición previa del estándar en IEEE
+  Xplore](https://ieeexplore.ieee.org/document/8055462).
+- [Wikipedia: Software verification and validation](https://en.wikipedia.org/wiki/Software_verification_and_validation).
+  Resume la distinción de Boehm, las técnicas estáticas y dinámicas, y la independencia técnica,
+  gerencial y financiera de la IV&V, con referencia al programa del Ejército de Estados Unidos para
+  el sistema Safeguard en la década de 1970.
+- [Wikipedia: V-Model (software development)](https://en.wikipedia.org/wiki/V-Model_(software_development)).
+  Estructura del modelo en V y el emparejamiento de cada fase de construcción con su prueba
+  correspondiente.
+- NASA Software Engineering Handbook. [SWE-141, Software Independent Verification and
+  Validation](https://swehb.nasa.gov/spaces/SWEHBVC/pages/50888971/SWE-141+-+Software+Independent+Verification+and+Validation).
+  Criterios de la NASA para exigir IV&V y definición de independencia técnica, gerencial y
+  financiera.
+- IEEE Computer Society. [Guide to the Software Engineering Body of Knowledge
+  (SWEBOK)](https://www.computer.org/education/bodies-of-knowledge/software-engineering), capítulo
+  sobre calidad del software, con la clasificación de técnicas estáticas y dinámicas de control de
+  calidad.
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

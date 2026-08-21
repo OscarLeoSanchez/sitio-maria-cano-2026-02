@@ -1,0 +1,295 @@
+---
+title: "Tema 3. SPICE, evaluación de procesos por niveles de capacidad"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                        |
+|--------|--------------------------------------------------------|
+| Unidad | Unidad 3. Estándares de calidad aplicados al software  |
+| Tema   | Tema 3. SPICE, evaluación de procesos por niveles de capacidad |
+:::
+
+[Diapositivas de la sesión](presentacion.qmd)
+
+El Tema 2 mostró dos normas ISO que miran ángulos distintos de la calidad, la familia SQuaRE
+evalúa el producto de software terminado con un catálogo de características medibles, e ISO 9001
+certifica que la organización tiene un sistema de gestión de calidad genérico, aplicable a
+cualquier sector, no solo al software. Hoy vas a ver un tercer enfoque, más cercano al proceso de
+desarrollo que a la organización completa o al producto final, el que la industria conoce como
+SPICE. SPICE no certifica un producto ni un sistema de gestión completo, evalúa qué tan capaz es
+cada proceso concreto del ciclo de vida del software, desde la gestión de requisitos hasta las
+pruebas, y le asigna un nivel de capacidad propio a cada uno. Es la pieza que te prepara para
+entender el Tema 4, que desarrolla CMMI, un marco que persigue la misma pregunta de
+fondo con una arquitectura distinta.
+
+## Qué es SPICE y de dónde viene el nombre
+
+SPICE es la sigla de *Software Process Improvement and Capability dEtermination*, en español mejora
+de proceso de software y determinación de capacidad, y nació como el nombre de un proyecto
+internacional que un grupo de trabajo formó en 1993 para redactar un estándar común de evaluación
+de procesos de software. El nombre original usaba la palabra *Evaluation* en vez de *dEtermination*,
+pero el comité la cambió porque en francés esa palabra tenía una connotación distinta a la que
+buscaban, y la sigla conservó la E minúscula en mitad de la palabra como recuerdo de ese ajuste.
+Aquel proyecto terminó formalizado en la norma internacional ISO/IEC 15504, que durante más de una
+década fue el documento oficial detrás del nombre SPICE.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Linea de tiempo del nombre SPICE, desde el proyecto internacional de 1993 hasta la norma ISO IEC 15504 y su sucesora la familia ISO IEC 33000 desde 2015, con SPICE como nombre coloquial que se mantiene durante todo el recorrido" font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="cds33a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs><text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">De donde viene el nombre SPICE</text><path d="M60,110 L700,110" stroke="#c7d6e6" stroke-width="2.5" fill="none"/><g fill="#0e6f6c"><circle cx="120" cy="110" r="7"/><circle cx="380" cy="110" r="7"/><circle cx="640" cy="110" r="7"/></g><g fill="none" stroke="#8fb3d1" stroke-width="1.6"><path d="M120,117 L120,140"/><path d="M380,117 L380,140"/><path d="M640,117 L640,140"/></g><g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="140" width="200" height="76" rx="10"/><rect x="280" y="140" width="200" height="76" rx="10"/><rect x="540" y="140" width="200" height="76" rx="10"/></g><g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="120" y="90">1993</text><text x="380" y="90">años después</text><text x="640" y="90">desde 2015</text></g><g text-anchor="middle" font-size="11.5" font-weight="600" fill="#12324f"><text x="120" y="164">Proyecto SPICE</text><text x="380" y="164">ISO/IEC 15504</text><text x="640" y="164">ISO/IEC 33001 y familia 33000</text></g><g text-anchor="middle" font-size="10.3" fill="#5b6876"><text x="120" y="182">grupo de trabajo internacional</text><text x="120" y="196">que redacta el primer estandar</text><text x="380" y="182">la norma que formalizo</text><text x="380" y="196">el proyecto SPICE</text><text x="640" y="182">norma sucesora, misma</text><text x="640" y="196">idea de fondo</text></g><text x="380" y="240" font-size="11.5" fill="#0e6f6c" text-anchor="middle">"SPICE" sigue siendo el nombre coloquial en toda la industria</text></svg>
+
+:::
+
+Desde marzo de 2015, ISO/IEC 15504 quedó reemplazada por ISO/IEC 33001, el primer documento de una
+familia nueva de normas, la serie ISO/IEC 33000, que reparte en distintos números lo que antes vivía
+en una sola norma, por ejemplo los requisitos para llevar a cabo una evaluación, los requisitos para
+un marco de medición de procesos, o los requisitos para construir un modelo de referencia o de
+evaluación. Ese cambio de número no cambió la idea de fondo, así que la industria siguió llamando
+SPICE al enfoque completo, aunque el documento que lo respalda hoy ya no sea ISO/IEC 15504 sino la
+familia 33000. Cuando encuentres el nombre SPICE en una oferta de trabajo, en un contrato o en una
+herramienta, casi siempre se refiere a este enfoque de evaluación de procesos, sin importar si quien
+lo escribió pensaba en la norma vieja o en la nueva.
+
+## Dos modelos separados, en vez de uno combinado
+
+La diferencia estructural más importante entre SPICE y CMMI, y la que más confunde a quien compara
+los dos marcos por primera vez, es que SPICE separa dos documentos que CMMI mantiene unidos en uno
+solo. El *modelo de referencia de procesos*, conocido por su sigla en inglés PRM (*Process Reference
+Model*), describe qué procesos existen en el dominio que se evalúa y qué logra cada uno, sin decir
+nada todavía sobre qué tan bien se ejecutan. El *modelo de evaluación de procesos*, con sigla en
+inglés PAM (*Process Assessment Model*), toma ese catálogo de procesos y añade la escala y las
+prácticas concretas con las que un equipo evaluador mide qué tan capaz es cada proceso en la
+práctica. CMMI, en cambio, integra la descripción de las áreas de proceso y su escala de madurez en
+un único modelo, así que quien trabaja con CMMI no necesita consultar dos documentos separados para
+saber qué se espera de un proceso y cómo se mide.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion estructural entre SPICE, que separa un modelo de referencia de procesos PRM de un modelo de evaluacion de procesos PAM, y CMMI, que integra ambas funciones en un solo modelo" font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="cds33b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs><text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Dos modelos separados contra un modelo integrado</text><rect x="20" y="40" width="340" height="240" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/><text x="190" y="62" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">SPICE</text><rect x="45" y="80" width="290" height="70" rx="10" fill="#eef4fa" stroke="#c7d6e6"/><text x="190" y="102" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Modelo de referencia (PRM)</text><text x="190" y="120" font-size="10.5" fill="#5b6876" text-anchor="middle">que procesos existen</text><text x="190" y="134" font-size="10.5" fill="#5b6876" text-anchor="middle">y que logra cada uno</text><path d="M190,150 L190,172" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds33b)"/><rect x="45" y="176" width="290" height="80" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/><text x="190" y="200" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">Modelo de evaluacion (PAM)</text><text x="190" y="218" font-size="10.5" fill="#3c7d7a" text-anchor="middle">como se mide que tan bien</text><text x="190" y="232" font-size="10.5" fill="#3c7d7a" text-anchor="middle">se ejecuta cada proceso</text><rect x="400" y="40" width="340" height="240" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/><text x="570" y="62" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">CMMI</text><rect x="425" y="112" width="290" height="108" rx="10" fill="#eef4fa" stroke="#c7d6e6"/><text x="570" y="152" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Un solo modelo integrado</text><text x="570" y="172" font-size="10.5" fill="#5b6876" text-anchor="middle">describe los procesos y su</text><text x="570" y="186" font-size="10.5" fill="#5b6876" text-anchor="middle">escala de madurez a la vez</text><text x="380" y="270" font-size="10.5" fill="#5b6876" text-anchor="middle">misma pregunta de fondo, arquitectura distinta</text></svg>
+
+:::
+
+Esta separación tiene una consecuencia práctica que vale la pena notar, un mismo modelo de
+referencia de procesos puede combinarse con más de un modelo de evaluación, y un mismo modelo de
+evaluación puede aplicarse a catálogos de procesos distintos según el dominio, como verás más
+adelante con Automotive SPICE. CMMI, al mantener ambas piezas unidas, no ofrece esa misma
+flexibilidad de combinar piezas, lo cual no es un defecto del modelo, es una decisión de diseño
+distinta que responde a otro objetivo, el de dar una sola escala de madurez fácil de comunicar hacia
+afuera de la organización.
+
+## Seis niveles de capacidad y nueve atributos de proceso
+
+SPICE mide la *capacidad* de un proceso en una escala de seis niveles, del 0 al 5, donde cada nivel
+agrega expectativas nuevas sobre el anterior. El nivel 0, incompleto, describe un proceso que no
+logra su propósito o lo logra de forma parcial e impredecible. El nivel 1, ejecutado, ya logra su
+propósito, aunque sea de forma poco planificada. Del nivel 2 en adelante, cada nivel añade una capa
+de gestión más exigente, primero sobre el proyecto individual, después sobre toda la organización, y
+finalmente sobre la mejora continua a partir de datos.
+
+Cada nivel se define mediante *atributos de proceso*, con sigla PA (*Process Attribute*), que son
+las condiciones concretas que hay que demostrar para alcanzar ese nivel. En total son nueve atributos
+repartidos entre los niveles 1 a 5, uno en el primer nivel y dos en cada uno de los siguientes
+cuatro.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Los seis niveles de capacidad de proceso de SPICE del 0 al 5, incompleto, ejecutado, gestionado, establecido, predecible y en optimizacion, y debajo un ejemplo de una misma organizacion donde el proceso de gestion de requisitos alcanza el nivel 3 y el proceso de pruebas se queda en el nivel 1" font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="cds33c" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs><text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Seis niveles de capacidad de proceso, del 0 al 5</text><g fill="#eef4fa" stroke="#c7d6e6"><rect x="14" y="34" width="108" height="54" rx="8"/><rect x="134" y="34" width="108" height="54" rx="8"/><rect x="254" y="34" width="108" height="54" rx="8"/><rect x="374" y="34" width="108" height="54" rx="8"/><rect x="494" y="34" width="108" height="54" rx="8"/><rect x="614" y="34" width="108" height="54" rx="8"/></g><g text-anchor="middle" font-size="10" font-weight="600" fill="#12324f"><text x="68" y="56">0. Incompleto</text><text x="188" y="56">1. Ejecutado</text><text x="308" y="56">2. Gestionado</text><text x="428" y="56">3. Establecido</text><text x="548" y="56">4. Predecible</text><text x="668" y="56">5. Optimizacion</text></g><g text-anchor="middle" font-size="9.5" fill="#5b6876"><text x="68" y="74">sin proposito</text><text x="188" y="74">1 atributo</text><text x="308" y="74">2 atributos</text><text x="428" y="74">2 atributos</text><text x="548" y="74">2 atributos</text><text x="668" y="74">2 atributos</text></g><text x="380" y="126" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">La misma organizacion, dos procesos, dos niveles distintos</text><text x="70" y="192" font-size="10.5" fill="#12324f">Gestion de requisitos: nivel 3</text><rect x="68" y="200" width="360" height="26" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/><text x="70" y="240" font-size="10.5" fill="#12324f">Pruebas: nivel 1</text><rect x="68" y="248" width="120" height="26" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><path d="M68,300 L668,300" stroke="#c7d6e6" stroke-width="2" fill="none"/><g stroke="#c7d6e6" stroke-width="1.4"><path d="M68,294 L68,306"/><path d="M188,294 L188,306"/><path d="M308,294 L308,306"/><path d="M428,294 L428,306"/><path d="M548,294 L548,306"/><path d="M668,294 L668,306"/></g><g text-anchor="middle" font-size="10" fill="#5b6876"><text x="68" y="320">0</text><text x="188" y="320">1</text><text x="308" y="320">2</text><text x="428" y="320">3</text><text x="548" y="320">4</text><text x="668" y="320">5</text></g><text x="380" y="344" font-size="10.5" fill="#5b6876" text-anchor="middle">CMMI en su representacion por etapas clasificaria a toda la organizacion en un solo nivel</text></svg>
+
+:::
+
+- **Nivel 1, PA 1.1 Desempeño del proceso.** El proceso logra su propósito y produce los resultados
+  esperados, aunque todavía no haya evidencia de que se planifica ni de que se gestiona con cuidado.
+- **Nivel 2, PA 2.1 Gestión del desempeño.** El proyecto planifica, monitorea y ajusta la ejecución
+  del proceso frente a objetivos definidos, en vez de dejar que ocurra sin seguimiento.
+- **Nivel 2, PA 2.2 Gestión de los productos de trabajo.** Los documentos, el código y demás
+  productos que genera el proceso se controlan, se revisan y quedan identificados con claridad.
+- **Nivel 3, PA 3.1 Definición del proceso.** La organización define un proceso estándar propio,
+  aplicable a cualquier proyecto, en vez de dejar que cada equipo lo invente por su cuenta.
+- **Nivel 3, PA 3.2 Despliegue del proceso.** Ese proceso estándar se adapta y se pone en práctica de
+  forma efectiva en cada proyecto concreto de la organización.
+- **Nivel 4, PA 4.1 Medición del proceso.** La organización recoge datos cuantitativos sobre el
+  desempeño del proceso, que sirven para tomar decisiones basadas en números y no solo en impresiones.
+- **Nivel 4, PA 4.2 Control del proceso.** Esos datos se usan para controlar el proceso dentro de
+  límites predecibles, de modo que su resultado deje de sorprender al equipo de un proyecto a otro.
+- **Nivel 5, PA 5.1 Innovación del proceso.** La organización identifica oportunidades de mejora a
+  partir de las causas de las variaciones que detecta el control cuantitativo del nivel anterior.
+- **Nivel 5, PA 5.2 Optimización del proceso.** Esas oportunidades se evalúan, se priorizan y se
+  aplican de forma sistemática, así que el proceso mejora de manera continua en vez de estancarse.
+
+La consecuencia más importante de esta arquitectura es que SPICE evalúa la capacidad de cada proceso
+por separado, no la de la organización completa de una sola vez. Una organización puede tener su
+proceso de gestión de requisitos en el nivel 3 porque lo definió y lo desplegó de forma estándar, y
+al mismo tiempo tener su proceso de pruebas apenas en el nivel 1 porque cada proyecto lo ejecuta a su
+manera, sin planificación ni control formal. Ese resultado mixto es perfectamente válido dentro de
+SPICE, mientras que CMMI, en su representación por etapas, tendría que resumir ambos procesos en un
+único nivel de madurez para toda la organización.
+
+::: {.callout-tip}
+## Reto 1. Un proceso, no toda la organización
+
+Antes de mirar la solución, piensa en esta situación. Una fábrica de software evalúa dos procesos
+con SPICE, gestión de requisitos alcanza el nivel 3, establecido, y el proceso de pruebas se queda
+en el nivel 1, ejecutado. Si esa misma organización se sometiera a una apreciación de CMMI en su
+representación por etapas, que evalúa a toda la organización con un único nivel, ¿qué pasaría con
+ese resultado mixto?
+
+<label><input type="checkbox"> CMMI reportaría dos niveles distintos, uno por cada proceso, igual que SPICE</label><br>
+<label><input type="checkbox"> CMMI ignoraría el proceso de pruebas y solo reportaría el nivel de gestión de requisitos</label><br>
+<label><input type="checkbox"> CMMI tendría que resumir ambos procesos en un único nivel de madurez para toda la organización</label><br>
+<label><input type="checkbox"> CMMI no puede evaluar organizaciones que trabajan con más de un proceso</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La opción correcta es la tercera. CMMI, en su representación por etapas, evalúa el conjunto de áreas
+de proceso de la organización y produce un único nivel de madurez que la resume completa, así que un
+resultado tan mixto como nivel 3 en un proceso y nivel 1 en otro no tiene forma de expresarse tal
+cual, queda absorbido por el nivel que la organización alcanza como conjunto. SPICE no tiene ese
+problema porque su unidad de análisis es el proceso individual desde el principio, cada proceso lleva
+su propio número y ningún resultado se combina con otro salvo que alguien decida resumirlos después,
+ya fuera de la norma. Esta es la misma distinción que vas a volver a encontrar en el cierre de esta
+guía, y que retoma el Tema 4 al desarrollar CMMI.
+:::
+
+## Qué evidencia respalda una evaluación SPICE
+
+Un equipo evaluador no le asigna un nivel a un proceso por impresión, lo hace a partir de evidencia
+concreta que revisa durante la evaluación, documentos, registros, entrevistas con el equipo del
+proyecto y observación directa del trabajo. Esa evidencia se organiza según qué está demostrando, si
+el proceso cumple su propósito básico o si además se gestiona con la disciplina que exige un nivel
+superior.
+
+Para el nivel 1, la evidencia son las *prácticas base*, las actividades esenciales que un proceso
+tiene que realizar para lograr su propósito, y los *productos de trabajo* que esas actividades
+producen, un documento de requisitos, un plan de pruebas, un registro de cambios aprobados. Para los
+niveles 2 y superiores, la evidencia son las *prácticas genéricas*, actividades que aplican por igual
+a cualquier proceso, sin importar cuál sea, porque lo que demuestran no es qué hace el proceso sino
+cómo se gestiona, se planifica, se controla, se mide o se mejora.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos tipos de evidencia en una evaluacion SPICE, las practicas base y los productos de trabajo que muestran si el proceso cumple su proposito en el nivel 1, y las practicas genericas que muestran la capacidad del proceso en los niveles 2 a 5, ambas convergen en la evidencia que revisa el equipo evaluador" font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="cds33d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs><text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Que evidencia respalda una evaluacion SPICE</text><g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="42" width="320" height="64" rx="10"/><rect x="410" y="42" width="320" height="64" rx="10"/></g><text x="190" y="66" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Practicas base y productos de trabajo</text><text x="190" y="84" font-size="10.5" fill="#5b6876" text-anchor="middle">indicadores de proceso, nivel 1</text><text x="570" y="66" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Practicas genericas</text><text x="570" y="84" font-size="10.5" fill="#5b6876" text-anchor="middle">indicadores de capacidad, niveles 2 a 5</text><rect x="235" y="164" width="290" height="72" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/><text x="380" y="192" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Resultados observables</text><text x="380" y="210" font-size="10.5" fill="#3c7d7a" text-anchor="middle">la evidencia que revisa el equipo evaluador</text><g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds33d)"><path d="M190,106 C240,130 300,144 340,164"/><path d="M570,106 C500,130 440,144 420,164"/></g><text x="380" y="264" font-size="11" fill="#5b6876" text-anchor="middle">ninguna evaluacion se apoya en una sola practica aislada,</text><text x="380" y="280" font-size="11" fill="#5b6876" text-anchor="middle">se busca un patron consistente de evidencia</text></svg>
+
+:::
+
+Ninguna de las dos categorías reemplaza a la otra, se acumulan. Para que un proceso alcance el nivel
+3, por ejemplo, tiene que seguir mostrando las prácticas base y los productos de trabajo del nivel 1,
+y además mostrar las prácticas genéricas de gestión del desempeño y de productos de trabajo del nivel
+2, y las de definición y despliegue del proceso del nivel 3. Ningún nivel se otorga por adelantado, ni
+se salta, porque cada uno depende de que el anterior ya esté cubierto con evidencia consistente, no
+con un único documento aislado que alguien preparó justo antes de la visita del equipo evaluador.
+
+::: {.callout-tip}
+## Reto 2. Clasifica la evidencia de una evaluación
+
+Caso de estudio. Un equipo evaluador visita a un proveedor que quiere certificar su proceso de
+gestión de configuración. Durante la visita recopila estos cuatro elementos, un registro de que el
+comité de cambios aprobó formalmente cada modificación a la línea base, un documento donde la
+organización definió por escrito el procedimiento estándar de gestión de configuración que aplica a
+todos los proyectos, la lista de elementos de configuración identificados en el proyecto actual, y
+una entrevista donde el responsable del proyecto explica cómo monitorea el avance del proceso frente
+a objetivos planeados.
+
+Antes de mirar la solución, decide para cada elemento si es evidencia de nivel 1, que el proceso
+cumple su propósito con prácticas base y productos de trabajo, o evidencia de nivel 2 o superior, que
+el proceso además se gestiona con prácticas genéricas.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+- La lista de elementos de configuración identificados es evidencia de nivel 1, un producto de
+  trabajo que muestra que el propósito básico del proceso, identificar qué se controla, se cumplió.
+- El registro de aprobación formal de cada cambio es evidencia de nivel 1 también, corresponde a una
+  práctica base del proceso de gestión de configuración, aprobar los cambios antes de aplicarlos.
+- La entrevista sobre cómo se monitorea el avance frente a objetivos planeados es evidencia de nivel
+  2, corresponde a la práctica genérica de gestión del desempeño, PA 2.1, que exige planificar y
+  monitorear el proceso, no solo ejecutarlo.
+- El documento con el procedimiento estándar que aplica a todos los proyectos es evidencia de nivel
+  3, no de nivel 2, porque estandarizar el proceso para toda la organización corresponde a la
+  práctica genérica de definición del proceso, PA 3.1, un paso más allá de que un solo proyecto lo
+  gestione bien.
+:::
+
+## Automotive SPICE, cuando SPICE es una exigencia contractual real
+
+Automotive SPICE es la aplicación de SPICE más conocida en la industria, la variante adaptada al
+desarrollo de software y sistemas embebidos para vehículos, publicada y mantenida por el VDA QMC, el
+centro de gestión de calidad de la asociación alemana de la industria automotriz (en alemán *Verband
+der Automobilindustrie*, VDA). Se alinea con la familia ISO/IEC 33000 que viste arriba, en particular
+con las normas que definen los requisitos de evaluación y el marco de medición de capacidad, y adapta
+el catálogo de procesos a las particularidades del desarrollo automotriz, ingeniería de sistemas,
+ingeniería de software y gestión del proyecto, entre otros grupos de procesos propios del sector.
+
+La razón por la que Automotive SPICE importa en este curso no es solo teórica. Un grupo de
+fabricantes alemanes, entre ellos Audi, BMW, Daimler, Porsche y Volkswagen, formó la iniciativa de
+fabricantes de software (en alemán *Herstellerinitiative Software*, HIS) y desde el año 2007 exige a
+sus proveedores de software embebido evaluaciones de Automotive SPICE, no de otro marco, como
+condición para adjudicar contratos. Con eso, SPICE deja de ser un ejercicio de comparación entre
+normas y se convierte en un requisito de negocio real, un proveedor que quiere venderle software a
+esos fabricantes necesita demostrar el nivel de capacidad que le exige el contrato, evaluado por
+personal certificado.
+
+Esa certificación de evaluadores tiene su propio esquema internacional, intacs (en inglés
+*International Assessor Certification Scheme*), que forma y certifica a los evaluadores de SPICE y de
+Automotive SPICE bajo criterios comunes, reconocidos en toda la industria automotriz. Que exista un
+esquema de certificación de personas, no solo de procesos, muestra qué tan formalizada está la
+práctica de evaluar con SPICE fuera del aula, y por qué a un proveedor no le basta con leer la norma
+para presentarse a una evaluación, necesita un equipo evaluador acreditado bajo ese esquema.
+
+## Cierre, la misma pregunta que CMMI, con otra unidad de análisis
+
+Con este tema termina tu recorrido por SPICE, y el Tema 4 retoma la misma pregunta de
+fondo, qué tan maduro es el proceso con el que un equipo construye software, desde un ángulo
+distinto. CMMI resume la madurez de la organización completa en un único nivel, mientras que SPICE
+evalúa la capacidad de cada proceso por separado y deja que una misma organización conviva con
+procesos en distintos niveles a la vez. La unidad de análisis, el proceso individual o la
+organización entera, es la decisión de fondo que separa ambos marcos, más que cualquier diferencia en
+el número de niveles o en los nombres de las prácticas. Cuando compares los dos marcos, empieza
+siempre por esa pregunta, qué es lo que se está evaluando, un proceso o una organización, antes de
+fijarte en cualquier otro detalle.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía
+
+- [ ] De dónde viene el nombre SPICE y cómo la norma ISO/IEC 15504 se convirtió en la familia
+      ISO/IEC 33000
+- [ ] Por qué SPICE separa un modelo de referencia de procesos (PRM) de un modelo de evaluación de
+      procesos (PAM), y en qué se diferencia esa arquitectura de la de CMMI
+- [ ] Los seis niveles de capacidad de proceso, del 0 al 5, y los nueve atributos de proceso que los
+      componen
+- [ ] Por qué SPICE evalúa cada proceso por separado y qué significa que una organización tenga un
+      proceso en nivel 3 y otro en nivel 1 al mismo tiempo
+- [ ] Qué tipo de evidencia respalda una evaluación SPICE, prácticas base y productos de trabajo en
+      el nivel 1, prácticas genéricas en los niveles superiores
+- [ ] Qué es Automotive SPICE y por qué es un requisito contractual real en la industria automotriz,
+      no solo un marco teórico
+:::
+
+## Recursos
+
+- [Wikipedia: ISO/IEC 15504](https://en.wikipedia.org/wiki/ISO/IEC_15504). Resume el origen del
+  proyecto SPICE, los seis niveles de capacidad y los nueve atributos de proceso, como puente hacia
+  el catálogo oficial de ISO.
+- [Wikipedia: ISO/IEC 33001](https://en.wikipedia.org/wiki/ISO/IEC_33001). Resume la familia de
+  normas sucesora de ISO/IEC 15504 y cómo se reparten sus documentos.
+- [ISO, catálogo de ISO/IEC 33001:2015](https://www.iso.org/standard/54175.html)
+- [ISO, catálogo de ISO/IEC 33020:2019](https://www.iso.org/standard/78526.html)
+- [Wikipedia: Automotive SPICE](https://en.wikipedia.org/wiki/Automotive_SPICE). Resume el origen de
+  la iniciativa HIS, el rol del VDA QMC y la alineación con la familia ISO/IEC 33000.
+- [VDA QMC, certificación de Automotive SPICE](https://vda-qmc.de/en/automotive-spice/automotive-spice-zertifizierung/)
+- [UL Solutions, formación certificada por intacs para evaluadores de Automotive SPICE](https://www.ul.com/sis/training/intacs-certified-automotive-spice-competent-assessor-v31)
+- [TechTarget, qué es SPICE](https://www.techtarget.com/searchsoftwarequality/definition/Software-Process-Improvement-and-Capability-dEtermination)
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

@@ -1,0 +1,367 @@
+---
+title: "Tema 2. Puntos de control y el costo de la calidad"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                             |
+|--------|-------------------------------------------------------------|
+| Unidad | Unidad 4. Validación y verificación                        |
+| Tema   | Tema 2. Puntos de control y el costo de la calidad          |
+:::
+
+[Diapositivas de la sesión](presentacion.qmd)
+
+El Tema 1 de esta unidad separó dos preguntas que se confunden con facilidad, verificar, comprobar
+que el software se construye correctamente según lo que se especificó, de validar, comprobar que el
+software construido es el que el usuario necesita, y mostró con el estándar IEEE 1012 y el modelo en
+V dónde encaja cada técnica dentro del ciclo de vida. Ese estándar responde qué se revisa en cada
+fase, así que a este tema le toca responder cuándo se revisa y con qué vara se decide si el
+resultado pasa o se devuelve. La respuesta corta es un punto de control, un momento fijado de
+antemano en el que alguien compara un entregable contra un criterio escrito y decide si avanza. La
+segunda mitad de la sesión mira el mismo problema desde el bolsillo del proyecto, con el modelo del
+costo de la calidad, que ordena en cuatro categorías cuánto cuesta prevenir un defecto frente a
+cuánto cuesta dejarlo llegar hasta el cliente, y con la idea de Philip Crosby de que la calidad sale
+gratis, una frase que se repite más de lo que se entiende.
+
+## Puntos de control: dónde se detiene el proyecto a revisar
+
+Un *punto de control*, en inglés *gate*, es un momento fijado de antemano en el calendario de un
+proyecto en el que un entregable concreto se detiene antes de seguir adelante, y alguien con
+autoridad para hacerlo decide si ese entregable pasa o si se devuelve para corregirse. La ubicación
+más común es el final de cada fase del ciclo de vida, el requisito antes de pasar a diseño, el
+diseño antes de pasar a código, el código antes de pasar a pruebas, y las pruebas antes de pasar a
+producción, aunque también se coloca un punto de control justo antes de cada despliegue, incluso
+cuando ese despliegue no cierra una fase completa sino que libera una versión menor sobre un sistema
+que ya está en producción.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco fases del ciclo de vida del software, requisitos, diseno, codigo, pruebas y despliegue, conectadas por puntos de control entre cada fase; debajo, el mecanismo interno de un punto de control, evidencia de verificacion o validacion comparada contra criterios de aceptacion, que decide si el entregable avanza o vuelve a la fase anterior" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds42a" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Puntos de control a lo largo del ciclo de vida</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="8" y="50" width="116" height="56" rx="8"/><rect x="162" y="50" width="116" height="56" rx="8"/><rect x="316" y="50" width="116" height="56" rx="8"/><rect x="470" y="50" width="116" height="56" rx="8"/><rect x="620" y="50" width="116" height="56" rx="8"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="66" y="82">Requisitos</text><text x="220" y="82">Diseño</text><text x="374" y="82">Código</text><text x="528" y="82">Pruebas</text><text x="678" y="82">Despliegue</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><polygon points="143,60 156,78 143,96 130,78"/><polygon points="297,60 310,78 297,96 284,78"/><polygon points="451,60 464,78 451,96 438,78"/><polygon points="601,60 614,78 601,96 588,78"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds42a)"><path d="M124,78 L128,78"/><path d="M156,78 L160,78"/><path d="M278,78 L282,78"/><path d="M310,78 L314,78"/><path d="M432,78 L436,78"/><path d="M464,78 L468,78"/><path d="M586,78 L586,78"/><path d="M614,78 L618,78"/></g>
+  <text x="380" y="120" font-size="11" fill="#5b6876" text-anchor="middle">cada rombo es un punto de control, aquí está lo que pasa dentro de uno</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="16" y="150" width="220" height="54" rx="9"/></g>
+  <text x="126" y="172" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Evidencia de</text>
+  <text x="126" y="189" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">verificación y/o validación</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="296" y="150" width="200" height="54" rx="9"/></g>
+  <text x="396" y="172" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Criterios de</text>
+  <text x="396" y="189" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">aceptación</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="576" y="128" width="160" height="42" rx="8"/><rect x="576" y="184" width="160" height="42" rx="8"/></g>
+  <text x="656" y="153" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Avanza</text>
+  <text x="656" y="205" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">Vuelve a la fase</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds42a)"><path d="M236,177 L294,177"/><path d="M496,166 C530,158 550,153 574,149"/></g>
+  <path d="M496,188 C530,196 550,201 574,201" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="5 5" marker-end="url(#cds42a)"/>
+  <text x="656" y="222" font-size="10" fill="#5b6876" text-anchor="middle">si no cumple el criterio</text>
+</svg>
+
+:::
+
+Lo que hace útil a un punto de control no es la fecha en el calendario, sino la evidencia que exige
+antes de dejar pasar el entregable, y esa evidencia se conecta de forma directa con la distinción
+del Tema 1. Un punto de control puede exigir evidencia de verificación, por ejemplo que el código
+pasó las pruebas unitarias y que una inspección de pares no encontró desviaciones del diseño
+acordado, puede exigir evidencia de validación, por ejemplo que un grupo de usuarios reales probó el
+sistema y confirmó que resuelve la necesidad para la que se pidió, o puede exigir las dos cosas a la
+vez, como suele pasar justo antes de un despliegue a producción, donde no basta con que el código
+haga lo que el diseño decía, además tiene que servirle a quien lo va a usar. Quien define qué exige
+cada punto de control decide, sin saberlo casi siempre, cuánto tiempo y cuánto dinero le va a costar
+al proyecto cada defecto que se le escape.
+
+## Criterios de aceptación: la vara que decide
+
+Un *criterio de aceptación* es la condición concreta y verificable con la que se decide si un
+entregable pasa un punto de control o se devuelve, y sin ese criterio el punto de control deja de
+servir para algo, se convierte en una reunión donde alguien opina si el trabajo se ve bien terminado.
+Un criterio de aceptación bien escrito comparte las mismas cuatro piezas que ya viste en otras guías
+de este curso para un requisito no funcional exigible, qué se mide, el valor límite que se exige,
+las condiciones en las que ese límite aplica, y cómo se comprueba. Si el punto de control es antes de
+un despliegue, un criterio de aceptación típico se ve así.
+
+> PC-DESPLIEGUE-03. Antes de liberar una nueva versión a producción, la batería completa de pruebas
+> de regresión pasa sin fallos, la prueba de aceptación con el área de negocio queda firmada por su
+> responsable, y la cobertura de las pruebas automatizadas sobre el módulo modificado no baja del
+> 80%. Se comprueba con el reporte del sistema de integración continua adjunto a la solicitud de
+> despliegue.
+
+Fíjate en que ese criterio mezcla las dos clases de evidencia que viste arriba, la prueba de
+regresión y la cobertura son evidencia de verificación porque comprueban que el código sigue
+haciendo lo que estaba especificado, mientras que la firma del área de negocio sobre la prueba de
+aceptación es evidencia de validación porque confirma que lo construido le sirve a quien lo va a
+usar. Un criterio de aceptación que solo exigiera pruebas técnicas dejaría pasar una versión que
+funciona perfecto y que, aun así, no resuelve lo que el negocio necesitaba.
+
+::: {.callout-tip}
+## Reto 1. Convierte una condición vaga en un criterio de aceptación
+
+Un equipo escribe esta condición en su tablero para el punto de control antes de desplegar el módulo
+de pagos, "el módulo de pagos debe estar listo antes de pasar a producción". Reescríbela con las
+cuatro piezas que viste arriba, qué se mide, el valor límite, las condiciones en que aplica y cómo se
+comprueba, para que un tercero pueda decidir sin discutir contigo si el módulo pasa el punto de
+control.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+No hay una única respuesta correcta, pero cualquier reescritura que sirva de verdad necesita las
+cuatro piezas juntas, por ejemplo, "PC-PAGOS-01. Antes de desplegar el módulo de pagos a producción,
+el 100% de las pruebas automatizadas del módulo pasa sin fallos, incluidas las pruebas de los tres
+métodos de pago habilitados, y una prueba manual con datos reales de prueba confirma que una compra
+completa se procesa y se refleja en el estado de la cuenta en menos de 10 segundos. Se comprueba con
+el reporte de la batería de pruebas y con el registro firmado de la prueba manual."
+
+La versión original, "debe estar listo", no dice qué significa listo, así que dos personas distintas
+podrían leerla y llegar a conclusiones opuestas sobre si el módulo pasa el punto de control. Esa es
+justo la grieta por la que se cuela un defecto que un criterio de aceptación bien escrito hubiera
+detenido antes de que llegara a producción.
+:::
+
+## El modelo del costo de la calidad
+
+El *costo de la calidad*, conocido por su sigla en inglés COQ (*Cost of Quality*), es un modelo que
+ordena en cuatro categorías todo el dinero que una organización gasta, directa o indirectamente,
+por causa de la calidad de lo que construye. Lo introdujo Armand Feigenbaum en un artículo de 1956
+en Harvard Business Review titulado "Total Quality Control", y lo desarrollaron después Philip
+Crosby y Joseph Juran, cada uno desde su propia manera de clasificar los gastos, hasta convertirlo en
+el marco que hoy se conoce como el modelo de prevención, evaluación y falla.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las cuatro categorias del costo de la calidad en una cuadricula de dos por dos: prevencion y evaluacion arriba, como costos de control, fallas internas y fallas externas abajo, como costos de falla" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds42b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Las cuatro categorías del costo de la calidad</text>
+  <text x="380" y="34" font-size="11" fill="#5b6876" text-anchor="middle">Feigenbaum, 1956, desarrollado por Crosby y Juran</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="40" y="52" width="330" height="106" rx="10"/><rect x="390" y="52" width="330" height="106" rx="10"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="40" y="176" width="330" height="106" rx="10"/><rect x="390" y="176" width="330" height="106" rx="10"/></g>
+  <g text-anchor="middle"><text x="205" y="76" font-size="14" font-weight="700" fill="#12324f">Prevención</text><text x="555" y="76" font-size="14" font-weight="700" fill="#12324f">Evaluación</text><text x="205" y="200" font-size="14" font-weight="700" fill="#0e6f6c">Fallas internas</text><text x="555" y="200" font-size="14" font-weight="700" fill="#0e6f6c">Fallas externas</text></g>
+  <g text-anchor="middle" font-size="11.5" fill="#5b6876"><text x="205" y="96">Evitar que el defecto ocurra</text><text x="555" y="96">Encontrar el defecto a tiempo</text><text x="205" y="220">El defecto ya existe y se</text><text x="205" y="234">detecta antes de entregar</text><text x="555" y="220">El defecto ya llegó</text><text x="555" y="234">al cliente</text></g>
+  <g text-anchor="middle" font-size="10.8" fill="#12324f"><text x="205" y="122">Capacitación, revisión de</text><text x="205" y="136">requisitos, diseño revisado</text><text x="555" y="122">Pruebas, auditorías,</text><text x="555" y="136">puntos de control con</text><text x="555" y="149">criterios de aceptación</text><text x="205" y="256">Retrabajo, reproceso,</text><text x="205" y="270">depuración antes de entregar</text><text x="555" y="256">Soporte, parches de</text><text x="555" y="270">emergencia, reputación</text></g>
+  <text x="205" y="304" font-size="11.5" fill="#5b6876" text-anchor="middle">Costos de control: se pagan para</text>
+  <text x="205" y="318" font-size="11.5" fill="#5b6876" text-anchor="middle">que el defecto no exista o se detecte pronto</text>
+  <text x="555" y="304" font-size="11.5" fill="#5b6876" text-anchor="middle">Costos de falla: se pagan porque</text>
+  <text x="555" y="318" font-size="11.5" fill="#5b6876" text-anchor="middle">el defecto ya existe y alguien lo encontró</text>
+</svg>
+
+:::
+
+Las dos categorías de arriba, prevención y evaluación, se conocen juntas como *costos de control*
+porque son dinero que la organización decide gastar a propósito, antes de que el defecto le cueste
+algo peor. Las dos categorías de abajo, fallas internas y fallas externas, se conocen como *costos de
+falla* porque no se decidieron a propósito, aparecieron porque un defecto que debía haberse
+prevenido o encontrado a tiempo terminó existiendo de todas formas. En un proyecto de software, la
+prevención incluye capacitar al equipo en buenas prácticas y revisar los requisitos antes de
+codificar, la evaluación incluye correr la batería de pruebas y pasar por los puntos de control con
+sus criterios de aceptación, la falla interna incluye el retrabajo cuando una prueba encuentra un
+defecto antes de entregar, y la falla externa incluye el soporte, los parches de emergencia y el daño
+a la reputación cuando el defecto ya está en manos del cliente.
+
+## Por qué prevenir sale más barato
+
+::: {.callout-tip}
+## Reto 2. Predice antes de ver la curva
+
+Antes de seguir leyendo, marca la afirmación que te parezca más cercana a la realidad sobre la
+relación entre invertir en prevención y el costo total de la calidad.
+
+<label><input type="checkbox"> Cuesta lo mismo prevenir un defecto que dejarlo llegar al cliente</label><br>
+<label><input type="checkbox"> Prevenir cuesta más que corregir el defecto una vez que el cliente lo reporta</label><br>
+<label><input type="checkbox"> Prevenir cuesta menos que dejar que el defecto avance hasta convertirse en una falla externa</label>
+:::
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Curva cualitativa ascendente del costo de un defecto segun la categoria del costo de la calidad en la que se detecta, de prevencion a fallas externas, con el eje vertical sin numeros" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds42c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="26" font-size="12.5" font-weight="700" fill="#12324f">Costo de un defecto según dónde se detecta</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#cds42c)"><path d="M96,236 L96,44"/><path d="M96,236 L706,236"/></g>
+  <path d="M130,214 C220,206 300,192 360,168 C440,138 520,100 610,62" fill="none" stroke="#0e6f6c" stroke-width="2.5"/>
+  <g fill="#0e6f6c"><circle cx="130" cy="214" r="5"/><circle cx="290" cy="188" r="5"/><circle cx="450" cy="128" r="5"/><circle cx="610" cy="62" r="5"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="130" y="256">Prevención</text><text x="290" y="256">Evaluación</text><text x="450" y="256">Fallas internas</text><text x="610" y="256">Fallas externas</text></g>
+  <text x="380" y="284" text-anchor="middle" font-size="11.5" fill="#5b6876">El eje vertical no lleva números a propósito: la tendencia está documentada, el factor exacto depende del proyecto</text>
+</svg>
+
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La tercera opción es la que tiene respaldo. Un defecto que se previene no llega a existir, un
+defecto que se evalúa se encuentra apenas nace, y en los dos casos el costo se queda dentro del
+proyecto y bajo su control. Un defecto que se convierte en falla interna ya obligó a retrabajo, y uno
+que se convierte en falla externa además arrastra soporte, parches de emergencia y el costo de la
+reputación, que no tiene techo fijo porque depende de cuánto daño le hizo al cliente y de cuánta
+gente se enteró. El eje vertical del diagrama no lleva números a propósito, siguiendo el mismo
+cuidado que ya viste con la curva del costo de corregir tarde en el Tema 1 de la Unidad 1, la
+tendencia está bien documentada, pero el factor exacto entre una categoría y otra cambia según el
+proyecto y no conviene repetirlo como si fuera una ley fija.
+:::
+
+Esta es la razón económica por la que un punto de control con un criterio de aceptación exigente vale
+la pena, cada punto de control que detiene un defecto antes de que avance a la siguiente categoría le
+está ahorrando al proyecto la diferencia entre esa categoría y la que sigue. Un punto de control
+antes del despliegue que exige evidencia real de verificación y de validación, como el que viste en
+el Reto 1, es la forma concreta en la que la prevención y la evaluación evitan que un defecto se
+convierta en una falla interna o, peor, en una falla externa.
+
+## La calidad es gratis, pero no es un regalo
+
+Philip Crosby publicó en 1979 el libro *Quality Is Free* (La calidad es gratis), y esa frase se cita
+todo el tiempo fuera de contexto, como si dijera que hacer bien las cosas no cuesta nada. Lo que
+Crosby quiso decir es distinto y más preciso, que el costo de la mala calidad, la suma de las fallas
+internas y externas, supera casi siempre al costo de prevenir esos mismos defectos, así que invertir
+en prevención termina pagándose solo y el resultado neto es, en la práctica, gratis. La calidad no
+es un regalo porque la prevención sí cuesta dinero, capacitación, revisiones, tiempo de diseño, la
+frase de Crosby no niega ese gasto, dice que ese gasto es menor que el que evita.
+
+El malentendido más común va justo en la dirección contraria a la que Crosby quería, alguien lee
+"la calidad es gratis" y concluye que gastar menos en prevención ahorra dinero, cuando la idea
+completa es la opuesta, gastar en prevención es lo que evita un gasto todavía mayor más adelante. La
+ASQ, la Sociedad Estadounidense para la Calidad (en inglés American Society for Quality), calcula que
+el costo total de la calidad, sumando las cuatro categorías de la sección anterior, ronda entre el
+10% y el 20% de los ingresos de una empresa típica, y puede llegar hasta el 40% en organizaciones con
+problemas serios de calidad. Ese rango completo, con sus cuatro categorías adentro, es lo que un
+programa de prevención bien dirigido busca reducir, no eliminar de un plumazo, porque ni evaluar ni
+prevenir cuestan cero.
+
+::: {.callout-tip}
+## Reto 3. Clasifica cada actividad en su categoría
+
+Un equipo de proyecto hace estas ocho cosas a lo largo de un mes. Clasifica cada una en prevención,
+evaluación, falla interna o falla externa, y anota qué palabra de la frase te dio la pista.
+
+1. El equipo dicta un taller interno sobre cómo escribir requisitos verificables.
+2. Un analista revisa el diseño de la arquitectura antes de que el equipo empiece a programar.
+3. El equipo ejecuta la batería de pruebas automatizadas en cada cambio.
+4. Un auditor externo revisa que el proceso de despliegue cumple el contrato firmado con el cliente.
+5. Una prueba de aceptación en el punto de control antes del despliegue encuentra un defecto y el
+   equipo lo corrige antes de entregar.
+6. Un cliente reporta que el sistema le cobró dos veces por la misma transacción, y el equipo de
+   soporte atiende el reclamo.
+7. El equipo reprocesa un módulo completo porque no pasó el punto de control de pruebas de
+   integración.
+8. La empresa paga una compensación al cliente por el tiempo que el sistema estuvo caído.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+| Actividad | Categoría | Pista |
+|---|---|---|
+| 1. Taller de requisitos verificables | Prevención | Ocurre antes de que exista ningún defecto |
+| 2. Revisión de la arquitectura antes de programar | Prevención | Busca evitar el defecto, no encontrarlo |
+| 3. Batería de pruebas automatizadas | Evaluación | Busca encontrar un defecto que ya podría existir |
+| 4. Auditoría externa del proceso de despliegue | Evaluación | Verifica cumplimiento, no corrige nada todavía |
+| 5. Defecto encontrado y corregido antes de entregar | Falla interna | El defecto ya existía, pero no salió del proyecto |
+| 6. Soporte por un cobro duplicado que ya sufrió el cliente | Falla externa | El defecto ya llegó al cliente |
+| 7. Reproceso de un módulo que no pasó un punto de control | Falla interna | Retrabajo antes de la entrega |
+| 8. Compensación por el tiempo caído | Falla externa | El cliente ya sufrió el daño y hay que resarcirlo |
+
+Fíjate en que las actividades 3 y 4 no corrigen nada por sí solas, solo encuentran o confirman, así
+que van en evaluación. Lo que las mueve a falla interna o externa es lo que pasa después, si el
+defecto que encuentran se corrige antes de salir del proyecto o si ya se le escapó al cliente.
+:::
+
+## Caso de estudio: el punto de control que existía pero no servía
+
+El 1 de octubre de 2013 el gobierno de Estados Unidos lanzó Healthcare.gov, el sitio federal para
+comprar seguros médicos bajo la ley de reforma sanitaria conocida como Affordable Care Act. El
+contrato para construir el mercado federal, a cargo del contratista CGI Federal, arrancó en 2011 con
+un costo estimado de 56 millones de dólares, y para febrero de 2014 ese costo había subido a más de
+209 millones, mientras que el del sistema que verificaba la identidad y el ingreso de cada
+solicitante, conocido como el data hub, pasó de 30 a casi 85 millones, según documentó la Oficina de
+Rendición de Cuentas de Estados Unidos, la GAO (en inglés Government Accountability Office), en su
+informe GAO-14-694, de julio de 2014. Un informe posterior de la misma oficina, GAO-15-238, de marzo
+de 2015, revisó qué pasó con las pruebas antes del lanzamiento y encontró que el sitio y los sistemas
+que lo respaldan no se probaron por completo, que la documentación de pruebas no incluía elementos
+clave, entre ellos los criterios con los que se decidía si una prueba pasaba o no, y que el equipo
+detectó errores en el código del sitio antes del lanzamiento sin corregirlos a tiempo. Aun así, el
+proyecto se lanzó en la fecha prometida, y durante el mes de octubre de 2013 el sitio estuvo caído una
+parte considerable del tiempo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Linea de tiempo del caso Healthcare.gov: contrato en 2011 con sobrecosto documentado por el GAO, pruebas incompletas antes de octubre de 2013 sin criterios claros de aceptacion, lanzamiento el 1 de octubre de 2013 pese a errores conocidos, y los informes del GAO de 2014 y 2015 que documentaron el sobrecosto y las fallas de prueba" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <path d="M24,56 L736,56" stroke="#c7d6e6" stroke-width="2.5" fill="none"/>
+  <g fill="#0e6f6c"><circle cx="105" cy="56" r="7"/><circle cx="285" cy="56" r="7"/><circle cx="465" cy="56" r="7"/><circle cx="645" cy="56" r="7"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5"><path d="M105,63 L105,84"/><path d="M285,63 L285,84"/><path d="M465,63 L465,84"/><path d="M645,63 L645,84"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="86" width="170" height="150" rx="10"/><rect x="200" y="86" width="170" height="150" rx="10"/><rect x="380" y="86" width="170" height="150" rx="10"/><rect x="560" y="86" width="170" height="150" rx="10"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="700" fill="#12324f"><text x="105" y="34">2011</text><text x="285" y="34">Antes de octubre 2013</text><text x="465" y="34">1 de octubre de 2013</text><text x="645" y="34">2014 a 2015</text></g>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="105" y="112">Contrato FFM</text><text x="285" y="112">Pruebas incompletas</text><text x="465" y="112">Lanzamiento</text><text x="645" y="112">Informes del GAO</text></g>
+  <g text-anchor="middle" font-size="10.8" fill="#5b6876"><text x="105" y="136">Estimado en 56 millones</text><text x="105" y="150">de dólares</text><text x="285" y="136">Sin criterios claros para</text><text x="285" y="150">decidir si una prueba pasaba</text><text x="465" y="136">Pese a errores de código</text><text x="465" y="150">conocidos y sin corregir</text><text x="645" y="136">GAO-14-694: sobrecosto</text><text x="645" y="150">de más de 200 millones</text></g>
+  <g text-anchor="middle" font-size="10.8" fill="#12324f"><text x="105" y="182">Subió a más de 209</text><text x="105" y="196">millones para 2014</text><text x="285" y="182">GAO-15-238 documentó</text><text x="285" y="196">la falta de criterios</text><text x="465" y="182">El sitio estuvo caído</text><text x="465" y="196">gran parte de octubre</text><text x="645" y="182">GAO-15-238: fallas</text><text x="645" y="196">de prueba antes del lanzamiento</text></g>
+</svg>
+
+:::
+
+Antes de seguir, pregúntate qué debía haber exigido, como mínimo, el punto de control previo al
+lanzamiento del 1 de octubre para que ese defecto no hubiera llegado a producción.
+
+La propia GAO señala la respuesta con precisión, el punto de control existía en el calendario del
+proyecto, pero le faltaba lo que convierte un punto de control en algo útil, un criterio de
+aceptación escrito que dijera con qué evidencia concreta se consideraba que un sistema pasaba la
+prueba. Sin ese criterio, la decisión de lanzar o no lanzar quedó en manos de un juicio informal bajo
+la presión de una fecha política fija, y ese juicio informal perdió frente a la fecha. El defecto que
+un criterio de aceptación bien escrito hubiera detenido en la categoría de evaluación, la más barata
+de las dos categorías de costo de control, terminó convertido en una falla externa, la más cara de
+las cuatro, con el costo añadido de la atención mediática que acompañó el fracaso del lanzamiento.
+
+## Lo que sigue
+
+Hoy viste que controlar la calidad no es una promesa vaga sino un mecanismo concreto, puntos de
+control con criterios de aceptación escritos, y que ese mecanismo se puede justificar con números
+propios, el modelo del costo de la calidad, que muestra por qué gastar en prevención sale más barato
+que dejar que el defecto avance. El Tema 3 cierra la unidad y el curso completo con dos preguntas que
+se apoyan directamente en lo de hoy, qué significa certificarse en un estándar de calidad, y cómo se
+pesan entre sí los distintos factores que determinan si un producto o un proceso es de calidad.
+Ninguna certificación seria se sostiene sin medir antes cuánto cuesta la calidad y sin puntos de
+control que generen la evidencia que un auditor externo va a pedir, así que lo de hoy es la base
+sobre la que se construye lo que sigue.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía
+
+- [ ] Qué es un punto de control y en qué momentos del ciclo de vida se suele colocar
+- [ ] Qué hace que un criterio de aceptación sirva de verdad, y qué evidencia de verificación o de
+      validación puede exigir
+- [ ] Las cuatro categorías del costo de la calidad, con un ejemplo propio de cada una
+- [ ] Por qué invertir en prevención reduce el costo total de la calidad, aunque a primera vista
+      parezca un gasto adicional
+- [ ] Qué quiso decir Crosby con "la calidad es gratis" y por qué se malinterpreta con frecuencia
+- [ ] Qué punto de control falló en Healthcare.gov y qué le faltaba para funcionar
+:::
+
+## Recursos
+
+- ASQ (American Society for Quality). "What is Cost of Quality (COQ)?"
+  [asq.org, quality-resources, cost-of-quality](https://asq.org/quality-resources/cost-of-quality)
+- Feigenbaum, A. V. (1956). "Total Quality Control." Harvard Business Review, 34(6), 93-101.
+- Crosby, P. B. (1979). *Quality Is Free: The Art of Making Quality Certain.* McGraw-Hill.
+- Juran, J. M. y Gryna, F. M. (eds.). *Juran's Quality Control Handbook.* McGraw-Hill.
+- [Wikipedia: Quality costs](https://en.wikipedia.org/wiki/Quality_costs). Puente hacia el trabajo
+  original de Feigenbaum, Crosby y Juran.
+- GAO (2014). *Healthcare.gov: Ineffective Planning and Oversight Practices Underscore the Need for
+  Improved Contract Management.* GAO-14-694.
+  [gao.gov, products, gao-14-694](https://www.gao.gov/products/gao-14-694)
+- GAO (2015). *Healthcare.gov: CMS Has Taken Steps to Address Problems, but Needs to Further
+  Implement Systems Development Best Practices.* GAO-15-238.
+  [gao.gov, products, gao-15-238](https://www.gao.gov/products/gao-15-238)
+- Pressman, R. S. *Ingeniería de software: un enfoque práctico.* Capítulo sobre gestión de calidad y
+  aseguramiento.
+- Sommerville, I. *Ingeniería de software.* Capítulo sobre gestión de calidad.
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

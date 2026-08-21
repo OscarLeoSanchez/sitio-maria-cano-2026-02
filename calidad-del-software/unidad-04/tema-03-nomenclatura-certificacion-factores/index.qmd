@@ -1,0 +1,456 @@
+---
+title: "Tema 3. A quién certifica una certificación, y el precio de cada atributo de calidad"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                              |
+|--------|------------------------------------------------------------------------------|
+| Unidad | Unidad 4. Validación y verificación                                          |
+| Tema   | Tema 3. A quién certifica una certificación, y el precio de cada atributo de calidad |
+:::
+
+[Diapositivas de la sesión](presentacion.qmd)
+
+El Tema 2 mostró con qué puntos de control y qué criterios de aceptación un equipo verifica que un
+entregable cumple lo pactado, y con qué modelo de costo de la calidad se compara lo que cuesta
+prevenir un defecto contra lo que cuesta corregirlo después de que ya llegó a producción. Ese
+trabajo de control deja una pregunta abierta que este tema completa, cómo comunicarle a alguien
+externo al equipo, un cliente, un regulador, un futuro empleador, que ese control se hizo bien. La
+respuesta casi siempre pasa por la palabra certificación, y esa palabra esconde una trampa, porque
+se usa para tres situaciones distintas que rara vez alguien distingue con cuidado. Hoy vas a
+aprender a distinguirlas, a leer con espíritu crítico qué garantiza en realidad una certificación y
+qué no, y a analizar los factores que determinan la calidad de un software con los intercambios que
+existen entre ellos, la clase de decisión que un ingeniero toma con criterio y no por intuición. Con
+este tema cierra la Unidad 4 y el curso completo, así que la última sección conecta las cuatro
+unidades en una sola idea.
+
+## Tres cosas que puede significar "certificado"
+
+Decir que un software está certificado suena a una sola afirmación, pero puede describir tres
+situaciones completamente distintas según qué fue lo que en realidad pasó por una evaluación
+externa, el producto en sí, la organización que lo construyó, o una persona del equipo. Confundir
+esas tres cosas no es un descuido menor, porque cada una da una garantía distinta sobre un objeto
+distinto, y presentarlas como si fueran intercambiables es, en el mejor de los casos, impreciso, y
+en el peor, engañoso.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres significados de la palabra certificado. Un nodo central se ramifica en certificacion de producto o sistema con el ejemplo de Common Criteria, certificacion de proceso u organizacion con los ejemplos de ISO 9001 y CMMI ya vistos en la Unidad 3, y certificacion de personas con el ejemplo de ISTQB" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds43a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Tres cosas que puede significar "certificado"</text>
+  <rect x="290" y="32" width="180" height="50" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="61" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Certificación</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="146" width="230" height="96" rx="10"/><rect x="265" y="146" width="230" height="96" rx="10"/><rect x="520" y="146" width="230" height="96" rx="10"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="125" y="170">Producto o sistema</text><text x="380" y="170">Proceso u organización</text><text x="635" y="170">Personas</text></g>
+  <g text-anchor="middle" font-size="10.8" fill="#5b6876"><text x="125" y="190">certifica el objeto en sí</text><text x="380" y="190">certifica cómo trabaja el equipo</text><text x="635" y="190">certifica el conocimiento</text></g>
+  <g text-anchor="middle" font-size="10.3" fill="#3c7d7a"><text x="125" y="210">ej. Common Criteria</text><text x="380" y="210">ej. ISO 9001, CMMI</text><text x="635" y="210">ej. ISTQB</text><text x="125" y="224">(ISO/IEC 15408)</text><text x="380" y="224">(vistos en la Unidad 3)</text><text x="635" y="224">Certified Tester</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds43a)"><path d="M340,82 C280,104 200,124 140,144"/><path d="M380,82 L380,144"/><path d="M420,82 C480,104 560,124 620,144"/></g>
+</svg>
+
+:::
+
+- **Certificación de producto o sistema.** Evalúa el objeto concreto que se va a usar, con
+  supuestos y alcance definidos en el propio certificado. El ejemplo más claro en seguridad es
+  Common Criteria, normalizado internacionalmente como ISO/IEC 15408, que evalúa un producto de
+  tecnología específico, un sistema operativo, un cortafuegos, una tarjeta inteligente, contra
+  reclamos de seguridad que el propio fabricante declaró en un documento llamado perfil de
+  protección o blanco de seguridad. El resultado es un nivel de garantía de evaluación, en inglés
+  *evaluation assurance level*, EAL, que va de EAL1 a EAL7, y que mide qué tan a fondo se verificó
+  el reclamo, no qué tan seguro es el producto en términos absolutos. Un dispositivo médico
+  certificado contra una norma de seguridad funcional específica es otro ejemplo del mismo tipo,
+  evalúan el producto en sí, no a la empresa que lo fabricó ni a la persona que lo programó.
+- **Certificación de proceso u organización.** Evalúa cómo trabaja el equipo o la empresa, sin
+  evaluar directamente ningún producto puntual. La Unidad 3 ya desarrolló en detalle los dos
+  ejemplos más comunes de este tipo, ISO 9001, que certifica el sistema de gestión de calidad de
+  toda la organización, y CMMI, que somete a la organización a una apreciación sobre la madurez de
+  su proceso. Ninguna de las dos revisa línea por línea un producto de software concreto, revisan si
+  la forma de trabajar de la organización sigue un sistema documentado y repetible.
+- **Certificación de personas.** Evalúa el conocimiento individual de una persona en un momento
+  dado, sin decir nada sobre ningún producto ni sobre la organización donde trabaja esa persona. El
+  ejemplo de referencia en esta industria es el esquema *Certified Tester* de la Junta
+  Internacional de Calificaciones de Pruebas de Software, conocida por su sigla en inglés ISTQB
+  (*International Software Testing Qualifications Board*), que agrupa a 69 juntas nacionales
+  miembro en más de 130 países y que reporta más de un millón de certificaciones emitidas. Su
+  certificación de nivel básico, *Foundation Level*, es el punto de entrada para probadores,
+  analistas y gerentes de pruebas, y sobre esa base construye niveles avanzados y de experto en
+  temas específicos de la disciplina. Que una persona tenga esa certificación demuestra que esa
+  persona conoce las técnicas de pruebas de software, no que un producto concreto que esa persona
+  haya probado esté libre de defectos.
+
+Caso de estudio. Una empresa que vende un sistema de gestión hospitalaria anuncia en su propuesta
+comercial que su software está certificado, y respalda esa frase con dos datos, la organización
+tiene ISO 9001 y dos de sus analistas de pruebas tienen la certificación ISTQB Foundation Level. El
+hospital que evalúa comprar el sistema quiere saber si esa evidencia le basta para confiar en que el
+producto específico protege los datos clínicos de sus pacientes como exige la regulación del
+sector. ¿Le basta esa evidencia, y si no, qué debería pedir en su lugar?
+
+No le basta. La certificación ISO 9001 demuestra que la organización sigue un sistema de gestión de
+calidad, no que este producto puntual maneje bien los datos clínicos, y las dos certificaciones
+ISTQB demuestran que dos personas conocen técnicas de pruebas, no que ese conocimiento se haya
+aplicado con éxito sobre este sistema en particular. Lo que el hospital necesita es evidencia sobre
+el producto mismo, un reporte de pruebas de seguridad realizado sobre este sistema, o si el riesgo
+lo justifica, una certificación de producto como Common Criteria evaluada sobre el módulo que
+maneja esos datos, con su alcance y sus supuestos declarados por escrito. Pedir las tres cosas
+juntas, evidencia de organización, de personas y de producto, da una imagen más completa que
+conformarse con cualquiera de las tres por separado.
+
+## Qué significa y qué no significa una certificación
+
+Con los tres tipos ya distinguidos, queda una pregunta que aplica a los tres por igual, qué
+garantiza en realidad un certificado una vez que se otorgó. La Unidad 3 ya mostró con el caso
+Volkswagen que la certificación ISO 9001 de una organización no evitó un fraude deliberado en sus
+motores, y la Unidad 2 mostró con el caso de CMMI convertido en teatro de cumplimiento cómo perseguir
+un nivel de madurez como fin en sí mismo puede dejar la calidad real del producto sin mejorar. La
+certificación de producto tiene su propio caso que ilustra el mismo problema desde otro ángulo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Linea de tiempo del caso Windows XP y Windows Server 2003, certificados Common Criteria con nivel de garantia de evaluacion EAL4+ en un momento dado bajo supuestos de entorno definidos, y años despues siguieron recibiendo parches de seguridad para vulnerabilidades encontradas, lo que muestra que una certificacion evalua reclamos bajo supuestos de un momento, no garantiza seguridad para siempre" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Una certificación es una fotografía, no una película</text>
+  <path d="M40,64 L720,64" stroke="#c7d6e6" stroke-width="2.5" fill="none"/>
+  <g fill="#0e6f6c"><circle cx="180" cy="64" r="7"/><circle cx="580" cy="64" r="7"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5"><path d="M180,71 L180,94"/><path d="M580,71 L580,94"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="50" y="96" width="260" height="126" rx="10"/></g>
+  <rect x="450" y="96" width="260" height="126" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="180" y="44" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Momento de la evaluación</text>
+  <text x="580" y="44" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Años después</text>
+  <text x="180" y="118" font-size="11.3" font-weight="600" fill="#0e6f6c" text-anchor="middle">Windows XP y Server 2003</text>
+  <text x="180" y="136" font-size="10.3" fill="#5b6876" text-anchor="middle">certificados Common Criteria</text>
+  <text x="180" y="152" font-size="10.3" fill="#5b6876" text-anchor="middle">con EAL4+, bajo los supuestos</text>
+  <text x="180" y="168" font-size="10.3" fill="#5b6876" text-anchor="middle">de entorno de su Security Target</text>
+  <text x="180" y="192" font-size="10.1" fill="#3c7d7a" text-anchor="middle">Los reclamos de seguridad</text>
+  <text x="180" y="206" font-size="10.1" fill="#3c7d7a" text-anchor="middle">quedaron verificados ahí</text>
+  <text x="580" y="118" font-size="11.3" font-weight="600" fill="#12324f" text-anchor="middle">Siguieron recibiendo</text>
+  <text x="580" y="136" font-size="10.3" fill="#5b6876" text-anchor="middle">parches de seguridad para</text>
+  <text x="580" y="152" font-size="10.3" fill="#5b6876" text-anchor="middle">vulnerabilidades encontradas</text>
+  <text x="580" y="168" font-size="10.3" fill="#5b6876" text-anchor="middle">después de la certificación</text>
+  <text x="380" y="246" font-size="10.6" fill="#5b6876" text-anchor="middle">Un EAL más alto evalúa con más rigor los reclamos, no promete más seguridad futura</text>
+</svg>
+
+:::
+
+Windows XP y Windows Server 2003 obtuvieron una certificación Common Criteria con nivel de garantía
+EAL4+, y aun así ambos sistemas siguieron recibiendo parches de seguridad durante años para
+vulnerabilidades que se fueron encontrando después de esa certificación. La razón no es que la
+certificación mintiera, es que una evaluación Common Criteria verifica reclamos de seguridad bajo
+supuestos concretos del entorno de uso, documentados en el blanco de seguridad del producto, no
+promete que ningún atacante futuro va a fallar en encontrar una falla nueva. Cuanto más alto es el
+nivel de garantía, con más rigor se verificó el reclamo original, pero eso mide la profundidad de la
+evaluación, no la seguridad del producto para siempre.
+
+La lección de fondo une los tres casos de las tres unidades. Una certificación, sea de producto, de
+proceso o de personas, es evidencia de que algo se cumplió en el momento en que un evaluador lo
+revisó, con el alcance y los supuestos que ese evaluador declaró por escrito. No es una promesa que
+se extienda automáticamente hacia el futuro ni hacia partes del producto o de la organización que la
+evaluación no cubrió. Leer un certificado con cuidado significa preguntar qué se evaluó exactamente,
+bajo qué supuestos, y cuándo, antes de repetir la frase "está certificado" como si respondiera
+cualquier pregunta que alguien pueda hacer sobre la calidad del software.
+
+::: {.callout-tip}
+## Reto 1. Detecta la afirmación exacta
+
+Lee cada afirmación con calma antes de marcar. Una empresa de software presenta estas cuatro frases
+en una propuesta comercial a un cliente. Marca las que describen con precisión lo que en verdad se
+certificó, y deja sin marcar las que mezclan un tipo de certificación con otro o prometen algo que
+ningún certificado promete.
+
+<label><input type="checkbox"> "Nuestra organización tiene una apreciación CMMI nivel 3, así que el proceso con el que construimos software es predecible y repetible"</label><br>
+<label><input type="checkbox"> "Nuestro software está certificado porque dos de nuestros analistas de pruebas tienen la certificación ISTQB Foundation Level"</label><br>
+<label><input type="checkbox"> "El módulo de autenticación de nuestro producto obtuvo una certificación Common Criteria EAL4+, evaluada bajo los supuestos de entorno que describe su blanco de seguridad"</label><br>
+<label><input type="checkbox"> "Estamos certificados ISO 9001, así que este producto en particular no tiene defectos"</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+Son precisas la primera y la tercera. La primera describe con exactitud qué certifica una
+apreciación CMMI, la madurez del proceso de la organización, sin decir nada sobre ningún producto en
+particular. La tercera describe con exactitud qué certifica Common Criteria, un producto concreto,
+aquí un módulo de autenticación, evaluado bajo supuestos de entorno que el propio certificado
+documenta.
+
+Las otras dos mezclan un tipo de certificación con otro. La segunda convierte una certificación de
+personas, el conocimiento individual de dos analistas, en una afirmación sobre el producto, cuando
+que dos personas estén certificadas no dice nada sobre si el software en sí tiene menos defectos. La
+cuarta comete el mismo error con una certificación de proceso, que la organización esté certificada
+ISO 9001 demuestra que sigue un sistema de gestión de calidad, no que un producto puntual esté libre
+de defectos, el mismo error que la Unidad 3 mostró con el caso Volkswagen, donde la certificación
+ISO 9001 de la organización no evitó el fraude en un producto concreto.
+:::
+
+## Factores de calidad y sus intercambios
+
+La Unidad 1 presentó las nueve características de calidad de producto de la edición 2023 de
+ISO/IEC 25010, adecuación funcional, eficiencia de desempeño, compatibilidad, capacidad de
+interacción, fiabilidad, seguridad, mantenibilidad, flexibilidad y seguridad funcional, como el
+catálogo con el que la industria parte la calidad de un producto en piezas medibles. Lo que esa
+unidad no desarrolló a fondo es que esas nueve características casi nunca crecen todas a la vez sin
+costo, mejorar una casi siempre le cuesta algo a otra, y un ingeniero que no reconoce ese intercambio
+termina optimizando un atributo mientras empeora otro sin darse cuenta.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos ejemplos de intercambio entre caracteristicas de la norma ISO IEC 25010. Seguridad contra usabilidad, mas capas de verificacion agregan friccion al usuario, y portabilidad contra eficiencia de desempeno, codigo generico para muchas plataformas aprovecha menos una plataforma especifica" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds43c" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Optimizar un atributo casi siempre cuesta algo de otro</text>
+  <rect x="20" y="36" width="210" height="70" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="530" y="36" width="210" height="70" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="125" y="58" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Seguridad</text>
+  <text x="125" y="76" font-size="10.2" fill="#3c7d7a" text-anchor="middle">protege datos y accesos</text>
+  <text x="125" y="92" font-size="9.8" fill="#3c7d7a" text-anchor="middle">con más capas de verificación</text>
+  <text x="635" y="58" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Usabilidad</text>
+  <text x="635" y="76" font-size="10.2" fill="#5b6876" text-anchor="middle">el usuario logra su tarea</text>
+  <text x="635" y="92" font-size="9.8" fill="#5b6876" text-anchor="middle">con la menor fricción posible</text>
+  <path d="M235,71 L525,71" fill="none" stroke="#8fb3d1" stroke-width="1.8" stroke-dasharray="5 5" marker-end="url(#cds43c)" marker-start="url(#cds43c)"/>
+  <text x="380" y="62" font-size="10.3" fill="#5b6876" text-anchor="middle">sube una, baja la otra</text>
+  <rect x="20" y="160" width="210" height="70" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="530" y="160" width="210" height="70" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="125" y="182" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Portabilidad</text>
+  <text x="125" y="200" font-size="10.2" fill="#3c7d7a" text-anchor="middle">se adapta a más plataformas</text>
+  <text x="125" y="216" font-size="9.8" fill="#3c7d7a" text-anchor="middle">con código lo más genérico posible</text>
+  <text x="635" y="182" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Eficiencia de desempeño</text>
+  <text x="635" y="200" font-size="10.2" fill="#5b6876" text-anchor="middle">tiempos y uso de recursos</text>
+  <text x="635" y="216" font-size="9.8" fill="#5b6876" text-anchor="middle">ajustados a una plataforma exacta</text>
+  <path d="M235,195 L525,195" fill="none" stroke="#8fb3d1" stroke-width="1.8" stroke-dasharray="5 5" marker-end="url(#cds43c)" marker-start="url(#cds43c)"/>
+  <text x="380" y="186" font-size="10.3" fill="#5b6876" text-anchor="middle">sube una, baja la otra</text>
+  <text x="380" y="252" font-size="10.6" fill="#5b6876" text-anchor="middle">Las nueve características de ISO/IEC 25010 (Unidad 1) compiten por el mismo esfuerzo de diseño</text>
+</svg>
+
+:::
+
+El primer intercambio es entre seguridad y usabilidad. Agregar una capa de verificación en dos
+pasos a un inicio de sesión reduce el riesgo de que alguien entre con una contraseña robada, pero le
+suma al usuario un paso adicional, un código que debe recibir, leer y escribir dentro de un tiempo
+límite, y ese paso adicional es fricción medible, más usuarios que abandonan el intento o que llaman
+a soporte porque el código les llegó tarde. El segundo intercambio es entre portabilidad y eficiencia
+de desempeño. Escribir código lo más genérico posible para que corra igual en varias plataformas
+casi siempre renuncia a los ajustes específicos que solo tienen sentido en una plataforma exacta, por
+ejemplo instrucciones optimizadas para un tipo particular de procesador o una librería gráfica nativa
+de un sistema operativo, así que el mismo software portable rinde algo por debajo de lo que rendiría
+una versión escrita a la medida de una sola plataforma.
+
+Ninguno de los dos intercambios significa que haya que elegir siempre el mismo lado. Un banco elige
+más seguridad aunque cueste usabilidad porque el riesgo de un fraude pesa más que una llamada de
+soporte, mientras que un juego que necesita correr a máxima velocidad en una sola consola elige
+menos portabilidad a cambio de aprovechar esa plataforma al máximo. El punto es que la elección debe
+ser deliberada, tomada con un criterio explícito, no el resultado accidental de que nadie se detuvo a
+preguntar qué se estaba sacrificando.
+
+Tomar esa decisión con criterio, en lugar de por intuición, es exactamente lo que persigue el
+*método de análisis de intercambios de arquitectura*, en inglés *Architecture Tradeoff Analysis
+Method*, ATAM, desarrollado por el Software Engineering Institute de la Universidad Carnegie Mellon.
+ATAM reúne a los interesados del proyecto para convertir los impulsores de negocio del sistema en
+escenarios concretos de atributos de calidad, y analiza esos escenarios contra los enfoques
+arquitectónicos propuestos para encontrar dos tipos de hallazgo, un *punto de sensibilidad*, una
+propiedad de la arquitectura que resulta crítica para lograr la respuesta de un solo atributo de
+calidad, y un *punto de intercambio*, una decisión que afecta a más de un atributo de calidad a la
+vez, exactamente como los dos ejemplos de arriba. Al final del proceso, cada punto de sensibilidad y
+cada punto de intercambio queda clasificado como riesgo o como no riesgo, según qué tan grave sea su
+efecto sobre los objetivos del proyecto.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Proceso de ATAM del Software Engineering Institute. Los impulsores de negocio generan escenarios de atributos de calidad, que se analizan contra los enfoques arquitectonicos, y ese analisis produce puntos de sensibilidad que afectan un solo atributo y puntos de intercambio que afectan varios, cada uno clasificado al final como riesgo o no riesgo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds43d" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cómo ATAM encuentra riesgos en una arquitectura</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="36" width="170" height="56" rx="8"/><rect x="200" y="36" width="180" height="56" rx="8"/><rect x="400" y="36" width="170" height="56" rx="8"/><rect x="590" y="36" width="160" height="56" rx="8"/></g>
+  <g text-anchor="middle" font-size="10.6" font-weight="600" fill="#12324f">
+    <text x="95" y="60">Impulsores de</text><text x="95" y="76">negocio</text>
+    <text x="290" y="60">Escenarios de</text><text x="290" y="76">atributos de calidad</text>
+    <text x="485" y="60">Enfoques</text><text x="485" y="76">arquitectónicos</text>
+    <text x="670" y="60">Análisis de</text><text x="670" y="76">intercambios</text>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds43d)"><path d="M180,64 L198,64"/><path d="M380,64 L398,64"/><path d="M570,64 L588,64"/></g>
+  <rect x="150" y="150" width="210" height="62" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="400" y="150" width="210" height="62" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="255" y="174" font-size="11.8" font-weight="700" fill="#0e6f6c" text-anchor="middle">Puntos de sensibilidad</text>
+  <text x="255" y="192" font-size="9.8" fill="#3c7d7a" text-anchor="middle">afectan un solo atributo</text>
+  <text x="505" y="174" font-size="11.8" font-weight="700" fill="#0e6f6c" text-anchor="middle">Puntos de intercambio</text>
+  <text x="505" y="192" font-size="9.8" fill="#3c7d7a" text-anchor="middle">afectan más de un atributo</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds43d)"><path d="M670,92 C670,112 550,132 480,148"/><path d="M290,92 C290,116 280,132 270,148"/></g>
+  <rect x="230" y="248" width="300" height="42" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="273" font-size="11.2" fill="#12324f" text-anchor="middle">Cada punto se clasifica como riesgo o no riesgo</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds43d)"><path d="M255,212 L310,246"/><path d="M505,212 L450,246"/></g>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Reto 2. Aplica el razonamiento de ATAM a una decisión real
+
+Lee la situación con calma antes de responder. El equipo de un banco digital decide agregar
+verificación en dos pasos a cada inicio de sesión, con un código adicional que el usuario recibe por
+mensaje de texto y debe escribir en menos de 60 segundos. Un mes después de publicar el cambio, el
+equipo de soporte reporta un aumento del 15% en llamadas de usuarios que no logran iniciar sesión
+porque el mensaje les llega tarde o porque se equivocan al escribir el código. La gerencia pregunta
+si el equipo debería revertir el cambio.
+
+Sin correr todavía el método ATAM completo, identifica cuál característica de la ISO/IEC 25010
+mejoró con este cambio, cuál se vio afectada, y si esta decisión es un punto de sensibilidad o un
+punto de intercambio en el vocabulario que acabas de ver.
+
+<label><input type="checkbox"> Es un punto de sensibilidad, porque solo afecta la seguridad</label><br>
+<label><input type="checkbox"> Es un punto de intercambio, porque la decisión afecta seguridad y usabilidad a la vez</label><br>
+<label><input type="checkbox"> No es ninguno de los dos, porque el aumento de llamadas es un problema del equipo de soporte, no de la arquitectura</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+La opción correcta es la segunda. La verificación en dos pasos mejora la seguridad, dificulta que
+alguien inicie sesión con solo una contraseña robada, pero a la vez empeora la usabilidad, un 15%
+más de usuarios no logra completar una tarea que antes completaba sin problema. Como la misma
+decisión arquitectónica mueve dos atributos de calidad en direcciones opuestas, es un punto de
+intercambio, no un punto de sensibilidad, que por definición solo movería un atributo a la vez.
+
+Revertir el cambio sin más análisis tampoco es la respuesta correcta, porque perder la ganancia de
+seguridad tiene su propio costo si el banco ya sufrió intentos de acceso no autorizado antes de este
+cambio. Lo que un método como ATAM aportaría aquí es forzar al equipo a escribir el escenario
+completo, con qué frecuencia ocurre un intento de acceso indebido, cuánto cuesta cada uno si tiene
+éxito, y cuánto le cuesta al banco cada llamada de soporte por un código que llega tarde, para
+decidir el intercambio con datos en vez de con la primera reacción de gerencia.
+:::
+
+## Cierre de la Unidad 4
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Los cuatro temas de la Unidad 4 alrededor de un centro que representa la validacion y verificacion del software. El Tema 1 aporta metodos y estandares como el modelo en V e IEEE 1012, el Tema 2 aporta control con puntos de aceptacion y el modelo de costo de la calidad COQ, y este Tema 3 aporta nomenclatura de certificacion y analisis de factores de calidad con sus intercambios" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Los tres temas de la Unidad 4</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="40" width="220" height="72" rx="10"/><rect x="520" y="40" width="220" height="72" rx="10"/><rect x="20" y="188" width="220" height="72" rx="10"/></g>
+  <rect x="520" y="188" width="220" height="72" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="270" y="114" width="220" height="72" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="130" y="62" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Tema 1</text>
+  <text x="130" y="80" font-size="10.3" fill="#5b6876" text-anchor="middle">Métodos y estándares</text>
+  <text x="130" y="96" font-size="10.3" fill="#5b6876" text-anchor="middle">modelo en V, IEEE 1012</text>
+  <text x="630" y="62" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Tema 2</text>
+  <text x="630" y="80" font-size="10.3" fill="#5b6876" text-anchor="middle">Control y costo</text>
+  <text x="630" y="96" font-size="10.3" fill="#5b6876" text-anchor="middle">puntos de control, modelo COQ</text>
+  <text x="130" y="210" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">Tema 3, primera mitad</text>
+  <text x="130" y="228" font-size="10.3" fill="#5b6876" text-anchor="middle">Nomenclatura de certificación</text>
+  <text x="130" y="244" font-size="10.3" fill="#5b6876" text-anchor="middle">producto, proceso y personas</text>
+  <text x="630" y="210" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">Tema 3, segunda mitad</text>
+  <text x="630" y="228" font-size="10.3" fill="#3c7d7a" text-anchor="middle">Factores de calidad</text>
+  <text x="630" y="244" font-size="10.3" fill="#3c7d7a" text-anchor="middle">ISO/IEC 25010 y ATAM</text>
+  <text x="380" y="146" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Validación y</text>
+  <text x="380" y="164" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">verificación</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8"><path d="M240,80 C255,90 268,108 275,124" marker-end="url(#cds43a)"/><path d="M520,80 C500,90 495,108 488,124" marker-end="url(#cds43a)"/><path d="M240,224 C255,214 268,196 275,180" marker-end="url(#cds43a)"/><path d="M520,224 C500,214 495,196 488,180" marker-end="url(#cds43a)"/></g>
+</svg>
+
+:::
+
+Con este tema termina la Unidad 4. El Tema 1 distinguió verificar de validar y presentó el modelo en
+V y el estándar IEEE 1012 como el marco que organiza esa distinción a lo largo del ciclo de vida. El
+Tema 2 mostró con qué puntos de control y qué criterios de aceptación se ejecuta esa verificación en
+la práctica, y con qué modelo, el costo de la calidad, se compara lo que cuesta prevenir un defecto
+contra lo que cuesta corregirlo después. Hoy cerraste el círculo por dos lados, aprendiste a
+distinguir con precisión qué certifica cada tipo de certificación y a leerla sin tomarla como una
+promesa permanente, y aprendiste a mirar los atributos de calidad de un producto no como una lista de
+casillas independientes, sino como un conjunto de intercambios que un ingeniero decide con criterio,
+apoyado si hace falta en un método formal como ATAM.
+
+## Cierre del curso
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las cuatro unidades del curso de Calidad del software alrededor de un centro que representa la disciplina de sostener la calidad con evidencia verificable. Unidad 1 define que es calidad y quien la juzga, Unidad 2 muestra como se organiza un programa de SQA con actividades modelos y metricas, Unidad 3 presenta los estandares con los que la industria certifica ese trabajo, y Unidad 4 cierra con como se verifica y se valida el resultado, cuanto cuesta y que significa una certificacion" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds43f" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Las cuatro unidades del curso</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="40" width="220" height="80" rx="10"/><rect x="530" y="40" width="220" height="80" rx="10"/><rect x="10" y="200" width="220" height="80" rx="10"/></g>
+  <rect x="530" y="200" width="220" height="80" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="280" y="120" width="200" height="80" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="120" y="64" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Unidad 1</text>
+  <text x="120" y="82" font-size="10.2" fill="#5b6876" text-anchor="middle">Qué es la calidad</text>
+  <text x="120" y="98" font-size="10.2" fill="#5b6876" text-anchor="middle">y quién la juzga</text>
+  <text x="640" y="64" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Unidad 2</text>
+  <text x="640" y="82" font-size="10.2" fill="#5b6876" text-anchor="middle">Cómo se organiza un</text>
+  <text x="640" y="98" font-size="10.2" fill="#5b6876" text-anchor="middle">programa de SQA</text>
+  <text x="120" y="224" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Unidad 3</text>
+  <text x="120" y="242" font-size="10.2" fill="#5b6876" text-anchor="middle">Los estándares que</text>
+  <text x="120" y="258" font-size="10.2" fill="#5b6876" text-anchor="middle">formalizan y certifican</text>
+  <text x="640" y="224" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Unidad 4</text>
+  <text x="640" y="242" font-size="10.2" fill="#3c7d7a" text-anchor="middle">Verificar, validar,</text>
+  <text x="640" y="258" font-size="10.2" fill="#3c7d7a" text-anchor="middle">costear y certificar</text>
+  <text x="380" y="152" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Calidad del software</text>
+  <text x="380" y="170" font-size="10.3" fill="#3c7d7a" text-anchor="middle">sostenida con evidencia</text>
+  <text x="380" y="186" font-size="10.3" fill="#3c7d7a" text-anchor="middle">verificable en cada entrega</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds43f)"><path d="M230,90 C250,100 268,110 282,130"/><path d="M530,90 C510,100 492,110 478,130"/><path d="M230,230 C250,220 268,210 282,192"/><path d="M530,230 C510,220 492,210 478,192"/></g>
+</svg>
+
+:::
+
+Con este tema terminan las cuatro unidades del curso de Calidad del software. La Unidad 1 arrancó
+mostrando que la calidad no es un juicio único, que Garvin describió cinco perspectivas distintas
+sobre el mismo producto, y que quien la juzga, el usuario, el cliente, el regulador o el equipo que
+mantiene el sistema, mide cosas distintas con la norma ISO/IEC 25010 como catálogo común. La Unidad 2
+tomó ese catálogo y mostró cómo se organiza el trabajo diario de sostenerlo, un programa de SQA con
+revisiones, auditorías y gestión de configuración como pilares, con modelos como ISO/IEC 25010 y
+CMMI para darle estructura, y con métricas concretas, densidad de defectos, cobertura de código,
+complejidad ciclomática, para saber si el programa está funcionando de verdad. La Unidad 3 presentó
+los estándares con los que la industria formaliza y certifica ese trabajo a gran escala, IEEE con la
+documentación y el proceso técnico, ISO con la calidad de producto y el sistema de gestión, SPICE y
+CMMI con la madurez del proceso medida en niveles. Y esta Unidad 4 cerró el círculo entrando a la
+validación y la verificación mismas, con qué método se comprueba que el software construido cumple
+lo que se prometió, cuánto cuesta hacerlo bien frente a lo que cuesta corregirlo tarde, y qué
+significa, y qué no significa, que ese trabajo termine respaldado por una certificación.
+
+La idea que atraviesa las cuatro unidades es la misma que cerró cada uno de sus casos de estudio, el
+fraude de Volkswagen bajo una ISO 9001 vigente, el CMMI convertido en teatro de formularios, Windows
+XP certificado y aun así parcheado durante años. La calidad del software no es un estado que se
+alcanza una vez y queda fijo, es una disciplina que se sostiene entrega tras entrega con evidencia
+verificable, revisiones documentadas, métricas leídas con criterio, pruebas que de verdad ejercitan
+el sistema, y certificaciones leídas por lo que en realidad certifican y no por lo que su nombre
+sugiere. Ese hábito, más que cualquier norma en particular, es lo que separa a un equipo que
+construye calidad de uno que solo la declara.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía
+
+- [ ] Los tres tipos de certificación, de producto o sistema, de proceso u organización y de
+      personas, con un ejemplo real de cada uno
+- [ ] Por qué confundir esos tres tipos produce afirmaciones engañosas como "mi software está
+      certificado"
+- [ ] Qué garantiza y qué no garantiza una certificación una vez otorgada, con el caso de Windows XP
+      y Common Criteria como ejemplo
+- [ ] Al menos dos ejemplos concretos de intercambio entre características de ISO/IEC 25010, como
+      seguridad contra usabilidad y portabilidad contra eficiencia de desempeño
+- [ ] Qué es un punto de sensibilidad y un punto de intercambio en el vocabulario de ATAM, y para
+      qué sirve ese método
+- [ ] Cómo se conectan las cuatro unidades del curso en una sola idea sobre qué es sostener la
+      calidad del software
+:::
+
+## Recursos
+
+- [ISTQB, International Software Testing Qualifications Board, qué hacemos](https://istqb.org/what-we-do/)
+- [Wikipedia: International Software Testing Qualifications Board](https://en.wikipedia.org/wiki/International_Software_Testing_Qualifications_Board).
+  Puente hacia los niveles del esquema Certified Tester.
+- [ISO/IEC 15408-1:2022, Evaluation criteria for IT security](https://www.iso.org/standard/72891.html).
+  Ficha del documento primario en el catálogo de ISO.
+- [Wikipedia: Common Criteria](https://en.wikipedia.org/wiki/Common_Criteria). Resume el caso de
+  Windows XP y Windows Server 2003 con referencia a fuentes primarias.
+- [Common Criteria Portal, productos certificados](https://www.commoncriteriaportal.org/products/)
+- Kazman, R., Klein, M. y Clements, P. (2000). *ATAM: Method for Architecture Evaluation.*
+  CMU/SEI-2000-TR-004. Software Engineering Institute, Carnegie Mellon University.
+  [sei.cmu.edu, documento 629](https://www.sei.cmu.edu/documents/629/2000_005_001_13706.pdf)
+- [Wikipedia: Architecture tradeoff analysis method](https://en.wikipedia.org/wiki/Architecture_tradeoff_analysis_method)
+- [Wikipedia: ISO/IEC 25010](https://en.wikipedia.org/wiki/ISO/IEC_25010). Ficha del documento
+  primario en el catálogo de ISO: [iso.org, 35733](https://www.iso.org/standard/35733.html)
+- Pressman, R. S. *Ingeniería de software: un enfoque práctico.* Capítulo sobre gestión de calidad
+  del software y certificación.
+- Sommerville, I. *Ingeniería de software.* Capítulo sobre gestión de calidad y estándares.
+- Galin, D. *Software Quality: Concepts and Practice.* Capítulos sobre certificación y sobre
+  métricas de calidad de producto.
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::
