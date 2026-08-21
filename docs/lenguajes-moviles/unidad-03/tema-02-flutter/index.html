@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Oscar Leonel Sánchez Conde">
+
+<title>Tema 2. Flutter, un framework que dibuja su propia interfaz – Clases María Cano 2026-02</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../estilos/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-8713356167177fd77be9341a95314561.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-9d905b06f1e8b96cef5de7dac512495c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No se han encontrado resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../lenguajes-moviles/unidad-03/index.html">Unidad 3. Desarrollo web multiplataforma orientado a dispositivos móviles</a></li><li class="breadcrumb-item"><a href="../../../lenguajes-moviles/unidad-03/tema-02-flutter/index.html">Tema 2. Flutter, un framework que dibuja su propia interfaz</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../../../">Clases María Cano 2026-02</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Presentación del curso</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 1. Tecnologías en desarrollo de aplicaciones para dispositivos móviles</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-01/tema-01-dispositivo-componentes-fisicos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Un computador entero en una sola pastilla</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-01/tema-02-componentes-logicos-categorizacion/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. Componentes lógicos, categorización y modos de operación</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-01/tema-03-interacciones-seguridad/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. El permiso que le das sin darte cuenta</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/actividad-01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Actividad 1. Revisión y sustentación de la Unidad 1</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 2. Herramientas de trabajo en desarrollo de aplicaciones para dispositivos móviles</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-02/tema-01-entorno-linea-comandos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. El taller antes que el código</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-02/tema-02-git-control-versiones/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. La red de seguridad para tu código</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-02/tema-03-herramientas-avanzadas-web-movil/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. El navegador como taller de trabajo</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 3. Desarrollo web multiplataforma orientado a dispositivos móviles</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-03/tema-01-multiplataforma-pwa/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. De la web a la pantalla de inicio</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-03/tema-02-flutter/index.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Tema 2. Flutter, un framework que dibuja su propia interfaz</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../lenguajes-moviles/unidad-03/tema-03-frameworks-web-react/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Qué resuelve un framework web, y cómo React lo resuelve distinto de Flutter</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta guía</h2>
+   
+  <ul>
+  <li><a href="#qué-es-flutter-y-por-qué-no-envuelve-una-página-web" id="toc-qué-es-flutter-y-por-qué-no-envuelve-una-página-web" class="nav-link active" data-scroll-target="#qué-es-flutter-y-por-qué-no-envuelve-una-página-web"><span class="header-section-number">1</span> Qué es Flutter y por qué no envuelve una página web</a>
+  <ul class="collapse">
+  <li><a href="#dos-formas-de-compilar-el-mismo-código-aot-y-jit" id="toc-dos-formas-de-compilar-el-mismo-código-aot-y-jit" class="nav-link" data-scroll-target="#dos-formas-de-compilar-el-mismo-código-aot-y-jit">Dos formas de compilar el mismo código, AOT y JIT</a></li>
+  </ul></li>
+  <li><a href="#todo-es-un-widget" id="toc-todo-es-un-widget" class="nav-link" data-scroll-target="#todo-es-un-widget"><span class="header-section-number">2</span> Todo es un widget</a></li>
+  <li><a href="#hot-reload-por-qué-el-ciclo-de-desarrollo-es-tan-corto" id="toc-hot-reload-por-qué-el-ciclo-de-desarrollo-es-tan-corto" class="nav-link" data-scroll-target="#hot-reload-por-qué-el-ciclo-de-desarrollo-es-tan-corto"><span class="header-section-number">3</span> Hot reload, por qué el ciclo de desarrollo es tan corto</a></li>
+  <li><a href="#construye-la-app-un-contador-real-con-flutter-instalado-en-este-equipo" id="toc-construye-la-app-un-contador-real-con-flutter-instalado-en-este-equipo" class="nav-link" data-scroll-target="#construye-la-app-un-contador-real-con-flutter-instalado-en-este-equipo"><span class="header-section-number">4</span> Construye la app, un contador real con Flutter instalado en este equipo</a></li>
+  <li><a href="#lo-que-viene-react-y-el-criterio-para-elegir-un-framework" id="toc-lo-que-viene-react-y-el-criterio-para-elegir-un-framework" class="nav-link" data-scroll-target="#lo-que-viene-react-y-el-criterio-para-elegir-un-framework"><span class="header-section-number">5</span> Lo que viene, React y el criterio para elegir un framework</a></li>
+  <li><a href="#lo-que-te-llevas-de-hoy" id="toc-lo-que-te-llevas-de-hoy" class="nav-link" data-scroll-target="#lo-que-te-llevas-de-hoy"><span class="header-section-number">6</span> Lo que te llevas de hoy</a></li>
+  <li><a href="#recursos" id="toc-recursos" class="nav-link" data-scroll-target="#recursos"><span class="header-section-number">7</span> Recursos</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../lenguajes-moviles/unidad-03/index.html">Unidad 3. Desarrollo web multiplataforma orientado a dispositivos móviles</a></li><li class="breadcrumb-item"><a href="../../../lenguajes-moviles/unidad-03/tema-02-flutter/index.html">Tema 2. Flutter, un framework que dibuja su propia interfaz</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Tema 2. Flutter, un framework que dibuja su propia interfaz</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Autor/a</div>
+    <div class="quarto-title-meta-contents">
+             <p>Oscar Leonel Sánchez Conde </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Fecha de publicación</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">21 de agosto de 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="ficha">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 90%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Unidad</td>
+<td>Unidad 3. Desarrollo web multiplataforma orientado a dispositivos móviles</td>
+</tr>
+<tr class="even">
+<td>Tema</td>
+<td>Tema 2. Framework multiplataforma Flutter</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><a href="../../../lenguajes-moviles/unidad-03/tema-02-flutter/presentacion.html">Diapositivas de la sesión</a></p>
+<p>El Tema 1 mapeó el terreno entre un sitio web común y una app nativa, con la aplicación web progresiva como el punto donde HTML, CSS y JavaScript ganan instalación y funcionamiento sin conexión, y dejó un ejemplo real de esa combinación con <code>manifest.json</code> y un service worker. Hoy ese mapa se completa con la pieza que va a construir esta unidad, un framework multiplataforma que no pertenece a ese mismo grupo. Flutter no genera HTML, no interpreta CSS y no corre sobre el motor de un navegador aunque también compile hacia web, así que conviene entender primero cómo logra verse y sentirse como una app nativa antes de escribir la primera línea de código.</p>
+<section id="qué-es-flutter-y-por-qué-no-envuelve-una-página-web" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="qué-es-flutter-y-por-qué-no-envuelve-una-página-web"><span class="header-section-number">1</span> Qué es Flutter y por qué no envuelve una página web</h2>
+<p>Flutter es un <em>SDK</em> (en inglés <em>software development kit</em>, kit de desarrollo de software) de código abierto de Google para construir aplicaciones compiladas de forma nativa a partir de una sola base de código, con destino a móvil, web, escritorio y otras plataformas. La palabra importante ahí es <em>compiladas</em>, porque marca la diferencia frente a una app híbrida como la que el Tema 1 describió, que empaqueta una vista web dentro de un contenedor nativo. Flutter no empaqueta nada: el código que escribes se convierte en instrucciones de dibujo que corren directamente sobre el procesador o la GPU del dispositivo.</p>
+<p>El lenguaje detrás de Flutter es <em>Dart</em>, también de Google, un lenguaje orientado a objetos con tipado seguro y <em>null safety</em>, que garantiza en tiempo de compilación que una variable declarada como no nula nunca llegue a serlo en tiempo de ejecución. Dart existe desde antes que Flutter, pero hoy su desarrollo va de la mano del framework porque su forma de compilar es la que hace posible todo lo que sigue en esta guía.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flujo desde el código Dart hasta los píxeles en pantalla, pasando por el motor de Flutter con Impeller o Skia y sin pasar por los widgets nativos del sistema operativo ni por el motor de un navegador" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="lenmov3t2a" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Flutter dibuja sus propios píxeles, no envuelve una página web</text> <rect x="20" y="54" width="170" height="86" rx="10" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="105" y="86" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Código Dart</text> <text x="105" y="104" font-size="11" fill="#5b6876" text-anchor="middle">árbol de widgets</text> <text x="105" y="120" font-size="11" fill="#5b6876" text-anchor="middle">tu app, tal como la escribes</text> <path d="M190,97 L248,97" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2a)"></path> <rect x="250" y="34" width="260" height="126" rx="12" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="380" y="64" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Motor de Flutter (C++)</text> <text x="380" y="84" font-size="11.5" fill="#3c7d7a" text-anchor="middle">Impeller o Skia</text> <text x="380" y="102" font-size="11" fill="#12324f" text-anchor="middle">convierte los widgets en instrucciones</text> <text x="380" y="118" font-size="11" fill="#12324f" text-anchor="middle">de dibujo, cuadro a cuadro</text> <text x="380" y="136" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">no llama a los widgets del sistema operativo</text> <path d="M510,97 L566,97" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2a)"></path> <rect x="568" y="54" width="172" height="86" rx="10" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="654" y="86" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">GPU del dispositivo</text> <text x="654" y="104" font-size="11" fill="#5b6876" text-anchor="middle">píxeles en pantalla</text> <text x="654" y="120" font-size="11" fill="#5b6876" text-anchor="middle">sin capa intermedia</text> <rect x="20" y="178" width="720" height="52" rx="10" fill="#f5f7fa" stroke="#cfd8e3"></rect> <text x="380" y="198" font-size="11.5" fill="#12324f" text-anchor="middle">Una vista web envuelta manda ese mismo trabajo al motor del navegador, y una app hibrida se lo</text> <text x="380" y="216" font-size="11.5" fill="#12324f" text-anchor="middle">manda a los widgets nativos del sistema operativo. Flutter no pasa por ninguno de los dos.</text>
+</svg>
+</div>
+<p>La documentación oficial de Flutter explica que la mayoría de los frameworks multiplataforma crean una capa de abstracción sobre las bibliotecas nativas de interfaz de Android y iOS, así que el código de la app, escrito muchas veces en un lenguaje interpretado, tiene que ir y volver contra esas bibliotecas del sistema en cada interacción, lo que agrega un costo de rendimiento que puede notarse. Flutter evita esa capa porque implementa su propio conjunto completo de widgets en Dart, imitaciones fieles del lenguaje visual de Android (Material) y de iOS (Cupertino), en vez de pedirle al sistema operativo que dibuje sus controles nativos. El motor gráfico propio de Flutter, antes Skia y hoy Impeller en las plataformas donde ya está activo por defecto, compone toda la escena de una sola vez y la entrega como píxeles, sin ir y volver entre el código de la app y el código de la plataforma en cada cuadro.</p>
+<p>Esa decisión trae dos consecuencias que vale la pena nombrar antes de seguir. La primera es que una app Flutter se ve igual de precisa en cualquier versión del sistema operativo donde corra, porque no depende de qué controles nativos trae instalados ese equipo. La segunda es que Flutter puede actualizar su propio motor de renderizado sin depender de que el usuario actualice el sistema operativo del teléfono, porque el motor viaja empaquetado dentro de la app.</p>
+<section id="dos-formas-de-compilar-el-mismo-código-aot-y-jit" class="level3">
+<h3 class="anchored" data-anchor-id="dos-formas-de-compilar-el-mismo-código-aot-y-jit">Dos formas de compilar el mismo código, AOT y JIT</h3>
+<p>Dart compila hacia dos destinos según el momento del ciclo de vida del proyecto. En producción, un compilador <em>AOT</em> (en inglés <em>ahead of time</em>, antes de tiempo) convierte el código Dart en instrucciones nativas ARM o x64 antes de que el usuario instale la app, así que en tiempo de ejecución no hace falta ningún intérprete ni máquina virtual, el procesador ejecuta directamente esas instrucciones. En desarrollo, en cambio, un compilador <em>JIT</em> (en inglés <em>just in time</em>, justo a tiempo) compila el código y lo entrega a una máquina virtual de Dart que corre dentro del propio dispositivo o emulador mientras programas, lo que abre la puerta a la herramienta que más acelera el ciclo de desarrollo en Flutter, el <em>hot reload</em>.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 258" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos caminos de compilación del mismo código Dart: JIT durante el desarrollo hacia una máquina virtual en el dispositivo que permite hot reload, y AOT en producción hacia código máquina nativo ARM o x64 que corre sin máquina virtual" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="lenmov3t2b" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Dos caminos para el mismo código Dart</text> <text x="20" y="42" font-size="12" font-weight="700" fill="#0e6f6c">Desarrollo, compilación JIT</text> <rect x="20" y="52" width="150" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="95" y="83" font-size="11.5" fill="#12324f" text-anchor="middle">Código Dart</text> <path d="M170,79 L226,79" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2b)"></path> <rect x="228" y="52" width="150" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="303" y="83" font-size="11.5" fill="#12324f" text-anchor="middle">Compilador JIT</text> <path d="M378,79 L434,79" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2b)"></path> <rect x="436" y="40" width="300" height="78" rx="11" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="586" y="62" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">VM de Dart en el dispositivo</text> <text x="586" y="80" font-size="11" fill="#12324f" text-anchor="middle">recibe el código nuevo con hot reload</text> <text x="586" y="96" font-size="11" fill="#12324f" text-anchor="middle">y conserva el estado de la app</text> <text x="20" y="146" font-size="12" font-weight="700" fill="#0e6f6c">Producción, compilación AOT</text> <rect x="20" y="156" width="150" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="95" y="187" font-size="11.5" fill="#12324f" text-anchor="middle">Código Dart</text> <path d="M170,183 L226,183" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2b)"></path> <rect x="228" y="156" width="150" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="303" y="187" font-size="11.5" fill="#12324f" text-anchor="middle">Compilador AOT</text> <path d="M378,183 L434,183" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2b)"></path> <rect x="436" y="144" width="300" height="78" rx="11" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="586" y="166" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Código máquina nativo</text> <text x="586" y="184" font-size="11" fill="#12324f" text-anchor="middle">instrucciones ARM o x64 listas para</text> <text x="586" y="200" font-size="11" fill="#12324f" text-anchor="middle">el procesador, sin máquina virtual</text>
+</svg>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 1. AOT o JIT según el momento
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para cada situación, marca si Dart está usando compilación AOT o compilación JIT:</p>
+<p><label><input type="checkbox"> Publicas la versión final de tu app en la tienda de aplicaciones</label></p>
+<p><label><input type="checkbox"> Guardas un cambio en <code>main.dart</code> y la app corriendo en el emulador se actualiza en un segundo sin perder el estado</label></p>
+<p><label><input type="checkbox"> Un usuario abre tu app instalada y el sistema operativo ejecuta directamente instrucciones ARM, sin ningún intérprete de por medio</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 1
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La primera y la tercera situación describen compilación AOT, porque ocurren fuera del ciclo de desarrollo activo, con el código ya convertido en instrucciones nativas antes de que el usuario instale o abra la app. La segunda describe compilación JIT, porque el código nuevo llega mientras la app ya está corriendo dentro de una máquina virtual de Dart en el dispositivo, que es justo lo que hace posible el hot reload de la siguiente sección.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="todo-es-un-widget" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="todo-es-un-widget"><span class="header-section-number">2</span> Todo es un widget</h2>
+<p>En Flutter, cualquier cosa que veas en pantalla, y varias cosas que no ves, como el espaciado o la animación, son un <em>widget</em>. Un botón es un widget, el texto dentro de ese botón es otro widget, el espacio alrededor del botón también es un widget, y la pantalla completa es un widget que contiene a todos los anteriores. Esos widgets se organizan en una estructura jerárquica, el <em>árbol de widgets</em>, donde cada widget describe una porción de la interfaz y puede contener a otros widgets como hijos.</p>
+<p>Flutter distingue dos tipos de widget según si guardan datos que cambian mientras la app corre. Un <code>StatelessWidget</code> es inmutable una vez que Flutter lo construye, así que sirve para partes de la interfaz que no necesitan reaccionar a nada, un ícono fijo, un texto que no cambia, la estructura general de la app. Un <code>StatefulWidget</code>, en cambio, mantiene un objeto <code>State</code> aparte que sí puede cambiar durante la vida de la app, con datos como el texto que un usuario está escribiendo o el número de veces que tocó un botón. Ambos tipos de widget implementan un método <code>build()</code>, que describe cómo se ve el widget en ese instante exacto, y que Flutter vuelve a ejecutar cada vez que algo en el widget o en su estado cambia, nunca a mano.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Árbol de widgets de la app contador: ContadorApp como StatelessWidget en la raíz, MaterialApp debajo, PaginaContador como StatefulWidget que guarda el contador en su State, y en el último nivel Scaffold con AppBar, el body con la columna de texto y el botón flotante que llama a incrementarContador" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="lenmov3t2c" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="14" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El árbol de widgets de la app contador</text> <rect x="290" y="22" width="180" height="48" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="380" y="42" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">ContadorApp</text> <text x="380" y="58" font-size="10.5" fill="#5b6876" text-anchor="middle">StatelessWidget, no cambia</text> <path d="M380,70 L380,98" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2c)"></path> <rect x="290" y="100" width="180" height="42" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="380" y="126" font-size="12" fill="#12324f" text-anchor="middle">MaterialApp</text> <path d="M380,142 L380,172" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2c)"></path> <rect x="258" y="174" width="244" height="66" rx="11" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="380" y="198" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">PaginaContador</text> <text x="380" y="216" font-size="10.5" fill="#3c7d7a" text-anchor="middle">StatefulWidget</text> <text x="380" y="230" font-size="10.5" fill="#3c7d7a" text-anchor="middle">su State guarda _contador</text> <path d="M320,240 C300,254 200,258 130,266" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#lenmov3t2c)"></path> <path d="M380,240 L380,266" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#lenmov3t2c)"></path> <path d="M440,240 C470,254 580,258 630,266" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#lenmov3t2c)"></path> <rect x="30" y="268" width="190" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="125" y="290" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">AppBar</text> <text x="125" y="306" font-size="10.5" fill="#5b6876" text-anchor="middle">titulo de la página</text> <rect x="285" y="268" width="190" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="380" y="290" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">body: Column</text> <text x="380" y="306" font-size="10.5" fill="#5b6876" text-anchor="middle">dos Text, uno con _contador</text> <rect x="540" y="268" width="190" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="635" y="290" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">floatingActionButton</text> <text x="635" y="306" font-size="10.5" fill="#5b6876" text-anchor="middle">onPressed: _incrementarContador</text>
+</svg>
+</div>
+<p>Fíjate en algo que el diagrama deja ver, <code>PaginaContador</code> es el <code>StatefulWidget</code> pero el dato que cambia, <code>_contador</code>, no vive en <code>PaginaContador</code> mismo, vive en un objeto <code>State</code> aparte que ese widget crea con <code>createState()</code>. Separar la descripción del widget (qué recibe de su padre, en este caso un título) de los datos que cambian con el tiempo es la idea central detrás de <code>StatefulWidget</code>, y es distinta de cómo funcionan otros frameworks que mezclan las dos cosas en un mismo objeto.</p>
+</section>
+<section id="hot-reload-por-qué-el-ciclo-de-desarrollo-es-tan-corto" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="hot-reload-por-qué-el-ciclo-de-desarrollo-es-tan-corto"><span class="header-section-number">3</span> Hot reload, por qué el ciclo de desarrollo es tan corto</h2>
+<p>El <em>hot reload</em> inyecta el código Dart que acabas de cambiar directamente en la máquina virtual de Dart que ya está corriendo dentro del dispositivo o emulador, sin reiniciar la app desde cero. Al guardar un archivo, Flutter compila solo las partes que cambiaron a un formato intermedio llamado <em>kernel</em> y lo envía a esa máquina virtual, que reemplaza las clases viejas por las nuevas. A partir de ahí, el propio framework de Flutter reconstruye el árbol de widgets con el código actualizado, así que el cambio aparece en pantalla en un tiempo cercano a un segundo, sin que la app vuelva a ejecutar su función <code>main()</code> ni el método <code>initState()</code> de cada widget con estado.</p>
+<p>Esa última parte es la que más acelera el trabajo diario, porque como <code>main()</code> no se vuelve a ejecutar, el estado que la app tenía en ese momento se conserva, si estabas navegando en la tercera pantalla de un flujo, con un formulario a medio llenar, sigues ahí después del hot reload, con el formulario intacto y solo el código nuevo aplicado. Comparar eso con el ciclo de una app completamente nativa deja ver la diferencia, ahí un cambio exige recompilar el código nativo completo, reinstalar la app en el dispositivo y volver a navegar a mano hasta la pantalla donde estabas, un ciclo que se mide en decenas de segundos o minutos en vez de segundo y medio.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro pasos del hot reload: editar y guardar el archivo Dart, compilar solo el cambio a un archivo kernel, inyectar ese kernel en la máquina virtual de Dart que ya esta corriendo en el dispositivo, y que el framework reconstruya el árbol de widgets sin volver a ejecutar main ni initState" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="lenmov3t2d" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Que pasa exactamente cuando guardas y llega el hot reload</text> <rect x="6" y="34" width="168" height="106" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="90" y="58" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">1. Editas</text> <text x="90" y="76" font-size="10.5" fill="#5b6876" text-anchor="middle">cambias main.dart</text> <text x="90" y="92" font-size="10.5" fill="#5b6876" text-anchor="middle">y guardas el archivo</text> <path d="M174,87 L188,87" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2d)"></path> <rect x="190" y="34" width="168" height="106" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="274" y="58" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">2. Compila</text> <text x="274" y="76" font-size="10.5" fill="#5b6876" text-anchor="middle">solo lo que cambio,</text> <text x="274" y="92" font-size="10.5" fill="#5b6876" text-anchor="middle">no todo el proyecto</text> <path d="M358,87 L372,87" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2d)"></path> <rect x="374" y="24" width="168" height="126" rx="10" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="458" y="48" font-size="11" font-weight="700" fill="#0e6f6c" text-anchor="middle">3. Inyecta</text> <text x="458" y="66" font-size="10.5" fill="#12324f" text-anchor="middle">el código nuevo entra</text> <text x="458" y="82" font-size="10.5" fill="#12324f" text-anchor="middle">a la VM de Dart que</text> <text x="458" y="98" font-size="10.5" fill="#12324f" text-anchor="middle">ya esta corriendo en</text> <text x="458" y="114" font-size="10.5" fill="#12324f" text-anchor="middle">el dispositivo</text> <path d="M542,87 L556,87" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2d)"></path> <rect x="558" y="34" width="180" height="106" rx="9" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="648" y="58" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">4. Reconstruye</text> <text x="648" y="76" font-size="10.5" fill="#5b6876" text-anchor="middle">el framework rearma</text> <text x="648" y="92" font-size="10.5" fill="#5b6876" text-anchor="middle">el árbol de widgets</text> <rect x="6" y="164" width="732" height="52" rx="10" fill="#f5f7fa" stroke="#cfd8e3"></rect> <text x="372" y="184" font-size="11.5" fill="#12324f" text-anchor="middle">main() e initState() no se vuelven a ejecutar, así que _contador conserva su valor.</text> <text x="372" y="202" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Un hot restart si los ejecuta de nuevo y el contador vuelve a cero.</text>
+</svg>
+</div>
+<p>Flutter distingue el hot reload de un <em>hot restart</em>, que sí vuelve a ejecutar <code>main()</code> desde cero y por lo tanto pierde el estado que la app tenía, útil cuando el cambio que hiciste afecta cómo se inicializa la app y un simple hot reload no alcanza a reflejarlo.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 2. Predice qué pasa con el contador
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Un estudiante tiene la app contador corriendo, con <code>_contador</code> en 7 después de tocar el botón siete veces. Para cada acción, marca si <code>_contador</code> se queda en 7 o vuelve a 0:</p>
+<p><label><input type="checkbox"> Cambia el texto <code>'Veces que tocaste el botón:'</code> por otro texto y guarda el archivo (hot reload automático)</label></p>
+<p><label><input type="checkbox"> Presiona el botón de hot restart en su editor</label></p>
+<p><label><input type="checkbox"> Cierra la app por completo y la vuelve a abrir desde el ícono del dispositivo</label></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 2
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Solo la primera acción deja <code>_contador</code> en 7. Un hot reload inyecta el texto nuevo en la máquina virtual de Dart que ya está corriendo y reconstruye el árbol de widgets sin volver a ejecutar <code>main()</code>, así que el objeto <code>State</code> con <code>_contador</code> en 7 sigue siendo el mismo objeto de antes, con el mismo valor.</p>
+<p>Las otras dos acciones sí vuelven <code>_contador</code> a 0. El hot restart, aunque sigue usando la máquina virtual de Dart y por eso es más rápido que reinstalar la app, vuelve a ejecutar <code>main()</code> desde cero, así que crea un objeto <code>State</code> nuevo con <code>_contador</code> inicializado otra vez en 0. Cerrar y reabrir la app por completo hace exactamente lo mismo, además de pasar por el ciclo completo de arranque del sistema operativo, así que el resultado es el mismo cero, pero por un camino más lento.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="construye-la-app-un-contador-real-con-flutter-instalado-en-este-equipo" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="construye-la-app-un-contador-real-con-flutter-instalado-en-este-equipo"><span class="header-section-number">4</span> Construye la app, un contador real con Flutter instalado en este equipo</h2>
+<p>Lo que sigue es una app mínima real, generada, modificada y verificada con los mismos comandos que vas a usar tú. El comando <code>flutter create</code> genera el proyecto base, con la estructura de carpetas, las dependencias y un ejemplo de contador que sirve como punto de partida estándar para conocer Flutter.</p>
+<pre><code>$ flutter create --project-name contador_lenguajes_moviles --org com.mariacano flutter_demo
+Creating project flutter_demo...
+Resolving dependencies in `flutter_demo`...
+Downloading packages...
+Got dependencies in `flutter_demo`.
+Wrote 131 files.
+
+All done!
+You can find general documentation for Flutter at: https://docs.flutter.dev/
+Detailed API documentation is available at: https://api.flutter.dev/
+If you prefer video documentation, consider: https://www.youtube.com/c/flutterdev
+
+In order to run your application, type:
+
+  $ cd flutter_demo
+  $ flutter run
+
+Your application code is in flutter_demo\lib\main.dart.</code></pre>
+<p>La bandera <code>--project-name</code> fija el nombre del paquete Dart por separado del nombre de la carpeta, que en este caso quedó como <code>flutter_demo</code>, así que el nombre del paquete y el de la carpeta no tienen que coincidir. <code>flutter create</code> deja el ejemplo de contador ya funcionando dentro de <code>lib/main.dart</code>, con nombres en inglés y comentarios genéricos. Lo siguiente es ese mismo archivo, reescrito con nombres en español y comentarios que explican cada widget, conservando exactamente la misma estructura <code>StatelessWidget</code>, <code>StatefulWidget</code> y <code>setState</code> que trae el generador.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode dart code-with-copy"><code class="sourceCode dart"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">'package:flutter/material.dart'</span>;</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// El punto de entrada de toda app Flutter. runApp() toma el widget raíz</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// y lo entrega al motor de renderizado, que lo dibuja en la pantalla.</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> main() <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  runApp(<span class="at">const</span> ContadorApp());</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// ContadorApp es un StatelessWidget: una vez que Flutter lo construye, no</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">// vuelve a cambiar por sí solo. Su único trabajo es describir la estructura</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// general de la app (título, tema visual, pantalla inicial).</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ContadorApp <span class="kw">extends</span> StatelessWidget <span class="op">{</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">const</span> ContadorApp(<span class="op">{</span><span class="kw">super</span><span class="op">.</span>key<span class="op">}</span>);</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  Widget build(BuildContext context) <span class="op">{</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> MaterialApp(</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      title<span class="op">:</span> <span class="st">'Contador Flutter'</span><span class="op">,</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>      theme<span class="op">:</span> ThemeData(</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        colorScheme<span class="op">:</span> ColorScheme<span class="op">.</span>fromSeed(seedColor<span class="op">:</span> Colors<span class="op">.</span>teal)<span class="op">,</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>      )<span class="op">,</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>      home<span class="op">:</span> <span class="at">const</span> PaginaContador(titulo<span class="op">:</span> <span class="st">'Tema 2. Contador en Flutter'</span>)<span class="op">,</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">// PaginaContador es un StatefulWidget: describe QUE datos puede tener un</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">// estado cambiante (aqui, un titulo fijo que llega del padre), pero el</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">// estado en si vive en un objeto State aparte, _PaginaContadorState.</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PaginaContador <span class="kw">extends</span> StatefulWidget <span class="op">{</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">const</span> PaginaContador(<span class="op">{</span><span class="kw">super</span><span class="op">.</span>key<span class="op">,</span> required <span class="kw">this</span><span class="op">.</span>titulo<span class="op">}</span>);</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">final</span> <span class="dt">String</span> titulo;</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>  State<span class="op">&lt;</span>PaginaContador<span class="op">&gt;</span> createState() <span class="op">=&gt;</span> _PaginaContadorState();</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co">// _PaginaContadorState guarda el dato que SI cambia mientras la app corre:</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="co">// cuantas veces el estudiante toco el botón. Separar el widget (la</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="co">// descripcion) de su estado (los datos que cambian) es la idea central de</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="co">// StatefulWidget.</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> _PaginaContadorState <span class="kw">extends</span> State<span class="op">&lt;</span>PaginaContador<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> _contador <span class="op">=</span> <span class="dv">0</span>;</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>  <span class="co">// setState() le avisa al framework que _contador cambio, así que debe</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>  <span class="co">// volver a llamar a build() para que la pantalla refleje el nuevo valor.</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Sin ese aviso, _contador cambiaria en memoria pero la pantalla seguiria</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>  <span class="co">// mostrando el número viejo.</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>  <span class="dt">void</span> _incrementarContador() <span class="op">{</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    setState(() <span class="op">{</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>      _contador<span class="op">++</span>;</span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>);</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>  <span class="co">// build() describe como se ve este widget en este momento exacto. Flutter</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>  <span class="co">// lo vuelve a ejecutar cada vez que setState() lo pide, nunca a mano.</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>  <span class="kw">@override</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>  Widget build(BuildContext context) <span class="op">{</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    <span class="kw">return</span> Scaffold(</span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>      appBar<span class="op">:</span> AppBar(</span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>        backgroundColor<span class="op">:</span> Theme<span class="op">.</span>of(context)<span class="op">.</span>colorScheme<span class="op">.</span>inversePrimary<span class="op">,</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>        title<span class="op">:</span> Text(widget<span class="op">.</span>titulo)<span class="op">,</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>      )<span class="op">,</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>      body<span class="op">:</span> Center(</span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>        child<span class="op">:</span> Column(</span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>          mainAxisAlignment<span class="op">:</span> MainAxisAlignment<span class="op">.</span>center<span class="op">,</span></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>          children<span class="op">:</span> [</span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>            <span class="at">const</span> Text(<span class="st">'Veces que tocaste el botón:'</span>)<span class="op">,</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>            Text(</span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>              <span class="st">'$_contador'</span><span class="op">,</span></span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>              style<span class="op">:</span> Theme<span class="op">.</span>of(context)<span class="op">.</span>textTheme<span class="op">.</span>headlineMedium<span class="op">,</span></span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>            )<span class="op">,</span></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>          ]<span class="op">,</span></span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>        )<span class="op">,</span></span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>      )<span class="op">,</span></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>      floatingActionButton<span class="op">:</span> FloatingActionButton(</span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>        onPressed<span class="op">:</span> _incrementarContador<span class="op">,</span></span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>        tooltip<span class="op">:</span> <span class="st">'Incrementar'</span><span class="op">,</span></span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>        child<span class="op">:</span> <span class="at">const</span> Icon(Icons<span class="op">.</span>add)<span class="op">,</span></span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>      )<span class="op">,</span></span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Fíjate en la línea <code>Text('$_contador')</code>, dentro de <code>build()</code>. Cada vez que <code>_incrementarContador</code> llama a <code>setState</code>, Flutter vuelve a ejecutar <code>build()</code> completo, y esa línea vuelve a leer el valor más reciente de <code>_contador</code>, así que el número que ves en pantalla queda sincronizado con el estado sin que el código tenga que buscar manualmente ese <code>Text</code> y cambiarle el contenido, al estilo de <code>document.getElementById</code> en JavaScript.</p>
+<p><code>flutter analyze</code> revisa el código en busca de errores, advertencias y problemas de estilo, sin llegar a compilar ni ejecutar la app. Esta es la salida real, capturada al correr el comando sobre el proyecto de esta guía:</p>
+<pre><code>$ flutter analyze
+Analyzing flutter_demo...
+No issues found! (ran in 58.8s)</code></pre>
+<p>El tiempo exacto varía según el equipo donde corras el comando, no es un número reproducible al milisegundo, lo que importa es el resultado, “No issues found!”, sin advertencias ni errores.</p>
+<p>Esta guía nace dentro de una unidad que la carta descriptiva titula “Desarrollo web multiplataforma”, así que vale la pena confirmar que Flutter también compila hacia esa plataforma. <code>flutter build web</code> no ejecuta un servidor ni abre el navegador, solo compila el proyecto a JavaScript o WebAssembly y deja el resultado listo para servir como sitio estático. Esta es la salida real de correr ese comando sobre el mismo proyecto contador:</p>
+<pre><code>$ flutter build web
+Compiling lib\main.dart for the Web...
+Wasm dry run succeeded. Consider building and testing your application with the --wasm flag.
+Font asset "CupertinoIcons.ttf" was tree-shaken, reducing it from 257628 to 1472 bytes (99.4% reduction).
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 7800 bytes (99.5% reduction).
+Compiling lib\main.dart for the Web...                             58,4s
+Built build\web</code></pre>
+<p>Dos detalles de esa salida merecen explicación. El <em>tree-shaking</em> de fuentes de íconos elimina del paquete final los glifos que la app nunca usa, así que una fuente de íconos completa de más de un megabyte y medio termina pesando unos pocos kilobytes en el sitio publicado, sin que tengas que elegir manualmente qué íconos conservar. El aviso sobre <em>Wasm dry run</em> avisa que el proyecto también podría compilarse a WebAssembly en vez de JavaScript con la bandera <code>--wasm</code>, una ruta más reciente que esta guía no exploró a fondo porque el objetivo aquí era confirmar que el proyecto compila hacia web sin errores, no comparar los dos formatos de salida entre sí. La verificación se quedó ahí, en confirmar que <code>flutter build web</code> termina con éxito y produce la carpeta <code>build/web</code>; no se sirvió ese resultado en un navegador como parte de esta guía.</p>
+</section>
+<section id="lo-que-viene-react-y-el-criterio-para-elegir-un-framework" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="lo-que-viene-react-y-el-criterio-para-elegir-un-framework"><span class="header-section-number">5</span> Lo que viene, React y el criterio para elegir un framework</h2>
+<p>Flutter resuelve la interfaz de esta unidad dibujando sus propios píxeles con un árbol de widgets en Dart, sin pasar por HTML, CSS ni el DOM. El Tema 3 va a mirar la otra familia de frameworks, la que sí trabaja dentro del navegador, con React como caso de estudio, y va a cerrar con el criterio general que un equipo real usa para elegir un framework de interfaz, más allá de si ese framework resultó ser Flutter, React o cualquier otro. La comparación no busca declarar un ganador absoluto, busca que entiendas qué preguntas hacerte la próxima vez que un proyecto real te ponga esa decisión sobre la mesa.</p>
+</section>
+<section id="lo-que-te-llevas-de-hoy" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="lo-que-te-llevas-de-hoy"><span class="header-section-number">6</span> Lo que te llevas de hoy</h2>
+<div class="checklist">
+<p><strong>Al salir de este tema deberías poder explicar, sin mirar la guía</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox">Por qué Flutter no es una vista web envuelta, y qué papel juegan Dart, el motor de Flutter (Impeller o Skia) y la ausencia de widgets nativos del sistema operativo en esa respuesta</label></li>
+<li><label><input type="checkbox">La diferencia entre compilación AOT y JIT en Dart, y en qué momento del ciclo de vida de una app se usa cada una</label></li>
+<li><label><input type="checkbox">Qué es el árbol de widgets, la diferencia entre <code>StatelessWidget</code> y <code>StatefulWidget</code>, y qué hace el método <code>build()</code></label></li>
+<li><label><input type="checkbox">Qué pasos sigue exactamente un hot reload y por qué preserva el estado de la app, a diferencia de un hot restart o de una recompilación nativa completa</label></li>
+<li><label><input type="checkbox">Cómo leer el <code>main.dart</code> de una app contador real, incluido qué hace <code>setState</code> y por qué es necesario para que la pantalla refleje un cambio</label></li>
+<li><label><input type="checkbox">Qué revisa <code>flutter analyze</code> y cómo se ve su salida cuando el proyecto no tiene problemas</label></li>
+</ul>
+</div>
+</section>
+<section id="recursos" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="recursos"><span class="header-section-number">7</span> Recursos</h2>
+<ul>
+<li>Flutter. <em>Flutter architectural overview.</em> <a href="https://docs.flutter.dev/resources/architectural-overview">docs.flutter.dev, architectural-overview</a></li>
+<li>Flutter. <em>Impeller rendering engine.</em> <a href="https://docs.flutter.dev/perf/impeller">docs.flutter.dev, impeller</a></li>
+<li>Flutter. <em>Hot reload.</em> <a href="https://docs.flutter.dev/tools/hot-reload">docs.flutter.dev, hot-reload</a></li>
+<li>Flutter. <em>How Flutter works: layout and widgets.</em> <a href="https://docs.flutter.dev/get-started/fwe/layout">docs.flutter.dev, layout</a></li>
+<li>Dart. <em>What is Dart?</em> <a href="https://dart.dev/overview">dart.dev, overview</a></li>
+<li>Flutter. <code>flutter create</code>, <code>flutter analyze</code> y <code>flutter build web</code>, documentación de la CLI. <a href="https://docs.flutter.dev/reference/flutter-cli">docs.flutter.dev, flutter-cli</a></li>
+</ul>
+<div class="pie-doc">
+<p>Lenguajes de computación para móviles. Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.</p>
+<p><strong>Transparencia.</strong> La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. La salida de terminal es una captura real tomada durante la preparación del material.</p>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/oscarleosanchez\.github\.io\/sitio-maria-cano-2026-02\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Oscar Leonel Sánchez Conde</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

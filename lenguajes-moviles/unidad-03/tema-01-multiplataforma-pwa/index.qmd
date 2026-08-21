@@ -1,0 +1,521 @@
+---
+title: "Tema 1. De la web a la pantalla de inicio"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+resources:
+  - ejemplo-pwa/**
+---
+
+::: {.ficha}
+|        |                                                                                    |
+|--------|------------------------------------------------------------------------------------|
+| Unidad | Unidad 3. Desarrollo web multiplataforma orientado a dispositivos móviles          |
+| Tema   | Tema 1. Desarrollo web multiplataforma y Progressive Web Apps                      |
+:::
+
+[Diapositivas de la sesión](presentacion.qmd)
+
+La Unidad 2 cerró con el navegador convertido en un taller completo de depuración, un concepto
+claro de para qué sirve empaquetar código con un bundler, y un criterio de diseño, mobile-first,
+que aplica sin importar qué framework termine usando el proyecto. También dejó fijada la decisión
+que abre esta unidad, el framework de interfaz de la Unidad 3 es Flutter, con React como punto de
+comparación. Antes de escribir la primera línea de código con Flutter conviene recorrer el terreno
+completo en el que se mueve, porque Flutter responde a un problema que no nace con él, cómo
+construir una aplicación que llegue a varias plataformas sin escribir el mismo trabajo varias
+veces. Este primer tema de la Unidad 3 recorre ese terreno en dos partes. La primera compara las
+tres estrategias que existen hoy para lograr multiplataforma, con qué se escribe cada una y qué
+gana y qué pierde frente a las otras. La segunda profundiza en la Progressive Web App, la variante
+que corre dentro del propio navegador, retomando desde donde la Unidad 1 dejó sus tres requisitos
+para llegar a construir un ejemplo real que se instala y funciona sin conexión.
+
+## Multiplataforma no es una sola idea, son tres caminos distintos
+
+Construir software multiplataforma para móviles significa que una misma aplicación llega a más de
+un sistema operativo, casi siempre Android e iOS, sin escribir un proyecto completamente
+independiente para cada uno. El problema que resuelve es de fondo económico y de tiempo, ya que las
+dos plataformas dominantes exponen lenguajes, kits de desarrollo y patrones de interfaz distintos
+entre sí, así que un equipo que quiere atender a ambas se enfrenta de entrada a la pregunta de
+cuánto código puede compartir entre ellas sin sacrificar lo que cada una hace mejor.
+
+Existen hoy tres respuestas distintas a esa pregunta, y cada una se ubica en un punto diferente
+entre dos extremos, escribir el máximo código posible una sola vez, o aprovechar al máximo lo que
+cada plataforma ofrece por separado.
+
+La primera es el desarrollo *nativo*, que escribe un proyecto distinto para cada sistema operativo
+con el lenguaje y el kit de desarrollo propios de esa plataforma, Kotlin o Java con el SDK de
+Android, y Swift u Objective-C con el SDK de iOS. Cada aplicación corre directamente sobre las
+herramientas que el fabricante de la plataforma diseñó para ella, sin ninguna capa intermedia entre
+el código y el sistema operativo.
+
+La segunda es el desarrollo *híbrido*, que empaqueta una aplicación web dentro de un contenedor
+nativo instalable desde la tienda de aplicaciones. Apache Cordova documenta su propia arquitectura
+como una ventana de navegador especial, el *WebView*, que sirve de contenedor para la interfaz de
+la aplicación, y dentro de esa ventana corre el código HTML, CSS y JavaScript del proyecto igual que
+correría en cualquier sitio web. Cuando la aplicación necesita algo que el navegador no expone por
+sí solo, cámara, sensores, estado de la batería, un *plugin* actúa de puente entre el código
+JavaScript y el componente nativo correspondiente, ya que un WebView por sí mismo no tiene acceso
+directo a esas capacidades del dispositivo. Capacitor, el sucesor espiritual de Cordova según su
+propia documentación, sigue la misma idea de fondo con una forma distinta de empaquetar los
+plugins como librerías nativas del proyecto en vez de copiar su código fuente.
+
+La tercera es la *multiplataforma con compilación real*, que escribe un único código fuente en el
+lenguaje del framework y ese código compila a elementos de interfaz nativos en cada plataforma, sin
+pasar por un WebView. Flutter, que la propia documentación oficial describe como un kit de
+herramientas de interfaz portátil para crear aplicaciones compiladas de forma nativa desde una sola
+base de código, es el representante de esta estrategia que trabaja el Tema 2. React Native sigue el
+mismo principio general con otra tecnología de base.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparación de las tres estrategias multiplataforma, nativo, híbrido y multiplataforma con compilación real, en tiempo de desarrollo, rendimiento, acceso a hardware y consistencia visual" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Tres estrategias, cuatro preguntas para elegir entre ellas</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="128" y="34" width="200" height="34" rx="8"/><rect x="336" y="34" width="200" height="34" rx="8"/><rect x="544" y="34" width="200" height="34" rx="8"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="700" fill="#0e6f6c"><text x="228" y="57">Nativo</text><text x="436" y="57">Híbrido</text><text x="644" y="57">Multiplataforma compilada</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="128" y="78" width="200" height="64" rx="8"/><rect x="336" y="78" width="200" height="64" rx="8"/><rect x="544" y="78" width="200" height="64" rx="8"/><rect x="128" y="154" width="200" height="64" rx="8"/><rect x="336" y="154" width="200" height="64" rx="8"/><rect x="544" y="154" width="200" height="64" rx="8"/><rect x="128" y="230" width="200" height="64" rx="8"/><rect x="336" y="230" width="200" height="64" rx="8"/><rect x="544" y="230" width="200" height="64" rx="8"/><rect x="128" y="306" width="200" height="64" rx="8"/><rect x="336" y="306" width="200" height="64" rx="8"/><rect x="544" y="306" width="200" height="64" rx="8"/></g>
+  <g font-size="11.5" font-weight="600" fill="#5b6876"><text x="10" y="104">Tiempo de</text><text x="10" y="120">desarrollo</text><text x="10" y="180">Rendimiento</text><text x="10" y="256">Acceso a</text><text x="10" y="272">hardware</text><text x="10" y="332">Consistencia</text><text x="10" y="348">visual</text></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f">
+    <text x="228" y="106">Alto, dos bases</text><text x="228" y="124">de código distintas</text>
+    <text x="436" y="106">Bajo, una sola base</text><text x="436" y="124">en HTML, CSS y JS</text>
+    <text x="644" y="106">Medio, una base en</text><text x="644" y="124">el lenguaje del framework</text>
+    <text x="228" y="182">Máximo, corre</text><text x="228" y="200">directo sobre el SDK</text>
+    <text x="436" y="182">Limitado por el</text><text x="436" y="200">WebView y su puente</text>
+    <text x="644" y="182">Cercano al nativo,</text><text x="644" y="200">compila a widgets reales</text>
+    <text x="228" y="258">Total, todas las</text><text x="228" y="276">APIs del sistema</text>
+    <text x="436" y="258">Mediado por</text><text x="436" y="276">plugins (Cordova, Capacitor)</text>
+    <text x="644" y="258">Amplio, vía paquetes</text><text x="644" y="276">del propio framework</text>
+    <text x="228" y="334">Cada plataforma</text><text x="228" y="352">se ve como se espera</text>
+    <text x="436" y="334">Depende de los</text><text x="436" y="352">componentes que use</text>
+    <text x="644" y="334">Alta entre plataformas,</text><text x="644" y="352">mismo motor de render</text>
+  </g>
+</svg>
+
+:::
+
+Ninguna de las tres estrategias es superior en abstracto, cada una ordena las cuatro preguntas de
+la tabla de un modo distinto según lo que el proyecto necesite. Una aplicación bancaria que depende
+de lectores biométricos y de animaciones muy exigentes probablemente justifica el costo de mantener
+dos bases nativas. Un catálogo de productos que ya existe como sitio web y solo necesita llegar a
+las tiendas de aplicaciones sin gastar mucho tiempo puede resolverse bien con un contenedor híbrido.
+Y un proyecto que quiere una sola base de código con una experiencia visual cercana a la nativa, sin
+duplicar el trabajo por plataforma, es el terreno de la multiplataforma con compilación real que
+Flutter trabaja en el Tema 2.
+
+::: {.callout-tip}
+## Reto 1. Elige la estrategia según lo que pide el proyecto
+
+Un banco encarga una aplicación con lector de huella dactilar, notificaciones push confiables en
+Android y en iOS, y animaciones fluidas para un lector de código QR en tiempo real. El banco tiene
+presupuesto para mantener dos equipos de desarrollo trabajando en paralelo. Antes de leer la
+solución, marca la estrategia que mejor responde a esos requisitos:
+
+<label><input type="checkbox"> Desarrollo nativo, un proyecto Kotlin y otro Swift</label>
+
+<label><input type="checkbox"> Desarrollo híbrido con Cordova o Capacitor</label>
+
+<label><input type="checkbox"> Multiplataforma con compilación real, como Flutter</label>
+
+Escribe en una frase qué requisito concreto del banco descarta a las otras dos opciones.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La respuesta correcta es desarrollo nativo. El requisito que descarta al híbrido es el rendimiento
+de las animaciones en tiempo real del lector de código QR, porque un WebView agrega una capa entre
+el código y el hardware que penaliza justo ese tipo de tarea, y el requisito que hace innecesaria la
+multiplataforma compilada es que el banco ya tiene presupuesto para dos equipos, así que no necesita
+ahorrar el costo de mantener dos bases de código, que es la ventaja principal que ofrecen tanto el
+híbrido como la multiplataforma compilada.
+
+Si el banco no tuviera ese presupuesto extra, la respuesta razonable cambiaría hacia una
+multiplataforma con compilación real, porque el acceso a hardware como el lector de huella sigue
+siendo amplio a través de paquetes del framework, y el rendimiento queda mucho más cerca del nativo
+que en un WebView.
+:::
+
+## Progressive Web Apps: retomando los tres requisitos
+
+La Unidad 1 ya presentó la Progressive Web App como la variante que se construye enteramente con
+tecnologías de la plataforma web y que instala, opera sin conexión y se integra con el sistema
+operativo, con sus tres requisitos sumándose entre sí, un manifiesto web, un servicio por HTTPS y
+un service worker registrado. Esta sección no repite esa base, la profundiza, entra en el contenido
+concreto de cada uno de esos tres requisitos hasta el punto de poder construir y probar una PWA
+real y mínima.
+
+### El manifiesto web app
+
+El manifiesto es un archivo JSON que describe la aplicación al navegador y al sistema operativo, y
+se enlaza desde el HTML con una etiqueta `<link rel="manifest">`. MDN documenta más de veinte
+campos posibles dentro de ese archivo, y en la especificación técnica todos son opcionales, pero en
+la práctica un navegador solo ofrece instalar la aplicación cuando el manifiesto trae un conjunto
+mínimo de esos campos completos. Conviene agruparlos según lo que resuelven en vez de memorizarlos
+todos sueltos.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres grupos de campos del manifiesto, identidad con name y short_name, apariencia con icons, display, theme_color y background_color, y navegación con start_url y scope, convergen en manifest.json que habilita que el navegador ofrezca instalar la aplicación" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov3t1a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Tres grupos de campos alimentan un solo archivo</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="36" width="230" height="54" rx="9"/><rect x="20" y="100" width="230" height="70" rx="9"/><rect x="20" y="180" width="230" height="54" rx="9"/></g>
+  <rect x="330" y="100" width="170" height="90" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="580" y="118" width="160" height="70" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t1a)">
+    <path d="M250,63 C290,90 300,120 326,144"/>
+    <path d="M250,135 L326,145"/>
+    <path d="M250,207 C290,180 300,160 326,146"/>
+    <path d="M500,145 L576,153"/>
+  </g>
+  <g text-anchor="middle">
+    <g font-size="12.5" font-weight="700" fill="#12324f"><text x="135" y="58">Identidad</text><text x="135" y="126">Apariencia</text><text x="135" y="202">Navegación</text></g>
+    <g font-size="11" fill="#5b6876"><text x="135" y="78">name, short_name</text><text x="135" y="144">icons, display,</text><text x="135" y="158">theme_color, background_color</text><text x="135" y="222">start_url, scope</text></g>
+    <text x="415" y="134" font-size="13.5" font-weight="700" fill="#0e6f6c">manifest.json</text>
+    <text x="415" y="154" font-size="11" fill="#3c7d7a">un archivo, tres</text>
+    <text x="415" y="168" font-size="11" fill="#3c7d7a">grupos de datos</text>
+    <text x="660" y="146" font-size="12.5" font-weight="700" fill="#12324f">PWA instalable</text>
+    <text x="660" y="164" font-size="11" fill="#5b6876">el navegador ofrece instalar</text>
+  </g>
+  <text x="380" y="258" font-size="11" fill="#5b6876" text-anchor="middle">La especificación marca casi todos los campos como opcionales, pero sin name o short_name,</text>
+  <text x="380" y="274" font-size="11" fill="#5b6876" text-anchor="middle">icons, start_url y display el navegador no ofrece instalar la aplicación</text>
+</svg>
+
+:::
+
+El grupo de *identidad* cubre `name`, el nombre completo que aparece en la pantalla de presentación
+al abrir la aplicación, y `short_name`, la versión corta que se muestra debajo del ícono en la
+pantalla de inicio cuando el nombre completo no cabe. El grupo de *apariencia* cubre `icons`, un
+arreglo de imágenes en distintos tamaños que el sistema operativo usa según el contexto, `display`,
+que en modo `standalone` hace que la aplicación abra sin la barra de direcciones del navegador, y
+`theme_color` junto con `background_color`, que pintan la pantalla de presentación mientras la
+aplicación termina de cargar. El grupo de *navegación* cubre `start_url`, la página con la que abre
+la aplicación instalada, y `scope`, el conjunto de rutas que la aplicación considera parte de sí
+misma, de forma que un enlace que salga de ese alcance abre en el navegador normal en vez de dentro
+de la aplicación instalada.
+
+### El service worker
+
+MDN documenta el service worker como un *worker* de JavaScript dirigido por eventos que actúa de
+proxy entre la aplicación, el navegador y la red. Corre en un hilo separado de la página, sin acceso
+al DOM, se registra contra un origen y una ruta concretos con
+`navigator.serviceWorker.register()`, y solo funciona dentro de un contexto seguro, ya sea HTTPS o
+`http://localhost` durante el desarrollo.
+
+Su ciclo de vida pasa por tres eventos. El evento `install` se dispara cuando el navegador descarga
+una versión nueva del archivo del service worker, y es el momento típico para abrir una caché y
+guardar en ella los archivos que la aplicación va a necesitar sin conexión. El evento `activate` se
+dispara una vez la instalación termina, y es el momento típico para borrar cachés de versiones
+anteriores que ya no hacen falta. El evento `fetch` se dispara cada vez que la página pide un
+recurso, imágenes, hojas de estilo, el propio HTML, y el service worker puede interceptar esa
+petición con `FetchEvent.respondWith()` para decidir de dónde sale la respuesta, en vez de dejar que
+el navegador vaya directo a la red.
+
+Esa decisión de dónde sale la respuesta admite más de un orden posible, y dos de los más comunes
+tienen nombre propio en la documentación de Chrome for Developers sobre estrategias de caché para
+service workers, *cache-first* y *network-first*.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparación de dos estrategias de caché: cache first intenta primero la caché y recurre a la red si falta, network first intenta primero la red y recurre a la caché si falla, ambas terminan respondiendo a la página" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov3t1b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">El orden decide la estrategia</text>
+  <g text-anchor="middle" font-size="11" font-weight="600" fill="#5b6876"><text x="215" y="36">Primer intento</text><text x="395" y="36">Si falla, recurre a</text><text x="585" y="36">Resultado</text></g>
+  <text x="10" y="86" font-size="12.5" font-weight="700" fill="#0e6f6c">Cache first</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="140" y="48" width="150" height="68" rx="9"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="320" y="48" width="150" height="68" rx="9"/><rect x="500" y="48" width="170" height="68" rx="9"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t1b)"><path d="M290,82 L316,82"/><path d="M470,82 L496,82"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#12324f"><text x="215" y="76">Caché</text><text x="395" y="76">Red</text><text x="585" y="76">Responde</text></g>
+  <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="215" y="96">revisa primero</text><text x="395" y="96">solo si no está en caché</text><text x="585" y="96">y guarda la copia nueva</text></g>
+  <text x="10" y="188" font-size="12.5" font-weight="700" fill="#0e6f6c">Network first</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="140" y="150" width="150" height="68" rx="9"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="320" y="150" width="150" height="68" rx="9"/><rect x="500" y="150" width="170" height="68" rx="9"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t1b)"><path d="M290,184 L316,184"/><path d="M470,184 L496,184"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#12324f"><text x="215" y="178">Red</text><text x="395" y="178">Caché</text><text x="585" y="178">Responde</text></g>
+  <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="215" y="198">intenta primero</text><text x="395" y="198">solo si la red falla</text><text x="585" y="198">con lo más fresco posible</text></g>
+  <text x="380" y="244" font-size="11" fill="#5b6876" text-anchor="middle">Chrome for Developers los documenta como cache-first y network-first, cada uno con su propia variante de reserva</text>
+</svg>
+
+:::
+
+*Cache-first* revisa primero la caché y solo va a la red si el recurso no está guardado, así que
+responde de inmediato cuando ya lo tiene y funciona igual con o sin conexión, la estrategia que
+Chrome for Developers recomienda para archivos estáticos, hojas de estilo, scripts, imágenes, que no
+cambian con frecuencia. *Network-first* invierte el orden, intenta la red primero para traer siempre
+el dato más reciente y solo cae a la caché cuando la red falla, la estrategia recomendada para
+contenido que cambia seguido, como una respuesta de una API o el HTML de una página con datos en
+vivo. Ninguna de las dos es universalmente mejor, la elección depende de si el recurso concreto
+prioriza velocidad y disponibilidad sin conexión, o prioriza estar siempre actualizado.
+
+::: {.callout-tip}
+## Reto 2. Elige la estrategia de caché según el recurso
+
+Una aplicación de noticias sirve dos tipos de recurso, el logo del periódico, que casi nunca cambia,
+y el texto de las noticias del día, que cambia constantemente a medida que se publican
+actualizaciones. Antes de leer la solución, marca la estrategia que conviene para cada recurso:
+
+<label><input type="checkbox"> El logo del periódico debería servirse con cache-first</label>
+
+<label><input type="checkbox"> El logo del periódico debería servirse con network-first</label>
+
+<label><input type="checkbox"> El texto de las noticias debería servirse con cache-first</label>
+
+<label><input type="checkbox"> El texto de las noticias debería servirse con network-first</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+El logo debe servirse con cache-first y el texto de las noticias con network-first. El logo casi
+nunca cambia, así que no tiene sentido esperar a la red cada vez que se necesita, cache-first lo
+entrega de inmediato desde la primera visita en adelante. El texto de las noticias es justo lo
+contrario, un usuario que abre la aplicación espera ver la última actualización disponible, así que
+network-first intenta la red primero y solo cae a la copia guardada si la conexión falla, en vez de
+arriesgarse a mostrar una noticia desactualizada cuando sí hay red disponible.
+:::
+
+### HTTPS y el contexto seguro
+
+El tercer requisito, servir la aplicación por HTTPS, no es una recomendación aparte de las otras
+dos, es la condición que hace posible registrar el service worker. MDN define un *contexto seguro*
+como una ventana o un worker que cumple unos estándares mínimos de autenticación y confidencialidad,
+pensado para que un atacante que intercepta la conexión, un ataque de intermediario o *MITM* (del
+inglés *man in the middle*), no pueda leer ni alterar lo que viaja entre el navegador y el servidor.
+Como el service worker puede interceptar cada petición de red que hace la página, registrar uno
+sobre una conexión sin cifrar abriría una puerta enorme para ese tipo de ataque, así que el
+navegador simplemente no lo permite. La única excepción documentada es `http://localhost`, que
+cuenta como contexto seguro sin necesitar certificado, pensada para que el desarrollo local no
+dependa de configurar HTTPS antes de poder probar nada.
+
+## Construye un ejemplo real y mínimo de PWA
+
+Con los tres requisitos ya explicados en detalle, esta sección construye una PWA mínima que cumple
+los tres, una página que se llama "Guía de bolsillo", con un manifiesto que la hace instalable y un
+service worker que la deja funcionando sin conexión.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="index.html registra sw.js al cargar, sw.js pasa por install, activate y fetch y llena Cache Storage con los archivos de la aplicación, y con o sin red el evento fetch responde igual desde esa caché" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov3t1c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Tres archivos, un flujo que no depende de la red</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="40" width="165" height="90" rx="10"/><rect x="195" y="40" width="165" height="90" rx="10"/></g>
+  <rect x="380" y="40" width="195" height="90" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="595" y="40" width="155" height="90" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t1c)"><path d="M175,85 L191,85"/><path d="M360,85 L376,85"/><path d="M575,85 L591,85"/></g>
+  <g text-anchor="middle">
+    <g font-size="13" font-weight="700" fill="#12324f"><text x="92" y="66">index.html</text><text x="277" y="66">sw.js</text></g>
+    <g font-size="11" fill="#5b6876"><text x="92" y="88">registra sw.js</text><text x="92" y="104">al cargar la página</text><text x="277" y="88">install, activate,</text><text x="277" y="104">fetch</text></g>
+    <text x="477" y="66" font-size="13" font-weight="700" fill="#0e6f6c">Cache Storage</text>
+    <g font-size="10.5" fill="#3c7d7a"><text x="477" y="86">guia-bolsillo-v1</text><text x="477" y="102">index.html, manifest.json,</text><text x="477" y="116">icon.svg</text></g>
+    <text x="672" y="70" font-size="12.5" font-weight="700" fill="#12324f">Con o sin red</text>
+    <g font-size="11" fill="#5b6876"><text x="672" y="90">el fetch event</text><text x="672" y="106">responde igual</text></g>
+  </g>
+  <text x="380" y="158" font-size="11" fill="#5b6876" text-anchor="middle">Verificado con un navegador automatizado: los cuatro archivos quedan en Cache Storage</text>
+  <text x="380" y="174" font-size="11" fill="#5b6876" text-anchor="middle">y la página recarga completa después de simular la pérdida de conexión</text>
+</svg>
+
+:::
+
+El manifiesto declara la identidad, la apariencia y el alcance de navegación, con un solo ícono en
+formato SVG para mantener el ejemplo autocontenido sin depender de generar varios tamaños de PNG:
+
+```json
+{
+  "name": "Guía de bolsillo",
+  "short_name": "Guía",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#12324f",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
+```
+
+El HTML enlaza ese manifiesto y registra el service worker apenas carga la página, comprobando
+antes que el navegador soporte la API:
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guía de bolsillo</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#12324f">
+</head>
+<body>
+  <h1>Guía de bolsillo</h1>
+  <p id="estado">Comprobando el service worker...</p>
+  <script>
+    const estado = document.getElementById("estado");
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js")
+        .then(() => {
+          estado.textContent = "Service worker registrado.";
+        })
+        .catch((error) => {
+          estado.textContent = "No se pudo registrar el service worker: " + error;
+        });
+    } else {
+      estado.textContent = "Este navegador no soporta service workers.";
+    }
+  </script>
+</body>
+</html>
+```
+
+Y el service worker sigue la estrategia cache-first explicada arriba, precarga los tres archivos
+durante `install` y responde desde la caché en cada `fetch`, cayendo a la red solo si el recurso no
+está guardado:
+
+```js
+// Service worker mínimo: cache-first para que la página cargue sin conexión.
+const CACHE_NOMBRE = "guia-bolsillo-v1";
+const ARCHIVOS_A_CACHEAR = [
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./icon.svg"
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NOMBRE).then((cache) => cache.addAll(ARCHIVOS_A_CACHEAR))
+  );
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((nombres) => {
+      return Promise.all(
+        nombres
+          .filter((nombre) => nombre !== CACHE_NOMBRE)
+          .map((nombre) => caches.delete(nombre))
+      );
+    })
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((respuestaCacheada) => {
+      return respuestaCacheada || fetch(event.request);
+    })
+  );
+});
+```
+
+Este ejemplo se probó completo con un navegador automatizado en vez de darlo por bueno solo por
+lectura del código. Primero se validó la sintaxis de los tres archivos, el JSON del manifiesto
+parsea sin error, el JavaScript del service worker pasa la verificación de sintaxis de Node, y el
+HTML se parsea sin excepciones. Después se cargó la página con un servidor local, se confirmó que el
+service worker quedaba registrado y que `Cache Storage` guardaba los cuatro recursos, y finalmente
+se simuló la pérdida de conexión y se recargó la página. La salida real de esa última prueba
+confirma que el contenido de la caché coincide con lo esperado y que la página sigue respondiendo:
+
+```
+"cacheContents": {
+  "guia-bolsillo-v1": [
+    "http://localhost:8912/",
+    "http://localhost:8912/index.html",
+    "http://localhost:8912/manifest.json",
+    "http://localhost:8912/icon.svg"
+  ]
+}
+"offlineReloadOk": true
+"offlineTitle": "Guia de bolsillo"
+```
+
+Puedes abrir el ejemplo completo, [Guía de bolsillo](ejemplo-pwa/index.html), directamente en el
+navegador. Cárgalo primero con conexión para que el service worker precargue la caché y después
+prueba a recargarlo sin conexión, tal como se describió en la prueba anterior.
+
+## Caso de estudio: Twitter Lite
+
+Twitter, la red social hoy conocida como X, enfrentaba en 2017 una tensión entre dos objetivos.
+Quería llegar a mercados emergentes donde buena parte de los usuarios navega con conexiones lentas y
+dispositivos de gama baja, pero su aplicación nativa de Android pesaba 23,5 megabytes para instalar,
+un costo alto de datos y de espacio para alguien con una conexión limitada. Antes de seguir,
+conviene preguntarse qué gana Twitter si construye una Progressive Web App en vez de seguir
+invirtiendo solo en mejorar la aplicación nativa.
+
+La respuesta, documentada en el caso de estudio oficial publicado en web.dev, es que Twitter Lite se
+convirtió en la experiencia web móvil por defecto para todos los usuarios en abril de 2017, con un
+peso de apenas 600 kilobytes por la red frente a los 23,5 megabytes de la aplicación nativa. Los
+resultados medidos después del lanzamiento incluyeron un aumento del 65% en páginas vistas por
+sesión, un aumento del 75% en tweets enviados y una reducción del 20% en la tasa de rebote, además
+de una reducción de hasta el 70% en el consumo de datos gracias a la optimización de imágenes. La
+página cargaba en menos de 5 segundos incluso sobre una red 3G, y las cargas posteriores eran casi
+instantáneas gracias al service worker cacheando los recursos ya vistos.
+
+| Métrica | Resultado reportado |
+|---|---|
+| Peso de instalación | 600 KB (PWA) frente a 23,5 MB (app nativa de Android) |
+| Páginas vistas por sesión | Aumento del 65% |
+| Tweets enviados | Aumento del 75% |
+| Tasa de rebote | Reducción del 20% |
+| Consumo de datos por imágenes | Reducción de hasta el 70% |
+
+::: {.destacado}
+El manifiesto y el service worker que acabas de construir en el ejemplo mínimo son, en esencia, la
+misma maquinaria detrás de estos números: una aplicación liviana, instalable y que sigue
+respondiendo con datos guardados cuando la red falla o es lenta.
+:::
+
+## Un paso más allá del navegador
+
+Todo lo que viste hoy, el manifiesto, el service worker y sus estrategias de caché, corre dentro del
+navegador y depende de lo que la plataforma web decida exponer en cada versión. El Tema 2 construye
+con Flutter una aplicación que compila a interfaz nativa real en cada plataforma, sin pasar por un
+navegador en ningún punto, un paso más allá de lo que una PWA puede ofrecer dentro de ese entorno,
+con acceso directo al SDK de cada sistema operativo y sin las limitaciones de soporte desigual entre
+navegadores que ya viste en la Unidad 1 para notificaciones push y sensores.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Qué significa multiplataforma en desarrollo móvil, y las tres estrategias que existen,
+      nativo, híbrido y multiplataforma con compilación real
+- [ ] Qué gana y qué pierde cada estrategia en tiempo de desarrollo, rendimiento, acceso a
+      hardware y consistencia visual
+- [ ] Qué campos lleva el manifiesto web app y en qué tres grupos se organizan, identidad,
+      apariencia y navegación
+- [ ] Qué es un service worker, su ciclo de vida de tres eventos, y cómo intercepta las
+      peticiones de red de la página
+- [ ] La diferencia entre cache-first y network-first, y cuándo conviene cada una
+- [ ] Por qué HTTPS es una condición para registrar un service worker, y por qué localhost es la
+      única excepción
+- [ ] Cómo se ve un ejemplo mínimo y real de PWA que carga sin conexión, con sus tres archivos
+- [ ] Qué mejoró Twitter Lite al migrar a una PWA, y por qué esos números importan para un
+      producto que llega a mercados con conexiones lentas
+:::
+
+## Recursos
+
+- MDN Web Docs. [Progressive web apps](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps).
+- MDN Web Docs. [Web application manifest](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest).
+- MDN Web Docs. [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API).
+- MDN Web Docs. [Secure contexts](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).
+- Chrome for Developers. [Strategies for service worker caching](https://developer.chrome.com/docs/workbox/caching-strategies-overview).
+- Apache Cordova. [Overview](https://cordova.apache.org/docs/en/latest/guide/overview/index.html).
+- Capacitor. [Documentación oficial](https://capacitorjs.com/docs).
+- Flutter. [Documentación oficial](https://flutter.dev).
+- web.dev. [Twitter Lite PWA significantly increases engagement and reduces data usage](https://web.dev/case-studies/twitter).
+
+::: {.pie-doc}
+Lenguajes de computación para móviles. Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. La
+verificación del ejemplo de PWA es una captura real hecha con un navegador automatizado durante
+la preparación del material.
+:::

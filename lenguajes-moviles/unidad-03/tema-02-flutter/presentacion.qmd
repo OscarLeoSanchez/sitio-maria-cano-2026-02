@@ -1,0 +1,276 @@
+---
+title: "Tema 2. Flutter, un framework que dibuja su propia interfaz"
+subtitle: "Lenguajes de computación para móviles. Unidad 3"
+author: "Oscar Leonel Sánchez Conde"
+format:
+  revealjs:
+    theme: [default, ../../../estilos/presentacion.scss]
+    slide-number: true
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Hoy {.center}
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Qué es Flutter]{.titulo}
+
+Dart, un motor de renderizado propio y por qué no es una vista web envuelta.
+:::
+
+::: {.tarjeta}
+[AOT y JIT]{.titulo}
+
+Dos formas de compilar el mismo código Dart, según el momento del proyecto.
+:::
+
+::: {.clave}
+[Todo es un widget]{.titulo}
+
+El árbol de widgets, `StatelessWidget`, `StatefulWidget` y `build()`.
+:::
+
+::: {.tarjeta}
+[Hot reload y la app contador]{.titulo}
+
+Por qué el ciclo de desarrollo es tan corto, con código real que compila.
+:::
+:::
+
+::: {.pie-diapositiva}
+Lenguajes de computación para móviles. Semestre 2026-02.
+:::
+
+## Lo que ya vimos {.center}
+
+::: {.destacado}
+El Tema 1 dejó el mapa entre sitio web, PWA, app híbrida y app nativa, con Flutter ya fijado como
+el framework de esta unidad y React como punto de comparación más adelante.
+:::
+
+Hoy Flutter deja de ser un nombre en un diagrama y se convierte en código que corre.
+
+## Flutter no envuelve una página web {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flujo desde el código Dart hasta los píxeles en pantalla, pasando por el motor de Flutter con Impeller o Skia y sin pasar por los widgets nativos del sistema operativo ni por el motor de un navegador" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov3t2a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Flutter dibuja sus propios píxeles, no envuelve una página web</text>
+  <rect x="20" y="54" width="170" height="86" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="105" y="86" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Código Dart</text>
+  <text x="105" y="104" font-size="11" fill="#5b6876" text-anchor="middle">árbol de widgets</text>
+  <text x="105" y="120" font-size="11" fill="#5b6876" text-anchor="middle">tu app, tal como la escribes</text>
+  <path d="M190,97 L248,97" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2a)"/>
+  <rect x="250" y="34" width="260" height="126" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="64" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Motor de Flutter (C++)</text>
+  <text x="380" y="84" font-size="11.5" fill="#3c7d7a" text-anchor="middle">Impeller o Skia</text>
+  <text x="380" y="102" font-size="11" fill="#12324f" text-anchor="middle">convierte los widgets en instrucciones</text>
+  <text x="380" y="118" font-size="11" fill="#12324f" text-anchor="middle">de dibujo, cuadro a cuadro</text>
+  <text x="380" y="136" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">no llama a los widgets del sistema operativo</text>
+  <path d="M510,97 L566,97" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2a)"/>
+  <rect x="568" y="54" width="172" height="86" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="654" y="86" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">GPU del dispositivo</text>
+  <text x="654" y="104" font-size="11" fill="#5b6876" text-anchor="middle">píxeles en pantalla</text>
+  <text x="654" y="120" font-size="11" fill="#5b6876" text-anchor="middle">sin capa intermedia</text>
+  <rect x="20" y="178" width="720" height="52" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="198" font-size="11.5" fill="#12324f" text-anchor="middle">Una vista web envuelta manda ese mismo trabajo al motor del navegador, y una app hibrida se lo</text>
+  <text x="380" y="216" font-size="11.5" fill="#12324f" text-anchor="middle">manda a los widgets nativos del sistema operativo. Flutter no pasa por ninguno de los dos.</text>
+</svg>
+
+:::
+
+## Dart, el lenguaje detrás {.center}
+
+::: {.tarjetas}
+::: {.tarjeta}
+[Orientado a objetos]{.titulo}
+
+Con tipado seguro y sound null safety.
+:::
+
+::: {.tarjeta}
+[De Google]{.titulo}
+
+Igual que Flutter, y su desarrollo va de la mano del framework.
+:::
+
+::: {.clave}
+[Compila a dos destinos]{.titulo}
+
+Código máquina nativo, o JavaScript/WebAssembly para web.
+:::
+:::
+
+## Dos formas de compilar el mismo código {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.neutro}
+**Desarrollo: JIT**
+
+- Compilador just in time
+- Corre en una VM de Dart en el dispositivo
+- Habilita el hot reload
+:::
+:::
+::: {.column width="50%"}
+::: {.neutro}
+**Producción: AOT**
+
+- Compilador ahead of time
+- Genera código máquina nativo ARM o x64
+- Corre sin máquina virtual
+:::
+:::
+:::
+
+::: {.destacado}
+Mismo código Dart, dos destinos distintos según el momento del proyecto.
+:::
+
+## Todo es un widget {.center}
+
+Cualquier cosa que veas en pantalla, incluido el espaciado, es un widget. Los widgets se organizan
+en el árbol de widgets.
+
+::: {.pasos}
+1. `StatelessWidget`: inmutable una vez construido
+2. `StatefulWidget`: mantiene un objeto `State` aparte que sí puede cambiar
+3. `build()`: describe cómo se ve el widget en este instante, y Flutter lo vuelve a llamar solo
+:::
+
+## El árbol de widgets del contador {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Árbol de widgets de la app contador: ContadorApp como StatelessWidget en la raíz, MaterialApp debajo, PaginaContador como StatefulWidget que guarda el contador en su State, y en el último nivel Scaffold con AppBar, el body con la columna de texto y el botón flotante que llama a incrementarContador" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov3t2c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="14" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El árbol de widgets de la app contador</text>
+  <rect x="290" y="22" width="180" height="48" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="42" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">ContadorApp</text>
+  <text x="380" y="58" font-size="10.5" fill="#5b6876" text-anchor="middle">StatelessWidget, no cambia</text>
+  <path d="M380,70 L380,98" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2c)"/>
+  <rect x="290" y="100" width="180" height="42" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="126" font-size="12" fill="#12324f" text-anchor="middle">MaterialApp</text>
+  <path d="M380,142 L380,172" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2c)"/>
+  <rect x="258" y="174" width="244" height="66" rx="11" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="198" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">PaginaContador</text>
+  <text x="380" y="216" font-size="10.5" fill="#3c7d7a" text-anchor="middle">StatefulWidget</text>
+  <text x="380" y="230" font-size="10.5" fill="#3c7d7a" text-anchor="middle">su State guarda _contador</text>
+  <path d="M320,240 C300,254 200,258 130,266" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#lenmov3t2c)"/>
+  <path d="M380,240 L380,266" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#lenmov3t2c)"/>
+  <path d="M440,240 C470,254 580,258 630,266" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#lenmov3t2c)"/>
+  <rect x="30" y="268" width="190" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="125" y="290" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">AppBar</text>
+  <text x="125" y="306" font-size="10.5" fill="#5b6876" text-anchor="middle">título de la página</text>
+  <rect x="285" y="268" width="190" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="290" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">body: Column</text>
+  <text x="380" y="306" font-size="10.5" fill="#5b6876" text-anchor="middle">dos Text, uno con _contador</text>
+  <rect x="540" y="268" width="190" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="635" y="290" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">floatingActionButton</text>
+  <text x="635" y="306" font-size="10.5" fill="#5b6876" text-anchor="middle">onPressed: _incrementarContador</text>
+</svg>
+
+:::
+
+## setState avisa, build() redibuja {.center}
+
+```dart
+void _incrementarContador() {
+  setState(() {
+    _contador++;
+  });
+}
+```
+
+::: {.destacado}
+Sin `setState`, `_contador` cambiaría en memoria pero la pantalla seguiría mostrando el número
+viejo.
+:::
+
+## Hot reload: qué pasa exactamente {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro pasos del hot reload: editar y guardar el archivo Dart, compilar solo el cambio a un archivo kernel, inyectar ese kernel en la máquina virtual de Dart que ya está corriendo en el dispositivo, y que el framework reconstruya el árbol de widgets sin volver a ejecutar main ni initState" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov3t2d" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Que pasa exactamente cuando guardas y llega el hot reload</text>
+  <rect x="6" y="34" width="168" height="106" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="90" y="58" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">1. Editas</text>
+  <text x="90" y="76" font-size="10.5" fill="#5b6876" text-anchor="middle">cambias main.dart</text>
+  <text x="90" y="92" font-size="10.5" fill="#5b6876" text-anchor="middle">y guardas el archivo</text>
+  <path d="M174,87 L188,87" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2d)"/>
+  <rect x="190" y="34" width="168" height="106" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="274" y="58" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">2. Compila</text>
+  <text x="274" y="76" font-size="10.5" fill="#5b6876" text-anchor="middle">solo lo que cambio,</text>
+  <text x="274" y="92" font-size="10.5" fill="#5b6876" text-anchor="middle">no todo el proyecto</text>
+  <path d="M358,87 L372,87" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2d)"/>
+  <rect x="374" y="24" width="168" height="126" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="458" y="48" font-size="11" font-weight="700" fill="#0e6f6c" text-anchor="middle">3. Inyecta</text>
+  <text x="458" y="66" font-size="10.5" fill="#12324f" text-anchor="middle">el código nuevo entra</text>
+  <text x="458" y="82" font-size="10.5" fill="#12324f" text-anchor="middle">a la VM de Dart que</text>
+  <text x="458" y="98" font-size="10.5" fill="#12324f" text-anchor="middle">ya esta corriendo en</text>
+  <text x="458" y="114" font-size="10.5" fill="#12324f" text-anchor="middle">el dispositivo</text>
+  <path d="M542,87 L556,87" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2d)"/>
+  <rect x="558" y="34" width="180" height="106" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="648" y="58" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">4. Reconstruye</text>
+  <text x="648" y="76" font-size="10.5" fill="#5b6876" text-anchor="middle">el framework rearma</text>
+  <text x="648" y="92" font-size="10.5" fill="#5b6876" text-anchor="middle">el árbol de widgets</text>
+  <rect x="6" y="164" width="732" height="52" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="372" y="184" font-size="11.5" fill="#12324f" text-anchor="middle">main() e initState() no se vuelven a ejecutar, así que _contador conserva su valor.</text>
+  <text x="372" y="202" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Un hot restart si los ejecuta de nuevo y el contador vuelve a cero.</text>
+</svg>
+
+:::
+
+## La app se construyó de verdad {.center}
+
+::: {.pasos}
+1. `flutter create` genera el proyecto base con el ejemplo de contador
+2. Se reescribió `main.dart` con nombres en español, misma estructura
+3. `flutter analyze` corrió sobre el proyecto real
+4. `flutter build web` compiló el proyecto a la plataforma web
+:::
+
+## flutter analyze, salida real {.center}
+
+```
+$ flutter analyze
+Analyzing flutter_demo...
+No issues found! (ran in 58.8s)
+```
+
+::: {.destacado}
+El tiempo exacto varía según el equipo. Lo que importa es "No issues found!"
+:::
+
+## flutter build web, salida real {.center}
+
+```
+$ flutter build web
+Compiling lib\main.dart for the Web...
+Font asset "MaterialIcons-Regular.otf" tree-shaken 99.5%
+Built build\web
+```
+
+::: {.datos}
+::: {.dato}
+[99,5%]{.cifra}[reducción de la fuente de íconos por tree-shaking, sin elegir nada a mano]{.rotulo}
+:::
+:::
+
+## Lo que viene {.center}
+
+::: {.destacado}
+El Tema 3 mira la otra familia de frameworks, la que trabaja dentro del navegador, con React como
+caso de estudio, y cierra con el criterio para elegir un framework de interfaz en general.
+:::
+
+::: {.pie-diapositiva}
+Lenguajes de computación para móviles. Semestre 2026-02.
+:::

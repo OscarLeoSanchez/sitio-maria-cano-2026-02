@@ -1,0 +1,507 @@
+---
+title: "Tema 2. Flutter, un framework que dibuja su propia interfaz"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                             |
+|--------|-----------------------------------------------------------------------------|
+| Unidad | Unidad 3. Desarrollo web multiplataforma orientado a dispositivos móviles   |
+| Tema   | Tema 2. Framework multiplataforma Flutter                                   |
+:::
+
+[Diapositivas de la sesión](presentacion.qmd)
+
+El Tema 1 mapeó el terreno entre un sitio web común y una app nativa, con la aplicación web
+progresiva como el punto donde HTML, CSS y JavaScript ganan instalación y funcionamiento sin
+conexión, y dejó un ejemplo real de esa combinación con `manifest.json` y un service worker. Hoy
+ese mapa se completa con la pieza que va a construir esta unidad, un framework multiplataforma que
+no pertenece a ese mismo grupo. Flutter no genera HTML, no interpreta CSS y no corre sobre el motor
+de un navegador aunque también compile hacia web, así que conviene entender primero cómo logra
+verse y sentirse como una app nativa antes de escribir la primera línea de código.
+
+## Qué es Flutter y por qué no envuelve una página web
+
+Flutter es un *SDK* (en inglés *software development kit*, kit de desarrollo de software) de
+código abierto de Google para construir aplicaciones compiladas de forma nativa a partir de una
+sola base de código, con destino a móvil, web, escritorio y otras plataformas. La palabra
+importante ahí es *compiladas*, porque marca la diferencia frente a una app híbrida como la que el
+Tema 1 describió, que empaqueta una vista web dentro de un contenedor nativo. Flutter no empaqueta
+nada: el código que escribes se convierte en instrucciones de dibujo que corren directamente sobre
+el procesador o la GPU del dispositivo.
+
+El lenguaje detrás de Flutter es *Dart*, también de Google, un lenguaje orientado a objetos con
+tipado seguro y *null safety*, que garantiza en tiempo de compilación que una variable declarada
+como no nula nunca llegue a serlo en tiempo de ejecución. Dart existe desde antes que Flutter, pero
+hoy su desarrollo va de la mano del framework porque su forma de compilar es la que hace posible
+todo lo que sigue en esta guía.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flujo desde el código Dart hasta los píxeles en pantalla, pasando por el motor de Flutter con Impeller o Skia y sin pasar por los widgets nativos del sistema operativo ni por el motor de un navegador" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov3t2a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Flutter dibuja sus propios píxeles, no envuelve una página web</text>
+  <rect x="20" y="54" width="170" height="86" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="105" y="86" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Código Dart</text>
+  <text x="105" y="104" font-size="11" fill="#5b6876" text-anchor="middle">árbol de widgets</text>
+  <text x="105" y="120" font-size="11" fill="#5b6876" text-anchor="middle">tu app, tal como la escribes</text>
+  <path d="M190,97 L248,97" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2a)"/>
+  <rect x="250" y="34" width="260" height="126" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="64" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Motor de Flutter (C++)</text>
+  <text x="380" y="84" font-size="11.5" fill="#3c7d7a" text-anchor="middle">Impeller o Skia</text>
+  <text x="380" y="102" font-size="11" fill="#12324f" text-anchor="middle">convierte los widgets en instrucciones</text>
+  <text x="380" y="118" font-size="11" fill="#12324f" text-anchor="middle">de dibujo, cuadro a cuadro</text>
+  <text x="380" y="136" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">no llama a los widgets del sistema operativo</text>
+  <path d="M510,97 L566,97" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2a)"/>
+  <rect x="568" y="54" width="172" height="86" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="654" y="86" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">GPU del dispositivo</text>
+  <text x="654" y="104" font-size="11" fill="#5b6876" text-anchor="middle">píxeles en pantalla</text>
+  <text x="654" y="120" font-size="11" fill="#5b6876" text-anchor="middle">sin capa intermedia</text>
+  <rect x="20" y="178" width="720" height="52" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="198" font-size="11.5" fill="#12324f" text-anchor="middle">Una vista web envuelta manda ese mismo trabajo al motor del navegador, y una app hibrida se lo</text>
+  <text x="380" y="216" font-size="11.5" fill="#12324f" text-anchor="middle">manda a los widgets nativos del sistema operativo. Flutter no pasa por ninguno de los dos.</text>
+</svg>
+
+:::
+
+La documentación oficial de Flutter explica que la mayoría de los frameworks multiplataforma
+crean una capa de abstracción sobre las bibliotecas nativas de interfaz de Android y iOS, así que
+el código de la app, escrito muchas veces en un lenguaje interpretado, tiene que ir y volver contra
+esas bibliotecas del sistema en cada interacción, lo que agrega un costo de rendimiento que puede
+notarse. Flutter evita esa capa porque implementa su propio conjunto completo de widgets en Dart,
+imitaciones fieles del lenguaje visual de Android (Material) y de iOS (Cupertino), en vez de pedirle
+al sistema operativo que dibuje sus controles nativos. El motor gráfico propio de Flutter, antes
+Skia y hoy Impeller en las plataformas donde ya está activo por defecto, compone toda la escena de
+una sola vez y la entrega como píxeles, sin ir y volver entre el código de la app y el código de la
+plataforma en cada cuadro.
+
+Esa decisión trae dos consecuencias que vale la pena nombrar antes de seguir. La primera es que una
+app Flutter se ve igual de precisa en cualquier versión del sistema operativo donde corra, porque no
+depende de qué controles nativos trae instalados ese equipo. La segunda es que Flutter puede
+actualizar su propio motor de renderizado sin depender de que el usuario actualice el sistema
+operativo del teléfono, porque el motor viaja empaquetado dentro de la app.
+
+### Dos formas de compilar el mismo código, AOT y JIT
+
+Dart compila hacia dos destinos según el momento del ciclo de vida del proyecto. En producción,
+un compilador *AOT* (en inglés *ahead of time*, antes de tiempo) convierte el código Dart en
+instrucciones nativas ARM o x64 antes de que el usuario instale la app, así que en tiempo de
+ejecución no hace falta ningún intérprete ni máquina virtual, el procesador ejecuta directamente esas
+instrucciones. En desarrollo, en cambio, un compilador *JIT* (en inglés *just in time*, justo a
+tiempo) compila el código y lo entrega a una máquina virtual de Dart que corre dentro del propio
+dispositivo o emulador mientras programas, lo que abre la puerta a la herramienta que más acelera el
+ciclo de desarrollo en Flutter, el *hot reload*.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 258" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos caminos de compilación del mismo código Dart: JIT durante el desarrollo hacia una máquina virtual en el dispositivo que permite hot reload, y AOT en producción hacia código máquina nativo ARM o x64 que corre sin máquina virtual" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov3t2b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Dos caminos para el mismo código Dart</text>
+  <text x="20" y="42" font-size="12" font-weight="700" fill="#0e6f6c">Desarrollo, compilación JIT</text>
+  <rect x="20" y="52" width="150" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="95" y="83" font-size="11.5" fill="#12324f" text-anchor="middle">Código Dart</text>
+  <path d="M170,79 L226,79" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2b)"/>
+  <rect x="228" y="52" width="150" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="303" y="83" font-size="11.5" fill="#12324f" text-anchor="middle">Compilador JIT</text>
+  <path d="M378,79 L434,79" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2b)"/>
+  <rect x="436" y="40" width="300" height="78" rx="11" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="586" y="62" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">VM de Dart en el dispositivo</text>
+  <text x="586" y="80" font-size="11" fill="#12324f" text-anchor="middle">recibe el código nuevo con hot reload</text>
+  <text x="586" y="96" font-size="11" fill="#12324f" text-anchor="middle">y conserva el estado de la app</text>
+  <text x="20" y="146" font-size="12" font-weight="700" fill="#0e6f6c">Producción, compilación AOT</text>
+  <rect x="20" y="156" width="150" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="95" y="187" font-size="11.5" fill="#12324f" text-anchor="middle">Código Dart</text>
+  <path d="M170,183 L226,183" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2b)"/>
+  <rect x="228" y="156" width="150" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="303" y="187" font-size="11.5" fill="#12324f" text-anchor="middle">Compilador AOT</text>
+  <path d="M378,183 L434,183" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#lenmov3t2b)"/>
+  <rect x="436" y="144" width="300" height="78" rx="11" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="586" y="166" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Código máquina nativo</text>
+  <text x="586" y="184" font-size="11" fill="#12324f" text-anchor="middle">instrucciones ARM o x64 listas para</text>
+  <text x="586" y="200" font-size="11" fill="#12324f" text-anchor="middle">el procesador, sin máquina virtual</text>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Reto 1. AOT o JIT según el momento
+
+Para cada situación, marca si Dart está usando compilación AOT o compilación JIT:
+
+<label><input type="checkbox"> Publicas la versión final de tu app en la tienda de aplicaciones</label>
+
+<label><input type="checkbox"> Guardas un cambio en `main.dart` y la app corriendo en el emulador se actualiza en un segundo sin perder el estado</label>
+
+<label><input type="checkbox"> Un usuario abre tu app instalada y el sistema operativo ejecuta directamente instrucciones ARM, sin ningún intérprete de por medio</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La primera y la tercera situación describen compilación AOT, porque ocurren fuera del ciclo de
+desarrollo activo, con el código ya convertido en instrucciones nativas antes de que el usuario
+instale o abra la app. La segunda describe compilación JIT, porque el código nuevo llega mientras la
+app ya está corriendo dentro de una máquina virtual de Dart en el dispositivo, que es justo lo que
+hace posible el hot reload de la siguiente sección.
+:::
+
+## Todo es un widget
+
+En Flutter, cualquier cosa que veas en pantalla, y varias cosas que no ves, como el espaciado o la
+animación, son un *widget*. Un botón es un widget, el texto dentro de ese botón es otro widget, el
+espacio alrededor del botón también es un widget, y la pantalla completa es un widget que contiene a
+todos los anteriores. Esos widgets se organizan en una estructura jerárquica, el *árbol de widgets*,
+donde cada widget describe una porción de la interfaz y puede contener a otros widgets como hijos.
+
+Flutter distingue dos tipos de widget según si guardan datos que cambian mientras la app corre. Un
+`StatelessWidget` es inmutable una vez que Flutter lo construye, así que sirve para partes de la
+interfaz que no necesitan reaccionar a nada, un ícono fijo, un texto que no cambia, la estructura
+general de la app. Un `StatefulWidget`, en cambio, mantiene un objeto `State` aparte que sí puede
+cambiar durante la vida de la app, con datos como el texto que un usuario está escribiendo o el
+número de veces que tocó un botón. Ambos tipos de widget implementan un método `build()`, que
+describe cómo se ve el widget en ese instante exacto, y que Flutter vuelve a ejecutar cada vez que
+algo en el widget o en su estado cambia, nunca a mano.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Árbol de widgets de la app contador: ContadorApp como StatelessWidget en la raíz, MaterialApp debajo, PaginaContador como StatefulWidget que guarda el contador en su State, y en el último nivel Scaffold con AppBar, el body con la columna de texto y el botón flotante que llama a incrementarContador" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov3t2c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="14" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El árbol de widgets de la app contador</text>
+  <rect x="290" y="22" width="180" height="48" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="42" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">ContadorApp</text>
+  <text x="380" y="58" font-size="10.5" fill="#5b6876" text-anchor="middle">StatelessWidget, no cambia</text>
+  <path d="M380,70 L380,98" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2c)"/>
+  <rect x="290" y="100" width="180" height="42" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="126" font-size="12" fill="#12324f" text-anchor="middle">MaterialApp</text>
+  <path d="M380,142 L380,172" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2c)"/>
+  <rect x="258" y="174" width="244" height="66" rx="11" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="198" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">PaginaContador</text>
+  <text x="380" y="216" font-size="10.5" fill="#3c7d7a" text-anchor="middle">StatefulWidget</text>
+  <text x="380" y="230" font-size="10.5" fill="#3c7d7a" text-anchor="middle">su State guarda _contador</text>
+  <path d="M320,240 C300,254 200,258 130,266" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#lenmov3t2c)"/>
+  <path d="M380,240 L380,266" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#lenmov3t2c)"/>
+  <path d="M440,240 C470,254 580,258 630,266" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#lenmov3t2c)"/>
+  <rect x="30" y="268" width="190" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="125" y="290" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">AppBar</text>
+  <text x="125" y="306" font-size="10.5" fill="#5b6876" text-anchor="middle">titulo de la página</text>
+  <rect x="285" y="268" width="190" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="290" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">body: Column</text>
+  <text x="380" y="306" font-size="10.5" fill="#5b6876" text-anchor="middle">dos Text, uno con _contador</text>
+  <rect x="540" y="268" width="190" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="635" y="290" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">floatingActionButton</text>
+  <text x="635" y="306" font-size="10.5" fill="#5b6876" text-anchor="middle">onPressed: _incrementarContador</text>
+</svg>
+
+:::
+
+Fíjate en algo que el diagrama deja ver, `PaginaContador` es el `StatefulWidget` pero el dato que
+cambia, `_contador`, no vive en `PaginaContador` mismo, vive en un objeto `State` aparte que ese
+widget crea con `createState()`. Separar la descripción del widget (qué recibe de su padre, en este
+caso un título) de los datos que cambian con el tiempo es la idea central detrás de
+`StatefulWidget`, y es distinta de cómo funcionan otros frameworks que mezclan las dos cosas en un
+mismo objeto.
+
+## Hot reload, por qué el ciclo de desarrollo es tan corto
+
+El *hot reload* inyecta el código Dart que acabas de cambiar directamente en la máquina virtual de
+Dart que ya está corriendo dentro del dispositivo o emulador, sin reiniciar la app desde cero. Al
+guardar un archivo, Flutter compila solo las partes que cambiaron a un formato intermedio llamado
+*kernel* y lo envía a esa máquina virtual, que reemplaza las clases viejas por las nuevas. A partir
+de ahí, el propio framework de Flutter reconstruye el árbol de widgets con el código actualizado,
+así que el cambio aparece en pantalla en un tiempo cercano a un segundo, sin que la app vuelva a
+ejecutar su función `main()` ni el método `initState()` de cada widget con estado.
+
+Esa última parte es la que más acelera el trabajo diario, porque como `main()` no se vuelve a
+ejecutar, el estado que la app tenía en ese momento se conserva, si estabas navegando en la tercera
+pantalla de un flujo, con un formulario a medio llenar, sigues ahí después del hot reload, con el
+formulario intacto y solo el código nuevo aplicado. Comparar eso con el ciclo de una app
+completamente nativa deja ver la diferencia, ahí un cambio exige recompilar el código nativo
+completo, reinstalar la app en el dispositivo y volver a navegar a mano hasta la pantalla donde
+estabas, un ciclo que se mide en decenas de segundos o minutos en vez de segundo y medio.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro pasos del hot reload: editar y guardar el archivo Dart, compilar solo el cambio a un archivo kernel, inyectar ese kernel en la máquina virtual de Dart que ya esta corriendo en el dispositivo, y que el framework reconstruya el árbol de widgets sin volver a ejecutar main ni initState" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="lenmov3t2d" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Que pasa exactamente cuando guardas y llega el hot reload</text>
+  <rect x="6" y="34" width="168" height="106" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="90" y="58" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">1. Editas</text>
+  <text x="90" y="76" font-size="10.5" fill="#5b6876" text-anchor="middle">cambias main.dart</text>
+  <text x="90" y="92" font-size="10.5" fill="#5b6876" text-anchor="middle">y guardas el archivo</text>
+  <path d="M174,87 L188,87" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2d)"/>
+  <rect x="190" y="34" width="168" height="106" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="274" y="58" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">2. Compila</text>
+  <text x="274" y="76" font-size="10.5" fill="#5b6876" text-anchor="middle">solo lo que cambio,</text>
+  <text x="274" y="92" font-size="10.5" fill="#5b6876" text-anchor="middle">no todo el proyecto</text>
+  <path d="M358,87 L372,87" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2d)"/>
+  <rect x="374" y="24" width="168" height="126" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="458" y="48" font-size="11" font-weight="700" fill="#0e6f6c" text-anchor="middle">3. Inyecta</text>
+  <text x="458" y="66" font-size="10.5" fill="#12324f" text-anchor="middle">el código nuevo entra</text>
+  <text x="458" y="82" font-size="10.5" fill="#12324f" text-anchor="middle">a la VM de Dart que</text>
+  <text x="458" y="98" font-size="10.5" fill="#12324f" text-anchor="middle">ya esta corriendo en</text>
+  <text x="458" y="114" font-size="10.5" fill="#12324f" text-anchor="middle">el dispositivo</text>
+  <path d="M542,87 L556,87" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#lenmov3t2d)"/>
+  <rect x="558" y="34" width="180" height="106" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="648" y="58" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">4. Reconstruye</text>
+  <text x="648" y="76" font-size="10.5" fill="#5b6876" text-anchor="middle">el framework rearma</text>
+  <text x="648" y="92" font-size="10.5" fill="#5b6876" text-anchor="middle">el árbol de widgets</text>
+  <rect x="6" y="164" width="732" height="52" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="372" y="184" font-size="11.5" fill="#12324f" text-anchor="middle">main() e initState() no se vuelven a ejecutar, así que _contador conserva su valor.</text>
+  <text x="372" y="202" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Un hot restart si los ejecuta de nuevo y el contador vuelve a cero.</text>
+</svg>
+
+:::
+
+Flutter distingue el hot reload de un *hot restart*, que sí vuelve a ejecutar `main()` desde cero y
+por lo tanto pierde el estado que la app tenía, útil cuando el cambio que hiciste afecta cómo se
+inicializa la app y un simple hot reload no alcanza a reflejarlo.
+
+::: {.callout-tip}
+## Reto 2. Predice qué pasa con el contador
+
+Un estudiante tiene la app contador corriendo, con `_contador` en 7 después de tocar el botón siete
+veces. Para cada acción, marca si `_contador` se queda en 7 o vuelve a 0:
+
+<label><input type="checkbox"> Cambia el texto `'Veces que tocaste el botón:'` por otro texto y guarda el archivo (hot reload automático)</label>
+
+<label><input type="checkbox"> Presiona el botón de hot restart en su editor</label>
+
+<label><input type="checkbox"> Cierra la app por completo y la vuelve a abrir desde el ícono del dispositivo</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+Solo la primera acción deja `_contador` en 7. Un hot reload inyecta el texto nuevo en la máquina
+virtual de Dart que ya está corriendo y reconstruye el árbol de widgets sin volver a ejecutar
+`main()`, así que el objeto `State` con `_contador` en 7 sigue siendo el mismo objeto de antes, con
+el mismo valor.
+
+Las otras dos acciones sí vuelven `_contador` a 0. El hot restart, aunque sigue usando la máquina
+virtual de Dart y por eso es más rápido que reinstalar la app, vuelve a ejecutar `main()` desde
+cero, así que crea un objeto `State` nuevo con `_contador` inicializado otra vez en 0. Cerrar y
+reabrir la app por completo hace exactamente lo mismo, además de pasar por el ciclo completo de
+arranque del sistema operativo, así que el resultado es el mismo cero, pero por un camino más
+lento.
+:::
+
+## Construye la app, un contador real con Flutter instalado en este equipo
+
+Lo que sigue es una app mínima real, generada, modificada y verificada con los mismos comandos que
+vas a usar tú. El comando `flutter create` genera el proyecto base, con la estructura de carpetas,
+las dependencias y un ejemplo de contador que sirve como punto de partida estándar para conocer
+Flutter.
+
+```
+$ flutter create --project-name contador_lenguajes_moviles --org com.mariacano flutter_demo
+Creating project flutter_demo...
+Resolving dependencies in `flutter_demo`...
+Downloading packages...
+Got dependencies in `flutter_demo`.
+Wrote 131 files.
+
+All done!
+You can find general documentation for Flutter at: https://docs.flutter.dev/
+Detailed API documentation is available at: https://api.flutter.dev/
+If you prefer video documentation, consider: https://www.youtube.com/c/flutterdev
+
+In order to run your application, type:
+
+  $ cd flutter_demo
+  $ flutter run
+
+Your application code is in flutter_demo\lib\main.dart.
+```
+
+La bandera `--project-name` fija el nombre del paquete Dart por separado del nombre de la carpeta,
+que en este caso quedó como `flutter_demo`, así que el nombre del paquete y el de la carpeta no
+tienen que coincidir. `flutter create` deja el ejemplo de contador ya funcionando dentro de
+`lib/main.dart`, con nombres en inglés y comentarios genéricos. Lo siguiente es ese mismo archivo,
+reescrito con nombres en español y comentarios que explican cada widget, conservando exactamente la
+misma estructura `StatelessWidget`, `StatefulWidget` y `setState` que trae el generador.
+
+```dart
+import 'package:flutter/material.dart';
+
+// El punto de entrada de toda app Flutter. runApp() toma el widget raíz
+// y lo entrega al motor de renderizado, que lo dibuja en la pantalla.
+void main() {
+  runApp(const ContadorApp());
+}
+
+// ContadorApp es un StatelessWidget: una vez que Flutter lo construye, no
+// vuelve a cambiar por sí solo. Su único trabajo es describir la estructura
+// general de la app (título, tema visual, pantalla inicial).
+class ContadorApp extends StatelessWidget {
+  const ContadorApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Contador Flutter',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+      ),
+      home: const PaginaContador(titulo: 'Tema 2. Contador en Flutter'),
+    );
+  }
+}
+
+// PaginaContador es un StatefulWidget: describe QUE datos puede tener un
+// estado cambiante (aqui, un titulo fijo que llega del padre), pero el
+// estado en si vive en un objeto State aparte, _PaginaContadorState.
+class PaginaContador extends StatefulWidget {
+  const PaginaContador({super.key, required this.titulo});
+
+  final String titulo;
+
+  @override
+  State<PaginaContador> createState() => _PaginaContadorState();
+}
+
+// _PaginaContadorState guarda el dato que SI cambia mientras la app corre:
+// cuantas veces el estudiante toco el botón. Separar el widget (la
+// descripcion) de su estado (los datos que cambian) es la idea central de
+// StatefulWidget.
+class _PaginaContadorState extends State<PaginaContador> {
+  int _contador = 0;
+
+  // setState() le avisa al framework que _contador cambio, así que debe
+  // volver a llamar a build() para que la pantalla refleje el nuevo valor.
+  // Sin ese aviso, _contador cambiaria en memoria pero la pantalla seguiria
+  // mostrando el número viejo.
+  void _incrementarContador() {
+    setState(() {
+      _contador++;
+    });
+  }
+
+  // build() describe como se ve este widget en este momento exacto. Flutter
+  // lo vuelve a ejecutar cada vez que setState() lo pide, nunca a mano.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.titulo),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Veces que tocaste el botón:'),
+            Text(
+              '$_contador',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _incrementarContador,
+        tooltip: 'Incrementar',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+```
+
+Fíjate en la línea `Text('$_contador')`, dentro de `build()`. Cada vez que `_incrementarContador`
+llama a `setState`, Flutter vuelve a ejecutar `build()` completo, y esa línea vuelve a leer el valor
+más reciente de `_contador`, así que el número que ves en pantalla queda sincronizado con el estado
+sin que el código tenga que buscar manualmente ese `Text` y cambiarle el contenido, al estilo de
+`document.getElementById` en JavaScript.
+
+`flutter analyze` revisa el código en busca de errores, advertencias y problemas de estilo, sin
+llegar a compilar ni ejecutar la app. Esta es la salida real, capturada al correr el comando sobre
+el proyecto de esta guía:
+
+```
+$ flutter analyze
+Analyzing flutter_demo...
+No issues found! (ran in 58.8s)
+```
+
+El tiempo exacto varía según el equipo donde corras el comando, no es un número reproducible al
+milisegundo, lo que importa es el resultado, "No issues found!", sin advertencias ni errores.
+
+Esta guía nace dentro de una unidad que la carta descriptiva titula "Desarrollo web
+multiplataforma", así que vale la pena confirmar que Flutter también compila hacia esa plataforma.
+`flutter build web` no ejecuta un servidor ni abre el navegador, solo compila el proyecto a
+JavaScript o WebAssembly y deja el resultado listo para servir como sitio estático. Esta es la
+salida real de correr ese comando sobre el mismo proyecto contador:
+
+```
+$ flutter build web
+Compiling lib\main.dart for the Web...
+Wasm dry run succeeded. Consider building and testing your application with the --wasm flag.
+Font asset "CupertinoIcons.ttf" was tree-shaken, reducing it from 257628 to 1472 bytes (99.4% reduction).
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 7800 bytes (99.5% reduction).
+Compiling lib\main.dart for the Web...                             58,4s
+Built build\web
+```
+
+Dos detalles de esa salida merecen explicación. El *tree-shaking* de fuentes de íconos elimina del
+paquete final los glifos que la app nunca usa, así que una fuente de íconos completa de más de un
+megabyte y medio termina pesando unos pocos kilobytes en el sitio publicado, sin que tengas que
+elegir manualmente qué íconos conservar. El aviso sobre *Wasm dry run* avisa que el proyecto también
+podría compilarse a WebAssembly en vez de JavaScript con la bandera `--wasm`, una ruta más reciente
+que esta guía no exploró a fondo porque el objetivo aquí era confirmar que el proyecto compila hacia
+web sin errores, no comparar los dos formatos de salida entre sí. La verificación se quedó ahí,
+en confirmar que `flutter build web` termina con éxito y produce la carpeta `build/web`; no se
+sirvió ese resultado en un navegador como parte de esta guía.
+
+## Lo que viene, React y el criterio para elegir un framework
+
+Flutter resuelve la interfaz de esta unidad dibujando sus propios píxeles con un árbol de widgets en
+Dart, sin pasar por HTML, CSS ni el DOM. El Tema 3 va a mirar la otra familia de frameworks, la que
+sí trabaja dentro del navegador, con React como caso de estudio, y va a cerrar con el criterio
+general que un equipo real usa para elegir un framework de interfaz, más allá de si ese framework
+resultó ser Flutter, React o cualquier otro. La comparación no busca declarar un ganador absoluto,
+busca que entiendas qué preguntas hacerte la próxima vez que un proyecto real te ponga esa decisión
+sobre la mesa.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Por qué Flutter no es una vista web envuelta, y qué papel juegan Dart, el motor de Flutter
+      (Impeller o Skia) y la ausencia de widgets nativos del sistema operativo en esa respuesta
+- [ ] La diferencia entre compilación AOT y JIT en Dart, y en qué momento del ciclo de vida de una
+      app se usa cada una
+- [ ] Qué es el árbol de widgets, la diferencia entre `StatelessWidget` y `StatefulWidget`, y qué
+      hace el método `build()`
+- [ ] Qué pasos sigue exactamente un hot reload y por qué preserva el estado de la app, a
+      diferencia de un hot restart o de una recompilación nativa completa
+- [ ] Cómo leer el `main.dart` de una app contador real, incluido qué hace `setState` y por qué es
+      necesario para que la pantalla refleje un cambio
+- [ ] Qué revisa `flutter analyze` y cómo se ve su salida cuando el proyecto no tiene problemas
+:::
+
+## Recursos
+
+- Flutter. *Flutter architectural overview.*
+  [docs.flutter.dev, architectural-overview](https://docs.flutter.dev/resources/architectural-overview)
+- Flutter. *Impeller rendering engine.*
+  [docs.flutter.dev, impeller](https://docs.flutter.dev/perf/impeller)
+- Flutter. *Hot reload.*
+  [docs.flutter.dev, hot-reload](https://docs.flutter.dev/tools/hot-reload)
+- Flutter. *How Flutter works: layout and widgets.*
+  [docs.flutter.dev, layout](https://docs.flutter.dev/get-started/fwe/layout)
+- Dart. *What is Dart?*
+  [dart.dev, overview](https://dart.dev/overview)
+- Flutter. `flutter create`, `flutter analyze` y `flutter build web`, documentación de la CLI.
+  [docs.flutter.dev, flutter-cli](https://docs.flutter.dev/reference/flutter-cli)
+
+::: {.pie-doc}
+Lenguajes de computación para móviles. Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. La
+salida de terminal es una captura real tomada durante la preparación del material.
+:::
