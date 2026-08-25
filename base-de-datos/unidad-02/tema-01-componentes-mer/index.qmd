@@ -274,7 +274,8 @@ al atributo `phone_number` de la entidad `instructor`.
   <rect x="565" y="72" width="175" height="90" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
   <text x="579" y="96" font-size="11" fill="#12324f">id=1, telefono=3001112233</text>
   <text x="579" y="114" font-size="11" fill="#12324f">id=1, telefono=3001119999</text>
-  <text x="579" y="140" font-size="11" fill="#0e6f6c">una fila por cada número, misma clave id_cliente</text>
+  <text x="579" y="138" font-size="10" fill="#0e6f6c">una fila por cada número,</text>
+  <text x="579" y="152" font-size="10" fill="#0e6f6c">misma clave id_cliente</text>
   <line x1="20" y1="180" x2="740" y2="180" stroke="#cfd8e3" stroke-width="1.2"/>
   <text x="185" y="204" font-size="11.5" fill="#5b6876" text-anchor="middle">buscar el segundo número exige leer y partir el texto completo</text>
   <text x="580" y="204" font-size="11.5" fill="#5b6876" text-anchor="middle">buscar el segundo número es una fila más en Cliente_Telefono</text>
@@ -411,6 +412,132 @@ revisar caso por caso, y por eso el propio libro prefiere, para relaciones de gr
 permitir una sola flecha de cardinalidad hacia como mucho un participante, precisamente para no
 introducir ambigüedades de lectura, un detalle de notación que la Unidad retoma en el Tema 2.
 
+## Decisiones de diseño: qué conviene modelar como qué
+
+Los conceptos de entidad, atributo y relación que acabas de ver no vienen con fronteras perfectamente
+marcadas. Silberschatz, Korth y Sudarshan dedican una sección completa del capítulo 6 a esta idea, los
+conceptos de conjunto de entidades y de conjunto de relaciones no son precisos, y es posible definir el
+conjunto de entidades y las relaciones entre ellas de formas distintas. Antes de cerrar el tema conviene
+ver, con ejemplos concretos del propio libro y de la cafetería, cuatro decisiones que vas a enfrentar
+una y otra vez al modelar cualquier negocio.
+
+### Atributo o entidad propia, con el ejemplo del teléfono del libro
+
+Ya viste, al hablar de `telefono` como atributo multivaluado de `Cliente`, que la pregunta correcta es
+si ese dato necesita cargar información propia que ya no cabe en un solo valor. El propio libro plantea
+la misma decisión con un caso casi idéntico, un conjunto de entidades `empleado` con el atributo
+`numero_telefono`. Tratar el teléfono como atributo simple supone que cada empleado tiene exactamente
+un número. Tratarlo como una entidad `Telefono` propia, conectada con `Empleado` mediante una relación
+`telefono_empleado`, permite además guardar dónde está instalado ese teléfono, la sucursal o el
+domicilio, o si es un celular. Modelar como entidad es siempre más general que modelar como atributo,
+así que la pregunta no es cuál opción es correcta en abstracto, sino si esa generalidad adicional hace
+falta de verdad en el negocio que estás modelando.
+
+Los mismos autores señalan un error frecuente en la dirección contraria, uno que conviene nombrar ahora
+porque la siguiente sección de este tema construye justo la relación que lo evita, usar la clave
+primaria de una entidad como atributo de otra en vez de conectarlas con una relación propia. En la
+cafetería sería incorrecto guardar `id_cliente` como un atributo más de `Pedido`, aunque cada pedido
+tenga siempre un único cliente. Esa conexión se representa con una relación, la que vas a construir en
+la siguiente sección, no con un atributo que esconde la relación real entre las dos entidades.
+
+### Entidad o relación, cuando un mismo hecho admite las dos lecturas
+
+`Pedido` ya quedó definido en este tema como una entidad fuerte, con su propio identificador
+`numero_pedido` y su propio atributo `fecha`. Pero esa no es la única forma válida de leer un pedido. El
+propio libro modela su ejemplo equivalente, un préstamo bancario, de las dos formas posibles, como
+entidad, con `numero_prestamo` e `importe` como atributos propios, o como una relación entre `cliente` y
+`sucursal`, con esos mismos dos atributos colgando de la relación en vez de vivir en una entidad aparte.
+
+La segunda forma funciona bien mientras cada préstamo pertenezca a un único cliente y a una única
+sucursal. El problema aparece, dicen los autores, en cuanto un préstamo se concede a varios clientes a
+la vez, como un préstamo solicitado conjuntamente por dos socios de un negocio. Sin una entidad propia
+para el préstamo, hay que crear una relación distinta por cada cliente copropietario, y cada una de esas
+relaciones tiene que repetir los mismos valores de `numero_prestamo` e `importe`. Esa réplica trae dos
+problemas concretos, se desperdicia espacio guardando el mismo dato varias veces, y una actualización
+puede corregir una copia y olvidar otra, dejando el préstamo con dos importes distintos según por cuál
+relación se consulte.
+
+Ese es exactamente el mismo riesgo que corrió la cafetería si `Pedido` no fuera una entidad. Imagina que,
+en vez de una entidad `Pedido` con su propio `numero_pedido` y su propia `fecha`, el pedido 1002 de Ana
+se modelara como una relación directa entre `Cliente` y cada `Producto` que compró, con `fecha` colgando
+de esa relación. Ese pedido incluyó una torta y, según el Reto 2 de este mismo tema, podría haber
+incluido también un jugo, así que la fecha del pedido 1002 tendría que repetirse en la relación con la
+torta y en la relación con el jugo, dos copias del mismo dato que en teoría nunca deberían divergir. El
+día que alguien corrija la fecha de una copia y olvide la otra, el pedido 1002 queda con dos fechas
+distintas sin que ninguna regla lo impida. Por eso `Pedido` se modela como entidad propia desde el
+principio de este tema, exactamente el mismo criterio que usa el libro para preferir una entidad
+`prestamo` sobre una relación que reparte sus atributos entre `cliente` y `sucursal`.
+
+### Relación binaria o de mayor grado, cuando dividir pierde información
+
+Ya viste, en la sección anterior, que una relación de tres o más entidades se puede reescribir como
+varias relaciones binarias, y que esa reescritura no siempre conserva todas las restricciones
+originales. El libro ofrece dos ejemplos verificados que muestran cuándo esa división funciona y cuándo
+no. Una relación ternaria `padres`, que conecta a cada hijo con su madre y con su padre a la vez, se
+puede dividir sin ningún problema en dos relaciones binarias, `madre` y `padre`, porque las dos mitades
+son independientes entre sí. Dividirla incluso mejora el modelo, porque permite registrar la madre de un
+hijo aunque no se conozca la identidad del padre, algo que la relación ternaria obligaría a resolver con
+un valor nulo.
+
+La relación `trabaja_en`, que conecta `empleado`, `sucursal` y `trabajo`, es el caso opuesto. No se puede
+dividir en una relación binaria `empleado`-`sucursal` y otra `empleado`-`trabajo` sin perder información
+real. Con las dos relaciones separadas se podría registrar que un empleado es director e interventor a
+la vez, y que trabaja en dos sucursales a la vez, pero ya no se podría saber en cuál sucursal ejerce cuál
+de los dos cargos, si es director en una y solo interventor en la otra. La diferencia entre `padres` y
+`trabaja_en` es que en la primera las dos mitades no dependen una de la otra, mientras que en la segunda
+el cargo depende de la combinación exacta de empleado y sucursal, no de cada uno por separado. Ese mismo
+criterio, si dividir la relación deja alguna combinación sin poder expresarse, es el que vas a usar cada
+vez que dudes entre una relación de grado mayor que dos y varias relaciones binarias.
+
+### Dónde vive el atributo de una relación
+
+Ya conoces `canal_pedido`, el atributo que registra si un pedido concreto de un cliente concreto llegó
+por el mostrador o a domicilio, colgando de la relación `realiza`. El libro explica, con un ejemplo casi
+idéntico, cuándo un atributo así puede en realidad mudarse a una de las entidades participantes sin que
+el modelo pierda nada, y cuándo no le queda más remedio que quedarse en la relación.
+
+El criterio depende de la cardinalidad. Si `realiza` fuera una relación uno a varios, cada pedido con un
+único cliente, entonces `canal_pedido` podría vivir igual de bien como atributo de `Pedido` que como
+atributo de la relación, porque cada entidad `Pedido` participa como mucho una vez en `realiza`, así que
+no hay ambigüedad posible sobre a cuál pedido pertenece ese canal. El libro ilustra exactamente esta idea
+con `fecha_acceso`, el atributo que registra cuándo un cliente accedió por última vez a una cuenta, en
+una relación `impositor` uno a varios de cliente a cuenta. Con cada cuenta asociada a un único cliente
+titular, `fecha_acceso` se puede mover al conjunto de entidades `cuenta` sin cambiar el significado. La
+regla que dan los autores es que, en una relación uno a varios, el atributo solo se puede recolocar en
+el lado "varios", nunca en el lado "uno".
+
+La situación cambia por completo si la relación es varios a varios. `Contiene`, la relación entre
+`Pedido` y `Producto` de la Unidad 3, es justo ese caso, y por eso `cantidad` no puede vivir en `Pedido`
+ni en `Producto` por separado. Un mismo `Pedido` puede incluir varios productos, y un mismo `Producto`
+puede aparecer en varios pedidos, así que la cantidad de café del pedido 1001 y la cantidad de café de
+cualquier otro pedido que también incluya café son datos distintos que solo tienen sentido atados a la
+combinación concreta de ese pedido con ese producto, no a uno de los dos por separado. El propio libro
+llega a la misma conclusión con `fecha_acceso` cuando `impositor` es varios a varios, con varios clientes
+titulares de una misma cuenta conjunta, ya no se puede saber cuál cliente hizo el último acceso si
+`fecha_acceso` se mueve a `cuenta`, así que el atributo tiene que quedarse en la relación.
+
+::: {.callout-tip}
+## Reto 4. Decide dónde vive canal_pedido
+
+Vuelve a la relación `realiza` de la sección anterior, donde `canal_pedido` cuelga de la relación entre
+`Cliente` y `Pedido`. Según lo que acabas de leer, `realiza` es uno a varios, cada pedido pertenece a un
+único cliente. Responde antes de seguir leyendo, se podría mover `canal_pedido` al conjunto de entidades
+`Pedido` sin que el modelo pierda ningún significado, o tendría que quedarse en la relación. Justifica tu
+respuesta con el mismo criterio de cardinalidad que acabas de ver con `fecha_acceso` e `impositor`.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+`canal_pedido` sí se puede mover al conjunto de entidades `Pedido` sin perder significado, porque
+`realiza` es uno a varios y cada entidad `Pedido` participa, a lo sumo, una vez en esa relación. Como
+cada pedido tiene un único cliente asociado, no existe ninguna ambigüedad sobre a cuál pedido pertenece
+el canal, así que da exactamente lo mismo declarar `canal_pedido` como atributo de la relación `realiza`
+que como atributo propio de `Pedido`. Es el mismo razonamiento que el libro aplica a `fecha_acceso`
+cuando `impositor` es uno a varios de cliente a cuenta, el atributo se puede recolocar en el lado
+"varios" de la relación sin cambiar lo que el modelo expresa.
+:::
+
 ## Cómo se identifica una entidad sin ambigüedad con una clave
 
 Una *superclave* es un conjunto de atributos cuyos valores identifican, sin ambigüedad, a cada entidad
@@ -537,6 +664,8 @@ Al salir de este tema deberías poder explicar, sin mirar la guía, los siguient
 - [ ] La diferencia entre superclave, clave candidata y clave primaria, y por qué un valor único hoy
       no siempre alcanza para ser clave
 - [ ] Cómo se arma la clave primaria de una entidad débil a partir de la clave de su propietario
+- [ ] Cuándo conviene modelar algo como entidad en vez de atributo, cuándo como entidad en vez de
+      relación, y dónde vive el atributo de una relación según su cardinalidad
 :::
 
 ## Antes del Tema 2
