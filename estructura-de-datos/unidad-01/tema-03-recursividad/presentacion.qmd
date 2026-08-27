@@ -1,0 +1,569 @@
+---
+title: "Tema 3. Cada llamada se apila"
+subtitle: "Estructura de datos (ESD01). Unidad 1"
+author: "Oscar Leonel Sánchez Conde"
+pagetitle: "Tema 3. Cada llamada se apila"
+title-prefix: ""
+format:
+  revealjs:
+    theme: [default, ../../../estilos/presentacion.scss]
+    slide-number: true
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Recorrido de la sesión {.center}
+
+::: {.tarjetas}
+::: {.clave}
+<span class="titulo">1. Caso base y caso recursivo</span>
+
+Identificamos el molde con la matrioska y con `factorial`.
+:::
+::: {}
+<span class="titulo">2. Marco de pila</span>
+
+Cada llamada se apila con sus propios datos y su dirección de retorno.
+:::
+::: {}
+<span class="titulo">3. Ramificación</span>
+
+`fibonacci` se abre en árbol y repite trabajo.
+:::
+::: {}
+<span class="titulo">4. Límites</span>
+
+Qué pasa cuando falta el caso base, y qué dice la finitud de Knuth.
+:::
+:::
+
+::: {.neutro}
+Apilar y desapilar, donde el último que entra es el primero que sale: esa disciplina ya está
+funcionando por debajo de cualquier programa, lo uses explícitamente o no.
+:::
+
+## Las muñecas que se abren en cascada {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco munecas rusas de tamano decreciente conectadas por flechas de apertura, la mas pequena solida como caso base, con una flecha curva de retorno que representa el cierre en orden inverso" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="p3m1" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Las munecas que se abren en cascada</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="95" y="70" width="110" height="110" rx="10"/><rect x="255" y="90" width="90" height="90" rx="9"/><rect x="395" y="108" width="72" height="72" rx="8"/><rect x="517" y="124" width="56" height="56" rx="7"/></g>
+  <rect x="623" y="138" width="42" height="42" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#p3m1)"><path d="M211,155 L249,155"/><path d="M351,155 L389,155"/><path d="M473,155 L511,155"/><path d="M579,155 L617,155"/></g>
+  <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="230" y="148">abre</text><text x="370" y="148">abre</text><text x="492" y="148">abre</text><text x="598" y="148">abre</text></g>
+  <g text-anchor="middle" font-size="11" font-weight="600" fill="#12324f"><text x="150" y="198">Muneca 1</text><text x="300" y="198">Muneca 2</text><text x="431" y="198">Muneca 3</text><text x="545" y="198">Muneca 4</text></g>
+  <text x="644" y="198" text-anchor="middle" font-size="11" font-weight="700" fill="#0e6f6c">caso base</text>
+  <text x="380" y="228" text-anchor="middle" font-size="11" fill="#5b6876">se cierran en orden inverso, la mas chica primero</text>
+  <text x="380" y="252" text-anchor="middle" font-size="11.5" fill="#5b6876">La que no tiene nada dentro es el caso base; las demas son el caso recursivo.</text>
+</svg>
+:::
+
+::: {.neutro}
+Abrir y mirar adentro es el caso recursivo. La muñeca sólida, la que ya no se abre, es el caso
+base: la única razón por la que la cascada se detiene.
+:::
+
+## Caso base y caso recursivo {.center}
+
+::: {.tarjetas}
+::: {.clave}
+<span class="titulo">Caso base</span>
+
+La condición más simple del problema. Se resuelve sin volver a llamar a la función.
+:::
+::: {}
+<span class="titulo">Caso recursivo</span>
+
+La función se llama a sí misma con una entrada más pequeña, y combina ese resultado con el trabajo
+del paso actual.
+:::
+:::
+
+::: {.destacado}
+Un algoritmo debe cumplir finitud: termina después de un número finito de pasos. Una función
+recursiva sin caso base, o con uno al que nunca se llega, deja de ser un algoritmo en sentido
+estricto.
+:::
+
+## Qué guarda un marco de pila {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos marcos de pila lado a lado, cada uno con sus propios parametros, variables locales y direccion de retorno, conectados por una flecha que representa la llamada de uno al otro" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="p3b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cada marco guarda sus propios datos, aparte de los demas</text>
+  <rect x="60" y="42" width="260" height="120" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="440" y="42" width="260" height="120" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <path d="M320,102 L436,102" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3b)"/>
+  <text x="378" y="92" font-size="11" fill="#5b6876" text-anchor="middle">llama a</text>
+  <g text-anchor="middle">
+    <g font-size="14" font-weight="600" fill="#12324f"><text x="190" y="64">marco de factorial(3)</text><text x="570" y="64">marco de factorial(2)</text></g>
+    <g font-size="16" font-weight="700" fill="#0e6f6c"><text x="190" y="92">n = 3</text><text x="570" y="92">n = 2</text></g>
+    <g font-size="11" fill="#5b6876"><text x="190" y="112">parametro, su propio espacio</text><text x="570" y="112">parametro, otro espacio aparte</text></g>
+    <g font-size="11.5" font-weight="600" fill="#0e6f6c"><text x="190" y="140">vuelve a: factorial(4)</text><text x="570" y="140">vuelve a: factorial(3)</text></g>
+  </g>
+  <text x="14" y="196" font-size="11.5" fill="#5b6876">Cambiar el n de un marco no toca el n del otro, aunque el codigo escriba "n" las dos veces.</text>
+  <text x="14" y="212" font-size="11.5" fill="#5b6876">La direccion de retorno de cada marco tambien es propia: cada uno vuelve a un sitio distinto.</text>
+</svg>
+:::
+
+Parámetros, variables locales y dirección de retorno. Ese tercer dato es el que le dice al programa
+adónde volver cuando la llamada termine.
+
+## La pila de llamadas para factorial(4) {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 410" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pila de llamadas de factorial(4): crece de abajo hacia arriba con cada llamada y se deshace de arriba hacia abajo con cada retorno" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="p3a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">La pila de llamadas para factorial(4)</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="290" y="110" width="180" height="58" rx="8"/><rect x="290" y="174" width="180" height="58" rx="8"/><rect x="290" y="238" width="180" height="58" rx="8"/><rect x="290" y="302" width="180" height="58" rx="8"/></g>
+  <rect x="290" y="46" width="180" height="58" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle">
+    <g font-size="13" font-weight="600" fill="#12324f"><text x="380" y="68">factorial(0)</text><text x="380" y="132">factorial(1)</text><text x="380" y="196">factorial(2)</text><text x="380" y="260">factorial(3)</text><text x="380" y="324">factorial(4)</text></g>
+    <text x="380" y="86" font-size="11" fill="#3c7d7a">caso base = 1</text>
+    <g font-size="11" fill="#5b6876"><text x="380" y="150">1 * factorial(0)</text><text x="380" y="214">2 * factorial(1)</text><text x="380" y="278">3 * factorial(2)</text><text x="380" y="342">4 * factorial(3)</text></g>
+  </g>
+  <text x="110" y="30" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Entra</text>
+  <path d="M110,345 L110,58" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3a)"/>
+  <g text-anchor="middle" font-size="15" font-weight="700" fill="#0e6f6c"><text x="110" y="79">5</text><text x="110" y="143">4</text><text x="110" y="207">3</text><text x="110" y="271">2</text><text x="110" y="335">1</text></g>
+  <text x="660" y="30" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Sale</text>
+  <path d="M660,58 L660,330" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3a)"/>
+  <g text-anchor="middle"><g font-size="15" font-weight="700" fill="#0e6f6c"><text x="660" y="71">1</text><text x="660" y="135">2</text><text x="660" y="199">3</text><text x="660" y="263">4</text><text x="660" y="327">5</text></g><g font-size="11" fill="#5b6876"><text x="660" y="89">valor 1</text><text x="660" y="153">valor 1</text><text x="660" y="217">valor 2</text><text x="660" y="281">valor 6</text><text x="660" y="345">valor 24, final</text></g></g>
+  <text x="380" y="398" font-size="11.5" fill="#5b6876" text-anchor="middle">Entra de abajo hacia arriba; sale de arriba hacia abajo, en el orden inverso.</text>
+</svg>
+:::
+
+## Trazado en vivo: factorial en Python {.center}
+
+::: {.columns}
+::: {.column width="55%"}
+<span class="titulo">Código</span>
+
+```python
+def factorial(n):
+    print(f"entra factorial({n})")
+    if n == 0:
+        return 1
+    r = n * factorial(n - 1)
+    print(f"sale factorial({n}) = {r}")
+    return r
+```
+:::
+::: {.column width="45%"}
+<span class="titulo">Salida real</span>
+
+```
+entra factorial(4)
+entra factorial(3)
+entra factorial(2)
+entra factorial(1)
+entra factorial(0)
+sale factorial(1) = 1
+sale factorial(2) = 2
+sale factorial(3) = 6
+sale factorial(4) = 24
+```
+:::
+:::
+
+::: {.neutro}
+El orden de las líneas "sale" es el inverso exacto del orden de las líneas "entra".
+:::
+
+## La misma lógica en Java {.center}
+
+```java
+public static int factorial(int n) {
+    System.out.println("entra factorial(" + n + ")");
+    if (n == 0) return 1;
+    int r = n * factorial(n - 1);
+    System.out.println("sale factorial(" + n + ") = " + r);
+    return r;
+}
+```
+
+::: {.neutro}
+Java no imprime nada distinto: un marco por llamada, en una pila que administra la máquina virtual
+en vez del sistema operativo directamente.
+:::
+
+## Reto 1. Dibuja la pila antes de correr el código {.center}
+
+```python
+def suma(n):
+    if n == 0:
+        return 0
+    return n + suma(n - 1)
+```
+
+::: {.pasos}
+1. Dibuja un rectángulo por cada llamada de `suma(5)`, de abajo hacia arriba, con el valor de `n`.
+2. Marca cuál es el caso base.
+3. Junto a cada rectángulo, escribe el valor que ese marco va a devolver.
+4. Solo después de terminar el dibujo, ejecuta el código y compara con lo que predijiste.
+:::
+
+## Recursión directa e indirecta {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de secuencia simplificado de es_par(4): las llamadas bajan alternando entre es_par y es_impar hasta el caso base es_par(0), y los retornos suben en el orden inverso, todos con valor True" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="p3f" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">es_par(4): las llamadas bajan, los retornos suben</text>
+  <rect x="120" y="32" width="120" height="30" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="530" y="32" width="120" height="30" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="180" y="52" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">es_par</text>
+  <text x="590" y="52" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">es_impar</text>
+  <line x1="180" y1="62" x2="180" y2="440" stroke="#cfd8e3" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="590" y1="62" x2="590" y2="440" stroke="#cfd8e3" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <path d="M180,90 L590,90" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3f)"/>
+  <text x="385" y="84" font-size="12" fill="#12324f" text-anchor="middle">es_par(4) llama a es_impar(3)</text>
+  <path d="M590,140 L180,140" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3f)"/>
+  <text x="385" y="134" font-size="12" fill="#12324f" text-anchor="middle">es_impar(3) llama a es_par(2)</text>
+  <path d="M180,190 L590,190" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3f)"/>
+  <text x="385" y="184" font-size="12" fill="#12324f" text-anchor="middle">es_par(2) llama a es_impar(1)</text>
+  <path d="M590,240 L180,240" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3f)"/>
+  <text x="385" y="234" font-size="12" fill="#12324f" text-anchor="middle">es_impar(1) llama a es_par(0)</text>
+  <rect x="120" y="258" width="120" height="42" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="180" y="275" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">es_par(0)</text>
+  <text x="180" y="292" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">caso base: True</text>
+  <path d="M180,330 L590,330" stroke="#8fb3d1" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#p3f)"/>
+  <text x="385" y="324" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">es_par(0) retorna True a es_impar(1)</text>
+  <path d="M590,380 L180,380" stroke="#8fb3d1" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#p3f)"/>
+  <text x="385" y="374" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">es_impar(1) retorna True a es_par(2)</text>
+  <text x="380" y="420" font-size="14" font-weight="700" fill="#0e6f6c" text-anchor="middle">y asi hasta es_par(4) = True</text>
+</svg>
+:::
+
+## Código: es_par y es_impar {.center}
+
+::: {.columns}
+::: {.column width="55%"}
+<span class="titulo">Código</span>
+
+```python
+def es_par(n):
+    if n == 0:
+        return True
+    return es_impar(n - 1)
+
+def es_impar(n):
+    if n == 0:
+        return False
+    return es_par(n - 1)
+```
+:::
+::: {.column width="45%"}
+<span class="titulo">Salida real</span>
+
+```
+es_par(4)
+es_impar(3)
+es_par(2)
+es_impar(1)
+es_par(0)
+es_par(4) = True
+```
+:::
+:::
+
+## Recursión directa frente a indirecta {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda una funcion con una flecha en bucle que representa la recursion directa; a la derecha dos funciones conectadas por dos flechas en sentidos opuestos que representan la recursion indirecta o mutua" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="p3e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="150" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Recursion directa</text>
+  <text x="560" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Recursion indirecta (o mutua)</text>
+  <rect x="65" y="78" width="170" height="64" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="485" y="43" width="150" height="50" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="485" y="143" width="150" height="50" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <path d="M235,128 C305,128 305,92 235,92" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3e)"/>
+  <path d="M635,68 C700,68 700,168 635,168" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3e)"/>
+  <path d="M485,168 C420,168 420,68 485,68" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3e)"/>
+  <g text-anchor="middle">
+    <text x="150" y="104" font-size="14" font-weight="600" fill="#12324f">funcion()</text>
+    <text x="150" y="124" font-size="11" fill="#5b6876">se llama con una entrada mas pequena</text>
+    <text x="560" y="64" font-size="13" font-weight="600" fill="#12324f">funcion_a()</text>
+    <text x="560" y="164" font-size="13" font-weight="600" fill="#12324f">funcion_b()</text>
+  </g>
+  <text x="14" y="215" font-size="11.5" fill="#5b6876">En la indirecta ninguna funcion se llama literalmente a si misma: el ciclo siempre pasa por la otra.</text>
+</svg>
+:::
+
+## Fibonacci: la recursión se ramifica {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 370" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol de llamadas de fibonacci(5), con quince casillas: las llamadas que se ramifican en azul y los casos base en verde, mostrando que fibonacci(1) se repite cinco veces y fibonacci(0) tres veces" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="p3d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">El arbol de llamadas de fibonacci(5): 15 llamadas en total</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#p3d)"><path d="M438,53 L264,87"/><path d="M438,53 L613,87"/><path d="M264,113 L163,147"/><path d="M264,113 L365,147"/><path d="M163,173 L95,207"/><path d="M163,173 L230,207"/><path d="M95,233 L50,267"/><path d="M95,233 L140,267"/><path d="M365,173 L320,207"/><path d="M365,173 L410,207"/><path d="M613,113 L545,147"/><path d="M613,113 L680,147"/><path d="M545,173 L500,207"/><path d="M545,173 L590,207"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="413" y="27" width="50" height="26" rx="6"/><rect x="239" y="87" width="50" height="26" rx="6"/><rect x="588" y="87" width="50" height="26" rx="6"/><rect x="138" y="147" width="50" height="26" rx="6"/><rect x="340" y="147" width="50" height="26" rx="6"/><rect x="520" y="147" width="50" height="26" rx="6"/><rect x="70" y="207" width="50" height="26" rx="6"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="25" y="267" width="50" height="26" rx="6"/><rect x="115" y="267" width="50" height="26" rx="6"/><rect x="205" y="207" width="50" height="26" rx="6"/><rect x="295" y="207" width="50" height="26" rx="6"/><rect x="385" y="207" width="50" height="26" rx="6"/><rect x="475" y="207" width="50" height="26" rx="6"/><rect x="565" y="207" width="50" height="26" rx="6"/><rect x="655" y="147" width="50" height="26" rx="6"/></g>
+  <g text-anchor="middle" font-size="14" font-weight="700" fill="#12324f"><text x="438" y="45">5</text><text x="264" y="105">4</text><text x="613" y="105">3</text><text x="163" y="165">3</text><text x="365" y="165">2</text><text x="545" y="165">2</text><text x="95" y="225">2</text></g>
+  <g text-anchor="middle" font-size="14" font-weight="700" fill="#0e6f6c"><text x="50" y="285">1</text><text x="140" y="285">0</text><text x="230" y="225">1</text><text x="320" y="225">1</text><text x="410" y="225">0</text><text x="500" y="225">1</text><text x="590" y="225">0</text><text x="680" y="165">1</text></g>
+  <text x="14" y="330" font-size="11.5" fill="#5b6876">Las casillas verdes son casos base (n = 0 o n = 1); las azules se ramifican en dos llamadas mas.</text>
+  <text x="14" y="348" font-size="11.5" fill="#5b6876">fibonacci(1) se calcula 5 veces y fibonacci(0) se calcula 3 veces, siempre el mismo subproblema.</text>
+</svg>
+:::
+
+## Código de fibonacci {.center}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+```
+:::
+::: {.column width="45%"}
+::: {.destacado}
+Una sola línea, dos llamadas recursivas. Las dos tienen que terminar antes de que la suma se pueda
+calcular.
+:::
+:::
+:::
+
+## Llamadas contra profundidad de la pila {.center}
+
+| n | Llamadas totales | Profundidad máxima |
+|---|---:|---:|
+| 5 | 15 | 4 |
+| 10 | 177 | 9 |
+| 20 | 21.891 | 19 |
+| 30 | 2.692.537 | 29 |
+
+::: {.destacado}
+Las llamadas crecen exponencial y la profundidad crece lineal. Por eso `fibonacci(30)` tarda mucho
+sin nunca desbordar la pila: el problema no es la memoria, es el tiempo.
+:::
+
+## Recursión versus iteración {.center}
+
+| | Iteración | Recursión |
+|---|---|---|
+| Repetición | Estructura repetitiva (bucle) | Llamadas repetidas a la función |
+| Condición de parada | Condición del bucle | Caso base |
+| Costo en tiempo | Sin llamadas adicionales | Tiempo extra por cada llamada |
+| Costo en memoria | Una sola copia de las variables | Un marco de pila por llamada activa |
+
+::: {.destacado}
+Si una solución iterativa es igual de clara, conviene preferirla: es más rápida y usa menos
+memoria. La recursión gana cuando el problema es naturalmente recursivo, como recorrer un árbol.
+:::
+
+::: {.fuente}
+Fuente: Joyanes Aguilar, L. *Fundamentos de programación: algoritmos.* Capítulo 14, Recursividad.
+:::
+
+## Cómo medir recursión y bucles en Python {.center}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+import time, tracemalloc
+
+def suma_recursiva(n):
+    if n == 0:
+        return 0
+    return n + suma_recursiva(n - 1)
+
+def suma_iterativa(n):
+    total = 0
+    for i in range(1, n + 1):
+        total += i
+    return total
+
+tracemalloc.start()
+t0 = time.perf_counter()
+suma_recursiva(900)
+t1 = time.perf_counter()
+_, pico = tracemalloc.get_traced_memory()
+tracemalloc.stop()
+```
+:::
+::: {.column width="45%"}
+<span class="titulo">Salida real, n = 900</span>
+
+```
+recursiva:
+  4047.6 microsegundos
+  pico: 20640 bytes
+iterativa:
+  710.7 microsegundos
+  pico: 144 bytes
+```
+:::
+:::
+
+::: {.destacado}
+La recursiva tardó 5.7 veces más y usó 143 veces más memoria rastreada. El tiempo varía entre
+ejecuciones; la memoria es estable, porque cada llamada reserva un marco de pila nuevo que la
+iterativa nunca crea.
+:::
+
+## Reto 2. Cuenta las llamadas repetidas de fibonacci(4) {.center}
+
+::: {.pasos}
+1. Dibuja el árbol de llamadas de `fibonacci(4)`, empezando por sus dos llamadas: `fibonacci(3)` y
+   `fibonacci(2)`.
+2. Repite para cada casilla nueva hasta que todas terminen en `fibonacci(1)` o `fibonacci(0)`.
+3. Cuenta cuántas veces aparece cada una, y el total de casillas del árbol completo.
+4. Ejecuta `fibonacci(4)` con una línea de rastro y compara con lo que dibujaste.
+:::
+
+## Recorrer una lista con recursión {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La lista de suma_lista(6,2,9,4) se achica de izquierda a derecha en cada llamada hasta la lista vacia, caso base que retorna 0; despues la suma se reconstruye de derecha a izquierda, sumando la cabeza en cada retorno, hasta 21" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="p3g" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">suma_lista([6, 2, 9, 4]): la lista se achica bajando, la suma crece subiendo</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="48" width="150" height="44" rx="8"/><rect x="195" y="48" width="120" height="44" rx="8"/><rect x="340" y="48" width="95" height="44" rx="8"/><rect x="460" y="48" width="70" height="44" rx="8"/></g>
+  <rect x="555" y="48" width="55" height="44" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="95" y="75">[6, 2, 9, 4]</text><text x="255" y="75">[2, 9, 4]</text><text x="387" y="75">[9, 4]</text><text x="495" y="75">[4]</text><text x="582" y="75">[]</text></g>
+  <path d="M170,70 L195,70" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3g)"/>
+  <path d="M315,70 L340,70" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3g)"/>
+  <path d="M435,70 L460,70" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3g)"/>
+  <path d="M530,70 L555,70" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3g)"/>
+  <path d="M582,92 L582,150" stroke="#8fb3d1" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#p3g)"/>
+  <text x="592" y="124" font-size="11" fill="#0e6f6c" font-weight="600" text-anchor="start">retorna 0</text>
+  <rect x="557" y="150" width="50" height="44" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="470" y="150" width="50" height="44" rx="8"/><rect x="362" y="150" width="50" height="44" rx="8"/><rect x="230" y="150" width="50" height="44" rx="8"/><rect x="70" y="150" width="50" height="44" rx="8"/></g>
+  <g text-anchor="middle" font-size="14" font-weight="700" fill="#0e6f6c"><text x="582" y="177">0</text><text x="495" y="177">4</text><text x="387" y="177">13</text><text x="255" y="177">15</text><text x="95" y="177">21</text></g>
+  <path d="M557,172 L520,172" stroke="#8fb3d1" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#p3g)"/>
+  <path d="M470,172 L412,172" stroke="#8fb3d1" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#p3g)"/>
+  <path d="M362,172 L280,172" stroke="#8fb3d1" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#p3g)"/>
+  <path d="M230,172 L120,172" stroke="#8fb3d1" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#p3g)"/>
+  <text x="380" y="222" font-size="14" font-weight="700" fill="#0e6f6c" text-anchor="middle">suma_lista([6, 2, 9, 4]) = 21</text>
+  <text x="380" y="240" font-size="11.5" fill="#5b6876" text-anchor="middle">Arriba, la lista se parte en cabeza y resto. Abajo, la suma sube sumando la cabeza en cada retorno.</text>
+</svg>
+:::
+
+## Código de suma_lista {.center}
+
+::: {.columns}
+::: {.column width="55%"}
+```python
+def suma_lista(datos):
+    if len(datos) == 0:
+        return 0
+    return datos[0] + suma_lista(datos[1:])
+```
+:::
+::: {.column width="45%"}
+::: {.neutro}
+El caso base es la lista vacía. El caso recursivo separa la cabeza y se la suma al resto, una
+lista más corta y más cerca del caso base.
+:::
+:::
+:::
+
+## Cuando falta el caso base: desbordamiento {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion entre una recursion con caso base, donde la pila crece y luego se vacia por completo, y una recursion sin caso base, donde la pila solo crece hasta chocar con el limite de memoria y lanzar un error" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="p3c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="185" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Con caso base</text>
+  <text x="575" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Sin caso base</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="115" y="180" width="140" height="26"/><rect x="115" y="150" width="140" height="26"/><rect x="115" y="120" width="140" height="26"/></g>
+  <rect x="115" y="90" width="140" height="26" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <path d="M185,216 L185,254" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#p3c)"/>
+  <text x="185" y="272" font-size="11.5" fill="#5b6876" text-anchor="middle">la pila se vacia: 0 marcos, resultado listo</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="505" y="200" width="140" height="22"/><rect x="505" y="174" width="140" height="22"/><rect x="505" y="148" width="140" height="22"/><rect x="505" y="122" width="140" height="22"/><rect x="505" y="96" width="140" height="22"/></g>
+  <rect x="505" y="70" width="140" height="22" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"/>
+  <text x="575" y="60" font-size="11.5" fill="#5b6876" text-anchor="middle">sigue llamando...</text>
+  <path d="M480,70 L670,70" stroke="#8fb3d1" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/>
+  <text x="575" y="246" font-size="11.5" fill="#0e6f6c" text-anchor="middle" font-weight="600">choca con el limite de la pila</text>
+  <text x="575" y="264" font-size="11" fill="#5b6876" text-anchor="middle">StackOverflowError (Java) o RecursionError (Python)</text>
+</svg>
+:::
+
+::: {.tarjetas}
+::: {}
+<span class="titulo">StackOverflowError (Java)</span>
+
+Error que lanza la máquina virtual cuando se agota la memoria reservada para la pila de un hilo.
+Sin aviso previo: corre hasta que la pila real se llena.
+:::
+::: {}
+<span class="titulo">RecursionError (Python)</span>
+
+Excepción que el intérprete lanza al superar `sys.getrecursionlimit()` (cerca de 1000 por
+defecto). Corta antes de que la pila de C se desborde.
+:::
+:::
+
+## Tres condiciones para que la recursión termine {.center}
+
+Un test que decide detener o continuar, una llamada recursiva que acerca al caso base, y un caso
+final que efectivamente detiene la cadena. Así se ven las tres en tres funciones ya conocidas:
+
+| Función | 1. Test (caso base) | 2. Llamada recursiva | 3. Caso final |
+|---|---|---|---|
+| `factorial(n)` | `n == 0` | `n * factorial(n - 1)` | `return 1` |
+| `suma_lista(datos)` | `len(datos) == 0` | `datos[0] + suma_lista(datos[1:])` | `return 0` |
+| `es_par(n)` | `n == 0` | `es_impar(n - 1)` | `return True` |
+
+::: {.destacado}
+Sin las tres, la recursión no cumple la finitud que exige todo algoritmo. `fibonacci` sin caso
+base, o `suma_lista` sin lista vacía, no terminarían nunca.
+:::
+
+::: {.fuente}
+Fuente: Joyanes Aguilar, L. *Fundamentos de programación: algoritmos.* Capítulo 14, Recursividad.
+:::
+
+## Un adelanto: las Torres de Hanoi {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hanoi de n discos se resuelve en tres pasos: mover n menos 1 discos de inicio a auxiliar, mover el disco n de inicio a destino, y mover n menos 1 discos de auxiliar a destino" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="p3h" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="30" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Hanoi(n) se resuelve con dos subproblemas de tamano n - 1</text>
+  <rect x="20" y="70" width="220" height="110" rx="14" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="270" y="70" width="220" height="110" rx="14" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="520" y="70" width="220" height="110" rx="14" fill="#eef4fa" stroke="#c7d6e6"/>
+  <path d="M240,125 L266,125" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#p3h)"/>
+  <path d="M490,125 L516,125" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#p3h)"/>
+  <g text-anchor="middle">
+    <text x="130" y="100" font-size="13" font-weight="700" fill="#12324f">Hanoi(n-1, I, C, F)</text>
+    <text x="130" y="122" font-size="11" fill="#5b6876">mueve n - 1 discos</text>
+    <text x="130" y="140" font-size="11" fill="#5b6876">de inicio a auxiliar</text>
+    <text x="380" y="100" font-size="13" font-weight="700" fill="#0e6f6c">mover disco n</text>
+    <text x="380" y="122" font-size="11" fill="#5b6876">un solo movimiento</text>
+    <text x="380" y="140" font-size="11" fill="#5b6876">de inicio a destino</text>
+    <text x="630" y="100" font-size="13" font-weight="700" fill="#12324f">Hanoi(n-1, C, F, I)</text>
+    <text x="630" y="122" font-size="11" fill="#5b6876">mueve n - 1 discos</text>
+    <text x="630" y="140" font-size="11" fill="#5b6876">de auxiliar a destino</text>
+  </g>
+  <text x="380" y="215" font-size="12" fill="#5b6876" text-anchor="middle">El caso base es n = 1: mover un solo disco de inicio a destino.</text>
+  <text x="380" y="240" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Total de movimientos: 2^n - 1 (para n = 10, son 1023)</text>
+</svg>
+:::
+
+::: {.fuente}
+Fuente: Joyanes Aguilar, L. *Fundamentos de programación: algoritmos.* Capítulo 14, Recursividad.
+:::
+
+## Antes de salir de esta sesión {.center}
+
+::: {.recuento}
+- La diferencia entre caso base y caso recursivo
+- Qué guarda un marco de pila, y para qué sirve la dirección de retorno
+- Por qué una función sin caso base rompe la finitud de Knuth
+- La diferencia entre recursión directa e indirecta
+- Por qué `fibonacci` genera un árbol de llamadas, no una cadena
+- Cómo aplicar el mismo molde para recorrer una lista
+:::
+
+## Para la próxima sesión {.center}
+
+::: {.destacado}
+La próxima estrategia es divide y vencerás: partir un problema en pedazos más pequeños del mismo
+problema, resolver cada uno y juntar las respuestas.
+:::
+
+Las Torres de Hanoi ya lo adelantaron: dos subproblemas de tamaño `n - 1` que no se tocan entre sí,
+justo lo que `fibonacci` sin memorizar no logra evitar.
