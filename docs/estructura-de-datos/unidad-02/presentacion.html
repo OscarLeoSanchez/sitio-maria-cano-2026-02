@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<link href="../../estilos/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-html/tabby.min.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.9.37">
+
+  <meta name="author" content="Oscar Leonel Sánchez Conde">
+  <title>Estructuras fijas: vectores, matrices, pilas y colas</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="../../site_libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="../../site_libs/revealjs/dist/reveal.css">
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../site_libs/revealjs/dist/theme/quarto-54c1bed68faba7d40addbad1d35990bb.css">
+  <link href="../../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="../../site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="../../site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="../../site_libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">Estructuras fijas: vectores, matrices, pilas y colas</h1>
+  <p class="subtitle">Estructura de datos (ESD01). Unidad 2</p>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Oscar Leonel Sánchez Conde 
+</div>
+</div>
+</div>
+
+</section>
+<section id="recorrido-de-la-unidad" class="slide level2 center">
+<h2>Recorrido de la unidad</h2>
+<div class="tarjetas">
+<div>
+<p><span class="titulo">0. Herramientas</span></p>
+<p>Notación O, excepciones, y quién construye de verdad Python y Java por dentro.</p>
+</div>
+<div class="clave">
+<p><span class="titulo">1. Vectores</span></p>
+<p>Memoria contigua, acceso en tiempo constante y el costo real de insertar o eliminar.</p>
+</div>
+<div>
+<p><span class="titulo">2. Matrices</span></p>
+<p>La fila se convierte en cuadrícula: misma aritmética, un índice más.</p>
+</div>
+<div>
+<p><span class="titulo">3. Pilas y colas</span></p>
+<p>Dos contratos clásicos, construidos sobre el mismo arreglo que crece.</p>
+</div>
+</div>
+<div class="neutro">
+<p>Cada idea se ve en Java y en Python: primero qué es, después por qué importa, y al final cómo se escribe.</p>
+</div>
+</section>
+<section id="antes-de-empezar-herramientas-para-leer-esta-unidad" class="slide level2 seccion" data-background-color="#12324f">
+<h2>Antes de empezar: herramientas para leer esta unidad</h2>
+<div class="rotulo">
+<p>Preámbulo</p>
+</div>
+<p>Cuatro términos que vas a ver una y otra vez, explicados una sola vez antes de usarlos.</p>
+</section>
+<section id="qué-es-la-notación-o" class="slide level2 center">
+<h2>Qué es la notación O</h2>
+<div class="destacado">
+<p>La notación O describe cómo crece el trabajo de un algoritmo a medida que crece la cantidad de datos, sin depender de qué tan rápida sea la máquina donde corre.</p>
+</div>
+<div class="tarjetas">
+<div>
+<p><span class="titulo">Para qué sirve</span></p>
+<p>Compara dos soluciones de forma justa, mirando cómo escalan, no cuántos milisegundos tardaron hoy en un computador concreto.</p>
+</div>
+<div>
+<p><span class="titulo">Cómo se lee</span></p>
+<p><code>O(algo)</code> responde una pregunta: si <code>n</code> (la cantidad de datos) se duplica, ¿el trabajo se queda igual, se duplica también, o crece mucho más rápido?</p>
+</div>
+</div>
+</section>
+<section id="las-tres-complejidades-de-hoy" class="slide level2 center">
+<h2>Las tres complejidades de hoy</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Notación</th>
+<th>Qué significa</th>
+<th>Ejemplo de esta unidad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>O(1), constante</td>
+<td>El trabajo no cambia sin importar cuántos datos haya</td>
+<td>Leer <code>a[5]</code></td>
+</tr>
+<tr class="even">
+<td>O(n), lineal</td>
+<td>El trabajo crece en proporción directa a la cantidad de datos</td>
+<td>Recorrer un arreglo completo</td>
+</tr>
+<tr class="odd">
+<td>O(n al cuadrado), cuadrática</td>
+<td>El trabajo crece con el cuadrado de los datos</td>
+<td>Un ciclo con otro ciclo adentro</td>
+</tr>
+</tbody>
+</table>
+<div class="neutro">
+<p>Con 10 elementos: O(1) es 1 operación, O(n) son 10, O(n al cuadrado) son 100. Con 1000 elementos: O(1) sigue siendo 1, O(n) son 1000, O(n al cuadrado) es un millón.</p>
+</div>
+</section>
+<section id="cómo-se-ven-estas-curvas-al-crecer-los-datos" class="slide level2 center">
+<h2>Cómo se ven estas curvas al crecer los datos</h2>
+<div class="diagrama">
+<svg viewbox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Curvas de crecimiento comparadas: logaritmo de n, n, n por logaritmo de n y n al cuadrado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<g stroke="#cfd8e3" stroke-width="1.5" fill="none"><path d="M76,26 L76,254"></path><path d="M76,254 L700,254"></path></g> <text x="14" y="24" font-size="11.5" fill="#5b6876">operaciones</text> <text x="700" y="276" font-size="11.5" fill="#5b6876" text-anchor="end">tamaño de la entrada (n)</text> <g fill="none" stroke-width="3"><path d="M76,250 C110,190 170,168 680,158" stroke="#8fc9c5"></path><path d="M76,250 L680,120" stroke="#8fb3d1"></path><path d="M76,250 C300,206 500,140 680,64" stroke="#0e6f6c"></path><path d="M76,250 C420,244 566,190 640,34" stroke="#12324f"></path></g> <g font-size="12.5" font-weight="600"><text x="690" y="162" fill="#3c7d7a">log n</text><text x="690" y="124" fill="#5b7f9f">n</text><text x="690" y="68" fill="#0e6f6c">n log n</text><text x="650" y="34" fill="#12324f">n al cuadrado</text></g> <text x="90" y="292" font-size="11.5" fill="#5b6876">Duplicar los datos suma un paso a la logarítmica y cuadruplica el trabajo de la cuadrática.</text>
+</svg>
+</div>
+<div class="neutro">
+<p>Esta unidad solo usa O(1) (constante, tan plana que ni siquiera se dibuja aquí), O(n) y O(n al cuadrado), la línea <code>n</code> y la línea <code>n al cuadrado</code> del gráfico. Log n y n log n pertenecen a algoritmos que verás más adelante en la carrera.</p>
+</div>
+</section>
+<section id="qué-es-una-excepción" class="slide level2 center">
+<h2>Qué es una excepción</h2>
+<div class="destacado">
+<p>Una excepción es la señal que un programa lanza en tiempo de ejecución cuando algo sale mal, en vez de seguir con un resultado incorrecto o fallar en silencio.</p>
+</div>
+<div class="neutro">
+<p>Java y Python tienen su propio mecanismo, con nombres distintos para representar el mismo tipo de problema. Verás cuatro de ellas hoy.</p>
+</div>
+</section>
+<section id="las-excepciones-de-esta-unidad" class="slide level2 center">
+<h2>Las excepciones de esta unidad</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Excepción</th>
+<th>Lenguaje</th>
+<th>Cuándo aparece</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ArrayIndexOutOfBoundsException</code></td>
+<td>Java</td>
+<td>Acceder a un índice fuera del rango del arreglo</td>
+</tr>
+<tr class="even">
+<td><code>IndexError</code></td>
+<td>Python</td>
+<td>Acceder a una posición fuera del rango de la lista</td>
+</tr>
+<tr class="odd">
+<td><code>NullPointerException</code></td>
+<td>Java</td>
+<td>Usar una referencia que todavía no apunta a ningún objeto</td>
+</tr>
+<tr class="even">
+<td><code>IllegalStateException</code></td>
+<td>Java</td>
+<td>Pedir una operación que el objeto no puede cumplir ahora, como desapilar una pila vacía</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="dos-nombres-que-vas-a-escuchar-mucho" class="slide level2 center">
+<h2>Dos nombres que vas a escuchar mucho</h2>
+<div class="tarjetas">
+<div class="clave">
+<p><span class="titulo">CPython</span></p>
+<p>La implementación de referencia de Python, escrita en el lenguaje C. Es la que instalas cuando bajas Python desde python.org, y la que casi todo el mundo llama simplemente Python.</p>
+</div>
+<div>
+<p><span class="titulo">OpenJDK</span></p>
+<p>La implementación libre y de código abierto de la plataforma Java. La mayoría de los JDK modernos, incluido el de Oracle, se basan en él.</p>
+</div>
+</div>
+<div class="neutro">
+<p>Cuando esta unidad diga cómo crece una lista de Python o un <code>ArrayList</code> de Java, en realidad está describiendo una decisión de CPython o de OpenJDK, no una regla del lenguaje en sí.</p>
+</div>
+</section>
+<section id="bloque-1.-vectores-o-arreglos" class="slide level2 seccion" data-background-color="#12324f">
+<h2>Bloque 1. Vectores o arreglos</h2>
+<div class="rotulo">
+<p>Bloque 1</p>
+</div>
+<p>Memoria contigua, acceso directo y el costo real de insertar o eliminar.</p>
+</section>
+<section id="qué-es-un-arreglo" class="slide level2 center">
+<h2>Qué es un arreglo</h2>
+<div class="destacado">
+<p>Un arreglo es un bloque de memoria contiguo que guarda un número fijo de elementos del mismo tipo, cada uno accesible por un número de posición llamado índice, que empieza en 0.</p>
+</div>
+<div class="neutro">
+<p>Analogía: un casillero de correo con compartimentos numerados en fila. Si sabes el número, llegas directo sin abrir los demás.</p>
+</div>
+</section>
+<section id="memoria-contigua-y-la-ecuación-de-acceso" class="slide level2 center">
+<h2>Memoria contigua y la ecuación de acceso</h2>
+<div class="diagrama">
+<svg viewbox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo de cinco casillas contiguas en memoria, con la casilla de indice 2 resaltada y la formula base mas indice por tamano de elemento debajo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b1a" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">La direccion se calcula, no se busca</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="140" y="50" width="90" height="60" rx="8"></rect><rect x="230" y="50" width="90" height="60" rx="8"></rect><rect x="410" y="50" width="90" height="60" rx="8"></rect><rect x="500" y="50" width="90" height="60" rx="8"></rect></g> <rect x="320" y="50" width="90" height="60" rx="8" fill="#e4f2f1" stroke="#8fc9c5"></rect> <g text-anchor="middle" font-size="14" font-weight="600" fill="#12324f"><text x="185" y="86">10</text><text x="275" y="86">20</text><text x="365" y="86">30</text><text x="455" y="86">40</text><text x="545" y="86">50</text></g> <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="185" y="128">indice 0</text><text x="275" y="128">indice 1</text><text x="365" y="128">indice 2</text><text x="455" y="128">indice 3</text><text x="545" y="128">indice 4</text></g> <path d="M365,112 L365,148" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1a)"></path> <rect x="215" y="158" width="300" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3"></rect> <text x="365" y="183" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0e6f6c">direccion = base + indice * tamano_elemento</text> <text x="380" y="214" text-anchor="middle" font-size="11" fill="#5b6876">Acceder a la casilla 2 no recorre las anteriores: calcula la posicion exacta.</text>
+</svg>
+</div>
+</section>
+<section id="los-tres-términos-de-la-ecuación" class="slide level2 center">
+<h2>Los tres términos de la ecuación</h2>
+<div class="tarjetas">
+<div>
+<p><span class="titulo">base</span></p>
+<p>La dirección de memoria donde empieza el arreglo completo, la casilla de índice 0.</p>
+</div>
+<div class="clave">
+<p><span class="titulo">índice</span></p>
+<p>La posición que se pide, contando siempre desde 0.</p>
+</div>
+<div>
+<p><span class="titulo">tamaño_elemento</span></p>
+<p>Cuántos bytes ocupa cada dato del tipo declarado, siempre el mismo en todo el arreglo.</p>
+</div>
+</div>
+<div class="destacado">
+<p>Por eso el acceso es O(1): la fórmula usa solo una multiplicación y una suma, sin importar si el arreglo tiene 5 elementos o 5 millones.</p>
+</div>
+</section>
+<section id="cuánto-pesa-tamaño_elemento-según-el-tipo" class="slide level2 center">
+<h2>Cuánto pesa tamaño_elemento, según el tipo</h2>
+<div class="neutro">
+<p>En Java, cada tipo primitivo tiene un tamaño fijo, definido en la especificación del lenguaje (JLS 4.2). Ese número es exactamente el <code>tamaño_elemento</code> de la ecuación anterior.</p>
+</div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Tipo (Java)</th>
+<th>Bytes por elemento</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>byte</code></td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td><code>char</code></td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td><code>int</code></td>
+<td>4</td>
+</tr>
+<tr class="even">
+<td><code>long</code></td>
+<td>8</td>
+</tr>
+<tr class="odd">
+<td><code>double</code></td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+<div class="destacado">
+<p>Un <code>int[1000]</code> pesa aproximadamente 1000 * 4 = 4000 bytes, más una pequeña cabecera fija del objeto arreglo. El peso total crece de forma lineal con la cantidad de elementos.</p>
+</div>
+</section>
+<section id="un-arreglo-de-objetos-no-guarda-los-datos-adentro" class="slide level2 center">
+<h2>Un arreglo de objetos no guarda los datos adentro</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda un arreglo de enteros guarda los valores directamente adentro de cada casilla. A la derecha un arreglo de strings guarda referencias del mismo tamano, que apuntan a objetos de texto de tamano variable ubicados aparte" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b1f" markerwidth="8" markerheight="8" refx="6" refy="2.8" orient="auto"><path d="M0,0 L6,2.8 L0,5.6 z" fill="#8fb3d1"></path></marker></defs> <text x="190" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">int[] numeros</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="100" y="40" width="60" height="44"></rect><rect x="160" y="40" width="60" height="44"></rect><rect x="220" y="40" width="60" height="44"></rect></g> <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="130" y="67">10</text><text x="190" y="67">20</text><text x="250" y="67">30</text></g> <text x="190" y="105" text-anchor="middle" font-size="10.5" fill="#5b6876">cada casilla mide 4 bytes: el valor vive adentro</text> <text x="565" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">String[] nombres</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="470" y="40" width="60" height="44"></rect><rect x="530" y="40" width="60" height="44"></rect></g> <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="500" y="67">ref</text><text x="560" y="67">ref</text></g> <path d="M500,84 L485,120" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1f)"></path> <path d="M560,84 L620,120" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1f)"></path> <rect x="440" y="122" width="90" height="34" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="485" y="144" text-anchor="middle" font-size="12" font-weight="600" fill="#0e6f6c">Ana</text> <rect x="560" y="122" width="170" height="34" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="645" y="144" text-anchor="middle" font-size="12" font-weight="600" fill="#0e6f6c">Un texto mucho mas largo</text> <text x="565" y="184" text-anchor="middle" font-size="10.5" fill="#5b6876">cada casilla mide siempre lo mismo; el String real vive aparte, con su propio tamano</text>
+</svg>
+</div>
+<div class="destacado">
+<p>El tamaño de un arreglo de referencias no depende de qué tan largo sea cada objeto al que apunta: todas las casillas miden lo mismo, sea una sola letra o un párrafo completo.</p>
+</div>
+</section>
+<section id="python-hasta-un-entero-es-un-objeto" class="slide level2 center">
+<h2>Python: hasta un entero es un objeto</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> sys</span>
+<span id="cb1-2"><a></a><span class="bu">print</span>(sys.getsizeof(<span class="dv">42</span>))            <span class="co"># 28</span></span>
+<span id="cb1-3"><a></a><span class="bu">print</span>(sys.getsizeof([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]))     <span class="co"># 88</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="destacado">
+<p>En Python no hay tipos primitivos dentro de una lista: hasta el número 42 es un objeto completo de 28 bytes, con su propia cabecera. La lista de 3 elementos solo guarda 3 referencias; los objetos enteros viven aparte, igual que los <code>String</code> en el ejemplo de Java.</p>
+</div>
+</section>
+<section id="declarar-un-arreglo" class="slide level2 center">
+<h2>Declarar un arreglo</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><span class="titulo">Java</span></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb2-1"><a></a><span class="dt">int</span><span class="op">[]</span> numeros <span class="op">=</span> <span class="kw">new</span> <span class="dt">int</span><span class="op">[</span><span class="dv">5</span><span class="op">];</span></span>
+<span id="cb2-2"><a></a><span class="co">// JLS 4.12.5: se llena con ceros</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div><div class="column" style="width:50%;">
+<p><span class="titulo">Python</span></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a>numeros <span class="op">=</span> [<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>]</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div></div>
+<div class="neutro">
+<p>Java reserva el tamaño desde el inicio y lo rellena con el valor por defecto del tipo. Python crea la lista ya con sus valores.</p>
+</div>
+</section>
+<section id="qué-pasa-fuera-de-los-límites" class="slide level2 center">
+<h2>Qué pasa fuera de los límites</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb4-1"><a></a><span class="dt">int</span><span class="op">[]</span> numeros <span class="op">=</span> <span class="op">{</span><span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span><span class="op">};</span></span>
+<span id="cb4-2"><a></a><span class="bu">System</span><span class="op">.</span><span class="fu">out</span><span class="op">.</span><span class="fu">println</span><span class="op">(</span>numeros<span class="op">[</span><span class="dv">5</span><span class="op">]);</span></span>
+<span id="cb4-3"><a></a><span class="co">// ArrayIndexOutOfBoundsException</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div><div class="column" style="width:50%;">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a>numeros <span class="op">=</span> [<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>]</span>
+<span id="cb5-2"><a></a><span class="bu">print</span>(numeros[<span class="dv">5</span>])</span>
+<span id="cb5-3"><a></a><span class="co"># IndexError: list index out of range</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div></div>
+<div class="destacado">
+<p>Ninguno de los dos falla en silencio: ambos avisan de inmediato con una de las excepciones de la tabla del preámbulo.</p>
+</div>
+</section>
+<section id="recorrer-un-arreglo" class="slide level2 center">
+<h2>Recorrer un arreglo</h2>
+<div class="tarjetas">
+<div>
+<p><span class="titulo">Ciclo indexado</span></p>
+<p>Repite mientras un contador <code>i</code> va de 0 hasta el tamaño; en cada vuelta accede a <code>a[i]</code>.</p>
+</div>
+<div>
+<p><span class="titulo">Ciclo por cada elemento</span></p>
+<p>Entrega directamente cada valor, uno por uno, sin exponer el índice.</p>
+</div>
+</div>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb6-1"><a></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> numeros<span class="op">.</span><span class="fu">length</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb6-2"><a></a>    <span class="bu">System</span><span class="op">.</span><span class="fu">out</span><span class="op">.</span><span class="fu">println</span><span class="op">(</span>numeros<span class="op">[</span>i<span class="op">]);</span></span>
+<span id="cb6-3"><a></a><span class="op">}</span></span>
+<span id="cb6-4"><a></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> n <span class="op">:</span> numeros<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-5"><a></a>    <span class="bu">System</span><span class="op">.</span><span class="fu">out</span><span class="op">.</span><span class="fu">println</span><span class="op">(</span>n<span class="op">);</span></span>
+<span id="cb6-6"><a></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div><div class="column" style="width:50%;">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(numeros)):</span>
+<span id="cb7-2"><a></a>    <span class="bu">print</span>(numeros[i])</span>
+<span id="cb7-3"><a></a><span class="cf">for</span> n <span class="kw">in</span> numeros:</span>
+<span id="cb7-4"><a></a>    <span class="bu">print</span>(n)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div></div>
+<div class="datos">
+<div>
+<p><span class="cifra">O(1)</span> <span class="rotulo">acceder a una casilla</span></p>
+</div>
+<div>
+<p><span class="cifra">O(n)</span> <span class="rotulo">recorrer el arreglo completo</span></p>
+</div>
+</div>
+</section>
+<section id="insertar-en-el-medio-paso-a-paso" class="slide level2 center">
+<h2>Insertar en el medio, paso a paso</h2>
+<div class="diagrama">
+<svg viewbox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres estados muestran como insertar 25 en el indice 2: primero el arreglo original, luego el 30 y el 40 desplazados una posicion a la derecha dejando un hueco, y por ultimo el 25 escrito en ese hueco" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b1b" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <text x="130" y="52" font-size="11" font-weight="600" fill="#5b6876">antes</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="30" width="70" height="42"></rect><rect x="290" y="30" width="70" height="42"></rect><rect x="360" y="30" width="70" height="42"></rect><rect x="430" y="30" width="70" height="42"></rect></g> <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="56">10</text><text x="325" y="56">20</text><text x="395" y="56">30</text><text x="465" y="56">40</text></g> <text x="500" y="56" font-size="11" fill="#5b6876">queremos insertar 25 en el indice 2</text> <path d="M395,72 C395,95 465,95 465,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1b)"></path> <path d="M325,72 C325,95 395,95 395,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1b)"></path> <text x="130" y="132" font-size="11" font-weight="600" fill="#5b6876">se corre un paso</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="110" width="70" height="42"></rect><rect x="290" y="110" width="70" height="42"></rect><rect x="430" y="110" width="70" height="42"></rect><rect x="500" y="110" width="70" height="42"></rect></g> <rect x="360" y="110" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"></rect> <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="136">10</text><text x="325" y="136">20</text><text x="465" y="136">30</text><text x="535" y="136">40</text></g> <text x="395" y="136" text-anchor="middle" font-size="11" fill="#5b6876">hueco</text> <path d="M395,152 L395,188" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1b)"></path> <text x="130" y="212" font-size="11" font-weight="600" fill="#5b6876">se escribe 25</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="190" width="70" height="42"></rect><rect x="290" y="190" width="70" height="42"></rect><rect x="430" y="190" width="70" height="42"></rect><rect x="500" y="190" width="70" height="42"></rect></g> <rect x="360" y="190" width="70" height="42" fill="#e4f2f1" stroke="#8fc9c5"></rect> <g text-anchor="middle" font-size="13" font-weight="600"><text x="255" y="216" fill="#12324f">10</text><text x="325" y="216" fill="#12324f">20</text><text x="395" y="216" fill="#0e6f6c">25</text><text x="465" y="216" fill="#12324f">30</text><text x="535" y="216" fill="#12324f">40</text></g>
+</svg>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a></a>numeros <span class="op">=</span> [<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">40</span>]</span>
+<span id="cb8-2"><a></a>numeros.insert(<span class="dv">2</span>, <span class="dv">25</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="destacado">
+<p>Insertar o eliminar en el inicio o en el medio cuesta O(n) porque cada elemento desde el punto de inserción hasta el final se mueve una posición.</p>
+</div>
+</section>
+<section id="eliminar-del-medio-paso-a-paso" class="slide level2 center">
+<h2>Eliminar del medio, paso a paso</h2>
+<div class="diagrama">
+<svg viewbox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres estados muestran como eliminar el elemento del indice 1: primero el arreglo original con ese elemento marcado, luego el 30 y el 40 desplazados una posicion a la izquierda, y por ultimo el arreglo final con una casilla libre al final" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b1c2" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <text x="130" y="52" font-size="11" font-weight="600" fill="#5b6876">antes</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="30" width="70" height="42"></rect><rect x="360" y="30" width="70" height="42"></rect><rect x="430" y="30" width="70" height="42"></rect></g> <rect x="290" y="30" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3"></rect> <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="56">10</text><text x="325" y="56">20</text><text x="395" y="56">30</text><text x="465" y="56">40</text></g> <text x="500" y="56" font-size="11" fill="#5b6876">se elimina el indice 1</text> <path d="M395,72 C395,95 325,95 325,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1c2)"></path> <path d="M465,72 C465,95 395,95 395,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1c2)"></path> <text x="130" y="132" font-size="11" font-weight="600" fill="#5b6876">se corre un paso</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="110" width="70" height="42"></rect><rect x="290" y="110" width="70" height="42"></rect><rect x="360" y="110" width="70" height="42"></rect></g> <rect x="430" y="110" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"></rect> <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="136">10</text><text x="325" y="136">30</text><text x="395" y="136">40</text></g> <text x="465" y="136" text-anchor="middle" font-size="11" fill="#5b6876">libre</text> <path d="M255,152 L255,188" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1c2)"></path> <text x="130" y="212" font-size="11" font-weight="600" fill="#5b6876">resultado final</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="190" width="70" height="42"></rect><rect x="290" y="190" width="70" height="42"></rect><rect x="360" y="190" width="70" height="42"></rect></g> <rect x="430" y="190" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"></rect> <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="216">10</text><text x="325" y="216">30</text><text x="395" y="216">40</text></g> <text x="520" y="216" text-anchor="start" font-size="11" fill="#5b6876">el tamano logico baja de 4 a 3</text>
+</svg>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a></a>numeros <span class="op">=</span> [<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">40</span>]</span>
+<span id="cb9-2"><a></a>numeros.pop(<span class="dv">1</span>)  <span class="co"># quita y devuelve el 20</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="neutro">
+<p><code>pop(indice)</code> quita el elemento de esa posición y devuelve su valor. Sin argumento, quita el último.</p>
+</div>
+</section>
+<section id="complejidad-de-un-arreglo-operación-por-operación" class="slide level2 center">
+<h2>Complejidad de un arreglo, operación por operación</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Operación</th>
+<th>Complejidad</th>
+<th>Por qué</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Acceder o leer <code>a[i]</code></td>
+<td>O(1)</td>
+<td>multiplicación y suma</td>
+</tr>
+<tr class="even">
+<td>Modificar <code>a[i] = x</code></td>
+<td>O(1)</td>
+<td>misma dirección de siempre</td>
+</tr>
+<tr class="odd">
+<td>Insertar o eliminar al final</td>
+<td>O(1) amortizado</td>
+<td>sin desplazamiento, si hay espacio</td>
+</tr>
+<tr class="even">
+<td>Insertar o eliminar al inicio o en medio</td>
+<td>O(n)</td>
+<td>desplaza todo lo posterior</td>
+</tr>
+<tr class="odd">
+<td>Buscar por valor</td>
+<td>O(n)</td>
+<td>recorrido casilla por casilla</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="los-arreglos-de-java-no-crecen" class="slide level2 center">
+<h2>Los arreglos de Java no crecen</h2>
+<div class="destacado">
+<p>En Java, un arreglo tiene tamaño fijo desde que se crea. No existe una operación para agregarle una casilla más: crecer significa crear un arreglo distinto y copiar.</p>
+</div>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo de tres casillas se copia a uno nuevo de seis casillas; el arreglo original queda disponible para el recolector de basura" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b1d" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="40" y="40" width="60" height="46"></rect><rect x="100" y="40" width="60" height="46"></rect><rect x="160" y="40" width="60" height="46"></rect></g> <g text-anchor="middle" font-size="13" fill="#5b6876"><text x="70" y="68">10</text><text x="130" y="68">20</text><text x="190" y="68">30</text></g> <text x="130" y="102" text-anchor="middle" font-size="10.5" fill="#5b6876">arreglo original, tamano fijo 3</text> <path d="M240,63 L296,63" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b1d)"></path> <text x="268" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0e6f6c">copia</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="320" y="40" width="60" height="46"></rect><rect x="380" y="40" width="60" height="46"></rect><rect x="440" y="40" width="60" height="46"></rect></g> <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="500" y="40" width="60" height="46"></rect><rect x="560" y="40" width="60" height="46"></rect><rect x="620" y="40" width="60" height="46"></rect></g> <g text-anchor="middle" font-size="13" fill="#12324f"><text x="350" y="68">10</text><text x="410" y="68">20</text><text x="470" y="68">30</text></g> <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="530" y="68">0</text><text x="590" y="68">0</text><text x="650" y="68">0</text></g> <text x="470" y="102" text-anchor="middle" font-size="10.5" fill="#5b6876">arreglo nuevo, tamano fijo 6</text> <text x="380" y="140" text-anchor="middle" font-size="11.5" fill="#5b6876">El arreglo de 3 casillas queda sin referencias y el recolector de basura lo libera.</text>
+</svg>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb10-1"><a></a><span class="dt">int</span><span class="op">[]</span> original <span class="op">=</span> <span class="op">{</span><span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span><span class="op">};</span></span>
+<span id="cb10-2"><a></a><span class="dt">int</span><span class="op">[]</span> masGrande <span class="op">=</span> <span class="bu">Arrays</span><span class="op">.</span><span class="fu">copyOf</span><span class="op">(</span>original<span class="op">,</span> <span class="dv">6</span><span class="op">);</span></span>
+<span id="cb10-3"><a></a><span class="co">// masGrande = [10, 20, 30, 0, 0, 0]</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="destacado">
+<p>Crecer significa crear uno nuevo y copiar, un costo O(n) cada vez que se agota el espacio.</p>
+</div>
+</section>
+<section id="capacidad-y-tamaño-dos-ideas-distintas" class="slide level2 center">
+<h2>Capacidad y tamaño: dos ideas distintas</h2>
+<div class="tarjetas">
+<div class="clave">
+<p><span class="titulo">tamaño</span></p>
+<p>Cuántos elementos hay usados de verdad. Es lo que devuelve <code>len()</code> en Python.</p>
+</div>
+<div>
+<p><span class="titulo">capacidad</span></p>
+<p>Cuánto espacio hay reservado en memoria, usado o no. No es visible directamente, pero existe por debajo.</p>
+</div>
+</div>
+<div class="destacado">
+<p>Cuando una estructura dinámica se queda sin capacidad, no reserva una casilla más: reserva de golpe un bloque más grande, para no repetir esa operación costosa demasiado seguido.</p>
+</div>
+</section>
+<section id="las-listas-de-python-son-arreglos-dinámicos-por-debajo" class="slide level2 center">
+<h2>Las listas de Python son arreglos dinámicos por debajo</h2>
+<div class="diagrama">
+<svg viewbox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una lista de Python con cinco elementos usados y tres casillas reservadas de mas, sin usar todavia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<g fill="#eef4fa" stroke="#c7d6e6"><rect x="100" y="40" width="66" height="50"></rect><rect x="166" y="40" width="66" height="50"></rect><rect x="232" y="40" width="66" height="50"></rect><rect x="298" y="40" width="66" height="50"></rect><rect x="364" y="40" width="66" height="50"></rect></g> <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="430" y="40" width="66" height="50"></rect><rect x="496" y="40" width="66" height="50"></rect><rect x="562" y="40" width="66" height="50"></rect></g> <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="133" y="70">a</text><text x="199" y="70">b</text><text x="265" y="70">c</text><text x="331" y="70">d</text><text x="397" y="70">e</text></g> <text x="265" y="112" text-anchor="middle" font-size="11" fill="#5b6876">tamano: len() devuelve 5</text> <text x="562" y="30" text-anchor="middle" font-size="11" fill="#5b6876">capacidad reservada, aun libre</text>
+</svg>
+</div>
+<div class="neutro">
+<p>La documentación de CPython lo describe así: son arreglos de longitud variable, no listas enlazadas. Por debajo hay un bloque contiguo con espacio de sobra.</p>
+</div>
+</section>
+<section id="qué-hace-append" class="slide level2 center">
+<h2>Qué hace append()</h2>
+<div class="destacado">
+<p><code>append(valor)</code> agrega <code>valor</code> justo después del último elemento usado, sin desplazar nada. Si sobra capacidad, cuesta O(1).</p>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a></a>lista <span class="op">=</span> []</span>
+<span id="cb11-2"><a></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">20</span>):</span>
+<span id="cb11-3"><a></a>    lista.append(i)</span>
+<span id="cb11-4"><a></a>    <span class="bu">print</span>(<span class="bu">id</span>(lista))</span>
+<span id="cb11-5"><a></a><span class="co"># el id() no cambia: el buffer interno se reemplaza por dentro</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="capacidad-reservada-al-crecer-una-lista" class="slide level2 center">
+<h2>Capacidad reservada al crecer una lista</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafico de barras con la secuencia real de capacidades reservadas por CPython al crecer una lista: 0, 4, 8, 16, 24, 32, creciendo cada vez menos en proporcion" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Capacidad reservada al crecer una lista en CPython</text> <g fill="#8fb3d1"><rect x="80" y="188" width="70" height="2"></rect><rect x="180" y="152" width="70" height="38"></rect><rect x="280" y="120" width="70" height="70"></rect><rect x="380" y="70" width="70" height="120"></rect><rect x="480" y="30" width="70" height="160"></rect><rect x="580" y="0" width="70" height="190"></rect></g> <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="115" y="205">0</text><text x="215" y="205">4</text><text x="315" y="205">8</text><text x="415" y="205">16</text><text x="515" y="205">24</text><text x="615" y="205">32</text></g>
+</svg>
+</div>
+<div class="neutro">
+<p>Fuente de la secuencia real: el código de <code>listobject.c</code> de CPython. La proporción de crecimiento tiende a 1,125 veces el tamaño anterior, no al doble.</p>
+</div>
+<div class="destacado">
+<p><code>ArrayList</code> de OpenJDK crece cerca de 1,5 veces, pero eso no es parte del contrato público del Javadoc: solo promete O(1) amortizado, el factor exacto es un detalle de implementación.</p>
+</div>
+</section>
+<section id="caso-de-estudio-la-cola-de-tareas-que-parecía-rápida" class="slide level2 center">
+<h2>Caso de estudio: la cola de tareas que parecía rápida</h2>
+<div class="neutro">
+<p><code>pop(0)</code> quita y devuelve el primer elemento de la lista, desplazando todo lo demás una posición hacia el inicio.</p>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a></a>tareas <span class="op">=</span> []</span>
+<span id="cb12-2"><a></a>tareas.append(nueva_tarea)      <span class="co"># O(1) amortizado, nada se mueve</span></span>
+<span id="cb12-3"><a></a>siguiente <span class="op">=</span> tareas.pop(<span class="dv">0</span>)       <span class="co"># O(n), todo se recorre y se desplaza</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="destacado">
+<p>Repetir <code>pop(0)</code> en un ciclo cuesta O(n al cuadrado) en total, aunque cada línea se vea inocente. La documentación de <code>collections.deque</code> advierte justo contra usar una lista como cola por esta razón.</p>
+</div>
+</section>
+<section id="caso-de-estudio-cuando-faltan-los-límites" class="slide level2 center">
+<h2>Caso de estudio: cuando faltan los límites</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource c number-lines code-with-copy"><code class="sourceCode c"><span id="cb13-1"><a></a><span class="dt">int</span> id_sequence<span class="op">[</span><span class="dv">3</span><span class="op">];</span></span>
+<span id="cb13-2"><a></a>id_sequence<span class="op">[</span><span class="dv">3</span><span class="op">]</span> <span class="op">=</span> <span class="dv">456</span><span class="op">;</span>  <span class="co">/* escritura fuera de los limites */</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="destacado">
+<p>Esta clase de error, CWE-787, ocupó el primer lugar del Top 25 de MITRE en 2023. La excepción que lanzan Java y Python evita esta categoría completa de fallas por diseño.</p>
+</div>
+</section>
+<section id="reto-1" class="slide level2 center">
+<h2>Reto 1</h2>
+<div class="pasos">
+<ol type="1">
+<li>Un ciclo llama a <code>lista.insert(0, i)</code> exactamente <code>n</code> veces, empezando de una lista vacía.</li>
+<li>Cada <code>insert(0, ...)</code> cuesta O(n) porque desplaza todo lo que ya está.</li>
+<li>¿Cuál es la complejidad total del ciclo completo?</li>
+</ol>
+</div>
+</section>
+<section id="reto-2" class="slide level2 center">
+<h2>Reto 2</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb14-1"><a></a><span class="dt">int</span><span class="op">[]</span> datos <span class="op">=</span> <span class="op">{</span><span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span><span class="op">,</span> <span class="dv">40</span><span class="op">};</span></span>
+<span id="cb14-2"><a></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;=</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb14-3"><a></a>    <span class="bu">System</span><span class="op">.</span><span class="fu">out</span><span class="op">.</span><span class="fu">println</span><span class="op">(</span>datos<span class="op">[</span>i<span class="op">]);</span></span>
+<span id="cb14-4"><a></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="pasos">
+<ol type="1">
+<li>Ejecuta mentalmente el ciclo para <code>datos.length == 4</code>.</li>
+<li>¿En qué valor de <code>i</code> ocurre el problema, y qué excepción lanza?</li>
+</ol>
+</div>
+</section>
+<section id="bloque-2.-matrices" class="slide level2 seccion" data-background-color="#12324f">
+<h2>Bloque 2. Matrices</h2>
+<div class="rotulo">
+<p>Bloque 2</p>
+</div>
+<p>La fila se convierte en cuadrícula: la misma aritmética, un índice más.</p>
+</section>
+<section id="qué-es-una-matriz" class="slide level2 center">
+<h2>Qué es una matriz</h2>
+<div class="destacado">
+<p>Una matriz es una tabla de datos organizada en filas y columnas, donde cada posición se ubica con dos índices en vez de uno solo.</p>
+</div>
+<div class="neutro">
+<p>Se puede pensar como un arreglo cuyos elementos son, a su vez, arreglos: cada fila es una lista de valores, y la matriz es la lista de esas filas.</p>
+</div>
+</section>
+<section id="indexar-en-dos-dimensiones" class="slide level2 center">
+<h2>Indexar en dos dimensiones</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una cuadricula de 3 filas por 4 columnas, con la celda de fila 1 columna 2 resaltada" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">M[1][2]: fila 1, columna 2</text> <g fill="#eef4fa" stroke="#c7d6e6"> <rect x="240" y="40" width="80" height="50"></rect><rect x="320" y="40" width="80" height="50"></rect><rect x="400" y="40" width="80" height="50"></rect><rect x="480" y="40" width="80" height="50"></rect> <rect x="240" y="90" width="80" height="50"></rect><rect x="400" y="90" width="80" height="50"></rect><rect x="480" y="90" width="80" height="50"></rect> <rect x="240" y="140" width="80" height="50"></rect><rect x="320" y="140" width="80" height="50"></rect><rect x="400" y="140" width="80" height="50"></rect><rect x="480" y="140" width="80" height="50"></rect> </g> <rect x="320" y="90" width="80" height="50" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="360" y="120" text-anchor="middle" font-size="13" font-weight="700" fill="#0e6f6c">M[1][2]</text> <text x="130" y="70" text-anchor="middle" font-size="11" fill="#5b6876">fila 0</text> <text x="130" y="120" text-anchor="middle" font-size="11" fill="#5b6876">fila 1</text> <text x="130" y="170" text-anchor="middle" font-size="11" fill="#5b6876">fila 2</text> <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="280" y="210">col 0</text><text x="360" y="210">col 1</text><text x="440" y="210">col 2</text><text x="520" y="210">col 3</text></g>
+</svg>
+</div>
+<div class="destacado">
+<p>El primer índice elige la fila, el segundo la columna dentro de esa fila. Sigue siendo O(1): dos cálculos aritméticos en vez de uno, no una búsqueda.</p>
+</div>
+</section>
+<section id="dos-formas-de-recorrer" class="slide level2 center">
+<h2>Dos formas de recorrer</h2>
+<div class="neutro">
+<p>Recorrer por filas visita todas las columnas de la fila 0, luego todas las de la fila 1, y así sucesivamente. Recorrer por columnas hace lo contrario.</p>
+</div>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><span class="titulo">Por filas</span></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb15-1"><a></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> filas<span class="op">;</span> i<span class="op">++)</span></span>
+<span id="cb15-2"><a></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> columnas<span class="op">;</span> j<span class="op">++)</span></span>
+<span id="cb15-3"><a></a>        <span class="fu">procesar</span><span class="op">(</span>m<span class="op">[</span>i<span class="op">][</span>j<span class="op">]);</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div><div class="column" style="width:50%;">
+<p><span class="titulo">Por columnas</span></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a></a><span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(columnas):</span>
+<span id="cb16-2"><a></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(filas):</span>
+<span id="cb16-3"><a></a>        procesar(m[i][j])</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div></div>
+<div class="neutro">
+<p>El orden de los ciclos no cambia el resultado, pero sí el orden en que se visitan las casillas.</p>
+</div>
+</section>
+<section id="qué-significa-guardar-una-matriz-por-filas" class="slide level2 center">
+<h2>Qué significa guardar una matriz por filas</h2>
+<div class="destacado">
+<p>Guardar por filas (row-major order) significa que todos los valores de la fila 0 quedan seguidos en memoria, después todos los de la fila 1, y así con cada fila siguiente.</p>
+</div>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Doce casillas contiguas en memoria representan una matriz de 3 filas por 4 columnas guardada en orden por filas; la posicion de M uno dos aparece resaltada en la sexta casilla" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Una matriz de 3x4, guardada como 12 casillas seguidas</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="40" width="58" height="44"></rect><rect x="88" y="40" width="58" height="44"></rect><rect x="146" y="40" width="58" height="44"></rect><rect x="204" y="40" width="58" height="44"></rect><rect x="262" y="40" width="58" height="44"></rect><rect x="378" y="40" width="58" height="44"></rect><rect x="436" y="40" width="58" height="44"></rect><rect x="494" y="40" width="58" height="44"></rect><rect x="552" y="40" width="58" height="44"></rect><rect x="610" y="40" width="58" height="44"></rect><rect x="668" y="40" width="58" height="44"></rect></g> <rect x="320" y="40" width="58" height="44" fill="#e4f2f1" stroke="#8fc9c5"></rect> <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="59" y="100">fila 0</text><text x="291" y="100">fila 1</text><text x="639" y="100">fila 2</text></g> <text x="349" y="66" text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c">M[1][2]</text> <rect x="220" y="130" width="320" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3"></rect> <text x="380" y="155" text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c">posicion = fila * columnas + columna = 1*4+2 = 6</text> <text x="380" y="190" text-anchor="middle" font-size="11" fill="#5b6876">NumPy permite elegir el orden por filas (C) o por columnas (F) al crear el arreglo.</text>
+</svg>
+</div>
+</section>
+<section id="qué-es-un-arreglo-de-arreglos-en-java" class="slide level2 center">
+<h2>Qué es un arreglo de arreglos, en Java</h2>
+<div class="destacado">
+<p>En Java, una matriz no es un bloque 2D real: es un arreglo cuyos elementos son referencias a otros arreglos, las filas, cada una un objeto independiente en el heap.</p>
+</div>
+<div class="diagrama">
+<svg viewbox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El arreglo m contiene tres referencias que apuntan a tres arreglos de fila independientes, cada uno un objeto separado en el heap" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b2c" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <rect x="30" y="70" width="70" height="50" fill="#eef4fa" stroke="#c7d6e6" rx="6"></rect> <text x="65" y="99" text-anchor="middle" font-size="13" font-weight="700" fill="#12324f">m</text> <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#b2c)"><path d="M100,82 L280,45"></path><path d="M100,95 L280,95"></path><path d="M100,108 L280,150"></path></g> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="290" y="25" width="200" height="40" rx="6"></rect><rect x="290" y="75" width="150" height="40" rx="6"></rect><rect x="290" y="130" width="230" height="40" rx="6"></rect></g> <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="390" y="49">fila 0: arreglo propio</text><text x="365" y="99">fila 1: arreglo propio</text><text x="405" y="154">fila 2: arreglo propio</text></g> <text x="380" y="185" text-anchor="middle" font-size="11" fill="#5b6876">Cada fila es un objeto aparte: nada obliga a que tengan el mismo tamano.</text>
+</svg>
+</div>
+</section>
+<section id="arreglos-irregulares-jagged" class="slide level2 center">
+<h2>Arreglos irregulares (jagged)</h2>
+<div class="neutro">
+<p>Un arreglo irregular (jagged) aprovecha justo eso: cada fila declara su propio tamaño.</p>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb17-1"><a></a><span class="dt">int</span><span class="op">[][]</span> triangular <span class="op">=</span> <span class="kw">new</span> <span class="dt">int</span><span class="op">[</span><span class="dv">4</span><span class="op">][];</span></span>
+<span id="cb17-2"><a></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb17-3"><a></a>    triangular<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> <span class="kw">new</span> <span class="dt">int</span><span class="op">[</span>i <span class="op">+</span> <span class="dv">1</span><span class="op">];</span></span>
+<span id="cb17-4"><a></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="el-nullpointerexception-que-sorprende" class="slide level2 center">
+<h2>El NullPointerException que sorprende</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><span class="titulo">Filas listas de una vez</span></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb18-1"><a></a><span class="dt">int</span><span class="op">[][]</span> m <span class="op">=</span> <span class="kw">new</span> <span class="dt">int</span><span class="op">[</span><span class="dv">3</span><span class="op">][</span><span class="dv">2</span><span class="op">];</span></span>
+<span id="cb18-2"><a></a>m<span class="op">[</span><span class="dv">0</span><span class="op">][</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="dv">5</span><span class="op">;</span>   <span class="co">// funciona</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div><div class="column" style="width:50%;">
+<p><span class="titulo">Filas en null</span></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb19-1"><a></a><span class="dt">int</span><span class="op">[][]</span> m <span class="op">=</span> <span class="kw">new</span> <span class="dt">int</span><span class="op">[</span><span class="dv">3</span><span class="op">][];</span></span>
+<span id="cb19-2"><a></a>m<span class="op">[</span><span class="dv">0</span><span class="op">][</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
+<span id="cb19-3"><a></a><span class="co">// NullPointerException:</span></span>
+<span id="cb19-4"><a></a><span class="co">// la fila 0 todavia no existe</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div></div>
+<div class="destacado">
+<p><code>new int[3][2]</code> crea las tres filas en ceros de inmediato. <code>new int[3][]</code> solo crea el arreglo exterior: cada fila vale <code>null</code> (ninguna referencia todavía) hasta que se asigna explícitamente.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb20-1"><a></a>m<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="kw">new</span> <span class="dt">int</span><span class="op">[</span><span class="dv">2</span><span class="op">];</span>  <span class="co">// ahora si</span></span>
+<span id="cb20-2"><a></a>m<span class="op">[</span><span class="dv">0</span><span class="op">][</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="qué-hace-clone-en-un-arreglo-de-arreglos" class="slide level2 center">
+<h2>Qué hace clone() en un arreglo de arreglos</h2>
+<div class="destacado">
+<p><code>clone()</code> crea un arreglo nuevo copiando, uno a uno, los valores del arreglo original. Si esos valores son referencias, como las filas de una matriz, copia las referencias, no los objetos a los que apuntan.</p>
+</div>
+</section>
+<section id="copia-superficial-contra-copia-profunda" class="slide level2 center">
+<h2>Copia superficial contra copia profunda</h2>
+<div class="tarjetas">
+<div>
+<p><span class="titulo">Copia superficial</span></p>
+<p>Copia solo las referencias externas. Las filas siguen siendo los mismos objetos compartidos.</p>
+</div>
+<div class="clave">
+<p><span class="titulo">Copia profunda</span></p>
+<p>Copia también el contenido de cada fila, creando objetos nuevos e independientes.</p>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb21-1"><a></a><span class="dt">int</span><span class="op">[][]</span> original <span class="op">=</span> <span class="op">{{</span><span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">},</span> <span class="op">{</span><span class="dv">3</span><span class="op">,</span> <span class="dv">4</span><span class="op">}};</span></span>
+<span id="cb21-2"><a></a><span class="dt">int</span><span class="op">[][]</span> copia <span class="op">=</span> original<span class="op">.</span><span class="fu">clone</span><span class="op">();</span></span>
+<span id="cb21-3"><a></a>copia<span class="op">[</span><span class="dv">0</span><span class="op">][</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="dv">999</span><span class="op">;</span></span>
+<span id="cb21-4"><a></a><span class="bu">System</span><span class="op">.</span><span class="fu">out</span><span class="op">.</span><span class="fu">println</span><span class="op">(</span>original<span class="op">[</span><span class="dv">0</span><span class="op">][</span><span class="dv">0</span><span class="op">]);</span> <span class="co">// imprime 999: copia superficial</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="destacado">
+<p>Para una copia real hay que clonar cada fila:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb22-1"><a></a><span class="dt">int</span><span class="op">[][]</span> profunda <span class="op">=</span> <span class="kw">new</span> <span class="dt">int</span><span class="op">[</span>original<span class="op">.</span><span class="fu">length</span><span class="op">][];</span></span>
+<span id="cb22-2"><a></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> original<span class="op">.</span><span class="fu">length</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb22-3"><a></a>    profunda<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> original<span class="op">[</span>i<span class="op">].</span><span class="fu">clone</span><span class="op">();</span></span>
+<span id="cb22-4"><a></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="python-lista-de-listas" class="slide level2 center">
+<h2>Python: lista de listas</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a></a>filas, columnas <span class="op">=</span> <span class="dv">3</span>, <span class="dv">4</span></span>
+<span id="cb23-2"><a></a>matriz <span class="op">=</span> [[<span class="dv">0</span>] <span class="op">*</span> columnas <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(filas)]</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="neutro">
+<p>Python no tiene un arreglo bidimensional nativo. El módulo <code>array</code> es de una sola dimensión; su propia documentación remite a NumPy para trabajo numérico serio con matrices.</p>
+</div>
+</section>
+<section id="qué-hace-el-operador-sobre-una-lista" class="slide level2 center">
+<h2>Qué hace el operador * sobre una lista</h2>
+<div class="destacado">
+<p><code>[valor] * n</code> crea una lista repitiendo <code>n</code> veces la misma referencia a <code>valor</code>, no <code>n</code> copias independientes. Si <code>valor</code> es a su vez una lista mutable, las <code>n</code> posiciones apuntan al mismo objeto.</p>
+</div>
+</section>
+<section id="el-bug-clásico-de-multiplicar-listas" class="slide level2 center">
+<h2>El bug clásico de multiplicar listas</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda, tres flechas etiquetadas mal apuntan a una sola lista compartida. A la derecha, tres flechas etiquetadas bien apuntan cada una a su propia lista independiente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b2e" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <text x="180" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">mal = [[0]*2] * 3</text> <text x="580" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">bien = [[0]*2 for _ in range(3)]</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="35" width="60" height="30" rx="5"></rect><rect x="60" y="80" width="60" height="30" rx="5"></rect><rect x="60" y="125" width="60" height="30" rx="5"></rect></g> <g text-anchor="middle" font-size="11" fill="#12324f"><text x="90" y="54">fila 0</text><text x="90" y="99">fila 1</text><text x="90" y="144">fila 2</text></g> <rect x="220" y="80" width="70" height="34" fill="#e4f2f1" stroke="#8fc9c5" rx="5"></rect> <text x="255" y="101" text-anchor="middle" font-size="11" font-weight="700" fill="#0e6f6c">[0, 0]</text> <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#b2e)"><path d="M120,50 L216,88"></path><path d="M120,95 L216,97"></path><path d="M120,140 L216,106"></path></g> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="460" y="35" width="60" height="30" rx="5"></rect><rect x="460" y="80" width="60" height="30" rx="5"></rect><rect x="460" y="125" width="60" height="30" rx="5"></rect></g> <g text-anchor="middle" font-size="11" fill="#12324f"><text x="490" y="54">fila 0</text><text x="490" y="99">fila 1</text><text x="490" y="144">fila 2</text></g> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="610" y="35" width="70" height="30" rx="5"></rect><rect x="610" y="80" width="70" height="30" rx="5"></rect><rect x="610" y="125" width="70" height="30" rx="5"></rect></g> <g text-anchor="middle" font-size="10.5" font-weight="700" fill="#0e6f6c"><text x="645" y="54">[0, 0]</text><text x="645" y="99">[0, 0]</text><text x="645" y="144">[0, 0]</text></g> <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#b2e)"><path d="M520,50 L606,50"></path><path d="M520,95 L606,95"></path><path d="M520,140 L606,140"></path></g> <text x="380" y="195" text-anchor="middle" font-size="11" fill="#5b6876">El operador * repite la misma referencia; la comprension crea una lista nueva en cada vuelta.</text>
+</svg>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a></a>mal <span class="op">=</span> [[<span class="dv">0</span>] <span class="op">*</span> <span class="dv">2</span>] <span class="op">*</span> <span class="dv">3</span></span>
+<span id="cb24-2"><a></a>mal[<span class="dv">0</span>][<span class="dv">0</span>] <span class="op">=</span> <span class="dv">5</span>      <span class="co"># las tres filas cambian: [[5, 0], [5, 0], [5, 0]]</span></span>
+<span id="cb24-3"><a></a></span>
+<span id="cb24-4"><a></a>bien <span class="op">=</span> [[<span class="dv">0</span>] <span class="op">*</span> <span class="dv">2</span> <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">3</span>)]</span>
+<span id="cb24-5"><a></a>bien[<span class="dv">0</span>][<span class="dv">0</span>] <span class="op">=</span> <span class="dv">5</span>     <span class="co"># solo la fila 0 cambia</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="destacado">
+<p>Un tablero del juego de la vida construido como <code>[[False] * ancho] * alto</code> sufre el mismo bug: marcar una celda viva enciende toda una columna en todas las filas a la vez.</p>
+</div>
+</section>
+<section id="numpy-en-una-diapositiva" class="slide level2 center">
+<h2>NumPy, en una diapositiva</h2>
+<div class="tarjetas">
+<div class="clave">
+<p><span class="titulo">ndarray</span></p>
+<p>Tamaño fijo, homogéneo y contiguo en memoria, con operaciones precompiladas en C.</p>
+</div>
+<div>
+<p><span class="titulo">Construcción</span></p>
+<p><code>np.array(...)</code>, <code>np.zeros((filas, columnas))</code>, <code>np.ones(...)</code>, <code>np.eye(n)</code>.</p>
+</div>
+</div>
+<div class="neutro">
+<p>Queda fuera del detalle de hoy, pero es la herramienta real para trabajo numérico con matrices.</p>
+</div>
+</section>
+<section id="operaciones-básicas-sobre-matrices" class="slide level2 center">
+<h2>Operaciones básicas sobre matrices</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb25-1"><a></a><span class="co">// suma elemento a elemento</span></span>
+<span id="cb25-2"><a></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> filas<span class="op">;</span> i<span class="op">++)</span></span>
+<span id="cb25-3"><a></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> columnas<span class="op">;</span> j<span class="op">++)</span></span>
+<span id="cb25-4"><a></a>        r<span class="op">[</span>i<span class="op">][</span>j<span class="op">]</span> <span class="op">=</span> a<span class="op">[</span>i<span class="op">][</span>j<span class="op">]</span> <span class="op">+</span> b<span class="op">[</span>i<span class="op">][</span>j<span class="op">];</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div><div class="column" style="width:50%;">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a></a><span class="co"># transposicion</span></span>
+<span id="cb26-2"><a></a>transpuesta <span class="op">=</span> [[fila[i] <span class="cf">for</span> fila <span class="kw">in</span> m]</span>
+<span id="cb26-3"><a></a>               <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(m[<span class="dv">0</span>]))]</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div></div>
+</section>
+<section id="reto-1-1" class="slide level2 center">
+<h2>Reto 1</h2>
+<div class="pasos">
+<ol type="1">
+<li><code>tablero = [[0] * 3] * 3</code></li>
+<li><code>tablero[1][1] = 9</code></li>
+<li>¿Cómo queda <code>tablero</code> completo después de esa asignación?</li>
+</ol>
+</div>
+</section>
+<section id="reto-2-1" class="slide level2 center">
+<h2>Reto 2</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb27-1"><a></a><span class="dt">int</span><span class="op">[][]</span> tablero <span class="op">=</span> <span class="kw">new</span> <span class="dt">int</span><span class="op">[</span><span class="dv">3</span><span class="op">][];</span></span>
+<span id="cb27-2"><a></a>tablero<span class="op">[</span><span class="dv">0</span><span class="op">][</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="pasos">
+<ol type="1">
+<li><code>new int[3][]</code> crea el arreglo exterior, pero no las filas.</li>
+<li>La segunda línea escribe en la fila 0 antes de crearla.</li>
+<li>¿Qué excepción se lanza, y qué línea hay que agregar antes para evitarla?</li>
+</ol>
+</div>
+</section>
+<section id="bloque-3.-pilas-y-colas-con-vectores" class="slide level2 seccion" data-background-color="#12324f">
+<h2>Bloque 3. Pilas y colas con vectores</h2>
+<div class="rotulo">
+<p>Bloque 3</p>
+</div>
+<p>Dos contratos clásicos, resueltos con el mismo arreglo que crece.</p>
+</section>
+<section id="qué-es-una-pila" class="slide level2 center">
+<h2>Qué es una pila</h2>
+<div class="destacado">
+<p>Una pila es una estructura donde el último elemento en entrar es el primero en salir: LIFO, last in, first out.</p>
+</div>
+<div class="neutro">
+<p>Analogía: una pila de platos. Solo puedes tomar el de encima, y solo puedes dejar uno nuevo encima de todos los demás.</p>
+</div>
+</section>
+<section id="la-operación-apilar" class="slide level2 center">
+<h2>La operación apilar</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="C llega como un elemento nuevo, separado de la pila; despues de apilar C, la pila queda con C encima de B encima de A" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b3g" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <text x="160" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">antes</text> <text x="560" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">despues de apilar(C)</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="100" y="130" width="120" height="40"></rect><rect x="100" y="170" width="120" height="40"></rect></g> <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="160" y="155">B</text><text x="160" y="195">A</text></g> <text x="345" y="40" text-anchor="middle" font-size="11" fill="#5b6876">C es un elemento nuevo, todavia fuera de la pila</text> <rect x="300" y="50" width="90" height="40" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="345" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c">C</text> <path d="M390,70 L496,70" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3g)"></path> <text x="443" y="90" text-anchor="middle" font-size="11" font-weight="700" fill="#0e6f6c">apilar(C)</text> <rect x="500" y="90" width="120" height="40" fill="#e4f2f1" stroke="#8fc9c5"></rect> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="500" y="130" width="120" height="40"></rect><rect x="500" y="170" width="120" height="40"></rect></g> <g text-anchor="middle" font-size="13" font-weight="600"><text x="560" y="115" fill="#0e6f6c">C</text><text x="560" y="155" fill="#12324f">B</text><text x="560" y="195" fill="#12324f">A</text></g>
+</svg>
+</div>
+<div class="destacado">
+<p>Apilar agrega un elemento nuevo justo encima del último. En un arreglo, eso significa escribir en la primera casilla libre y avanzar el contador de tamaño.</p>
+</div>
+</section>
+<section id="la-operación-desapilar" class="slide level2 center">
+<h2>La operación desapilar</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes hay tres elementos apilados con C encima; despues de desapilar, C sale y quedan solo A y B" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b3h" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <text x="160" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">antes</text> <text x="560" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">despues de desapilar()</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="100" y="130" width="120" height="40"></rect><rect x="100" y="90" width="120" height="40"></rect></g> <rect x="100" y="50" width="120" height="40" fill="#e4f2f1" stroke="#8fc9c5"></rect> <g text-anchor="middle" font-size="13" font-weight="600"><text x="160" y="75" fill="#0e6f6c">C</text><text x="160" y="115" fill="#12324f">B</text><text x="160" y="155" fill="#12324f">A</text></g> <path d="M220,70 C340,70 340,100 480,110" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3h)"></path> <text x="340" y="90" text-anchor="middle" font-size="11" font-weight="700" fill="#0e6f6c">desapilar() devuelve C</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="500" y="90" width="120" height="40"></rect><rect x="500" y="130" width="120" height="40"></rect></g> <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="560" y="115">B</text><text x="560" y="155">A</text></g>
+</svg>
+</div>
+<div class="destacado">
+<p>Desapilar quita y devuelve el elemento de arriba. En un arreglo, eso es leer la última casilla ocupada y retroceder el contador de tamaño.</p>
+</div>
+</section>
+<section id="las-operaciones-cima-y-estavacia" class="slide level2 center">
+<h2>Las operaciones cima y estaVacia</h2>
+<div class="tarjetas">
+<div>
+<p><span class="titulo">cima()</span></p>
+<p>Devuelve el elemento de arriba sin quitarlo de la pila.</p>
+</div>
+<div>
+<p><span class="titulo">estaVacia()</span></p>
+<p>Responde si la pila no tiene ningún elemento ocupado.</p>
+</div>
+</div>
+</section>
+<section id="diseño-de-la-clase-pila" class="slide level2 center">
+<h2>Diseño de la clase Pila</h2>
+<div class="tarjetas">
+<div class="clave">
+<p><span class="titulo">datos</span></p>
+<p><code>Object[]</code>, el arreglo que guarda los elementos.</p>
+</div>
+<div>
+<p><span class="titulo">tamaño</span></p>
+<p><code>int</code>, cuántos elementos hay ocupados de verdad.</p>
+</div>
+</div>
+</section>
+<section id="pila-completa-en-java-1-de-2" class="slide level2 center">
+<h2>Pila completa en Java (1 de 2)</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb28-1"><a></a><span class="kw">public</span> <span class="kw">class</span> Pila <span class="op">{</span></span>
+<span id="cb28-2"><a></a>    <span class="kw">private</span> <span class="bu">Object</span><span class="op">[]</span> datos<span class="op">;</span></span>
+<span id="cb28-3"><a></a>    <span class="kw">private</span> <span class="dt">int</span> tamano<span class="op">;</span></span>
+<span id="cb28-4"><a></a>    <span class="kw">public</span> <span class="fu">Pila</span><span class="op">()</span> <span class="op">{</span> datos <span class="op">=</span> <span class="kw">new</span> <span class="bu">Object</span><span class="op">[</span><span class="dv">10</span><span class="op">];</span> tamano <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb28-5"><a></a>    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">apilar</span><span class="op">(</span><span class="bu">Object</span> elemento<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb28-6"><a></a>        <span class="cf">if</span> <span class="op">(</span>tamano <span class="op">==</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">)</span> <span class="fu">redimensionar</span><span class="op">();</span></span>
+<span id="cb28-7"><a></a>        datos<span class="op">[</span>tamano<span class="op">]</span> <span class="op">=</span> elemento<span class="op">;</span></span>
+<span id="cb28-8"><a></a>        tamano<span class="op">++;</span></span>
+<span id="cb28-9"><a></a>    <span class="op">}</span></span>
+<span id="cb28-10"><a></a>    <span class="kw">public</span> <span class="bu">Object</span> <span class="fu">desapilar</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb28-11"><a></a>        <span class="cf">if</span> <span class="op">(</span><span class="fu">estaVacia</span><span class="op">())</span> <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">IllegalStateException</span><span class="op">(</span><span class="st">"la pila esta vacia"</span><span class="op">);</span></span>
+<span id="cb28-12"><a></a>        tamano<span class="op">--;</span></span>
+<span id="cb28-13"><a></a>        <span class="bu">Object</span> e <span class="op">=</span> datos<span class="op">[</span>tamano<span class="op">];</span></span>
+<span id="cb28-14"><a></a>        datos<span class="op">[</span>tamano<span class="op">]</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb28-15"><a></a>        <span class="cf">return</span> e<span class="op">;</span></span>
+<span id="cb28-16"><a></a>    <span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="pila-completa-en-java-2-de-2" class="slide level2 center">
+<h2>Pila completa en Java (2 de 2)</h2>
+<div class="neutro">
+<p>Continúa la misma clase <code>Pila</code> de la diapositiva anterior.</p>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb29-1"><a></a>    <span class="kw">public</span> <span class="bu">Object</span> <span class="fu">cima</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb29-2"><a></a>        <span class="cf">if</span> <span class="op">(</span><span class="fu">estaVacia</span><span class="op">())</span> <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">IllegalStateException</span><span class="op">(</span><span class="st">"la pila esta vacia"</span><span class="op">);</span></span>
+<span id="cb29-3"><a></a>        <span class="cf">return</span> datos<span class="op">[</span>tamano <span class="op">-</span> <span class="dv">1</span><span class="op">];</span></span>
+<span id="cb29-4"><a></a>    <span class="op">}</span></span>
+<span id="cb29-5"><a></a>    <span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">estaVacia</span><span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> tamano <span class="op">==</span> <span class="dv">0</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb29-6"><a></a>    <span class="kw">private</span> <span class="dt">void</span> <span class="fu">redimensionar</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb29-7"><a></a>        <span class="bu">Object</span><span class="op">[]</span> nuevo <span class="op">=</span> <span class="kw">new</span> <span class="bu">Object</span><span class="op">[</span>datos<span class="op">.</span><span class="fu">length</span> <span class="op">*</span> <span class="dv">2</span><span class="op">];</span></span>
+<span id="cb29-8"><a></a>        <span class="bu">System</span><span class="op">.</span><span class="fu">arraycopy</span><span class="op">(</span>datos<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> nuevo<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">);</span></span>
+<span id="cb29-9"><a></a>        datos <span class="op">=</span> nuevo<span class="op">;</span></span>
+<span id="cb29-10"><a></a>    <span class="op">}</span></span>
+<span id="cb29-11"><a></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="pila-completa-en-python-1-de-2" class="slide level2 center">
+<h2>Pila completa en Python (1 de 2)</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a></a><span class="kw">class</span> Pila:</span>
+<span id="cb30-2"><a></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb30-3"><a></a>        <span class="va">self</span>._datos <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> <span class="dv">10</span></span>
+<span id="cb30-4"><a></a>        <span class="va">self</span>._tamano <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb30-5"><a></a>    <span class="kw">def</span> apilar(<span class="va">self</span>, elemento):</span>
+<span id="cb30-6"><a></a>        <span class="cf">if</span> <span class="va">self</span>._tamano <span class="op">==</span> <span class="bu">len</span>(<span class="va">self</span>._datos):</span>
+<span id="cb30-7"><a></a>            <span class="va">self</span>._redimensionar()</span>
+<span id="cb30-8"><a></a>        <span class="va">self</span>._datos[<span class="va">self</span>._tamano] <span class="op">=</span> elemento</span>
+<span id="cb30-9"><a></a>        <span class="va">self</span>._tamano <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb30-10"><a></a>    <span class="kw">def</span> desapilar(<span class="va">self</span>):</span>
+<span id="cb30-11"><a></a>        <span class="cf">if</span> <span class="va">self</span>.esta_vacia():</span>
+<span id="cb30-12"><a></a>            <span class="cf">raise</span> <span class="pp">IndexError</span>(<span class="st">"la pila esta vacia"</span>)</span>
+<span id="cb30-13"><a></a>        <span class="va">self</span>._tamano <span class="op">-=</span> <span class="dv">1</span></span>
+<span id="cb30-14"><a></a>        e <span class="op">=</span> <span class="va">self</span>._datos[<span class="va">self</span>._tamano]</span>
+<span id="cb30-15"><a></a>        <span class="va">self</span>._datos[<span class="va">self</span>._tamano] <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb30-16"><a></a>        <span class="cf">return</span> e</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="pila-completa-en-python-2-de-2" class="slide level2 center">
+<h2>Pila completa en Python (2 de 2)</h2>
+<div class="neutro">
+<p>Continúa la misma clase <code>Pila</code> de la diapositiva anterior.</p>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a></a>    <span class="kw">def</span> cima(<span class="va">self</span>):</span>
+<span id="cb31-2"><a></a>        <span class="cf">if</span> <span class="va">self</span>.esta_vacia():</span>
+<span id="cb31-3"><a></a>            <span class="cf">raise</span> <span class="pp">IndexError</span>(<span class="st">"la pila esta vacia"</span>)</span>
+<span id="cb31-4"><a></a>        <span class="cf">return</span> <span class="va">self</span>._datos[<span class="va">self</span>._tamano <span class="op">-</span> <span class="dv">1</span>]</span>
+<span id="cb31-5"><a></a>    <span class="kw">def</span> esta_vacia(<span class="va">self</span>):</span>
+<span id="cb31-6"><a></a>        <span class="cf">return</span> <span class="va">self</span>._tamano <span class="op">==</span> <span class="dv">0</span></span>
+<span id="cb31-7"><a></a>    <span class="kw">def</span> _redimensionar(<span class="va">self</span>):</span>
+<span id="cb31-8"><a></a>        nuevos <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> (<span class="bu">len</span>(<span class="va">self</span>._datos) <span class="op">*</span> <span class="dv">2</span>)</span>
+<span id="cb31-9"><a></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>._tamano):</span>
+<span id="cb31-10"><a></a>            nuevos[i] <span class="op">=</span> <span class="va">self</span>._datos[i]</span>
+<span id="cb31-11"><a></a>        <span class="va">self</span>._datos <span class="op">=</span> nuevos</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="redimensionar-el-orden-importa" class="slide level2 center">
+<h2>Redimensionar: el orden importa</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo de capacidad 4 lleno se copia a uno nuevo de capacidad 8, y solo despues de terminar la copia se escribe el quinto elemento" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b3b" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="40" y="30" width="50" height="40"></rect><rect x="90" y="30" width="50" height="40"></rect><rect x="140" y="30" width="50" height="40"></rect><rect x="190" y="30" width="50" height="40"></rect></g> <text x="115" y="86" text-anchor="middle" font-size="10.5" fill="#5b6876">capacidad 4, llena</text> <path d="M260,50 L300,50" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3b)"></path> <text x="280" y="40" text-anchor="middle" font-size="10" font-weight="700" fill="#0e6f6c">1. copia</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="320" y="30" width="46" height="40"></rect><rect x="366" y="30" width="46" height="40"></rect><rect x="412" y="30" width="46" height="40"></rect><rect x="458" y="30" width="46" height="40"></rect></g> <rect x="504" y="30" width="46" height="40" fill="#e4f2f1" stroke="#8fc9c5"></rect> <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="550" y="30" width="46" height="40"></rect><rect x="596" y="30" width="46" height="40"></rect><rect x="642" y="30" width="46" height="40"></rect></g> <text x="480" y="10" text-anchor="middle" font-size="10" font-weight="700" fill="#0e6f6c">2. escribe el 5</text> <text x="480" y="86" text-anchor="middle" font-size="10.5" fill="#5b6876">capacidad 8, con espacio de sobra</text> <text x="380" y="140" text-anchor="middle" font-size="11.5" fill="#5b6876">Primero se crece y se copia; solo despues se escribe el elemento nuevo.</text>
+</svg>
+</div>
+</section>
+<section id="cuánto-crecen-las-estructuras-reales" class="slide level2 center">
+<h2>Cuánto crecen las estructuras reales</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Estructura</th>
+<th>Factor de crecimiento</th>
+<th>¿Parte del contrato público?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>java.util.Vector</code></td>
+<td>duplica (x2)</td>
+<td>Sí, documentado en el Javadoc</td>
+</tr>
+<tr class="even">
+<td><code>java.util.ArrayList</code></td>
+<td>cerca de x1,5</td>
+<td>No, solo promete O(1) amortizado</td>
+</tr>
+<tr class="odd">
+<td>lista de CPython</td>
+<td>fórmula propia, tiende a x1,125</td>
+<td>No, es un detalle de implementación</td>
+</tr>
+</tbody>
+</table>
+<div class="neutro">
+<p>La <code>Pila</code> de hoy duplica, como <code>Vector</code>, porque el objetivo es entender el mecanismo, no copiar una fórmula de producción.</p>
+</div>
+</section>
+<section id="por-qué-el-costo-amortizado-es-o1" class="slide level2 center">
+<h2>Por qué el costo amortizado es O(1)</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Barras que representan el costo de copiar en cada redimensionamiento: 1, 2, 4 y 8 elementos copiados, cuya suma 15 es menor que el doble de la capacidad final, 16" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Costo de copiar en cada redimensionamiento</text> <g fill="#8fb3d1"><rect x="120" y="150" width="70" height="10"></rect><rect x="240" y="130" width="70" height="30"></rect><rect x="360" y="90" width="70" height="70"></rect><rect x="480" y="20" width="70" height="140"></rect></g> <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="155" y="172">1</text><text x="275" y="172">2</text><text x="395" y="172">4</text><text x="515" y="172">8</text></g> <text x="380" y="188" text-anchor="middle" font-size="11.5" fill="#5b6876">1 + 2 + 4 + 8 = 15, menos del doble de la capacidad final (16): el promedio por operacion es O(1).</text>
+</svg>
+</div>
+<div class="fuente">
+<p>Fuente: Cormen, Leiserson, Rivest y Stein. <em>Introduction to Algorithms.</em> Capítulo sobre tablas dinámicas.</p>
+</div>
+</section>
+<section id="reto-1-2" class="slide level2 center">
+<h2>Reto 1</h2>
+<div class="pasos">
+<ol type="1">
+<li>Una <code>Pila</code> empieza con capacidad 4 y duplica al llenarse.</li>
+<li>Se hacen 8 llamadas seguidas a <code>apilar</code>.</li>
+<li>¿En qué llamada exacta ocurre el redimensionamiento, y qué capacidad final queda?</li>
+</ol>
+</div>
+</section>
+<section id="referencias-obsoletas-por-qué-desapilar-pone-null" class="slide level2 center">
+<h2>Referencias obsoletas: por qué desapilar pone null</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb32-1"><a></a><span class="kw">public</span> <span class="bu">Object</span> <span class="fu">desapilar</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb32-2"><a></a>    tamano<span class="op">--;</span></span>
+<span id="cb32-3"><a></a>    <span class="bu">Object</span> e <span class="op">=</span> datos<span class="op">[</span>tamano<span class="op">];</span></span>
+<span id="cb32-4"><a></a>    datos<span class="op">[</span>tamano<span class="op">]</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span>   <span class="co">// sin esto, la referencia queda viva</span></span>
+<span id="cb32-5"><a></a>    <span class="cf">return</span> e<span class="op">;</span></span>
+<span id="cb32-6"><a></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="destacado">
+<p>Sin ese <code>null</code>, el recolector de basura no puede liberar el objeto aunque ya lo hayas olvidado lógicamente. <em>Effective Java</em> de Joshua Bloch usa exactamente una pila con arreglo como ejemplo de este problema, al que llama referencias obsoletas.</p>
+</div>
+</section>
+<section id="qué-es-una-cola" class="slide level2 center">
+<h2>Qué es una cola</h2>
+<div class="destacado">
+<p>Una cola es una estructura donde el primer elemento en entrar es el primero en salir: FIFO, first in, first out.</p>
+</div>
+<div class="neutro">
+<p>Analogía: la fila de un banco. Quien llega primero, se atiende primero; los nuevos se suman al final de la fila.</p>
+</div>
+</section>
+<section id="la-operación-encolar" class="slide level2 center">
+<h2>La operación encolar</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes hay dos elementos en fila, A y B; despues de encolar C, C se agrega al final" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b3i" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <text x="140" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">antes</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="80" y="35" width="90" height="42"></rect><rect x="170" y="35" width="90" height="42"></rect></g> <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="125" y="61">A</text><text x="215" y="61">B</text></g> <text x="125" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">frente</text> <text x="215" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">fin</text> <path d="M280,56 C340,56 340,56 400,56" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3i)"></path> <text x="340" y="40" text-anchor="middle" font-size="11" font-weight="700" fill="#0e6f6c">encolar(C)</text> <text x="560" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">despues</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="420" y="35" width="90" height="42"></rect><rect x="510" y="35" width="90" height="42"></rect></g> <rect x="600" y="35" width="90" height="42" fill="#e4f2f1" stroke="#8fc9c5"></rect> <g text-anchor="middle" font-size="13" font-weight="600"><text x="465" y="61" fill="#12324f">A</text><text x="555" y="61" fill="#12324f">B</text><text x="645" y="61" fill="#0e6f6c">C</text></g> <text x="465" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">frente</text> <text x="645" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">fin</text>
+</svg>
+</div>
+<div class="destacado">
+<p>Encolar agrega un elemento por el extremo llamado fin, sin tocar el resto de la fila.</p>
+</div>
+</section>
+<section id="la-operación-desencolar" class="slide level2 center">
+<h2>La operación desencolar</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes hay tres elementos en fila, A, B y C; despues de desencolar, A sale por el frente y quedan B y C" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b3j" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <text x="175" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">antes</text> <rect x="40" y="35" width="90" height="42" fill="#e4f2f1" stroke="#8fc9c5"></rect> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="130" y="35" width="90" height="42"></rect><rect x="220" y="35" width="90" height="42"></rect></g> <g text-anchor="middle" font-size="13" font-weight="600"><text x="85" y="61" fill="#0e6f6c">A</text><text x="175" y="61" fill="#12324f">B</text><text x="265" y="61" fill="#12324f">C</text></g> <text x="85" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">frente</text> <path d="M330,56 L480,56" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3j)"></path> <text x="405" y="42" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0e6f6c">desencolar()</text> <text x="405" y="82" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0e6f6c">devuelve A</text> <text x="590" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">despues</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="500" y="35" width="90" height="42"></rect><rect x="590" y="35" width="90" height="42"></rect></g> <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="545" y="61">B</text><text x="635" y="61">C</text></g> <text x="545" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">frente</text>
+</svg>
+</div>
+<div class="destacado">
+<p>Desencolar quita y devuelve el elemento del extremo llamado frente, el más antiguo de la fila.</p>
+</div>
+</section>
+<section id="por-qué-la-cola-ingenua-falla" class="slide level2 center">
+<h2>Por qué la cola ingenua falla</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a></a>cola <span class="op">=</span> []</span>
+<span id="cb33-2"><a></a>cola.append(x)          <span class="co"># entra al final, esto si es barato</span></span>
+<span id="cb33-3"><a></a>primero <span class="op">=</span> cola.pop(<span class="dv">0</span>)   <span class="co"># sale del inicio: O(n) cada vez</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="destacado">
+<p>Quitar siempre de la posición 0 desplaza todo lo demás. La solución no es mover los elementos, es mover los índices.</p>
+</div>
+</section>
+<section id="qué-es-un-arreglo-circular" class="slide level2 center">
+<h2>Qué es un arreglo circular</h2>
+<div class="destacado">
+<p>Un arreglo circular es un arreglo normal donde, al llegar a la última casilla, el siguiente índice vuelve a la posición 0 en vez de salirse del arreglo.</p>
+</div>
+<div class="neutro">
+<p>Analogía: una pista de atletismo. Un corredor que llega a la meta no se detiene contra una pared: sigue corriendo y vuelve al punto de partida, dando otra vuelta sobre la misma pista.</p>
+</div>
+</section>
+<section id="el-arreglo-circular-en-mecánica" class="slide level2 center">
+<h2>El arreglo circular en mecánica</h2>
+<div class="diagrama">
+<svg viewbox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo circular de capacidad 6 con frente en la posicion 4 y tamano 3, ocupando las posiciones 4, 5 y 0 de forma envuelta" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<text x="380" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">frente = 4, tamano = 3: ocupa 4, 5 y 0 (envuelto)</text> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="180" y="50" width="80" height="50"></rect><rect x="260" y="50" width="80" height="50"></rect><rect x="340" y="50" width="80" height="50"></rect></g> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="100" y="50" width="80" height="50"></rect><rect x="420" y="50" width="80" height="50"></rect><rect x="500" y="50" width="80" height="50"></rect></g> <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="140" y="42">0</text><text x="220" y="42">1</text><text x="300" y="42">2</text><text x="380" y="42">3</text><text x="460" y="42">4</text><text x="540" y="42">5</text></g> <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="140" y="80">c</text><text x="460" y="80">a</text><text x="540" y="80">b</text></g> <text x="460" y="122" text-anchor="middle" font-size="11" font-weight="600" fill="#0e6f6c">frente</text> <rect x="230" y="140" width="300" height="42" rx="8" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="380" y="166" text-anchor="middle" font-size="12" font-weight="700" fill="#12324f">siguiente posicion = (frente + tamano) % capacidad</text> <text x="380" y="205" text-anchor="middle" font-size="11" fill="#5b6876">Ni encolar ni desencolar mueven elementos: solo avanzan indices con modulo.</text>
+</svg>
+</div>
+<div class="neutro">
+<p>El operador módulo (<code>%</code>) devuelve el resto de una división. Por eso al llegar a la posición 6 en un arreglo de capacidad 6, <code>6 % 6 = 0</code>, y el índice vuelve al inicio.</p>
+</div>
+</section>
+<section id="la-ambigüedad-de-frente-fin" class="slide level2 center">
+<h2>La ambigüedad de frente == fin</h2>
+<div class="destacado">
+<p>Con solo dos índices, una cola vacía y una cola llena pueden verse exactamente igual: <code>frente == fin</code> en ambos casos. Hace falta un tercer dato para distinguirlas.</p>
+</div>
+<div class="tarjetas">
+<div class="clave">
+<p><span class="titulo">Solución A: contador de tamaño</span></p>
+<p>Guardar cuántos elementos hay, además de <code>frente</code>. Es la que usa esta implementación.</p>
+</div>
+<div>
+<p><span class="titulo">Solución B: sacrificar un espacio</span></p>
+<p>Nunca llenar la última casilla. La documentación de buffers circulares del kernel de Linux la usa, y de paso permite cambiar el módulo por una máscara AND si la capacidad es potencia de 2.</p>
+</div>
+</div>
+</section>
+<section id="cola-completa-en-java-1-de-2" class="slide level2 center">
+<h2>Cola completa en Java (1 de 2)</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb34-1"><a></a><span class="kw">public</span> <span class="kw">class</span> Cola <span class="op">{</span></span>
+<span id="cb34-2"><a></a>    <span class="kw">private</span> <span class="bu">Object</span><span class="op">[]</span> datos<span class="op">;</span></span>
+<span id="cb34-3"><a></a>    <span class="kw">private</span> <span class="dt">int</span> frente<span class="op">;</span></span>
+<span id="cb34-4"><a></a>    <span class="kw">private</span> <span class="dt">int</span> tamano<span class="op">;</span></span>
+<span id="cb34-5"><a></a>    <span class="kw">public</span> <span class="fu">Cola</span><span class="op">()</span> <span class="op">{</span> datos <span class="op">=</span> <span class="kw">new</span> <span class="bu">Object</span><span class="op">[</span><span class="dv">10</span><span class="op">];</span> frente <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> tamano <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb34-6"><a></a>    <span class="kw">public</span> <span class="dt">void</span> <span class="fu">encolar</span><span class="op">(</span><span class="bu">Object</span> elemento<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb34-7"><a></a>        <span class="cf">if</span> <span class="op">(</span>tamano <span class="op">==</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">)</span> <span class="fu">redimensionar</span><span class="op">();</span></span>
+<span id="cb34-8"><a></a>        <span class="dt">int</span> posicion <span class="op">=</span> <span class="op">(</span>frente <span class="op">+</span> tamano<span class="op">)</span> <span class="op">%</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">;</span></span>
+<span id="cb34-9"><a></a>        datos<span class="op">[</span>posicion<span class="op">]</span> <span class="op">=</span> elemento<span class="op">;</span></span>
+<span id="cb34-10"><a></a>        tamano<span class="op">++;</span></span>
+<span id="cb34-11"><a></a>    <span class="op">}</span></span>
+<span id="cb34-12"><a></a>    <span class="kw">public</span> <span class="bu">Object</span> <span class="fu">frente</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb34-13"><a></a>        <span class="cf">if</span> <span class="op">(</span><span class="fu">estaVacia</span><span class="op">())</span> <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">IllegalStateException</span><span class="op">(</span><span class="st">"la cola esta vacia"</span><span class="op">);</span></span>
+<span id="cb34-14"><a></a>        <span class="cf">return</span> datos<span class="op">[</span>frente<span class="op">];</span></span>
+<span id="cb34-15"><a></a>    <span class="op">}</span></span>
+<span id="cb34-16"><a></a>    <span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">estaVacia</span><span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> tamano <span class="op">==</span> <span class="dv">0</span><span class="op">;</span> <span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="cola-completa-en-java-2-de-2" class="slide level2 center">
+<h2>Cola completa en Java (2 de 2)</h2>
+<div class="neutro">
+<p>Continúa la misma clase <code>Cola</code> de la diapositiva anterior.</p>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb35-1"><a></a>    <span class="kw">public</span> <span class="bu">Object</span> <span class="fu">desencolar</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb35-2"><a></a>        <span class="cf">if</span> <span class="op">(</span><span class="fu">estaVacia</span><span class="op">())</span> <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">IllegalStateException</span><span class="op">(</span><span class="st">"la cola esta vacia"</span><span class="op">);</span></span>
+<span id="cb35-3"><a></a>        <span class="bu">Object</span> e <span class="op">=</span> datos<span class="op">[</span>frente<span class="op">];</span></span>
+<span id="cb35-4"><a></a>        datos<span class="op">[</span>frente<span class="op">]</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb35-5"><a></a>        frente <span class="op">=</span> <span class="op">(</span>frente <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">%</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">;</span></span>
+<span id="cb35-6"><a></a>        tamano<span class="op">--;</span></span>
+<span id="cb35-7"><a></a>        <span class="cf">return</span> e<span class="op">;</span></span>
+<span id="cb35-8"><a></a>    <span class="op">}</span></span>
+<span id="cb35-9"><a></a>    <span class="kw">private</span> <span class="dt">void</span> <span class="fu">redimensionar</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb35-10"><a></a>        <span class="bu">Object</span><span class="op">[]</span> nuevo <span class="op">=</span> <span class="kw">new</span> <span class="bu">Object</span><span class="op">[</span>datos<span class="op">.</span><span class="fu">length</span> <span class="op">*</span> <span class="dv">2</span><span class="op">];</span></span>
+<span id="cb35-11"><a></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> tamano<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb35-12"><a></a>            nuevo<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> datos<span class="op">[(</span>frente <span class="op">+</span> i<span class="op">)</span> <span class="op">%</span> datos<span class="op">.</span><span class="fu">length</span><span class="op">];</span></span>
+<span id="cb35-13"><a></a>        <span class="op">}</span></span>
+<span id="cb35-14"><a></a>        datos <span class="op">=</span> nuevo<span class="op">;</span></span>
+<span id="cb35-15"><a></a>        frente <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb35-16"><a></a>    <span class="op">}</span></span>
+<span id="cb35-17"><a></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="cola-completa-en-python-1-de-2" class="slide level2 center">
+<h2>Cola completa en Python (1 de 2)</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a></a><span class="kw">class</span> Cola:</span>
+<span id="cb36-2"><a></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb36-3"><a></a>        <span class="va">self</span>._datos <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> <span class="dv">10</span></span>
+<span id="cb36-4"><a></a>        <span class="va">self</span>._frente <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb36-5"><a></a>        <span class="va">self</span>._tamano <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb36-6"><a></a>    <span class="kw">def</span> encolar(<span class="va">self</span>, elemento):</span>
+<span id="cb36-7"><a></a>        <span class="cf">if</span> <span class="va">self</span>._tamano <span class="op">==</span> <span class="bu">len</span>(<span class="va">self</span>._datos):</span>
+<span id="cb36-8"><a></a>            <span class="va">self</span>._redimensionar()</span>
+<span id="cb36-9"><a></a>        posicion <span class="op">=</span> (<span class="va">self</span>._frente <span class="op">+</span> <span class="va">self</span>._tamano) <span class="op">%</span> <span class="bu">len</span>(<span class="va">self</span>._datos)</span>
+<span id="cb36-10"><a></a>        <span class="va">self</span>._datos[posicion] <span class="op">=</span> elemento</span>
+<span id="cb36-11"><a></a>        <span class="va">self</span>._tamano <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb36-12"><a></a>    <span class="kw">def</span> frente(<span class="va">self</span>):</span>
+<span id="cb36-13"><a></a>        <span class="cf">if</span> <span class="va">self</span>.esta_vacia():</span>
+<span id="cb36-14"><a></a>            <span class="cf">raise</span> <span class="pp">IndexError</span>(<span class="st">"la cola esta vacia"</span>)</span>
+<span id="cb36-15"><a></a>        <span class="cf">return</span> <span class="va">self</span>._datos[<span class="va">self</span>._frente]</span>
+<span id="cb36-16"><a></a>    <span class="kw">def</span> esta_vacia(<span class="va">self</span>):</span>
+<span id="cb36-17"><a></a>        <span class="cf">return</span> <span class="va">self</span>._tamano <span class="op">==</span> <span class="dv">0</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="cola-completa-en-python-2-de-2" class="slide level2 center">
+<h2>Cola completa en Python (2 de 2)</h2>
+<div class="neutro">
+<p>Continúa la misma clase <code>Cola</code> de la diapositiva anterior.</p>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a></a>    <span class="kw">def</span> desencolar(<span class="va">self</span>):</span>
+<span id="cb37-2"><a></a>        <span class="cf">if</span> <span class="va">self</span>.esta_vacia():</span>
+<span id="cb37-3"><a></a>            <span class="cf">raise</span> <span class="pp">IndexError</span>(<span class="st">"la cola esta vacia"</span>)</span>
+<span id="cb37-4"><a></a>        e <span class="op">=</span> <span class="va">self</span>._datos[<span class="va">self</span>._frente]</span>
+<span id="cb37-5"><a></a>        <span class="va">self</span>._datos[<span class="va">self</span>._frente] <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb37-6"><a></a>        <span class="va">self</span>._frente <span class="op">=</span> (<span class="va">self</span>._frente <span class="op">+</span> <span class="dv">1</span>) <span class="op">%</span> <span class="bu">len</span>(<span class="va">self</span>._datos)</span>
+<span id="cb37-7"><a></a>        <span class="va">self</span>._tamano <span class="op">-=</span> <span class="dv">1</span></span>
+<span id="cb37-8"><a></a>        <span class="cf">return</span> e</span>
+<span id="cb37-9"><a></a>    <span class="kw">def</span> _redimensionar(<span class="va">self</span>):</span>
+<span id="cb37-10"><a></a>        vieja <span class="op">=</span> <span class="bu">len</span>(<span class="va">self</span>._datos)</span>
+<span id="cb37-11"><a></a>        nuevos <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> (vieja <span class="op">*</span> <span class="dv">2</span>)</span>
+<span id="cb37-12"><a></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>._tamano):</span>
+<span id="cb37-13"><a></a>            nuevos[i] <span class="op">=</span> <span class="va">self</span>._datos[(<span class="va">self</span>._frente <span class="op">+</span> i) <span class="op">%</span> vieja]</span>
+<span id="cb37-14"><a></a>        <span class="va">self</span>._datos <span class="op">=</span> nuevos</span>
+<span id="cb37-15"><a></a>        <span class="va">self</span>._frente <span class="op">=</span> <span class="dv">0</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="reto-2-2" class="slide level2 center">
+<h2>Reto 2</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode numberSource java number-lines code-with-copy"><code class="sourceCode java"><span id="cb38-1"><a></a><span class="co">// version con un bug: sin contador de tamano</span></span>
+<span id="cb38-2"><a></a><span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">estaVacia</span><span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> frente <span class="op">==</span> fin<span class="op">;</span> <span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="pasos">
+<ol type="1">
+<li>Una cola de capacidad 6 recibe 6 elementos seguidos: <code>fin</code> termina exactamente donde empezó <code>frente</code>.</li>
+<li><code>estaVacia()</code> compara solo <code>frente == fin</code>.</li>
+<li>¿Qué responde <code>estaVacia()</code> en ese momento, y qué pasa si llega un séptimo elemento?</li>
+</ol>
+</div>
+</section>
+<section id="redimensionar-una-cola-circular-no-es-una-copia-simple" class="slide level2 center">
+<h2>Redimensionar una cola circular no es una copia simple</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 760 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo circular con el elemento c en la posicion 0 y a, b en las posiciones 4 y 5, envueltos; al redimensionar se linealizan en un arreglo nuevo en el orden logico a, b, c" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="b3f" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <text x="150" y="18" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">arreglo envuelto (frente = 4)</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="80" y="30" width="50" height="40"></rect><rect x="130" y="30" width="50" height="40"></rect><rect x="180" y="30" width="50" height="40"></rect></g> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="30" y="30" width="50" height="40"></rect><rect x="230" y="30" width="50" height="40"></rect><rect x="280" y="30" width="50" height="40"></rect></g> <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="55" y="55">c</text><text x="255" y="55">a</text><text x="305" y="55">b</text></g> <g text-anchor="middle" font-size="10" fill="#5b6876"><text x="55" y="86">0</text><text x="255" y="86">4</text><text x="305" y="86">5</text></g> <path d="M330,50 L390,50" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3f)"></path> <text x="360" y="40" text-anchor="middle" font-size="10" font-weight="700" fill="#0e6f6c">linealizar</text> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="410" y="30" width="50" height="40"></rect><rect x="460" y="30" width="50" height="40"></rect><rect x="510" y="30" width="50" height="40"></rect></g> <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="560" y="30" width="50" height="40"></rect><rect x="610" y="30" width="50" height="40"></rect><rect x="660" y="30" width="50" height="40"></rect></g> <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="435" y="55">a</text><text x="485" y="55">b</text><text x="535" y="55">c</text></g> <text x="380" y="145" text-anchor="middle" font-size="11" fill="#5b6876">Copiar por posicion mezclaria el orden; hay que leer desde frente con modulo y escribir desde 0.</text>
+</svg>
+</div>
+</section>
+<section id="complejidad-de-la-cola" class="slide level2 center">
+<h2>Complejidad de la cola</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Operación</th>
+<th>Peor caso</th>
+<th>Amortizado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>encolar</code></td>
+<td>O(n)</td>
+<td>O(1)</td>
+</tr>
+<tr class="even">
+<td><code>desencolar</code></td>
+<td>O(1)</td>
+<td>O(1)</td>
+</tr>
+<tr class="odd">
+<td><code>frente</code></td>
+<td>O(1)</td>
+<td>O(1)</td>
+</tr>
+<tr class="even">
+<td><code>estaVacia</code></td>
+<td>O(1)</td>
+<td>O(1)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="el-pago-real-estructuras-ya-construidas" class="slide level2 center">
+<h2>El pago real: estructuras ya construidas</h2>
+<div class="tarjetas">
+<div class="clave">
+<p><span class="titulo">java.util.ArrayDeque</span></p>
+<p>El propio Javadoc recomienda usarlo en vez de <code>Stack</code> como pila, y en vez de <code>LinkedList</code> como cola.</p>
+</div>
+<div>
+<p><span class="titulo">collections.deque de Python</span></p>
+<p>O(1) documentado en ambos extremos, frente a O(n) de <code>list.pop(0)</code> o <code>list.insert(0, x)</code>.</p>
+</div>
+</div>
+<div class="destacado">
+<p>Es exactamente la misma técnica de arreglo circular que acabas de construir a mano, ya probada y lista para usar.</p>
+</div>
+</section>
+<section id="lo-que-conecta-toda-la-unidad" class="slide level2 center">
+<h2>Lo que conecta toda la unidad</h2>
+<div class="recuento">
+<ul>
+<li>La notación O compara algoritmos por cómo escalan, no por velocidad de máquina</li>
+<li>Un arreglo calcula la dirección de cada casilla: acceso O(1)</li>
+<li>Insertar o eliminar en medio cuesta O(n) por el desplazamiento</li>
+<li>Java reserva memoria fija; crecer significa copiar a un arreglo nuevo</li>
+<li>Capacidad y tamaño son ideas distintas: una es espacio, la otra es uso real</li>
+<li>Una matriz en Java es un arreglo de arreglos, filas independientes</li>
+<li><code>[[0]*n]*m</code> comparte una sola fila entre todas las referencias</li>
+<li>Redimensionar siempre copia primero y escribe después</li>
+<li>El costo de redimensionar, repartido entre todas las llamadas, es O(1) amortizado</li>
+<li>El arreglo circular mueve índices con módulo, nunca elementos</li>
+<li>Olvidar limpiar una referencia deja basura que el recolector no puede liberar</li>
+</ul>
+</div>
+</section>
+<section id="estructuras-fijas-el-resumen-en-una-idea" class="slide level2 center">
+<h2>Estructuras fijas: el resumen en una idea</h2>
+<div class="destacado">
+<p>Un arreglo resuelve todo esto con aritmética sobre memoria contigua. El costo aparece exactamente cuando algo tiene que moverse o crecer, nunca antes.</p>
+</div>
+
+
+</section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="../../site_libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="../../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="../../site_libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="../../site_libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="../../site_libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="../../site_libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="../../site_libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="../../site_libs/revealjs/plugin/search/search.js"></script>
+  <script src="../../site_libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="../../site_libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': false,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: true,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: false,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1280,
+
+        height: 720,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copiado");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copiado");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp("https:\/\/oscarleosanchez\.github\.io\/sitio-maria-cano-2026-02\/");
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>

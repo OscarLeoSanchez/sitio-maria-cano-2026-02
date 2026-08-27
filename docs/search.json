@@ -7621,7 +7621,7 @@
     "href": "estructura-de-datos/unidad-02/index.html#empieza-aquí",
     "title": "Unidad 2. Estructuras fijas",
     "section": "3 Empieza aquí",
-    "text": "3 Empieza aquí\nIr al Tema 1. Vectores o arreglos\n\nEstructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.\nTransparencia. La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.",
+    "text": "3 Empieza aquí\nIr al Tema 1. Vectores o arreglos Diapositivas de la unidad\n\nEstructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.\nTransparencia. La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.",
     "crumbs": [
       "Unidad 2. Estructuras fijas",
       "Introducción a la unidad"
@@ -9645,5 +9645,635 @@
     "title": "Tema 3. Cada llamada se apila",
     "section": "Cómo medir recursión y bucles en Python",
     "text": "Cómo medir recursión y bucles en Python\n\n\nimport time, tracemalloc\n\ndef suma_recursiva(n):\n    if n == 0:\n        return 0\n    return n + suma_recursiva(n - 1)\n\ndef suma_iterativa(n):\n    total = 0\n    for i in range(1, n + 1):\n        total += i\n    return total\n\ntracemalloc.start()\nt0 = time.perf_counter()\nsuma_recursiva(900)\nt1 = time.perf_counter()\n_, pico = tracemalloc.get_traced_memory()\ntracemalloc.stop()\n\nSalida real, n = 900\nrecursiva:\n  4047.6 microsegundos\n  pico: 20640 bytes\niterativa:\n  710.7 microsegundos\n  pico: 144 bytes\n\n\nLa recursiva tardó 5.7 veces más y usó 143 veces más memoria rastreada. El tiempo varía entre ejecuciones; la memoria es estable, porque cada llamada reserva un marco de pila nuevo que la iterativa nunca crea."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#recorrido-de-la-unidad",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#recorrido-de-la-unidad",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Recorrido de la unidad",
+    "text": "Recorrido de la unidad\n\n\n0. Herramientas\nNotación O, excepciones, y quién construye de verdad Python y Java por dentro.\n\n\n1. Vectores\nMemoria contigua, acceso en tiempo constante y el costo real de insertar o eliminar.\n\n\n2. Matrices\nLa fila se convierte en cuadrícula: misma aritmética, un índice más.\n\n\n3. Pilas y colas\nDos contratos clásicos, construidos sobre el mismo arreglo que crece.\n\n\n\nCada idea se ve en Java y en Python: primero qué es, después por qué importa, y al final cómo se escribe."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#bloque-1.-vectores-o-arreglos",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#bloque-1.-vectores-o-arreglos",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Bloque 1. Vectores o arreglos",
+    "text": "Bloque 1. Vectores o arreglos\n\nBloque 1\n\nMemoria contigua, acceso directo y el costo real de insertar o eliminar."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#memoria-contigua-y-acceso-directo",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#memoria-contigua-y-acceso-directo",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Memoria contigua y acceso directo",
+    "text": "Memoria contigua y acceso directo\n\n\n La direccion se calcula, no se busca   1020304050 indice 0indice 1indice 2indice 3indice 4   direccion = base + indice * tamano_elemento Acceder a la casilla 2 no recorre las anteriores: calcula la posicion exacta."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#declarar-un-arreglo",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#declarar-un-arreglo",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Declarar un arreglo",
+    "text": "Declarar un arreglo\n\n\nJava\nint[] numeros = new int[5];\n// JLS 4.12.5: se llena con ceros\n\nPython\nnumeros = [10, 20, 30]\n\n\nJava reserva el tamaño desde el inicio y lo rellena con el valor por defecto del tipo. Python crea la lista ya con sus valores."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-pasa-fuera-de-los-límites",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-pasa-fuera-de-los-límites",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué pasa fuera de los límites",
+    "text": "Qué pasa fuera de los límites\n\n\nint[] numeros = {10, 20, 30};\nSystem.out.println(numeros[5]);\n// ArrayIndexOutOfBoundsException\n\nnumeros = [10, 20, 30]\nprint(numeros[5])\n# IndexError: list index out of range\n\n\nNinguno de los dos falla en silencio: ambos avisan de inmediato con una de las excepciones de la tabla del preámbulo."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#recorrer-un-arreglo",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#recorrer-un-arreglo",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Recorrer un arreglo",
+    "text": "Recorrer un arreglo\n\n\nCiclo indexado\nRepite mientras un contador i va de 0 hasta el tamaño; en cada vuelta accede a a[i].\n\n\nCiclo por cada elemento\nEntrega directamente cada valor, uno por uno, sin exponer el índice.\n\n\n\n\nfor (int i = 0; i &lt; numeros.length; i++) {\n    System.out.println(numeros[i]);\n}\nfor (int n : numeros) {\n    System.out.println(n);\n}\n\nfor i in range(len(numeros)):\n    print(numeros[i])\nfor n in numeros:\n    print(n)\n\n\n\nO(1) acceder a una casilla\n\n\nO(n) recorrer el arreglo completo"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#el-costo-de-insertar-en-el-medio",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#el-costo-de-insertar-en-el-medio",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "El costo de insertar en el medio",
+    "text": "El costo de insertar en el medio\n\n\n Insertar 25 en el indice 2 antes  10203040   despues   1020253040\n\n\nnumeros = [10, 20, 30, 40]\nnumeros.insert(2, 25)\n\nInsertar o eliminar en el inicio o en el medio cuesta O(n) porque hay que desplazar todo lo que sigue."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#complejidad-de-un-arreglo-operación-por-operación",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#complejidad-de-un-arreglo-operación-por-operación",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Complejidad de un arreglo, operación por operación",
+    "text": "Complejidad de un arreglo, operación por operación\n\n\n\n\n\n\n\n\nOperación\nComplejidad\nPor qué\n\n\n\n\nAcceder o leer a[i]\nO(1)\nmultiplicación y suma\n\n\nModificar a[i] = x\nO(1)\nmisma dirección de siempre\n\n\nInsertar o eliminar al final\nO(1) amortizado\nsin desplazamiento, si hay espacio\n\n\nInsertar o eliminar al inicio o en medio\nO(n)\ndesplaza todo lo posterior\n\n\nBuscar por valor\nO(n)\nrecorrido casilla por casilla"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#los-arreglos-de-java-no-crecen",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#los-arreglos-de-java-no-crecen",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Los arreglos de Java no crecen",
+    "text": "Los arreglos de Java no crecen\n\nEn Java, un arreglo tiene tamaño fijo desde que se crea. No existe una operación para agregarle una casilla más: crecer significa crear un arreglo distinto y copiar.\n\n\n\n  102030 arreglo original, tamano fijo 3  copia   102030 000 arreglo nuevo, tamano fijo 6 El arreglo de 3 casillas queda sin referencias y el recolector de basura lo libera.\n\n\nint[] original = {10, 20, 30};\nint[] masGrande = Arrays.copyOf(original, 6);\n// masGrande = [10, 20, 30, 0, 0, 0]\n\nCrecer significa crear uno nuevo y copiar, un costo O(n) cada vez que se agota el espacio."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#las-listas-de-python-son-arreglos-dinámicos-por-debajo",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#las-listas-de-python-son-arreglos-dinámicos-por-debajo",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Las listas de Python son arreglos dinámicos por debajo",
+    "text": "Las listas de Python son arreglos dinámicos por debajo\n\n\n  abcde tamano: len() devuelve 5 capacidad reservada, aun libre\n\n\n\nLa documentación de CPython lo describe así: son arreglos de longitud variable, no listas enlazadas. Por debajo hay un bloque contiguo con espacio de sobra."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#cuánto-reserva-python-de-más",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#cuánto-reserva-python-de-más",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Cuánto reserva Python de más",
+    "text": "Cuánto reserva Python de más\n\n\nCapacidad reservada al crecer una lista en CPython  048162432\n\n\n\nFuente de la secuencia real: el código de listobject.c de CPython. La proporción de crecimiento tiende a 1,125 veces el tamaño anterior, no al doble.\n\n\nArrayList de Java crece cerca de 1,5 veces, pero eso no es parte del contrato público del Javadoc: solo promete O(1) amortizado, el factor exacto es un detalle de OpenJDK."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#caso-de-estudio-la-cola-de-tareas-que-parecía-rápida",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#caso-de-estudio-la-cola-de-tareas-que-parecía-rápida",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Caso de estudio: la cola de tareas que parecía rápida",
+    "text": "Caso de estudio: la cola de tareas que parecía rápida\n\npop(0) quita y devuelve el primer elemento de la lista, desplazando todo lo demás una posición hacia el inicio.\n\ntareas = []\ntareas.append(nueva_tarea)      # O(1) amortizado, nada se mueve\nsiguiente = tareas.pop(0)       # O(n), todo se recorre y se desplaza\n\nRepetir pop(0) en un ciclo cuesta O(n al cuadrado) en total, aunque cada línea se vea inocente. La documentación de collections.deque advierte justo contra usar una lista como cola por esta razón."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#caso-de-estudio-cuando-faltan-los-límites",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#caso-de-estudio-cuando-faltan-los-límites",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Caso de estudio: cuando faltan los límites",
+    "text": "Caso de estudio: cuando faltan los límites\nint id_sequence[3];\nid_sequence[3] = 456;  /* escritura fuera de los limites */\n\nEsta clase de error, CWE-787, ocupó el primer lugar del Top 25 de MITRE en 2023. La excepción que lanzan Java y Python evita esta categoría completa de fallas por diseño."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#reto-1",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#reto-1",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Reto 1",
+    "text": "Reto 1\n\n\nUn ciclo llama a lista.insert(0, i) exactamente n veces, empezando de una lista vacía.\nCada insert(0, ...) cuesta O(n) porque desplaza todo lo que ya está.\n¿Cuál es la complejidad total del ciclo completo?"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#reto-2",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#reto-2",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Reto 2",
+    "text": "Reto 2\nint[] datos = {10, 20, 30, 40};\nfor (int i = 0; i &lt;= datos.length; i++) {\n    System.out.println(datos[i]);\n}\n\n\nEjecuta mentalmente el ciclo para datos.length == 4.\n¿En qué valor de i ocurre el problema, y qué excepción lanza?"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#bloque-2.-matrices",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#bloque-2.-matrices",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Bloque 2. Matrices",
+    "text": "Bloque 2. Matrices\n\nBloque 2\n\nLa fila se convierte en cuadrícula: la misma aritmética, un índice más."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#indexar-en-dos-dimensiones",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#indexar-en-dos-dimensiones",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Indexar en dos dimensiones",
+    "text": "Indexar en dos dimensiones\n\n\nM[1][2]: fila 1, columna 2       M[1][2] fila 0 fila 1 fila 2 col 0col 1col 2col 3\n\n\n\nEl primer índice elige la fila, el segundo la columna dentro de esa fila. Sigue siendo O(1): dos cálculos aritméticos en vez de uno, no una búsqueda."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#dos-formas-de-recorrer",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#dos-formas-de-recorrer",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Dos formas de recorrer",
+    "text": "Dos formas de recorrer\n\nRecorrer por filas visita todas las columnas de la fila 0, luego todas las de la fila 1, y así sucesivamente. Recorrer por columnas hace lo contrario.\n\n\n\nPor filas\nfor (int i = 0; i &lt; filas; i++)\n    for (int j = 0; j &lt; columnas; j++)\n        procesar(m[i][j]);\n\nPor columnas\nfor j in range(columnas):\n    for i in range(filas):\n        procesar(m[i][j])\n\n\nEl orden de los ciclos no cambia el resultado, pero sí el orden en que se visitan las casillas."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#cómo-vive-una-matriz-en-memoria-orden-por-filas",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#cómo-vive-una-matriz-en-memoria-orden-por-filas",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Cómo vive una matriz en memoria: orden por filas",
+    "text": "Cómo vive una matriz en memoria: orden por filas\n\n\nUna matriz de 3x4, guardada como 12 casillas seguidas   fila 0fila 1fila 2 M[1][2]  posicion = fila * columnas + columna = 1*4+2 = 6 NumPy permite elegir el orden por filas (C) o por columnas (F) al crear el arreglo."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#java-un-arreglo-de-arreglos",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#java-un-arreglo-de-arreglos",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Java: un arreglo de arreglos",
+    "text": "Java: un arreglo de arreglos\n\n\n  m   fila 0: arreglo propiofila 1: arreglo propiofila 2: arreglo propio Cada fila es un objeto aparte: nada obliga a que tengan el mismo tamano.\n\n\n// arreglo irregular (jagged): cada fila con su propio tamano\nint[][] triangular = new int[4][];\nfor (int i = 0; i &lt; 4; i++) {\n    triangular[i] = new int[i + 1];\n}"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#el-nullpointerexception-que-sorprende",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#el-nullpointerexception-que-sorprende",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "El NullPointerException que sorprende",
+    "text": "El NullPointerException que sorprende\n\n\nFilas listas de una vez\nint[][] m = new int[3][2];\nm[0][0] = 5;   // funciona\n\nFilas en null\nint[][] m = new int[3][];\nm[0][0] = 5;\n// NullPointerException:\n// la fila 0 todavia no existe\n\n\nnew int[3][2] crea las tres filas en ceros de inmediato. new int[3][] solo crea el arreglo exterior: cada fila vale null (ninguna referencia todavía) hasta que se asigna explícitamente.\nm[0] = new int[2];  // ahora si\nm[0][0] = 5;"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#copia-superficial-contra-copia-profunda",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#copia-superficial-contra-copia-profunda",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Copia superficial contra copia profunda",
+    "text": "Copia superficial contra copia profunda\n\n\nCopia superficial\nCopia solo las referencias externas. Las filas siguen siendo los mismos objetos compartidos.\n\n\nCopia profunda\nCopia también el contenido de cada fila, creando objetos nuevos e independientes.\n\n\nint[][] original = {{1, 2}, {3, 4}};\nint[][] copia = original.clone();\ncopia[0][0] = 999;\nSystem.out.println(original[0][0]); // imprime 999: copia superficial\n\nPara una copia real hay que clonar cada fila:\nint[][] profunda = new int[original.length][];\nfor (int i = 0; i &lt; original.length; i++) {\n    profunda[i] = original[i].clone();\n}"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#python-lista-de-listas",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#python-lista-de-listas",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Python: lista de listas",
+    "text": "Python: lista de listas\nfilas, columnas = 3, 4\nmatriz = [[0] * columnas for _ in range(filas)]\n\nPython no tiene un arreglo bidimensional nativo. El módulo array es de una sola dimensión; su propia documentación remite a NumPy para trabajo numérico serio con matrices."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#el-bug-clásico-de-multiplicar-listas",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#el-bug-clásico-de-multiplicar-listas",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "El bug clásico de multiplicar listas",
+    "text": "El bug clásico de multiplicar listas\n\n\n mal = [[0]*2] * 3 bien = [[0]*2 for _ in range(3)]  fila 0fila 1fila 2  [0, 0]   fila 0fila 1fila 2  [0, 0][0, 0][0, 0]  El operador * repite la misma referencia; la comprension crea una lista nueva en cada vuelta.\n\n\nmal = [[0] * 2] * 3\nmal[0][0] = 5      # las tres filas cambian: [[5, 0], [5, 0], [5, 0]]\n\nbien = [[0] * 2 for _ in range(3)]\nbien[0][0] = 5     # solo la fila 0 cambia\n\nUn tablero del juego de la vida construido como [[False] * ancho] * alto sufre el mismo bug: marcar una celda viva enciende toda una columna en todas las filas a la vez."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#numpy-en-una-diapositiva",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#numpy-en-una-diapositiva",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "NumPy, en una diapositiva",
+    "text": "NumPy, en una diapositiva\n\n\nndarray\nTamaño fijo, homogéneo y contiguo en memoria, con operaciones precompiladas en C.\n\n\nConstrucción\nnp.array(...), np.zeros((filas, columnas)), np.ones(...), np.eye(n).\n\n\n\nQueda fuera del detalle de hoy, pero es la herramienta real para trabajo numérico con matrices."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#operaciones-básicas-sobre-matrices",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#operaciones-básicas-sobre-matrices",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Operaciones básicas sobre matrices",
+    "text": "Operaciones básicas sobre matrices\n\n\n// suma elemento a elemento\nfor (int i = 0; i &lt; filas; i++)\n    for (int j = 0; j &lt; columnas; j++)\n        r[i][j] = a[i][j] + b[i][j];\n\n# transposicion\ntranspuesta = [[fila[i] for fila in m]\n               for i in range(len(m[0]))]"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#reto-1-1",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#reto-1-1",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Reto 1",
+    "text": "Reto 1\n\n\ntablero = [[0] * 3] * 3\ntablero[1][1] = 9\n¿Cómo queda tablero completo después de esa asignación?"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#reto-2-1",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#reto-2-1",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Reto 2",
+    "text": "Reto 2\nint[][] tablero = new int[3][];\ntablero[0][0] = 1;\n\n\nnew int[3][] crea el arreglo exterior, pero no las filas.\nLa segunda línea escribe en la fila 0 antes de crearla.\n¿Qué excepción se lanza, y qué línea hay que agregar antes para evitarla?"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#bloque-3.-pilas-y-colas-con-vectores",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#bloque-3.-pilas-y-colas-con-vectores",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Bloque 3. Pilas y colas con vectores",
+    "text": "Bloque 3. Pilas y colas con vectores\n\nBloque 3\n\nDos contratos clásicos, resueltos con el mismo arreglo que crece."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#el-contrato-que-faltaba-completar",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#el-contrato-que-faltaba-completar",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "El contrato que faltaba completar",
+    "text": "El contrato que faltaba completar\n\n\n Pila Cola apilar(elemento)desapilar()cima()estaVacia() encolar(elemento)desencolar()frente()estaVacia()\n\n\n\nAmbos contratos se completan hoy con el mismo mecanismo por dentro: un arreglo que crece cuando se llena."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#diseño-de-la-clase-pila",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#diseño-de-la-clase-pila",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Diseño de la clase Pila",
+    "text": "Diseño de la clase Pila\n\n\ndatos\nObject[], el arreglo que guarda los elementos.\n\n\ntamaño\nint, cuántos elementos hay ocupados de verdad."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-java",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-java",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Pila completa en Java",
+    "text": "Pila completa en Java\npublic class Pila {\n    private Object[] datos;\n    private int tamano;\n\n    public Pila() { datos = new Object[10]; tamano = 0; }\n\n    public void apilar(Object elemento) {\n        if (tamano == datos.length) redimensionar();\n        datos[tamano] = elemento;\n        tamano++;\n    }\n\n    public Object desapilar() {\n        if (estaVacia()) throw new IllegalStateException(\"la pila esta vacia\");\n        tamano--;\n        Object e = datos[tamano];\n        datos[tamano] = null;\n        return e;\n    }\n\n    public Object cima() {\n        if (estaVacia()) throw new IllegalStateException(\"la pila esta vacia\");\n        return datos[tamano - 1];\n    }\n\n    public boolean estaVacia() { return tamano == 0; }\n\n    private void redimensionar() {\n        Object[] nuevo = new Object[datos.length * 2];\n        System.arraycopy(datos, 0, nuevo, 0, datos.length);\n        datos = nuevo;\n    }\n}"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-python",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-python",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Pila completa en Python",
+    "text": "Pila completa en Python\nclass Pila:\n    def __init__(self):\n        self._datos = [None] * 10\n        self._tamano = 0\n\n    def apilar(self, elemento):\n        if self._tamano == len(self._datos):\n            self._redimensionar()\n        self._datos[self._tamano] = elemento\n        self._tamano += 1\n\n    def desapilar(self):\n        if self.esta_vacia():\n            raise IndexError(\"la pila esta vacia\")\n        self._tamano -= 1\n        e = self._datos[self._tamano]\n        self._datos[self._tamano] = None\n        return e\n\n    def cima(self):\n        if self.esta_vacia():\n            raise IndexError(\"la pila esta vacia\")\n        return self._datos[self._tamano - 1]\n\n    def esta_vacia(self):\n        return self._tamano == 0\n\n    def _redimensionar(self):\n        nuevos = [None] * (len(self._datos) * 2)\n        for i in range(self._tamano):\n            nuevos[i] = self._datos[i]\n        self._datos = nuevos"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#redimensionar-el-orden-importa",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#redimensionar-el-orden-importa",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Redimensionar: el orden importa",
+    "text": "Redimensionar: el orden importa\n\n\n  capacidad 4, llena  1. copia    2. escribe el 5 capacidad 8, con espacio de sobra Primero se crece y se copia; solo despues se escribe el elemento nuevo."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#cuánto-crecen-las-estructuras-reales",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#cuánto-crecen-las-estructuras-reales",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Cuánto crecen las estructuras reales",
+    "text": "Cuánto crecen las estructuras reales\n\n\n\n\n\n\n\n\nEstructura\nFactor de crecimiento\n¿Parte del contrato público?\n\n\n\n\njava.util.Vector\nduplica (x2)\nSí, documentado en el Javadoc\n\n\njava.util.ArrayList\ncerca de x1,5\nNo, solo promete O(1) amortizado\n\n\nlista de CPython\nfórmula propia, tiende a x1,125\nNo, es un detalle de implementación\n\n\n\n\nLa Pila de hoy duplica, como Vector, porque el objetivo es entender el mecanismo, no copiar una fórmula de producción."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#por-qué-el-costo-amortizado-es-o1",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#por-qué-el-costo-amortizado-es-o1",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Por qué el costo amortizado es O(1)",
+    "text": "Por qué el costo amortizado es O(1)\n\n\nCosto de copiar en cada redimensionamiento  1248 1 + 2 + 4 + 8 = 15, menos del doble de la capacidad final (16): el promedio por operacion es O(1).\n\n\n\nFuente: Cormen, Leiserson, Rivest y Stein. Introduction to Algorithms. Capítulo sobre tablas dinámicas."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#reto-1-2",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#reto-1-2",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Reto 1",
+    "text": "Reto 1\n\n\nUna Pila empieza con capacidad 4 y duplica al llenarse.\nSe hacen 8 llamadas seguidas a apilar.\n¿En qué llamada exacta ocurre el redimensionamiento, y qué capacidad final queda?"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#referencias-obsoletas-por-qué-desapilar-pone-null",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#referencias-obsoletas-por-qué-desapilar-pone-null",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Referencias obsoletas: por qué desapilar pone null",
+    "text": "Referencias obsoletas: por qué desapilar pone null\npublic Object desapilar() {\n    tamano--;\n    Object e = datos[tamano];\n    datos[tamano] = null;   // sin esto, la referencia queda viva\n    return e;\n}\n\nSin ese null, el recolector de basura no puede liberar el objeto aunque ya lo hayas olvidado lógicamente. Effective Java de Joshua Bloch usa exactamente una pila con arreglo como ejemplo de este problema, al que llama referencias obsoletas."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#por-qué-la-cola-ingenua-falla",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#por-qué-la-cola-ingenua-falla",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Por qué la cola ingenua falla",
+    "text": "Por qué la cola ingenua falla\ncola = []\ncola.append(x)          # entra al final, esto si es barato\nprimero = cola.pop(0)   # sale del inicio: O(n) cada vez\n\nQuitar siempre de la posición 0 desplaza todo lo demás. La solución no es mover los elementos, es mover los índices."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#el-arreglo-circular",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#el-arreglo-circular",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "El arreglo circular",
+    "text": "El arreglo circular\n\n\nfrente = 4, tamano = 3: ocupa 4, 5 y 0 (envuelto)   012345 cab frente  siguiente posicion = (frente + tamano) % capacidad Ni encolar ni desencolar mueven elementos: solo avanzan indices con modulo."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#la-ambigüedad-de-frente-fin",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#la-ambigüedad-de-frente-fin",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "La ambigüedad de frente == fin",
+    "text": "La ambigüedad de frente == fin\n\nCon solo dos índices, una cola vacía y una cola llena pueden verse exactamente igual: frente == fin en ambos casos. Hace falta un tercer dato para distinguirlas.\n\n\n\nSolución A: contador de tamaño\nGuardar cuántos elementos hay, además de frente. Es la que usa esta implementación.\n\n\nSolución B: sacrificar un espacio\nNunca llenar la última casilla. La documentación de buffers circulares del kernel de Linux la usa, y de paso permite cambiar el módulo por una máscara AND si la capacidad es potencia de 2."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-java",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-java",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Cola completa en Java",
+    "text": "Cola completa en Java\npublic class Cola {\n    private Object[] datos;\n    private int frente;\n    private int tamano;\n\n    public Cola() { datos = new Object[10]; frente = 0; tamano = 0; }\n\n    public void encolar(Object elemento) {\n        if (tamano == datos.length) redimensionar();\n        int posicion = (frente + tamano) % datos.length;\n        datos[posicion] = elemento;\n        tamano++;\n    }\n\n    public Object desencolar() {\n        if (estaVacia()) throw new IllegalStateException(\"la cola esta vacia\");\n        Object e = datos[frente];\n        datos[frente] = null;\n        frente = (frente + 1) % datos.length;\n        tamano--;\n        return e;\n    }\n\n    public Object frente() {\n        if (estaVacia()) throw new IllegalStateException(\"la cola esta vacia\");\n        return datos[frente];\n    }\n\n    public boolean estaVacia() { return tamano == 0; }\n\n    private void redimensionar() {\n        Object[] nuevo = new Object[datos.length * 2];\n        for (int i = 0; i &lt; tamano; i++) {\n            nuevo[i] = datos[(frente + i) % datos.length];\n        }\n        datos = nuevo;\n        frente = 0;\n    }\n}"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-python",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-python",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Cola completa en Python",
+    "text": "Cola completa en Python\nclass Cola:\n    def __init__(self):\n        self._datos = [None] * 10\n        self._frente = 0\n        self._tamano = 0\n\n    def encolar(self, elemento):\n        if self._tamano == len(self._datos):\n            self._redimensionar()\n        posicion = (self._frente + self._tamano) % len(self._datos)\n        self._datos[posicion] = elemento\n        self._tamano += 1\n\n    def desencolar(self):\n        if self.esta_vacia():\n            raise IndexError(\"la cola esta vacia\")\n        e = self._datos[self._frente]\n        self._datos[self._frente] = None\n        self._frente = (self._frente + 1) % len(self._datos)\n        self._tamano -= 1\n        return e\n\n    def frente(self):\n        if self.esta_vacia():\n            raise IndexError(\"la cola esta vacia\")\n        return self._datos[self._frente]\n\n    def esta_vacia(self):\n        return self._tamano == 0\n\n    def _redimensionar(self):\n        vieja = len(self._datos)\n        nuevos = [None] * (vieja * 2)\n        for i in range(self._tamano):\n            nuevos[i] = self._datos[(self._frente + i) % vieja]\n        self._datos = nuevos\n        self._frente = 0"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#reto-2-2",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#reto-2-2",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Reto 2",
+    "text": "Reto 2\n// version con un bug: sin contador de tamano\npublic boolean estaVacia() { return frente == fin; }\n\n\nUna cola de capacidad 6 recibe 6 elementos seguidos: fin termina exactamente donde empezó frente.\nestaVacia() compara solo frente == fin.\n¿Qué responde estaVacia() en ese momento, y qué pasa si llega un séptimo elemento?"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#redimensionar-una-cola-circular-no-es-una-copia-simple",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#redimensionar-una-cola-circular-no-es-una-copia-simple",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Redimensionar una cola circular no es una copia simple",
+    "text": "Redimensionar una cola circular no es una copia simple\n\n\n arreglo envuelto (frente = 4)   cab 045  linealizar   abc Copiar por posicion mezclaria el orden; hay que leer desde frente con modulo y escribir desde 0."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#complejidad-de-la-cola",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#complejidad-de-la-cola",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Complejidad de la cola",
+    "text": "Complejidad de la cola\n\n\n\nOperación\nPeor caso\nAmortizado\n\n\n\n\nencolar\nO(n)\nO(1)\n\n\ndesencolar\nO(1)\nO(1)\n\n\nfrente\nO(1)\nO(1)\n\n\nestaVacia\nO(1)\nO(1)"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#el-pago-real-estructuras-ya-construidas",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#el-pago-real-estructuras-ya-construidas",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "El pago real: estructuras ya construidas",
+    "text": "El pago real: estructuras ya construidas\n\n\njava.util.ArrayDeque\nEl propio Javadoc recomienda usarlo en vez de Stack como pila, y en vez de LinkedList como cola.\n\n\ncollections.deque de Python\nO(1) documentado en ambos extremos, frente a O(n) de list.pop(0) o list.insert(0, x).\n\n\n\nEs exactamente la misma técnica de arreglo circular que acabas de construir a mano, ya probada y lista para usar."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#lo-que-conecta-toda-la-unidad",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#lo-que-conecta-toda-la-unidad",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Lo que conecta toda la unidad",
+    "text": "Lo que conecta toda la unidad\n\n\nLa notación O compara algoritmos por cómo escalan, no por velocidad de máquina\nUn arreglo calcula la dirección de cada casilla: acceso O(1)\nInsertar o eliminar en medio cuesta O(n) por el desplazamiento\nJava reserva memoria fija; crecer significa copiar a un arreglo nuevo\nCapacidad y tamaño son ideas distintas: una es espacio, la otra es uso real\nUna matriz en Java es un arreglo de arreglos, filas independientes\n[[0]*n]*m comparte una sola fila entre todas las referencias\nRedimensionar siempre copia primero y escribe después\nEl costo de redimensionar, repartido entre todas las llamadas, es O(1) amortizado\nEl arreglo circular mueve índices con módulo, nunca elementos\nOlvidar limpiar una referencia deja basura que el recolector no puede liberar"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#estructuras-fijas-el-resumen-en-una-idea",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#estructuras-fijas-el-resumen-en-una-idea",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Estructuras fijas: el resumen en una idea",
+    "text": "Estructuras fijas: el resumen en una idea\n\nUn arreglo resuelve todo esto con aritmética sobre memoria contigua. El costo aparece exactamente cuando algo tiene que moverse o crecer, nunca antes."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-java-1-de-2",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-java-1-de-2",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Pila completa en Java (1 de 2)",
+    "text": "Pila completa en Java (1 de 2)\npublic class Pila {\n    private Object[] datos;\n    private int tamano;\n    public Pila() { datos = new Object[10]; tamano = 0; }\n    public void apilar(Object elemento) {\n        if (tamano == datos.length) redimensionar();\n        datos[tamano] = elemento;\n        tamano++;\n    }\n    public Object desapilar() {\n        if (estaVacia()) throw new IllegalStateException(\"la pila esta vacia\");\n        tamano--;\n        Object e = datos[tamano];\n        datos[tamano] = null;\n        return e;\n    }"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-java-2-de-2",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-java-2-de-2",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Pila completa en Java (2 de 2)",
+    "text": "Pila completa en Java (2 de 2)\n\nContinúa la misma clase Pila de la diapositiva anterior.\n\n    public Object cima() {\n        if (estaVacia()) throw new IllegalStateException(\"la pila esta vacia\");\n        return datos[tamano - 1];\n    }\n    public boolean estaVacia() { return tamano == 0; }\n    private void redimensionar() {\n        Object[] nuevo = new Object[datos.length * 2];\n        System.arraycopy(datos, 0, nuevo, 0, datos.length);\n        datos = nuevo;\n    }\n}"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-python-1-de-2",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-python-1-de-2",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Pila completa en Python (1 de 2)",
+    "text": "Pila completa en Python (1 de 2)\nclass Pila:\n    def __init__(self):\n        self._datos = [None] * 10\n        self._tamano = 0\n    def apilar(self, elemento):\n        if self._tamano == len(self._datos):\n            self._redimensionar()\n        self._datos[self._tamano] = elemento\n        self._tamano += 1\n    def desapilar(self):\n        if self.esta_vacia():\n            raise IndexError(\"la pila esta vacia\")\n        self._tamano -= 1\n        e = self._datos[self._tamano]\n        self._datos[self._tamano] = None\n        return e"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-python-2-de-2",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#pila-completa-en-python-2-de-2",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Pila completa en Python (2 de 2)",
+    "text": "Pila completa en Python (2 de 2)\n\nContinúa la misma clase Pila de la diapositiva anterior.\n\n    def cima(self):\n        if self.esta_vacia():\n            raise IndexError(\"la pila esta vacia\")\n        return self._datos[self._tamano - 1]\n    def esta_vacia(self):\n        return self._tamano == 0\n    def _redimensionar(self):\n        nuevos = [None] * (len(self._datos) * 2)\n        for i in range(self._tamano):\n            nuevos[i] = self._datos[i]\n        self._datos = nuevos"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-java-1-de-2",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-java-1-de-2",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Cola completa en Java (1 de 2)",
+    "text": "Cola completa en Java (1 de 2)\npublic class Cola {\n    private Object[] datos;\n    private int frente;\n    private int tamano;\n    public Cola() { datos = new Object[10]; frente = 0; tamano = 0; }\n    public void encolar(Object elemento) {\n        if (tamano == datos.length) redimensionar();\n        int posicion = (frente + tamano) % datos.length;\n        datos[posicion] = elemento;\n        tamano++;\n    }\n    public Object frente() {\n        if (estaVacia()) throw new IllegalStateException(\"la cola esta vacia\");\n        return datos[frente];\n    }\n    public boolean estaVacia() { return tamano == 0; }"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-java-2-de-2",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-java-2-de-2",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Cola completa en Java (2 de 2)",
+    "text": "Cola completa en Java (2 de 2)\n\nContinúa la misma clase Cola de la diapositiva anterior.\n\n    public Object desencolar() {\n        if (estaVacia()) throw new IllegalStateException(\"la cola esta vacia\");\n        Object e = datos[frente];\n        datos[frente] = null;\n        frente = (frente + 1) % datos.length;\n        tamano--;\n        return e;\n    }\n    private void redimensionar() {\n        Object[] nuevo = new Object[datos.length * 2];\n        for (int i = 0; i &lt; tamano; i++) {\n            nuevo[i] = datos[(frente + i) % datos.length];\n        }\n        datos = nuevo;\n        frente = 0;\n    }\n}"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-python-1-de-2",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-python-1-de-2",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Cola completa en Python (1 de 2)",
+    "text": "Cola completa en Python (1 de 2)\nclass Cola:\n    def __init__(self):\n        self._datos = [None] * 10\n        self._frente = 0\n        self._tamano = 0\n    def encolar(self, elemento):\n        if self._tamano == len(self._datos):\n            self._redimensionar()\n        posicion = (self._frente + self._tamano) % len(self._datos)\n        self._datos[posicion] = elemento\n        self._tamano += 1\n    def frente(self):\n        if self.esta_vacia():\n            raise IndexError(\"la cola esta vacia\")\n        return self._datos[self._frente]\n    def esta_vacia(self):\n        return self._tamano == 0"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-python-2-de-2",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#cola-completa-en-python-2-de-2",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Cola completa en Python (2 de 2)",
+    "text": "Cola completa en Python (2 de 2)\n\nContinúa la misma clase Cola de la diapositiva anterior.\n\n    def desencolar(self):\n        if self.esta_vacia():\n            raise IndexError(\"la cola esta vacia\")\n        e = self._datos[self._frente]\n        self._datos[self._frente] = None\n        self._frente = (self._frente + 1) % len(self._datos)\n        self._tamano -= 1\n        return e\n    def _redimensionar(self):\n        vieja = len(self._datos)\n        nuevos = [None] * (vieja * 2)\n        for i in range(self._tamano):\n            nuevos[i] = self._datos[(self._frente + i) % vieja]\n        self._datos = nuevos\n        self._frente = 0"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#antes-de-empezar-herramientas-para-leer-esta-unidad",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#antes-de-empezar-herramientas-para-leer-esta-unidad",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Antes de empezar: herramientas para leer esta unidad",
+    "text": "Antes de empezar: herramientas para leer esta unidad\n\nPreámbulo\n\nCuatro términos que vas a ver una y otra vez, explicados una sola vez antes de usarlos."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-es-la-notación-o",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-es-la-notación-o",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué es la notación O",
+    "text": "Qué es la notación O\n\nLa notación O describe cómo crece el trabajo de un algoritmo a medida que crece la cantidad de datos, sin depender de qué tan rápida sea la máquina donde corre.\n\n\n\nPara qué sirve\nCompara dos soluciones de forma justa, mirando cómo escalan, no cuántos milisegundos tardaron hoy en un computador concreto.\n\n\nCómo se lee\nO(algo) responde una pregunta: si n (la cantidad de datos) se duplica, ¿el trabajo se queda igual, se duplica también, o crece mucho más rápido?"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#las-tres-complejidades-de-hoy",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#las-tres-complejidades-de-hoy",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Las tres complejidades de hoy",
+    "text": "Las tres complejidades de hoy\n\n\n\n\n\n\n\n\nNotación\nQué significa\nEjemplo de esta unidad\n\n\n\n\nO(1), constante\nEl trabajo no cambia sin importar cuántos datos haya\nLeer a[5]\n\n\nO(n), lineal\nEl trabajo crece en proporción directa a la cantidad de datos\nRecorrer un arreglo completo\n\n\nO(n al cuadrado), cuadrática\nEl trabajo crece con el cuadrado de los datos\nUn ciclo con otro ciclo adentro\n\n\n\n\nCon 10 elementos: O(1) es 1 operación, O(n) son 10, O(n al cuadrado) son 100. Con 1000 elementos: O(1) sigue siendo 1, O(n) son 1000, O(n al cuadrado) es un millón."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-es-una-excepción",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-es-una-excepción",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué es una excepción",
+    "text": "Qué es una excepción\n\nUna excepción es la señal que un programa lanza en tiempo de ejecución cuando algo sale mal, en vez de seguir con un resultado incorrecto o fallar en silencio.\n\n\nJava y Python tienen su propio mecanismo, con nombres distintos para representar el mismo tipo de problema. Verás cuatro de ellas hoy."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#las-excepciones-de-esta-unidad",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#las-excepciones-de-esta-unidad",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Las excepciones de esta unidad",
+    "text": "Las excepciones de esta unidad\n\n\n\n\n\n\n\n\nExcepción\nLenguaje\nCuándo aparece\n\n\n\n\nArrayIndexOutOfBoundsException\nJava\nAcceder a un índice fuera del rango del arreglo\n\n\nIndexError\nPython\nAcceder a una posición fuera del rango de la lista\n\n\nNullPointerException\nJava\nUsar una referencia que todavía no apunta a ningún objeto\n\n\nIllegalStateException\nJava\nPedir una operación que el objeto no puede cumplir ahora, como desapilar una pila vacía"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#dos-nombres-que-vas-a-escuchar-mucho",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#dos-nombres-que-vas-a-escuchar-mucho",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Dos nombres que vas a escuchar mucho",
+    "text": "Dos nombres que vas a escuchar mucho\n\n\nCPython\nLa implementación de referencia de Python, escrita en el lenguaje C. Es la que instalas cuando bajas Python desde python.org, y la que casi todo el mundo llama simplemente Python.\n\n\nOpenJDK\nLa implementación libre y de código abierto de la plataforma Java. La mayoría de los JDK modernos, incluido el de Oracle, se basan en él.\n\n\n\nCuando esta unidad diga cómo crece una lista de Python o un ArrayList de Java, en realidad está describiendo una decisión de CPython o de OpenJDK, no una regla del lenguaje en sí."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-es-un-arreglo",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-es-un-arreglo",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué es un arreglo",
+    "text": "Qué es un arreglo\n\nUn arreglo es un bloque de memoria contiguo que guarda un número fijo de elementos del mismo tipo, cada uno accesible por un número de posición llamado índice, que empieza en 0.\n\n\nAnalogía: un casillero de correo con compartimentos numerados en fila. Si sabes el número, llegas directo sin abrir los demás."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#memoria-contigua-y-la-ecuación-de-acceso",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#memoria-contigua-y-la-ecuación-de-acceso",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Memoria contigua y la ecuación de acceso",
+    "text": "Memoria contigua y la ecuación de acceso\n\n\n La direccion se calcula, no se busca   1020304050 indice 0indice 1indice 2indice 3indice 4   direccion = base + indice * tamano_elemento Acceder a la casilla 2 no recorre las anteriores: calcula la posicion exacta."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#los-tres-términos-de-la-ecuación",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#los-tres-términos-de-la-ecuación",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Los tres términos de la ecuación",
+    "text": "Los tres términos de la ecuación\n\n\nbase\nLa dirección de memoria donde empieza el arreglo completo, la casilla de índice 0.\n\n\níndice\nLa posición que se pide, contando siempre desde 0.\n\n\ntamaño_elemento\nCuántos bytes ocupa cada dato del tipo declarado, siempre el mismo en todo el arreglo.\n\n\n\nPor eso el acceso es O(1): la fórmula usa solo una multiplicación y una suma, sin importar si el arreglo tiene 5 elementos o 5 millones."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#insertar-en-el-medio-paso-a-paso",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#insertar-en-el-medio-paso-a-paso",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Insertar en el medio, paso a paso",
+    "text": "Insertar en el medio, paso a paso\n\n\n antes  10203040 queremos insertar 25 en el indice 2   se corre un paso   10203040 hueco  se escribe 25   1020253040\n\n\nnumeros = [10, 20, 30, 40]\nnumeros.insert(2, 25)\n\nInsertar o eliminar en el inicio o en el medio cuesta O(n) porque cada elemento desde el punto de inserción hasta el final se mueve una posición."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#eliminar-del-medio-paso-a-paso",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#eliminar-del-medio-paso-a-paso",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Eliminar del medio, paso a paso",
+    "text": "Eliminar del medio, paso a paso\n\n\n antes   10203040 se elimina el indice 1   se corre un paso   103040 libre  resultado final   103040 el tamano logico baja de 4 a 3\n\n\nnumeros = [10, 20, 30, 40]\nnumeros.pop(1)  # quita y devuelve el 20\n\npop(indice) quita el elemento de esa posición y devuelve su valor. Sin argumento, quita el último."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#capacidad-y-tamaño-dos-ideas-distintas",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#capacidad-y-tamaño-dos-ideas-distintas",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Capacidad y tamaño: dos ideas distintas",
+    "text": "Capacidad y tamaño: dos ideas distintas\n\n\ntamaño\nCuántos elementos hay usados de verdad. Es lo que devuelve len() en Python.\n\n\ncapacidad\nCuánto espacio hay reservado en memoria, usado o no. No es visible directamente, pero existe por debajo.\n\n\n\nCuando una estructura dinámica se queda sin capacidad, no reserva una casilla más: reserva de golpe un bloque más grande, para no repetir esa operación costosa demasiado seguido."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#capacidad-reservada-al-crecer-una-lista",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#capacidad-reservada-al-crecer-una-lista",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Capacidad reservada al crecer una lista",
+    "text": "Capacidad reservada al crecer una lista\n\n\nCapacidad reservada al crecer una lista en CPython  048162432\n\n\n\nFuente de la secuencia real: el código de listobject.c de CPython. La proporción de crecimiento tiende a 1,125 veces el tamaño anterior, no al doble.\n\n\nArrayList de OpenJDK crece cerca de 1,5 veces, pero eso no es parte del contrato público del Javadoc: solo promete O(1) amortizado, el factor exacto es un detalle de implementación."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-es-una-matriz",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-es-una-matriz",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué es una matriz",
+    "text": "Qué es una matriz\n\nUna matriz es una tabla de datos organizada en filas y columnas, donde cada posición se ubica con dos índices en vez de uno solo.\n\n\nSe puede pensar como un arreglo cuyos elementos son, a su vez, arreglos: cada fila es una lista de valores, y la matriz es la lista de esas filas."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-significa-guardar-una-matriz-por-filas",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-significa-guardar-una-matriz-por-filas",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué significa guardar una matriz por filas",
+    "text": "Qué significa guardar una matriz por filas\n\nGuardar por filas (row-major order) significa que todos los valores de la fila 0 quedan seguidos en memoria, después todos los de la fila 1, y así con cada fila siguiente.\n\n\n\nUna matriz de 3x4, guardada como 12 casillas seguidas   fila 0fila 1fila 2 M[1][2]  posicion = fila * columnas + columna = 1*4+2 = 6 NumPy permite elegir el orden por filas (C) o por columnas (F) al crear el arreglo."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-es-un-arreglo-de-arreglos-en-java",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-es-un-arreglo-de-arreglos-en-java",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué es un arreglo de arreglos, en Java",
+    "text": "Qué es un arreglo de arreglos, en Java\n\nEn Java, una matriz no es un bloque 2D real: es un arreglo cuyos elementos son referencias a otros arreglos, las filas, cada una un objeto independiente en el heap.\n\n\n\n  m   fila 0: arreglo propiofila 1: arreglo propiofila 2: arreglo propio Cada fila es un objeto aparte: nada obliga a que tengan el mismo tamano."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-hace-clone-en-un-arreglo-de-arreglos",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-hace-clone-en-un-arreglo-de-arreglos",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué hace clone() en un arreglo de arreglos",
+    "text": "Qué hace clone() en un arreglo de arreglos\n\nclone() crea un arreglo nuevo copiando, uno a uno, los valores del arreglo original. Si esos valores son referencias, como las filas de una matriz, copia las referencias, no los objetos a los que apuntan."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-hace-el-operador-sobre-una-lista",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-hace-el-operador-sobre-una-lista",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué hace el operador * sobre una lista",
+    "text": "Qué hace el operador * sobre una lista\n\n[valor] * n crea una lista repitiendo n veces la misma referencia a valor, no n copias independientes. Si valor es a su vez una lista mutable, las n posiciones apuntan al mismo objeto."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-es-una-pila",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-es-una-pila",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué es una pila",
+    "text": "Qué es una pila\n\nUna pila es una estructura donde el último elemento en entrar es el primero en salir: LIFO, last in, first out.\n\n\nAnalogía: una pila de platos. Solo puedes tomar el de encima, y solo puedes dejar uno nuevo encima de todos los demás."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#la-operación-apilar",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#la-operación-apilar",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "La operación apilar",
+    "text": "La operación apilar\n\n\n antes despues de apilar(C)  BA C es un elemento nuevo, todavia fuera de la pila  C  apilar(C)   CBA\n\n\n\nApilar agrega un elemento nuevo justo encima del último. En un arreglo, eso significa escribir en la primera casilla libre y avanzar el contador de tamaño."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#la-operación-desapilar",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#la-operación-desapilar",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "La operación desapilar",
+    "text": "La operación desapilar\n\n\n antes despues de desapilar()   CBA  desapilar() devuelve C  BA\n\n\n\nDesapilar quita y devuelve el elemento de arriba. En un arreglo, eso es leer la última casilla ocupada y retroceder el contador de tamaño."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#las-operaciones-cima-y-estavacia",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#las-operaciones-cima-y-estavacia",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Las operaciones cima y estaVacia",
+    "text": "Las operaciones cima y estaVacia\n\n\ncima()\nDevuelve el elemento de arriba sin quitarlo de la pila.\n\n\nestaVacia()\nResponde si la pila no tiene ningún elemento ocupado."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-es-una-cola",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-es-una-cola",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué es una cola",
+    "text": "Qué es una cola\n\nUna cola es una estructura donde el primer elemento en entrar es el primero en salir: FIFO, first in, first out.\n\n\nAnalogía: la fila de un banco. Quien llega primero, se atiende primero; los nuevos se suman al final de la fila."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#la-operación-encolar",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#la-operación-encolar",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "La operación encolar",
+    "text": "La operación encolar\n\n\n antes  AB frente fin  encolar(C) despues   ABC frente fin\n\n\n\nEncolar agrega un elemento por el extremo llamado fin, sin tocar el resto de la fila."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#la-operación-desencolar",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#la-operación-desencolar",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "La operación desencolar",
+    "text": "La operación desencolar\n\n\n antes   ABC frente  desencolar() devuelve A despues  BC frente\n\n\n\nDesencolar quita y devuelve el elemento del extremo llamado frente, el más antiguo de la fila."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-es-un-arreglo-circular",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-es-un-arreglo-circular",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué es un arreglo circular",
+    "text": "Qué es un arreglo circular\n\nUn arreglo circular es un arreglo normal donde, al llegar a la última casilla, el siguiente índice vuelve a la posición 0 en vez de salirse del arreglo.\n\n\nAnalogía: una pista de atletismo. Un corredor que llega a la meta no se detiene contra una pared: sigue corriendo y vuelve al punto de partida, dando otra vuelta sobre la misma pista."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#el-arreglo-circular-en-mecánica",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#el-arreglo-circular-en-mecánica",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "El arreglo circular en mecánica",
+    "text": "El arreglo circular en mecánica\n\n\nfrente = 4, tamano = 3: ocupa 4, 5 y 0 (envuelto)   012345 cab frente  siguiente posicion = (frente + tamano) % capacidad Ni encolar ni desencolar mueven elementos: solo avanzan indices con modulo.\n\n\n\nEl operador módulo (%) devuelve el resto de una división. Por eso al llegar a la posición 6 en un arreglo de capacidad 6, 6 % 6 = 0, y el índice vuelve al inicio."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#qué-hace-append",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#qué-hace-append",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Qué hace append()",
+    "text": "Qué hace append()\n\nappend(valor) agrega valor justo después del último elemento usado, sin desplazar nada. Si sobra capacidad, cuesta O(1).\n\nlista = []\nfor i in range(20):\n    lista.append(i)\n    print(id(lista))\n# el id() no cambia: el buffer interno se reemplaza por dentro"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#arreglos-irregulares-jagged",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#arreglos-irregulares-jagged",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Arreglos irregulares (jagged)",
+    "text": "Arreglos irregulares (jagged)\n\nUn arreglo irregular (jagged) aprovecha justo eso: cada fila declara su propio tamaño.\n\nint[][] triangular = new int[4][];\nfor (int i = 0; i &lt; 4; i++) {\n    triangular[i] = new int[i + 1];\n}"
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#cómo-se-ven-estas-curvas-al-crecer-los-datos",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#cómo-se-ven-estas-curvas-al-crecer-los-datos",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Cómo se ven estas curvas al crecer los datos",
+    "text": "Cómo se ven estas curvas al crecer los datos\n\n\n operaciones tamaño de la entrada (n)  log nnn log nn al cuadrado Duplicar los datos suma un paso a la logarítmica y cuadruplica el trabajo de la cuadrática.\n\n\n\nEsta unidad solo usa O(1) (constante, tan plana que ni siquiera se dibuja aquí), O(n) y O(n al cuadrado), la línea n y la línea n al cuadrado del gráfico. Log n y n log n pertenecen a algoritmos que verás más adelante en la carrera."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#cuánto-pesa-tamaño_elemento-según-el-tipo",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#cuánto-pesa-tamaño_elemento-según-el-tipo",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Cuánto pesa tamaño_elemento, según el tipo",
+    "text": "Cuánto pesa tamaño_elemento, según el tipo\n\nEn Java, cada tipo primitivo tiene un tamaño fijo, definido en la especificación del lenguaje (JLS 4.2). Ese número es exactamente el tamaño_elemento de la ecuación anterior.\n\n\n\n\nTipo (Java)\nBytes por elemento\n\n\n\n\nbyte\n1\n\n\nchar\n2\n\n\nint\n4\n\n\nlong\n8\n\n\ndouble\n8\n\n\n\n\nUn int[1000] pesa aproximadamente 1000 * 4 = 4000 bytes, más una pequeña cabecera fija del objeto arreglo. El peso total crece de forma lineal con la cantidad de elementos."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#un-arreglo-de-objetos-no-guarda-los-datos-adentro",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#un-arreglo-de-objetos-no-guarda-los-datos-adentro",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Un arreglo de objetos no guarda los datos adentro",
+    "text": "Un arreglo de objetos no guarda los datos adentro\n\n\n int[] numeros  102030 cada casilla mide 4 bytes: el valor vive adentro String[] nombres  refref    Ana  Un texto mucho mas largo cada casilla mide siempre lo mismo; el String real vive aparte, con su propio tamano\n\n\n\nEl tamaño de un arreglo de referencias no depende de qué tan largo sea cada objeto al que apunta: todas las casillas miden lo mismo, sea una sola letra o un párrafo completo."
+  },
+  {
+    "objectID": "estructura-de-datos/unidad-02/presentacion.html#python-hasta-un-entero-es-un-objeto",
+    "href": "estructura-de-datos/unidad-02/presentacion.html#python-hasta-un-entero-es-un-objeto",
+    "title": "Estructuras fijas: vectores, matrices, pilas y colas",
+    "section": "Python: hasta un entero es un objeto",
+    "text": "Python: hasta un entero es un objeto\nimport sys\nprint(sys.getsizeof(42))            # 28\nprint(sys.getsizeof([1, 2, 3]))     # 88\n\nEn Python no hay tipos primitivos dentro de una lista: hasta el número 42 es un objeto completo de 28 bytes, con su propia cabecera. La lista de 3 elementos solo guarda 3 referencias; los objetos enteros viven aparte, igual que los String en el ejemplo de Java."
   }
 ]

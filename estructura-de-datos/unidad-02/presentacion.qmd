@@ -1,0 +1,1481 @@
+---
+title: "Estructuras fijas: vectores, matrices, pilas y colas"
+subtitle: "Estructura de datos (ESD01). Unidad 2"
+author: "Oscar Leonel Sánchez Conde"
+pagetitle: "Estructuras fijas: vectores, matrices, pilas y colas"
+title-prefix: ""
+format:
+  revealjs:
+    theme: [default, ../../estilos/presentacion.scss]
+    slide-number: true
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Recorrido de la unidad {.center}
+
+::: {.tarjetas}
+::: {}
+<span class="titulo">0. Herramientas</span>
+
+Notación O, excepciones, y quién construye de verdad Python y Java por dentro.
+:::
+::: {.clave}
+<span class="titulo">1. Vectores</span>
+
+Memoria contigua, acceso en tiempo constante y el costo real de insertar o eliminar.
+:::
+::: {}
+<span class="titulo">2. Matrices</span>
+
+La fila se convierte en cuadrícula: misma aritmética, un índice más.
+:::
+::: {}
+<span class="titulo">3. Pilas y colas</span>
+
+Dos contratos clásicos, construidos sobre el mismo arreglo que crece.
+:::
+:::
+
+::: {.neutro}
+Cada idea se ve en Java y en Python: primero qué es, después por qué importa, y al final cómo se
+escribe.
+:::
+
+## Antes de empezar: herramientas para leer esta unidad {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Preámbulo
+:::
+
+Cuatro términos que vas a ver una y otra vez, explicados una sola vez antes de usarlos.
+
+## Qué es la notación O {.center}
+
+::: {.destacado}
+La notación O describe cómo crece el trabajo de un algoritmo a medida que crece la cantidad de
+datos, sin depender de qué tan rápida sea la máquina donde corre.
+:::
+
+::: {.tarjetas}
+::: {}
+<span class="titulo">Para qué sirve</span>
+
+Compara dos soluciones de forma justa, mirando cómo escalan, no cuántos milisegundos tardaron hoy
+en un computador concreto.
+:::
+::: {}
+<span class="titulo">Cómo se lee</span>
+
+`O(algo)` responde una pregunta: si `n` (la cantidad de datos) se duplica, ¿el trabajo se queda
+igual, se duplica también, o crece mucho más rápido?
+:::
+:::
+
+## Las tres complejidades de hoy {.center}
+
+| Notación | Qué significa | Ejemplo de esta unidad |
+|---|---|---|
+| O(1), constante | El trabajo no cambia sin importar cuántos datos haya | Leer `a[5]` |
+| O(n), lineal | El trabajo crece en proporción directa a la cantidad de datos | Recorrer un arreglo completo |
+| O(n al cuadrado), cuadrática | El trabajo crece con el cuadrado de los datos | Un ciclo con otro ciclo adentro |
+
+::: {.neutro}
+Con 10 elementos: O(1) es 1 operación, O(n) son 10, O(n al cuadrado) son 100. Con 1000 elementos:
+O(1) sigue siendo 1, O(n) son 1000, O(n al cuadrado) es un millón.
+:::
+
+## Cómo se ven estas curvas al crecer los datos {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Curvas de crecimiento comparadas: logaritmo de n, n, n por logaritmo de n y n al cuadrado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <g stroke="#cfd8e3" stroke-width="1.5" fill="none"><path d="M76,26 L76,254"/><path d="M76,254 L700,254"/></g>
+  <text x="14" y="24" font-size="11.5" fill="#5b6876">operaciones</text>
+  <text x="700" y="276" font-size="11.5" fill="#5b6876" text-anchor="end">tamaño de la entrada (n)</text>
+  <g fill="none" stroke-width="3"><path d="M76,250 C110,190 170,168 680,158" stroke="#8fc9c5"/><path d="M76,250 L680,120" stroke="#8fb3d1"/><path d="M76,250 C300,206 500,140 680,64" stroke="#0e6f6c"/><path d="M76,250 C420,244 566,190 640,34" stroke="#12324f"/></g>
+  <g font-size="12.5" font-weight="600"><text x="690" y="162" fill="#3c7d7a">log n</text><text x="690" y="124" fill="#5b7f9f">n</text><text x="690" y="68" fill="#0e6f6c">n log n</text><text x="650" y="34" fill="#12324f">n al cuadrado</text></g>
+  <text x="90" y="292" font-size="11.5" fill="#5b6876">Duplicar los datos suma un paso a la logarítmica y cuadruplica el trabajo de la cuadrática.</text>
+</svg>
+:::
+
+::: {.neutro}
+Esta unidad solo usa O(1) (constante, tan plana que ni siquiera se dibuja aquí), O(n) y O(n al
+cuadrado), la línea `n` y la línea `n al cuadrado` del gráfico. Log n y n log n pertenecen a
+algoritmos que verás más adelante en la carrera.
+:::
+
+## Qué es una excepción {.center}
+
+::: {.destacado}
+Una excepción es la señal que un programa lanza en tiempo de ejecución cuando algo sale mal, en
+vez de seguir con un resultado incorrecto o fallar en silencio.
+:::
+
+::: {.neutro}
+Java y Python tienen su propio mecanismo, con nombres distintos para representar el mismo tipo de
+problema. Verás cuatro de ellas hoy.
+:::
+
+## Las excepciones de esta unidad {.center}
+
+| Excepción | Lenguaje | Cuándo aparece |
+|---|---|---|
+| `ArrayIndexOutOfBoundsException` | Java | Acceder a un índice fuera del rango del arreglo |
+| `IndexError` | Python | Acceder a una posición fuera del rango de la lista |
+| `NullPointerException` | Java | Usar una referencia que todavía no apunta a ningún objeto |
+| `IllegalStateException` | Java | Pedir una operación que el objeto no puede cumplir ahora, como desapilar una pila vacía |
+
+## Dos nombres que vas a escuchar mucho {.center}
+
+::: {.tarjetas}
+::: {.clave}
+<span class="titulo">CPython</span>
+
+La implementación de referencia de Python, escrita en el lenguaje C. Es la que instalas cuando
+bajas Python desde python.org, y la que casi todo el mundo llama simplemente Python.
+:::
+::: {}
+<span class="titulo">OpenJDK</span>
+
+La implementación libre y de código abierto de la plataforma Java. La mayoría de los JDK
+modernos, incluido el de Oracle, se basan en él.
+:::
+:::
+
+::: {.neutro}
+Cuando esta unidad diga cómo crece una lista de Python o un `ArrayList` de Java, en realidad está
+describiendo una decisión de CPython o de OpenJDK, no una regla del lenguaje en sí.
+:::
+
+## Bloque 1. Vectores o arreglos {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 1
+:::
+
+Memoria contigua, acceso directo y el costo real de insertar o eliminar.
+
+## Qué es un arreglo {.center}
+
+::: {.destacado}
+Un arreglo es un bloque de memoria contiguo que guarda un número fijo de elementos del mismo
+tipo, cada uno accesible por un número de posición llamado índice, que empieza en 0.
+:::
+
+::: {.neutro}
+Analogía: un casillero de correo con compartimentos numerados en fila. Si sabes el número, llegas
+directo sin abrir los demás.
+:::
+
+## Memoria contigua y la ecuación de acceso {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo de cinco casillas contiguas en memoria, con la casilla de indice 2 resaltada y la formula base mas indice por tamano de elemento debajo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">La direccion se calcula, no se busca</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="140" y="50" width="90" height="60" rx="8"/><rect x="230" y="50" width="90" height="60" rx="8"/><rect x="410" y="50" width="90" height="60" rx="8"/><rect x="500" y="50" width="90" height="60" rx="8"/></g>
+  <rect x="320" y="50" width="90" height="60" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="14" font-weight="600" fill="#12324f"><text x="185" y="86">10</text><text x="275" y="86">20</text><text x="365" y="86">30</text><text x="455" y="86">40</text><text x="545" y="86">50</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="185" y="128">indice 0</text><text x="275" y="128">indice 1</text><text x="365" y="128">indice 2</text><text x="455" y="128">indice 3</text><text x="545" y="128">indice 4</text></g>
+  <path d="M365,112 L365,148" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1a)"/>
+  <rect x="215" y="158" width="300" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="365" y="183" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0e6f6c">direccion = base + indice * tamano_elemento</text>
+  <text x="380" y="214" text-anchor="middle" font-size="11" fill="#5b6876">Acceder a la casilla 2 no recorre las anteriores: calcula la posicion exacta.</text>
+</svg>
+:::
+
+## Los tres términos de la ecuación {.center}
+
+::: {.tarjetas}
+::: {}
+<span class="titulo">base</span>
+
+La dirección de memoria donde empieza el arreglo completo, la casilla de índice 0.
+:::
+::: {.clave}
+<span class="titulo">índice</span>
+
+La posición que se pide, contando siempre desde 0.
+:::
+::: {}
+<span class="titulo">tamaño_elemento</span>
+
+Cuántos bytes ocupa cada dato del tipo declarado, siempre el mismo en todo el arreglo.
+:::
+:::
+
+::: {.destacado}
+Por eso el acceso es O(1): la fórmula usa solo una multiplicación y una suma, sin importar si el
+arreglo tiene 5 elementos o 5 millones.
+:::
+
+## Cuánto pesa tamaño_elemento, según el tipo {.center}
+
+::: {.neutro}
+En Java, cada tipo primitivo tiene un tamaño fijo, definido en la especificación del lenguaje
+(JLS 4.2). Ese número es exactamente el `tamaño_elemento` de la ecuación anterior.
+:::
+
+| Tipo (Java) | Bytes por elemento |
+|---|---|
+| `byte` | 1 |
+| `char` | 2 |
+| `int` | 4 |
+| `long` | 8 |
+| `double` | 8 |
+
+::: {.destacado}
+Un `int[1000]` pesa aproximadamente 1000 * 4 = 4000 bytes, más una pequeña cabecera fija del
+objeto arreglo. El peso total crece de forma lineal con la cantidad de elementos.
+:::
+
+## Un arreglo de objetos no guarda los datos adentro {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda un arreglo de enteros guarda los valores directamente adentro de cada casilla. A la derecha un arreglo de strings guarda referencias del mismo tamano, que apuntan a objetos de texto de tamano variable ubicados aparte" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1f" markerWidth="8" markerHeight="8" refX="6" refY="2.8" orient="auto"><path d="M0,0 L6,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="190" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">int[] numeros</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="100" y="40" width="60" height="44"/><rect x="160" y="40" width="60" height="44"/><rect x="220" y="40" width="60" height="44"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="130" y="67">10</text><text x="190" y="67">20</text><text x="250" y="67">30</text></g>
+  <text x="190" y="105" text-anchor="middle" font-size="10.5" fill="#5b6876">cada casilla mide 4 bytes: el valor vive adentro</text>
+  <text x="565" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">String[] nombres</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="470" y="40" width="60" height="44"/><rect x="530" y="40" width="60" height="44"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="500" y="67">ref</text><text x="560" y="67">ref</text></g>
+  <path d="M500,84 L485,120" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1f)"/>
+  <path d="M560,84 L620,120" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1f)"/>
+  <rect x="440" y="122" width="90" height="34" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="485" y="144" text-anchor="middle" font-size="12" font-weight="600" fill="#0e6f6c">Ana</text>
+  <rect x="560" y="122" width="170" height="34" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="645" y="144" text-anchor="middle" font-size="12" font-weight="600" fill="#0e6f6c">Un texto mucho mas largo</text>
+  <text x="565" y="184" text-anchor="middle" font-size="10.5" fill="#5b6876">cada casilla mide siempre lo mismo; el String real vive aparte, con su propio tamano</text>
+</svg>
+:::
+
+::: {.destacado}
+El tamaño de un arreglo de referencias no depende de qué tan largo sea cada objeto al que apunta:
+todas las casillas miden lo mismo, sea una sola letra o un párrafo completo.
+:::
+
+## Python: hasta un entero es un objeto {.center}
+
+```python
+import sys
+print(sys.getsizeof(42))            # 28
+print(sys.getsizeof([1, 2, 3]))     # 88
+```
+
+::: {.destacado}
+En Python no hay tipos primitivos dentro de una lista: hasta el número 42 es un objeto completo
+de 28 bytes, con su propia cabecera. La lista de 3 elementos solo guarda 3 referencias; los
+objetos enteros viven aparte, igual que los `String` en el ejemplo de Java.
+:::
+
+## Declarar un arreglo {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+int[] numeros = new int[5];
+// JLS 4.12.5: se llena con ceros
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+numeros = [10, 20, 30]
+```
+:::
+:::
+
+::: {.neutro}
+Java reserva el tamaño desde el inicio y lo rellena con el valor por defecto del tipo. Python
+crea la lista ya con sus valores.
+:::
+
+## Qué pasa fuera de los límites {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+```java
+int[] numeros = {10, 20, 30};
+System.out.println(numeros[5]);
+// ArrayIndexOutOfBoundsException
+```
+:::
+::: {.column width="50%"}
+```python
+numeros = [10, 20, 30]
+print(numeros[5])
+# IndexError: list index out of range
+```
+:::
+:::
+
+::: {.destacado}
+Ninguno de los dos falla en silencio: ambos avisan de inmediato con una de las excepciones de la
+tabla del preámbulo.
+:::
+
+## Recorrer un arreglo {.center}
+
+::: {.tarjetas}
+::: {}
+<span class="titulo">Ciclo indexado</span>
+
+Repite mientras un contador `i` va de 0 hasta el tamaño; en cada vuelta accede a `a[i]`.
+:::
+::: {}
+<span class="titulo">Ciclo por cada elemento</span>
+
+Entrega directamente cada valor, uno por uno, sin exponer el índice.
+:::
+:::
+
+::: {.columns}
+::: {.column width="50%"}
+```java
+for (int i = 0; i < numeros.length; i++) {
+    System.out.println(numeros[i]);
+}
+for (int n : numeros) {
+    System.out.println(n);
+}
+```
+:::
+::: {.column width="50%"}
+```python
+for i in range(len(numeros)):
+    print(numeros[i])
+for n in numeros:
+    print(n)
+```
+:::
+:::
+
+::: {.datos}
+::: {}
+<span class="cifra">O(1)</span>
+<span class="rotulo">acceder a una casilla</span>
+:::
+::: {}
+<span class="cifra">O(n)</span>
+<span class="rotulo">recorrer el arreglo completo</span>
+:::
+:::
+
+## Insertar en el medio, paso a paso {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres estados muestran como insertar 25 en el indice 2: primero el arreglo original, luego el 30 y el 40 desplazados una posicion a la derecha dejando un hueco, y por ultimo el 25 escrito en ese hueco" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="52" font-size="11" font-weight="600" fill="#5b6876">antes</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="30" width="70" height="42"/><rect x="290" y="30" width="70" height="42"/><rect x="360" y="30" width="70" height="42"/><rect x="430" y="30" width="70" height="42"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="56">10</text><text x="325" y="56">20</text><text x="395" y="56">30</text><text x="465" y="56">40</text></g>
+  <text x="500" y="56" font-size="11" fill="#5b6876">queremos insertar 25 en el indice 2</text>
+  <path d="M395,72 C395,95 465,95 465,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1b)"/>
+  <path d="M325,72 C325,95 395,95 395,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1b)"/>
+  <text x="130" y="132" font-size="11" font-weight="600" fill="#5b6876">se corre un paso</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="110" width="70" height="42"/><rect x="290" y="110" width="70" height="42"/><rect x="430" y="110" width="70" height="42"/><rect x="500" y="110" width="70" height="42"/></g>
+  <rect x="360" y="110" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"/>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="136">10</text><text x="325" y="136">20</text><text x="465" y="136">30</text><text x="535" y="136">40</text></g>
+  <text x="395" y="136" text-anchor="middle" font-size="11" fill="#5b6876">hueco</text>
+  <path d="M395,152 L395,188" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1b)"/>
+  <text x="130" y="212" font-size="11" font-weight="600" fill="#5b6876">se escribe 25</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="190" width="70" height="42"/><rect x="290" y="190" width="70" height="42"/><rect x="430" y="190" width="70" height="42"/><rect x="500" y="190" width="70" height="42"/></g>
+  <rect x="360" y="190" width="70" height="42" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="13" font-weight="600"><text x="255" y="216" fill="#12324f">10</text><text x="325" y="216" fill="#12324f">20</text><text x="395" y="216" fill="#0e6f6c">25</text><text x="465" y="216" fill="#12324f">30</text><text x="535" y="216" fill="#12324f">40</text></g>
+</svg>
+:::
+
+```python
+numeros = [10, 20, 30, 40]
+numeros.insert(2, 25)
+```
+
+::: {.destacado}
+Insertar o eliminar en el inicio o en el medio cuesta O(n) porque cada elemento desde el punto de
+inserción hasta el final se mueve una posición.
+:::
+
+## Eliminar del medio, paso a paso {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres estados muestran como eliminar el elemento del indice 1: primero el arreglo original con ese elemento marcado, luego el 30 y el 40 desplazados una posicion a la izquierda, y por ultimo el arreglo final con una casilla libre al final" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1c2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="52" font-size="11" font-weight="600" fill="#5b6876">antes</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="30" width="70" height="42"/><rect x="360" y="30" width="70" height="42"/><rect x="430" y="30" width="70" height="42"/></g>
+  <rect x="290" y="30" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="56">10</text><text x="325" y="56">20</text><text x="395" y="56">30</text><text x="465" y="56">40</text></g>
+  <text x="500" y="56" font-size="11" fill="#5b6876">se elimina el indice 1</text>
+  <path d="M395,72 C395,95 325,95 325,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1c2)"/>
+  <path d="M465,72 C465,95 395,95 395,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1c2)"/>
+  <text x="130" y="132" font-size="11" font-weight="600" fill="#5b6876">se corre un paso</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="110" width="70" height="42"/><rect x="290" y="110" width="70" height="42"/><rect x="360" y="110" width="70" height="42"/></g>
+  <rect x="430" y="110" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"/>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="136">10</text><text x="325" y="136">30</text><text x="395" y="136">40</text></g>
+  <text x="465" y="136" text-anchor="middle" font-size="11" fill="#5b6876">libre</text>
+  <path d="M255,152 L255,188" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1c2)"/>
+  <text x="130" y="212" font-size="11" font-weight="600" fill="#5b6876">resultado final</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="190" width="70" height="42"/><rect x="290" y="190" width="70" height="42"/><rect x="360" y="190" width="70" height="42"/></g>
+  <rect x="430" y="190" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"/>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="216">10</text><text x="325" y="216">30</text><text x="395" y="216">40</text></g>
+  <text x="520" y="216" text-anchor="start" font-size="11" fill="#5b6876">el tamano logico baja de 4 a 3</text>
+</svg>
+:::
+
+```python
+numeros = [10, 20, 30, 40]
+numeros.pop(1)  # quita y devuelve el 20
+```
+
+::: {.neutro}
+`pop(indice)` quita el elemento de esa posición y devuelve su valor. Sin argumento, quita el
+último.
+:::
+
+## Complejidad de un arreglo, operación por operación {.center}
+
+| Operación | Complejidad | Por qué |
+|---|---|---|
+| Acceder o leer `a[i]` | O(1) | multiplicación y suma |
+| Modificar `a[i] = x` | O(1) | misma dirección de siempre |
+| Insertar o eliminar al final | O(1) amortizado | sin desplazamiento, si hay espacio |
+| Insertar o eliminar al inicio o en medio | O(n) | desplaza todo lo posterior |
+| Buscar por valor | O(n) | recorrido casilla por casilla |
+
+## Los arreglos de Java no crecen {.center}
+
+::: {.destacado}
+En Java, un arreglo tiene tamaño fijo desde que se crea. No existe una operación para agregarle
+una casilla más: crecer significa crear un arreglo distinto y copiar.
+:::
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo de tres casillas se copia a uno nuevo de seis casillas; el arreglo original queda disponible para el recolector de basura" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="40" y="40" width="60" height="46"/><rect x="100" y="40" width="60" height="46"/><rect x="160" y="40" width="60" height="46"/></g>
+  <g text-anchor="middle" font-size="13" fill="#5b6876"><text x="70" y="68">10</text><text x="130" y="68">20</text><text x="190" y="68">30</text></g>
+  <text x="130" y="102" text-anchor="middle" font-size="10.5" fill="#5b6876">arreglo original, tamano fijo 3</text>
+  <path d="M240,63 L296,63" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b1d)"/>
+  <text x="268" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0e6f6c">copia</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="320" y="40" width="60" height="46"/><rect x="380" y="40" width="60" height="46"/><rect x="440" y="40" width="60" height="46"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="500" y="40" width="60" height="46"/><rect x="560" y="40" width="60" height="46"/><rect x="620" y="40" width="60" height="46"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f"><text x="350" y="68">10</text><text x="410" y="68">20</text><text x="470" y="68">30</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="530" y="68">0</text><text x="590" y="68">0</text><text x="650" y="68">0</text></g>
+  <text x="470" y="102" text-anchor="middle" font-size="10.5" fill="#5b6876">arreglo nuevo, tamano fijo 6</text>
+  <text x="380" y="140" text-anchor="middle" font-size="11.5" fill="#5b6876">El arreglo de 3 casillas queda sin referencias y el recolector de basura lo libera.</text>
+</svg>
+:::
+
+```java
+int[] original = {10, 20, 30};
+int[] masGrande = Arrays.copyOf(original, 6);
+// masGrande = [10, 20, 30, 0, 0, 0]
+```
+
+::: {.destacado}
+Crecer significa crear uno nuevo y copiar, un costo O(n) cada vez que se agota el espacio.
+:::
+
+## Capacidad y tamaño: dos ideas distintas {.center}
+
+::: {.tarjetas}
+::: {.clave}
+<span class="titulo">tamaño</span>
+
+Cuántos elementos hay usados de verdad. Es lo que devuelve `len()` en Python.
+:::
+::: {}
+<span class="titulo">capacidad</span>
+
+Cuánto espacio hay reservado en memoria, usado o no. No es visible directamente, pero existe por
+debajo.
+:::
+:::
+
+::: {.destacado}
+Cuando una estructura dinámica se queda sin capacidad, no reserva una casilla más: reserva de
+golpe un bloque más grande, para no repetir esa operación costosa demasiado seguido.
+:::
+
+## Las listas de Python son arreglos dinámicos por debajo {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una lista de Python con cinco elementos usados y tres casillas reservadas de mas, sin usar todavia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="100" y="40" width="66" height="50"/><rect x="166" y="40" width="66" height="50"/><rect x="232" y="40" width="66" height="50"/><rect x="298" y="40" width="66" height="50"/><rect x="364" y="40" width="66" height="50"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="430" y="40" width="66" height="50"/><rect x="496" y="40" width="66" height="50"/><rect x="562" y="40" width="66" height="50"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="133" y="70">a</text><text x="199" y="70">b</text><text x="265" y="70">c</text><text x="331" y="70">d</text><text x="397" y="70">e</text></g>
+  <text x="265" y="112" text-anchor="middle" font-size="11" fill="#5b6876">tamano: len() devuelve 5</text>
+  <text x="562" y="30" text-anchor="middle" font-size="11" fill="#5b6876">capacidad reservada, aun libre</text>
+</svg>
+:::
+
+::: {.neutro}
+La documentación de CPython lo describe así: son arreglos de longitud variable, no listas
+enlazadas. Por debajo hay un bloque contiguo con espacio de sobra.
+:::
+
+## Qué hace append() {.center}
+
+::: {.destacado}
+`append(valor)` agrega `valor` justo después del último elemento usado, sin desplazar nada. Si
+sobra capacidad, cuesta O(1).
+:::
+
+```python
+lista = []
+for i in range(20):
+    lista.append(i)
+    print(id(lista))
+# el id() no cambia: el buffer interno se reemplaza por dentro
+```
+
+## Capacidad reservada al crecer una lista {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafico de barras con la secuencia real de capacidades reservadas por CPython al crecer una lista: 0, 4, 8, 16, 24, 32, creciendo cada vez menos en proporcion" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Capacidad reservada al crecer una lista en CPython</text>
+  <g fill="#8fb3d1"><rect x="80" y="188" width="70" height="2"/><rect x="180" y="152" width="70" height="38"/><rect x="280" y="120" width="70" height="70"/><rect x="380" y="70" width="70" height="120"/><rect x="480" y="30" width="70" height="160"/><rect x="580" y="0" width="70" height="190"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="115" y="205">0</text><text x="215" y="205">4</text><text x="315" y="205">8</text><text x="415" y="205">16</text><text x="515" y="205">24</text><text x="615" y="205">32</text></g>
+</svg>
+:::
+
+::: {.neutro}
+Fuente de la secuencia real: el código de `listobject.c` de CPython. La proporción de crecimiento
+tiende a 1,125 veces el tamaño anterior, no al doble.
+:::
+
+::: {.destacado}
+`ArrayList` de OpenJDK crece cerca de 1,5 veces, pero eso no es parte del contrato público del
+Javadoc: solo promete O(1) amortizado, el factor exacto es un detalle de implementación.
+:::
+
+## Caso de estudio: la cola de tareas que parecía rápida {.center}
+
+::: {.neutro}
+`pop(0)` quita y devuelve el primer elemento de la lista, desplazando todo lo demás una posición
+hacia el inicio.
+:::
+
+```python
+tareas = []
+tareas.append(nueva_tarea)      # O(1) amortizado, nada se mueve
+siguiente = tareas.pop(0)       # O(n), todo se recorre y se desplaza
+```
+
+::: {.destacado}
+Repetir `pop(0)` en un ciclo cuesta O(n al cuadrado) en total, aunque cada línea se vea inocente. La
+documentación de `collections.deque` advierte justo contra usar una lista como cola por esta razón.
+:::
+
+## Caso de estudio: cuando faltan los límites {.center}
+
+```c
+int id_sequence[3];
+id_sequence[3] = 456;  /* escritura fuera de los limites */
+```
+
+::: {.destacado}
+Esta clase de error, CWE-787, ocupó el primer lugar del Top 25 de MITRE en 2023. La excepción que
+lanzan Java y Python evita esta categoría completa de fallas por diseño.
+:::
+
+## Reto 1 {.center}
+
+::: {.pasos}
+1. Un ciclo llama a `lista.insert(0, i)` exactamente `n` veces, empezando de una lista vacía.
+2. Cada `insert(0, ...)` cuesta O(n) porque desplaza todo lo que ya está.
+3. ¿Cuál es la complejidad total del ciclo completo?
+:::
+
+## Reto 2 {.center}
+
+```java
+int[] datos = {10, 20, 30, 40};
+for (int i = 0; i <= datos.length; i++) {
+    System.out.println(datos[i]);
+}
+```
+
+::: {.pasos}
+1. Ejecuta mentalmente el ciclo para `datos.length == 4`.
+2. ¿En qué valor de `i` ocurre el problema, y qué excepción lanza?
+:::
+
+## Bloque 2. Matrices {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 2
+:::
+
+La fila se convierte en cuadrícula: la misma aritmética, un índice más.
+
+## Qué es una matriz {.center}
+
+::: {.destacado}
+Una matriz es una tabla de datos organizada en filas y columnas, donde cada posición se ubica con
+dos índices en vez de uno solo.
+:::
+
+::: {.neutro}
+Se puede pensar como un arreglo cuyos elementos son, a su vez, arreglos: cada fila es una lista de
+valores, y la matriz es la lista de esas filas.
+:::
+
+## Indexar en dos dimensiones {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una cuadricula de 3 filas por 4 columnas, con la celda de fila 1 columna 2 resaltada" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">M[1][2]: fila 1, columna 2</text>
+  <g fill="#eef4fa" stroke="#c7d6e6">
+    <rect x="240" y="40" width="80" height="50"/><rect x="320" y="40" width="80" height="50"/><rect x="400" y="40" width="80" height="50"/><rect x="480" y="40" width="80" height="50"/>
+    <rect x="240" y="90" width="80" height="50"/><rect x="400" y="90" width="80" height="50"/><rect x="480" y="90" width="80" height="50"/>
+    <rect x="240" y="140" width="80" height="50"/><rect x="320" y="140" width="80" height="50"/><rect x="400" y="140" width="80" height="50"/><rect x="480" y="140" width="80" height="50"/>
+  </g>
+  <rect x="320" y="90" width="80" height="50" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="360" y="120" text-anchor="middle" font-size="13" font-weight="700" fill="#0e6f6c">M[1][2]</text>
+  <text x="130" y="70" text-anchor="middle" font-size="11" fill="#5b6876">fila 0</text>
+  <text x="130" y="120" text-anchor="middle" font-size="11" fill="#5b6876">fila 1</text>
+  <text x="130" y="170" text-anchor="middle" font-size="11" fill="#5b6876">fila 2</text>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="280" y="210">col 0</text><text x="360" y="210">col 1</text><text x="440" y="210">col 2</text><text x="520" y="210">col 3</text></g>
+</svg>
+:::
+
+::: {.destacado}
+El primer índice elige la fila, el segundo la columna dentro de esa fila. Sigue siendo O(1): dos
+cálculos aritméticos en vez de uno, no una búsqueda.
+:::
+
+## Dos formas de recorrer {.center}
+
+::: {.neutro}
+Recorrer por filas visita todas las columnas de la fila 0, luego todas las de la fila 1, y así
+sucesivamente. Recorrer por columnas hace lo contrario.
+:::
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Por filas</span>
+
+```java
+for (int i = 0; i < filas; i++)
+    for (int j = 0; j < columnas; j++)
+        procesar(m[i][j]);
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Por columnas</span>
+
+```python
+for j in range(columnas):
+    for i in range(filas):
+        procesar(m[i][j])
+```
+:::
+:::
+
+::: {.neutro}
+El orden de los ciclos no cambia el resultado, pero sí el orden en que se visitan las casillas.
+:::
+
+## Qué significa guardar una matriz por filas {.center}
+
+::: {.destacado}
+Guardar por filas (row-major order) significa que todos los valores de la fila 0 quedan seguidos
+en memoria, después todos los de la fila 1, y así con cada fila siguiente.
+:::
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Doce casillas contiguas en memoria representan una matriz de 3 filas por 4 columnas guardada en orden por filas; la posicion de M uno dos aparece resaltada en la sexta casilla" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Una matriz de 3x4, guardada como 12 casillas seguidas</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="40" width="58" height="44"/><rect x="88" y="40" width="58" height="44"/><rect x="146" y="40" width="58" height="44"/><rect x="204" y="40" width="58" height="44"/><rect x="262" y="40" width="58" height="44"/><rect x="378" y="40" width="58" height="44"/><rect x="436" y="40" width="58" height="44"/><rect x="494" y="40" width="58" height="44"/><rect x="552" y="40" width="58" height="44"/><rect x="610" y="40" width="58" height="44"/><rect x="668" y="40" width="58" height="44"/></g>
+  <rect x="320" y="40" width="58" height="44" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="59" y="100">fila 0</text><text x="291" y="100">fila 1</text><text x="639" y="100">fila 2</text></g>
+  <text x="349" y="66" text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c">M[1][2]</text>
+  <rect x="220" y="130" width="320" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="155" text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c">posicion = fila * columnas + columna = 1*4+2 = 6</text>
+  <text x="380" y="190" text-anchor="middle" font-size="11" fill="#5b6876">NumPy permite elegir el orden por filas (C) o por columnas (F) al crear el arreglo.</text>
+</svg>
+:::
+
+## Qué es un arreglo de arreglos, en Java {.center}
+
+::: {.destacado}
+En Java, una matriz no es un bloque 2D real: es un arreglo cuyos elementos son referencias a otros
+arreglos, las filas, cada una un objeto independiente en el heap.
+:::
+
+::: {.diagrama}
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El arreglo m contiene tres referencias que apuntan a tres arreglos de fila independientes, cada uno un objeto separado en el heap" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b2c" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <rect x="30" y="70" width="70" height="50" fill="#eef4fa" stroke="#c7d6e6" rx="6"/>
+  <text x="65" y="99" text-anchor="middle" font-size="13" font-weight="700" fill="#12324f">m</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#b2c)"><path d="M100,82 L280,45"/><path d="M100,95 L280,95"/><path d="M100,108 L280,150"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="290" y="25" width="200" height="40" rx="6"/><rect x="290" y="75" width="150" height="40" rx="6"/><rect x="290" y="130" width="230" height="40" rx="6"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="390" y="49">fila 0: arreglo propio</text><text x="365" y="99">fila 1: arreglo propio</text><text x="405" y="154">fila 2: arreglo propio</text></g>
+  <text x="380" y="185" text-anchor="middle" font-size="11" fill="#5b6876">Cada fila es un objeto aparte: nada obliga a que tengan el mismo tamano.</text>
+</svg>
+:::
+
+## Arreglos irregulares (jagged) {.center}
+
+::: {.neutro}
+Un arreglo irregular (jagged) aprovecha justo eso: cada fila declara su propio tamaño.
+:::
+
+```java
+int[][] triangular = new int[4][];
+for (int i = 0; i < 4; i++) {
+    triangular[i] = new int[i + 1];
+}
+```
+
+## El NullPointerException que sorprende {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Filas listas de una vez</span>
+
+```java
+int[][] m = new int[3][2];
+m[0][0] = 5;   // funciona
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Filas en null</span>
+
+```java
+int[][] m = new int[3][];
+m[0][0] = 5;
+// NullPointerException:
+// la fila 0 todavia no existe
+```
+:::
+:::
+
+::: {.destacado}
+`new int[3][2]` crea las tres filas en ceros de inmediato. `new int[3][]` solo crea el arreglo
+exterior: cada fila vale `null` (ninguna referencia todavía) hasta que se asigna explícitamente.
+```java
+m[0] = new int[2];  // ahora si
+m[0][0] = 5;
+```
+:::
+
+## Qué hace clone() en un arreglo de arreglos {.center}
+
+::: {.destacado}
+`clone()` crea un arreglo nuevo copiando, uno a uno, los valores del arreglo original. Si esos
+valores son referencias, como las filas de una matriz, copia las referencias, no los objetos a
+los que apuntan.
+:::
+
+## Copia superficial contra copia profunda {.center}
+
+::: {.tarjetas}
+::: {}
+<span class="titulo">Copia superficial</span>
+
+Copia solo las referencias externas. Las filas siguen siendo los mismos objetos compartidos.
+:::
+::: {.clave}
+<span class="titulo">Copia profunda</span>
+
+Copia también el contenido de cada fila, creando objetos nuevos e independientes.
+:::
+:::
+
+```java
+int[][] original = {{1, 2}, {3, 4}};
+int[][] copia = original.clone();
+copia[0][0] = 999;
+System.out.println(original[0][0]); // imprime 999: copia superficial
+```
+
+::: {.destacado}
+Para una copia real hay que clonar cada fila:
+```java
+int[][] profunda = new int[original.length][];
+for (int i = 0; i < original.length; i++) {
+    profunda[i] = original[i].clone();
+}
+```
+:::
+
+## Python: lista de listas {.center}
+
+```python
+filas, columnas = 3, 4
+matriz = [[0] * columnas for _ in range(filas)]
+```
+
+::: {.neutro}
+Python no tiene un arreglo bidimensional nativo. El módulo `array` es de una sola dimensión; su
+propia documentación remite a NumPy para trabajo numérico serio con matrices.
+:::
+
+## Qué hace el operador * sobre una lista {.center}
+
+::: {.destacado}
+`[valor] * n` crea una lista repitiendo `n` veces la misma referencia a `valor`, no `n` copias
+independientes. Si `valor` es a su vez una lista mutable, las `n` posiciones apuntan al mismo
+objeto.
+:::
+
+## El bug clásico de multiplicar listas {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda, tres flechas etiquetadas mal apuntan a una sola lista compartida. A la derecha, tres flechas etiquetadas bien apuntan cada una a su propia lista independiente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b2e" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="180" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">mal = [[0]*2] * 3</text>
+  <text x="580" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">bien = [[0]*2 for _ in range(3)]</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="35" width="60" height="30" rx="5"/><rect x="60" y="80" width="60" height="30" rx="5"/><rect x="60" y="125" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="90" y="54">fila 0</text><text x="90" y="99">fila 1</text><text x="90" y="144">fila 2</text></g>
+  <rect x="220" y="80" width="70" height="34" fill="#e4f2f1" stroke="#8fc9c5" rx="5"/>
+  <text x="255" y="101" text-anchor="middle" font-size="11" font-weight="700" fill="#0e6f6c">[0, 0]</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#b2e)"><path d="M120,50 L216,88"/><path d="M120,95 L216,97"/><path d="M120,140 L216,106"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="460" y="35" width="60" height="30" rx="5"/><rect x="460" y="80" width="60" height="30" rx="5"/><rect x="460" y="125" width="60" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="490" y="54">fila 0</text><text x="490" y="99">fila 1</text><text x="490" y="144">fila 2</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="610" y="35" width="70" height="30" rx="5"/><rect x="610" y="80" width="70" height="30" rx="5"/><rect x="610" y="125" width="70" height="30" rx="5"/></g>
+  <g text-anchor="middle" font-size="10.5" font-weight="700" fill="#0e6f6c"><text x="645" y="54">[0, 0]</text><text x="645" y="99">[0, 0]</text><text x="645" y="144">[0, 0]</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#b2e)"><path d="M520,50 L606,50"/><path d="M520,95 L606,95"/><path d="M520,140 L606,140"/></g>
+  <text x="380" y="195" text-anchor="middle" font-size="11" fill="#5b6876">El operador * repite la misma referencia; la comprension crea una lista nueva en cada vuelta.</text>
+</svg>
+:::
+
+```python
+mal = [[0] * 2] * 3
+mal[0][0] = 5      # las tres filas cambian: [[5, 0], [5, 0], [5, 0]]
+
+bien = [[0] * 2 for _ in range(3)]
+bien[0][0] = 5     # solo la fila 0 cambia
+```
+
+::: {.destacado}
+Un tablero del juego de la vida construido como `[[False] * ancho] * alto` sufre el mismo bug:
+marcar una celda viva enciende toda una columna en todas las filas a la vez.
+:::
+
+## NumPy, en una diapositiva {.center}
+
+::: {.tarjetas}
+::: {.clave}
+<span class="titulo">ndarray</span>
+
+Tamaño fijo, homogéneo y contiguo en memoria, con operaciones precompiladas en C.
+:::
+::: {}
+<span class="titulo">Construcción</span>
+
+`np.array(...)`, `np.zeros((filas, columnas))`, `np.ones(...)`, `np.eye(n)`.
+:::
+:::
+
+::: {.neutro}
+Queda fuera del detalle de hoy, pero es la herramienta real para trabajo numérico con matrices.
+:::
+
+## Operaciones básicas sobre matrices {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+```java
+// suma elemento a elemento
+for (int i = 0; i < filas; i++)
+    for (int j = 0; j < columnas; j++)
+        r[i][j] = a[i][j] + b[i][j];
+```
+:::
+::: {.column width="50%"}
+```python
+# transposicion
+transpuesta = [[fila[i] for fila in m]
+               for i in range(len(m[0]))]
+```
+:::
+:::
+
+## Reto 1 {.center}
+
+::: {.pasos}
+1. `tablero = [[0] * 3] * 3`
+2. `tablero[1][1] = 9`
+3. ¿Cómo queda `tablero` completo después de esa asignación?
+:::
+
+## Reto 2 {.center}
+
+```java
+int[][] tablero = new int[3][];
+tablero[0][0] = 1;
+```
+
+::: {.pasos}
+1. `new int[3][]` crea el arreglo exterior, pero no las filas.
+2. La segunda línea escribe en la fila 0 antes de crearla.
+3. ¿Qué excepción se lanza, y qué línea hay que agregar antes para evitarla?
+:::
+
+## Bloque 3. Pilas y colas con vectores {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 3
+:::
+
+Dos contratos clásicos, resueltos con el mismo arreglo que crece.
+
+## Qué es una pila {.center}
+
+::: {.destacado}
+Una pila es una estructura donde el último elemento en entrar es el primero en salir: LIFO,
+last in, first out.
+:::
+
+::: {.neutro}
+Analogía: una pila de platos. Solo puedes tomar el de encima, y solo puedes dejar uno nuevo
+encima de todos los demás.
+:::
+
+## La operación apilar {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="C llega como un elemento nuevo, separado de la pila; despues de apilar C, la pila queda con C encima de B encima de A" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3g" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="160" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">antes</text>
+  <text x="560" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">despues de apilar(C)</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="100" y="130" width="120" height="40"/><rect x="100" y="170" width="120" height="40"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="160" y="155">B</text><text x="160" y="195">A</text></g>
+  <text x="345" y="40" text-anchor="middle" font-size="11" fill="#5b6876">C es un elemento nuevo, todavia fuera de la pila</text>
+  <rect x="300" y="50" width="90" height="40" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="345" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c">C</text>
+  <path d="M390,70 L496,70" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3g)"/>
+  <text x="443" y="90" text-anchor="middle" font-size="11" font-weight="700" fill="#0e6f6c">apilar(C)</text>
+  <rect x="500" y="90" width="120" height="40" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="500" y="130" width="120" height="40"/><rect x="500" y="170" width="120" height="40"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600"><text x="560" y="115" fill="#0e6f6c">C</text><text x="560" y="155" fill="#12324f">B</text><text x="560" y="195" fill="#12324f">A</text></g>
+</svg>
+:::
+
+::: {.destacado}
+Apilar agrega un elemento nuevo justo encima del último. En un arreglo, eso significa escribir en
+la primera casilla libre y avanzar el contador de tamaño.
+:::
+
+## La operación desapilar {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes hay tres elementos apilados con C encima; despues de desapilar, C sale y quedan solo A y B" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3h" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="160" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">antes</text>
+  <text x="560" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">despues de desapilar()</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="100" y="130" width="120" height="40"/><rect x="100" y="90" width="120" height="40"/></g>
+  <rect x="100" y="50" width="120" height="40" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="13" font-weight="600"><text x="160" y="75" fill="#0e6f6c">C</text><text x="160" y="115" fill="#12324f">B</text><text x="160" y="155" fill="#12324f">A</text></g>
+  <path d="M220,70 C340,70 340,100 480,110" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3h)"/>
+  <text x="340" y="90" text-anchor="middle" font-size="11" font-weight="700" fill="#0e6f6c">desapilar() devuelve C</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="500" y="90" width="120" height="40"/><rect x="500" y="130" width="120" height="40"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="560" y="115">B</text><text x="560" y="155">A</text></g>
+</svg>
+:::
+
+::: {.destacado}
+Desapilar quita y devuelve el elemento de arriba. En un arreglo, eso es leer la última casilla
+ocupada y retroceder el contador de tamaño.
+:::
+
+## Las operaciones cima y estaVacia {.center}
+
+::: {.tarjetas}
+::: {}
+<span class="titulo">cima()</span>
+
+Devuelve el elemento de arriba sin quitarlo de la pila.
+:::
+::: {}
+<span class="titulo">estaVacia()</span>
+
+Responde si la pila no tiene ningún elemento ocupado.
+:::
+:::
+
+## Diseño de la clase Pila {.center}
+
+::: {.tarjetas}
+::: {.clave}
+<span class="titulo">datos</span>
+
+`Object[]`, el arreglo que guarda los elementos.
+:::
+::: {}
+<span class="titulo">tamaño</span>
+
+`int`, cuántos elementos hay ocupados de verdad.
+:::
+:::
+
+## Pila completa en Java (1 de 2) {.center}
+
+```java
+public class Pila {
+    private Object[] datos;
+    private int tamano;
+    public Pila() { datos = new Object[10]; tamano = 0; }
+    public void apilar(Object elemento) {
+        if (tamano == datos.length) redimensionar();
+        datos[tamano] = elemento;
+        tamano++;
+    }
+    public Object desapilar() {
+        if (estaVacia()) throw new IllegalStateException("la pila esta vacia");
+        tamano--;
+        Object e = datos[tamano];
+        datos[tamano] = null;
+        return e;
+    }
+```
+
+## Pila completa en Java (2 de 2) {.center}
+
+::: {.neutro}
+Continúa la misma clase `Pila` de la diapositiva anterior.
+:::
+
+```java
+    public Object cima() {
+        if (estaVacia()) throw new IllegalStateException("la pila esta vacia");
+        return datos[tamano - 1];
+    }
+    public boolean estaVacia() { return tamano == 0; }
+    private void redimensionar() {
+        Object[] nuevo = new Object[datos.length * 2];
+        System.arraycopy(datos, 0, nuevo, 0, datos.length);
+        datos = nuevo;
+    }
+}
+```
+
+## Pila completa en Python (1 de 2) {.center}
+
+```python
+class Pila:
+    def __init__(self):
+        self._datos = [None] * 10
+        self._tamano = 0
+    def apilar(self, elemento):
+        if self._tamano == len(self._datos):
+            self._redimensionar()
+        self._datos[self._tamano] = elemento
+        self._tamano += 1
+    def desapilar(self):
+        if self.esta_vacia():
+            raise IndexError("la pila esta vacia")
+        self._tamano -= 1
+        e = self._datos[self._tamano]
+        self._datos[self._tamano] = None
+        return e
+```
+
+## Pila completa en Python (2 de 2) {.center}
+
+::: {.neutro}
+Continúa la misma clase `Pila` de la diapositiva anterior.
+:::
+
+```python
+    def cima(self):
+        if self.esta_vacia():
+            raise IndexError("la pila esta vacia")
+        return self._datos[self._tamano - 1]
+    def esta_vacia(self):
+        return self._tamano == 0
+    def _redimensionar(self):
+        nuevos = [None] * (len(self._datos) * 2)
+        for i in range(self._tamano):
+            nuevos[i] = self._datos[i]
+        self._datos = nuevos
+```
+
+## Redimensionar: el orden importa {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo de capacidad 4 lleno se copia a uno nuevo de capacidad 8, y solo despues de terminar la copia se escribe el quinto elemento" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="40" y="30" width="50" height="40"/><rect x="90" y="30" width="50" height="40"/><rect x="140" y="30" width="50" height="40"/><rect x="190" y="30" width="50" height="40"/></g>
+  <text x="115" y="86" text-anchor="middle" font-size="10.5" fill="#5b6876">capacidad 4, llena</text>
+  <path d="M260,50 L300,50" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3b)"/>
+  <text x="280" y="40" text-anchor="middle" font-size="10" font-weight="700" fill="#0e6f6c">1. copia</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="320" y="30" width="46" height="40"/><rect x="366" y="30" width="46" height="40"/><rect x="412" y="30" width="46" height="40"/><rect x="458" y="30" width="46" height="40"/></g>
+  <rect x="504" y="30" width="46" height="40" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="550" y="30" width="46" height="40"/><rect x="596" y="30" width="46" height="40"/><rect x="642" y="30" width="46" height="40"/></g>
+  <text x="480" y="10" text-anchor="middle" font-size="10" font-weight="700" fill="#0e6f6c">2. escribe el 5</text>
+  <text x="480" y="86" text-anchor="middle" font-size="10.5" fill="#5b6876">capacidad 8, con espacio de sobra</text>
+  <text x="380" y="140" text-anchor="middle" font-size="11.5" fill="#5b6876">Primero se crece y se copia; solo despues se escribe el elemento nuevo.</text>
+</svg>
+:::
+
+## Cuánto crecen las estructuras reales {.center}
+
+| Estructura | Factor de crecimiento | ¿Parte del contrato público? |
+|---|---|---|
+| `java.util.Vector` | duplica (x2) | Sí, documentado en el Javadoc |
+| `java.util.ArrayList` | cerca de x1,5 | No, solo promete O(1) amortizado |
+| lista de CPython | fórmula propia, tiende a x1,125 | No, es un detalle de implementación |
+
+::: {.neutro}
+La `Pila` de hoy duplica, como `Vector`, porque el objetivo es entender el mecanismo, no copiar
+una fórmula de producción.
+:::
+
+## Por qué el costo amortizado es O(1) {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Barras que representan el costo de copiar en cada redimensionamiento: 1, 2, 4 y 8 elementos copiados, cuya suma 15 es menor que el doble de la capacidad final, 16" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Costo de copiar en cada redimensionamiento</text>
+  <g fill="#8fb3d1"><rect x="120" y="150" width="70" height="10"/><rect x="240" y="130" width="70" height="30"/><rect x="360" y="90" width="70" height="70"/><rect x="480" y="20" width="70" height="140"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="155" y="172">1</text><text x="275" y="172">2</text><text x="395" y="172">4</text><text x="515" y="172">8</text></g>
+  <text x="380" y="188" text-anchor="middle" font-size="11.5" fill="#5b6876">1 + 2 + 4 + 8 = 15, menos del doble de la capacidad final (16): el promedio por operacion es O(1).</text>
+</svg>
+:::
+
+::: {.fuente}
+Fuente: Cormen, Leiserson, Rivest y Stein. *Introduction to Algorithms.* Capítulo sobre tablas
+dinámicas.
+:::
+
+## Reto 1 {.center}
+
+::: {.pasos}
+1. Una `Pila` empieza con capacidad 4 y duplica al llenarse.
+2. Se hacen 8 llamadas seguidas a `apilar`.
+3. ¿En qué llamada exacta ocurre el redimensionamiento, y qué capacidad final queda?
+:::
+
+## Referencias obsoletas: por qué desapilar pone null {.center}
+
+```java
+public Object desapilar() {
+    tamano--;
+    Object e = datos[tamano];
+    datos[tamano] = null;   // sin esto, la referencia queda viva
+    return e;
+}
+```
+
+::: {.destacado}
+Sin ese `null`, el recolector de basura no puede liberar el objeto aunque ya lo hayas olvidado
+lógicamente. *Effective Java* de Joshua Bloch usa exactamente una pila con arreglo como ejemplo
+de este problema, al que llama referencias obsoletas.
+:::
+
+## Qué es una cola {.center}
+
+::: {.destacado}
+Una cola es una estructura donde el primer elemento en entrar es el primero en salir: FIFO,
+first in, first out.
+:::
+
+::: {.neutro}
+Analogía: la fila de un banco. Quien llega primero, se atiende primero; los nuevos se suman al
+final de la fila.
+:::
+
+## La operación encolar {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes hay dos elementos en fila, A y B; despues de encolar C, C se agrega al final" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3i" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="140" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">antes</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="80" y="35" width="90" height="42"/><rect x="170" y="35" width="90" height="42"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="125" y="61">A</text><text x="215" y="61">B</text></g>
+  <text x="125" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">frente</text>
+  <text x="215" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">fin</text>
+  <path d="M280,56 C340,56 340,56 400,56" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3i)"/>
+  <text x="340" y="40" text-anchor="middle" font-size="11" font-weight="700" fill="#0e6f6c">encolar(C)</text>
+  <text x="560" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">despues</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="420" y="35" width="90" height="42"/><rect x="510" y="35" width="90" height="42"/></g>
+  <rect x="600" y="35" width="90" height="42" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="13" font-weight="600"><text x="465" y="61" fill="#12324f">A</text><text x="555" y="61" fill="#12324f">B</text><text x="645" y="61" fill="#0e6f6c">C</text></g>
+  <text x="465" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">frente</text>
+  <text x="645" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">fin</text>
+</svg>
+:::
+
+::: {.destacado}
+Encolar agrega un elemento por el extremo llamado fin, sin tocar el resto de la fila.
+:::
+
+## La operación desencolar {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes hay tres elementos en fila, A, B y C; despues de desencolar, A sale por el frente y quedan B y C" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3j" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="175" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">antes</text>
+  <rect x="40" y="35" width="90" height="42" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="130" y="35" width="90" height="42"/><rect x="220" y="35" width="90" height="42"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600"><text x="85" y="61" fill="#0e6f6c">A</text><text x="175" y="61" fill="#12324f">B</text><text x="265" y="61" fill="#12324f">C</text></g>
+  <text x="85" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">frente</text>
+  <path d="M330,56 L480,56" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3j)"/>
+  <text x="405" y="42" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0e6f6c">desencolar()</text>
+  <text x="405" y="82" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0e6f6c">devuelve A</text>
+  <text x="590" y="20" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">despues</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="500" y="35" width="90" height="42"/><rect x="590" y="35" width="90" height="42"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="545" y="61">B</text><text x="635" y="61">C</text></g>
+  <text x="545" y="95" text-anchor="middle" font-size="10.5" fill="#5b6876">frente</text>
+</svg>
+:::
+
+::: {.destacado}
+Desencolar quita y devuelve el elemento del extremo llamado frente, el más antiguo de la fila.
+:::
+
+## Por qué la cola ingenua falla {.center}
+
+```python
+cola = []
+cola.append(x)          # entra al final, esto si es barato
+primero = cola.pop(0)   # sale del inicio: O(n) cada vez
+```
+
+::: {.destacado}
+Quitar siempre de la posición 0 desplaza todo lo demás. La solución no es mover los elementos,
+es mover los índices.
+:::
+
+## Qué es un arreglo circular {.center}
+
+::: {.destacado}
+Un arreglo circular es un arreglo normal donde, al llegar a la última casilla, el siguiente
+índice vuelve a la posición 0 en vez de salirse del arreglo.
+:::
+
+::: {.neutro}
+Analogía: una pista de atletismo. Un corredor que llega a la meta no se detiene contra una pared:
+sigue corriendo y vuelve al punto de partida, dando otra vuelta sobre la misma pista.
+:::
+
+## El arreglo circular en mecánica {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo circular de capacidad 6 con frente en la posicion 4 y tamano 3, ocupando las posiciones 4, 5 y 0 de forma envuelta" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">frente = 4, tamano = 3: ocupa 4, 5 y 0 (envuelto)</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="180" y="50" width="80" height="50"/><rect x="260" y="50" width="80" height="50"/><rect x="340" y="50" width="80" height="50"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="100" y="50" width="80" height="50"/><rect x="420" y="50" width="80" height="50"/><rect x="500" y="50" width="80" height="50"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="140" y="42">0</text><text x="220" y="42">1</text><text x="300" y="42">2</text><text x="380" y="42">3</text><text x="460" y="42">4</text><text x="540" y="42">5</text></g>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="140" y="80">c</text><text x="460" y="80">a</text><text x="540" y="80">b</text></g>
+  <text x="460" y="122" text-anchor="middle" font-size="11" font-weight="600" fill="#0e6f6c">frente</text>
+  <rect x="230" y="140" width="300" height="42" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="166" text-anchor="middle" font-size="12" font-weight="700" fill="#12324f">siguiente posicion = (frente + tamano) % capacidad</text>
+  <text x="380" y="205" text-anchor="middle" font-size="11" fill="#5b6876">Ni encolar ni desencolar mueven elementos: solo avanzan indices con modulo.</text>
+</svg>
+:::
+
+::: {.neutro}
+El operador módulo (`%`) devuelve el resto de una división. Por eso al llegar a la posición 6 en
+un arreglo de capacidad 6, `6 % 6 = 0`, y el índice vuelve al inicio.
+:::
+
+## La ambigüedad de frente == fin {.center}
+
+::: {.destacado}
+Con solo dos índices, una cola vacía y una cola llena pueden verse exactamente igual:
+`frente == fin` en ambos casos. Hace falta un tercer dato para distinguirlas.
+:::
+
+::: {.tarjetas}
+::: {.clave}
+<span class="titulo">Solución A: contador de tamaño</span>
+
+Guardar cuántos elementos hay, además de `frente`. Es la que usa esta implementación.
+:::
+::: {}
+<span class="titulo">Solución B: sacrificar un espacio</span>
+
+Nunca llenar la última casilla. La documentación de buffers circulares del kernel de Linux la usa,
+y de paso permite cambiar el módulo por una máscara AND si la capacidad es potencia de 2.
+:::
+:::
+
+## Cola completa en Java (1 de 2) {.center}
+
+```java
+public class Cola {
+    private Object[] datos;
+    private int frente;
+    private int tamano;
+    public Cola() { datos = new Object[10]; frente = 0; tamano = 0; }
+    public void encolar(Object elemento) {
+        if (tamano == datos.length) redimensionar();
+        int posicion = (frente + tamano) % datos.length;
+        datos[posicion] = elemento;
+        tamano++;
+    }
+    public Object frente() {
+        if (estaVacia()) throw new IllegalStateException("la cola esta vacia");
+        return datos[frente];
+    }
+    public boolean estaVacia() { return tamano == 0; }
+```
+
+## Cola completa en Java (2 de 2) {.center}
+
+::: {.neutro}
+Continúa la misma clase `Cola` de la diapositiva anterior.
+:::
+
+```java
+    public Object desencolar() {
+        if (estaVacia()) throw new IllegalStateException("la cola esta vacia");
+        Object e = datos[frente];
+        datos[frente] = null;
+        frente = (frente + 1) % datos.length;
+        tamano--;
+        return e;
+    }
+    private void redimensionar() {
+        Object[] nuevo = new Object[datos.length * 2];
+        for (int i = 0; i < tamano; i++) {
+            nuevo[i] = datos[(frente + i) % datos.length];
+        }
+        datos = nuevo;
+        frente = 0;
+    }
+}
+```
+
+## Cola completa en Python (1 de 2) {.center}
+
+```python
+class Cola:
+    def __init__(self):
+        self._datos = [None] * 10
+        self._frente = 0
+        self._tamano = 0
+    def encolar(self, elemento):
+        if self._tamano == len(self._datos):
+            self._redimensionar()
+        posicion = (self._frente + self._tamano) % len(self._datos)
+        self._datos[posicion] = elemento
+        self._tamano += 1
+    def frente(self):
+        if self.esta_vacia():
+            raise IndexError("la cola esta vacia")
+        return self._datos[self._frente]
+    def esta_vacia(self):
+        return self._tamano == 0
+```
+
+## Cola completa en Python (2 de 2) {.center}
+
+::: {.neutro}
+Continúa la misma clase `Cola` de la diapositiva anterior.
+:::
+
+```python
+    def desencolar(self):
+        if self.esta_vacia():
+            raise IndexError("la cola esta vacia")
+        e = self._datos[self._frente]
+        self._datos[self._frente] = None
+        self._frente = (self._frente + 1) % len(self._datos)
+        self._tamano -= 1
+        return e
+    def _redimensionar(self):
+        vieja = len(self._datos)
+        nuevos = [None] * (vieja * 2)
+        for i in range(self._tamano):
+            nuevos[i] = self._datos[(self._frente + i) % vieja]
+        self._datos = nuevos
+        self._frente = 0
+```
+
+## Reto 2 {.center}
+
+```java
+// version con un bug: sin contador de tamano
+public boolean estaVacia() { return frente == fin; }
+```
+
+::: {.pasos}
+1. Una cola de capacidad 6 recibe 6 elementos seguidos: `fin` termina exactamente donde empezó
+   `frente`.
+2. `estaVacia()` compara solo `frente == fin`.
+3. ¿Qué responde `estaVacia()` en ese momento, y qué pasa si llega un séptimo elemento?
+:::
+
+## Redimensionar una cola circular no es una copia simple {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo circular con el elemento c en la posicion 0 y a, b en las posiciones 4 y 5, envueltos; al redimensionar se linealizan en un arreglo nuevo en el orden logico a, b, c" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3f" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="150" y="18" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">arreglo envuelto (frente = 4)</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="80" y="30" width="50" height="40"/><rect x="130" y="30" width="50" height="40"/><rect x="180" y="30" width="50" height="40"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="30" y="30" width="50" height="40"/><rect x="230" y="30" width="50" height="40"/><rect x="280" y="30" width="50" height="40"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="55" y="55">c</text><text x="255" y="55">a</text><text x="305" y="55">b</text></g>
+  <g text-anchor="middle" font-size="10" fill="#5b6876"><text x="55" y="86">0</text><text x="255" y="86">4</text><text x="305" y="86">5</text></g>
+  <path d="M330,50 L390,50" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b3f)"/>
+  <text x="360" y="40" text-anchor="middle" font-size="10" font-weight="700" fill="#0e6f6c">linealizar</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="410" y="30" width="50" height="40"/><rect x="460" y="30" width="50" height="40"/><rect x="510" y="30" width="50" height="40"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="560" y="30" width="50" height="40"/><rect x="610" y="30" width="50" height="40"/><rect x="660" y="30" width="50" height="40"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="435" y="55">a</text><text x="485" y="55">b</text><text x="535" y="55">c</text></g>
+  <text x="380" y="145" text-anchor="middle" font-size="11" fill="#5b6876">Copiar por posicion mezclaria el orden; hay que leer desde frente con modulo y escribir desde 0.</text>
+</svg>
+:::
+
+## Complejidad de la cola {.center}
+
+| Operación | Peor caso | Amortizado |
+|---|---|---|
+| `encolar` | O(n) | O(1) |
+| `desencolar` | O(1) | O(1) |
+| `frente` | O(1) | O(1) |
+| `estaVacia` | O(1) | O(1) |
+
+## El pago real: estructuras ya construidas {.center}
+
+::: {.tarjetas}
+::: {.clave}
+<span class="titulo">java.util.ArrayDeque</span>
+
+El propio Javadoc recomienda usarlo en vez de `Stack` como pila, y en vez de `LinkedList` como
+cola.
+:::
+::: {}
+<span class="titulo">collections.deque de Python</span>
+
+O(1) documentado en ambos extremos, frente a O(n) de `list.pop(0)` o `list.insert(0, x)`.
+:::
+:::
+
+::: {.destacado}
+Es exactamente la misma técnica de arreglo circular que acabas de construir a mano, ya probada
+y lista para usar.
+:::
+
+## Lo que conecta toda la unidad {.center}
+
+::: {.recuento}
+- La notación O compara algoritmos por cómo escalan, no por velocidad de máquina
+- Un arreglo calcula la dirección de cada casilla: acceso O(1)
+- Insertar o eliminar en medio cuesta O(n) por el desplazamiento
+- Java reserva memoria fija; crecer significa copiar a un arreglo nuevo
+- Capacidad y tamaño son ideas distintas: una es espacio, la otra es uso real
+- Una matriz en Java es un arreglo de arreglos, filas independientes
+- `[[0]*n]*m` comparte una sola fila entre todas las referencias
+- Redimensionar siempre copia primero y escribe después
+- El costo de redimensionar, repartido entre todas las llamadas, es O(1) amortizado
+- El arreglo circular mueve índices con módulo, nunca elementos
+- Olvidar limpiar una referencia deja basura que el recolector no puede liberar
+:::
+
+## Estructuras fijas: el resumen en una idea {.center}
+
+::: {.destacado}
+Un arreglo resuelve todo esto con aritmética sobre memoria contigua. El costo aparece
+exactamente cuando algo tiene que moverse o crecer, nunca antes.
+:::
