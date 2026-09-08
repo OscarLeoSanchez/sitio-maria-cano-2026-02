@@ -1,0 +1,472 @@
+---
+title: "Actividad 2. La veterinaria, de cero al modelo completo"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|            |                                     |
+|------------|-------------------------------------|
+| Asignatura | Base de datos                       |
+| Unidad     | Unidad 2. Modelo entidad relación   |
+:::
+
+Los dos temas de esta unidad enseñaron cada pieza del modelo entidad relación por separado, la
+entidad y el atributo en el Tema 1, la cardinalidad y la participación en el Tema 2, siempre sobre el
+mismo negocio de ejemplo, una cafetería. Esta actividad cierra la unidad con un negocio distinto, una
+clínica veterinaria, para que apliques esas piezas de punta a punta, desde un enunciado sin ninguna
+entidad marcada hasta el diagrama completo en las dos notaciones. El punto donde se detiene esta
+actividad es el mismo donde se detuvo el Tema 2, con el modelo dibujado y las llaves foráneas ya
+anticipadas, sin llegar todavía a escribir una sola sentencia `CREATE TABLE`, porque ese paso formal
+le corresponde a la Unidad 3.
+
+## Objetivos
+
+Al terminar esta actividad puedes:
+
+1. **Identificar** las entidades, los atributos y las relaciones de un negocio nuevo a partir de su
+   descripción en prosa, sin que nadie las marque de antemano.
+2. **Dibujar** el modelo entidad relación completo de ese negocio, en notación de Chen y en notación
+   de pata de gallo.
+3. **Decidir** la cardinalidad y la participación de cada relación, con la misma justificación de
+   negocio que usaste en el Tema 2.
+
+## El caso: una clínica veterinaria
+
+Imagina que la recepción de una clínica veterinaria registra cada cita en una sola hoja de cálculo,
+con el nombre de la mascota, el de su dueño, el teléfono de ese dueño, el veterinario que la atendió,
+el tratamiento aplicado y el costo, todo mezclado en las mismas columnas.
+
+::: {.tabla-ancha}
+| Cita | Fecha | Mascota | Especie | Dueño | Teléfono del dueño | Veterinario | Tratamiento | Costo |
+|---|---|---|---|---|---|---|---|---|
+| 501 | 2026-09-01 | Max | Perro | Camila Torres | 300 222 1144 | Paola Vélez | Vacunación antirrábica | 45000 |
+| 502 | 2026-09-01 | Max | Perro | Camila Torres | 300 222 1144 | Julián Ospina | Consulta general | 60000 |
+| 503 | 2026-09-03 | Luna | Gato | Camila Torres | 300 222 1144 | Paola Vélez | Desparasitación | 35000 |
+| 504 | 2026-09-05 | Rocky | Perro | Jorge Salazar | 301 555 9988 | Paola Vélez | Consulta general | 60000 |
+:::
+
+Fíjate en el teléfono de Camila Torres, repetido de forma idéntica en las filas 501, 502 y 503,
+aunque dos de esas tres filas ni siquiera son de la misma mascota, la 501 y la 502 son de Max y la
+503 es de Luna. Antes de seguir, piensa qué pasa si Camila cambia de número y alguien corrige la fila
+501 sin corregir también la 503, y cuántos sustantivos distintos alcanzas a separar en esta tabla si
+te olvidas por un momento de que está escrita en filas y columnas.
+
+El teléfono no es un dato de la cita ni de la mascota, es un dato del dueño, y por eso vuelve a
+aparecer cada vez que Camila trae a cualquiera de sus mascotas, sin que eso implique que el negocio
+tenga dos números distintos para la misma persona. Esa misma pregunta, qué sustantivo es dueño de
+cada dato, es la que resuelves en los siguientes cuatro pasos, en el mismo orden en que la resolvió
+el Tema 2 con la cafetería.
+
+## Paso 1. Encuentra las entidades
+
+Leída con cuidado, la tabla nombra cinco tipos de objetos distinguibles entre sí, aunque no todos
+aparecen como columnas separadas a primera vista. `Dueño` y `Mascota` ya tienen su propia columna.
+`Veterinario` también tiene la suya, aunque solo aparece como un nombre repetido. `Tratamiento`
+aparece igual, como un texto repetido en vez de un catálogo aparte. Y `Cita`, la fila entera, es en sí
+misma una entidad, con su propio identificador, el número 501, 502, 503 o 504, aunque a simple vista
+se confunda con toda la tabla porque cada fila de la hoja de cálculo es exactamente una cita.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco rectángulos con los nombres de las entidades encontradas en la tabla plana de la veterinaria: Dueño, Mascota y Veterinario en la fila superior, Cita y Tratamiento en la fila inferior" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cinco sustantivos distinguibles dentro de la tabla plana</text>
+  <rect x="20" y="40" width="150" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="95" y="70" font-size="13.5" font-weight="600" fill="#12324f" text-anchor="middle">Dueño</text>
+  <rect x="305" y="40" width="150" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="70" font-size="13.5" font-weight="600" fill="#12324f" text-anchor="middle">Mascota</text>
+  <rect x="590" y="40" width="150" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="665" y="70" font-size="13.5" font-weight="600" fill="#12324f" text-anchor="middle">Veterinario</text>
+  <rect x="210" y="130" width="150" height="50" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="285" y="160" font-size="13.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">Cita</text>
+  <rect x="400" y="130" width="150" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="475" y="160" font-size="13.5" font-weight="600" fill="#12324f" text-anchor="middle">Tratamiento</text>
+  <text x="380" y="196" font-size="11" fill="#5b6876" text-anchor="middle">Dueño y Mascota ya tenían columna propia; Veterinario y Tratamiento se repiten como texto; Cita es cada fila</text>
+</svg>
+
+:::
+
+## Paso 2. Asigna los atributos a cada entidad
+
+`Dueño` y `Mascota` son las dos entidades con más variedad de atributos en este caso, así que
+conviene dibujarlas primero con la notación completa de Chen, la misma que usaste en el Tema 1 para
+`Cliente`.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda la entidad Dueño con tres atributos, id_dueño simple y subrayado como clave primaria, telefono multivaluado dibujado con óvalo doble y direccion simple; a la derecha la entidad Mascota con id_mascota subrayado como clave primaria, fecha_nacimiento simple y edad derivada dibujada con óvalo punteado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro formas de atributo, repartidas entre dos entidades del caso</text>
+  <line x1="380" y1="24" x2="380" y2="312" stroke="#cfd8e3" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <line x1="150" y1="145" x2="98" y2="82" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="230" y1="145" x2="292" y2="85" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="190" y1="195" x2="190" y2="254" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="525" y1="145" x2="488" y2="82" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="605" y1="145" x2="668" y2="82" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="570" y1="195" x2="570" y2="254" stroke="#8fb3d1" stroke-width="1.6"/>
+  <rect x="115" y="145" width="150" height="50" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="190" y="175" font-size="14.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Dueño</text>
+  <rect x="495" y="145" width="150" height="50" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="570" y="175" font-size="14.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Mascota</text>
+  <ellipse cx="70" cy="55" rx="58" ry="26" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="70" y="51" font-size="11.5" fill="#12324f" text-anchor="middle" text-decoration="underline">id_dueño</text>
+  <text x="70" y="66" font-size="10.5" fill="#5b6876" text-anchor="middle">simple, clave primaria</text>
+  <ellipse cx="310" cy="55" rx="58" ry="28" fill="#eef4fa" stroke="#c7d6e6"/>
+  <ellipse cx="310" cy="55" rx="46" ry="20" fill="none" stroke="#c7d6e6"/>
+  <text x="310" y="51" font-size="11.5" fill="#12324f" text-anchor="middle">telefono</text>
+  <text x="310" y="66" font-size="10.5" fill="#5b6876" text-anchor="middle">multivaluado</text>
+  <ellipse cx="190" cy="280" rx="62" ry="26" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="190" y="276" font-size="11.5" fill="#12324f" text-anchor="middle">direccion</text>
+  <text x="190" y="291" font-size="10.5" fill="#5b6876" text-anchor="middle">simple</text>
+  <ellipse cx="460" cy="55" rx="58" ry="26" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="460" y="51" font-size="11.5" fill="#12324f" text-anchor="middle" text-decoration="underline">id_mascota</text>
+  <text x="460" y="66" font-size="10.5" fill="#5b6876" text-anchor="middle">simple, clave primaria</text>
+  <ellipse cx="690" cy="55" rx="60" ry="26" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="690" y="51" font-size="11.5" fill="#12324f" text-anchor="middle">fecha_nacimiento</text>
+  <text x="690" y="66" font-size="10.5" fill="#5b6876" text-anchor="middle">simple</text>
+  <ellipse cx="570" cy="280" rx="58" ry="26" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"/>
+  <text x="570" y="276" font-size="11.5" fill="#12324f" text-anchor="middle">edad</text>
+  <text x="570" y="291" font-size="10.5" fill="#0e6f6c" text-anchor="middle">derivada de fecha_nacimiento</text>
+</svg>
+
+:::
+
+`id_dueño` y `id_mascota` son atributos simples y monovaluados, y cada uno basta por sí solo para
+identificar a cualquier entidad de su conjunto, así que cada uno es clave primaria. `telefono` es
+multivaluado porque un mismo dueño puede tener un celular y un fijo vigentes a la vez, exactamente el
+mismo caso de `Cliente` en el Tema 1, y por la misma razón no puede guardarse como un texto aplanado
+en una sola columna. `edad` es derivada, porque no se guarda directamente sino que se calcula
+restando `fecha_nacimiento` de la fecha de hoy, así que cambia solo porque el tiempo pasa, nunca
+porque alguien la edite a mano.
+
+Las otras tres entidades tienen atributos más sencillos, todos simples y monovaluados, así que basta
+con una tabla en vez de un diagrama nuevo.
+
+| Entidad | Atributos | Clave primaria |
+|---|---|---|
+| `Veterinario` | nombre, especialidad | `id_veterinario` |
+| `Cita` | fecha, hora | `id_cita` |
+| `Tratamiento` | nombre, precio_base | `id_tratamiento` |
+
+## Paso 3. Encuentra las relaciones entre las entidades
+
+Con las cinco entidades ya separadas, toca conectar las que de verdad tienen una asociación en el
+negocio, con el mismo verbo que usaste en el Tema 1 para nombrar `Realiza` y `Contiene` en la
+cafetería. Un dueño posee una o varias mascotas. Una mascota genera una o varias citas a lo largo de
+su vida. Un veterinario atiende una o varias citas. Y cada cita incluye uno o varios tratamientos, con
+un dato propio de esa combinación exacta, el costo que de verdad se cobró en esa cita por ese
+tratamiento, que puede diferir del `precio_base` del catálogo por un descuento o un ajuste puntual.
+Ese costo no le pertenece a `Cita` ni a `Tratamiento` por separado, sino a la pareja concreta de una
+cita con un tratamiento, así que va a colgar de la relación, igual que `cantidad` colgaba de
+`Contiene` en la cafetería. Las cuatro relaciones son binarias, ninguna conecta más de dos conjuntos
+de entidades a la vez.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las cinco entidades conectadas por cuatro relaciones sin cardinalidad todavía: Dueño y Mascota por Posee, Mascota y Cita por Genera, Cita y Veterinario por Atiende, Cita y Tratamiento por Incluye" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro relaciones entre las cinco entidades, todavía sin cardinalidad</text>
+  <line x1="150" y1="60" x2="198" y2="60" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="282" y1="60" x2="330" y2="60" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="390" y1="85" x2="390" y2="144" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="390" y1="196" x2="390" y2="255" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="450" y1="280" x2="498" y2="280" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="582" y1="280" x2="630" y2="280" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="390" y1="305" x2="390" y2="364" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="390" y1="416" x2="390" y2="475" stroke="#8fb3d1" stroke-width="1.6"/>
+  <rect x="30" y="35" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="90" y="65" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Dueño</text>
+  <polygon points="198,60 240,34 282,60 240,86" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="240" y="64" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Posee</text>
+  <rect x="330" y="35" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="390" y="65" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Mascota</text>
+  <polygon points="348,170 390,144 432,170 390,196" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="390" y="174" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Genera</text>
+  <rect x="330" y="255" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="390" y="285" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Cita</text>
+  <polygon points="498,280 540,254 582,280 540,306" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="540" y="284" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Atiende</text>
+  <rect x="630" y="255" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="690" y="285" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Veterinario</text>
+  <polygon points="348,390 390,364 432,390 390,416" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="390" y="394" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Incluye</text>
+  <rect x="330" y="475" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="390" y="505" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Tratamiento</text>
+</svg>
+
+:::
+
+## Paso 4. Cardinalidad y participación de cada relación
+
+Con las cuatro relaciones ya nombradas, falta la pregunta que de verdad decide cómo queda la tabla en
+la Unidad 3, cuántas instancias de un lado se asocian con cuántas del otro, y si cada entidad puede
+quedar sin participar.
+
+`Posee` es uno a muchos, un dueño puede tener varias mascotas, pero cada mascota pertenece a un único
+dueño. En el alcance de este caso, donde toda mascota que aparece ya tiene un dueño registrado y todo
+dueño registrado ya trajo al menos una mascota, la participación es total en los dos lados.
+
+`Genera` también es uno a muchos, una mascota puede generar varias citas a lo largo de su vida, pero
+cada cita es siempre de una única mascota. Aquí la participación es asimétrica, toda cita tiene que
+tener una mascota, así que `Cita` participa de forma total, pero una mascota recién registrada puede
+no tener todavía ninguna cita agendada, así que `Mascota` participa de forma parcial.
+
+`Atiende` es uno a muchos igual que las dos anteriores, un veterinario atiende varias citas, pero cada
+cita la atiende un único veterinario. La participación vuelve a ser asimétrica, toda cita necesita un
+veterinario que la atienda, así que `Cita` es total, pero un veterinario puede no tener ninguna cita
+asignada en un momento dado, así que `Veterinario` es parcial, el mismo caso que `advisor` entre
+instructor y estudiante que ya viste en el Tema 2.
+
+`Incluye` es muchos a muchos, una cita puede incluir varios tratamientos y un mismo tratamiento
+aparece en varias citas distintas. Toda cita tiene que incluir al menos un tratamiento, aunque sea
+una consulta general, así que `Cita` participa de forma total, pero el catálogo de la clínica puede
+tener un tratamiento nuevo que todavía nadie ha aplicado, así que `Tratamiento` participa de forma
+parcial.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El modelo completo de la veterinaria en notación de Chen, con línea doble en cada relación donde la participación es total, línea simple donde es parcial, flecha hacia el lado uno de cada relación uno a muchos, y el atributo costo_aplicado colgando de la relación muchos a muchos Incluye" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="va1" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El modelo completo, en notación de Chen</text>
+  <path d="M150,57 L198,57" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#va1)"/>
+  <line x1="150" y1="63" x2="198" y2="63" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="282" y1="57" x2="330" y2="57" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="282" y1="63" x2="330" y2="63" stroke="#8fb3d1" stroke-width="1.6"/>
+  <path d="M390,85 L390,144" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#va1)"/>
+  <line x1="387" y1="196" x2="387" y2="255" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="393" y1="196" x2="393" y2="255" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="450" y1="277" x2="498" y2="277" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="450" y1="283" x2="498" y2="283" stroke="#8fb3d1" stroke-width="1.6"/>
+  <path d="M582,280 L630,280" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#va1)"/>
+  <line x1="387" y1="305" x2="387" y2="364" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="393" y1="305" x2="393" y2="364" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="390" y1="416" x2="390" y2="475" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="432" y1="390" x2="470" y2="390" stroke="#8fb3d1" stroke-width="1.6"/>
+  <rect x="30" y="35" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="90" y="60" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Dueño</text>
+  <text x="90" y="76" font-size="10" fill="#5b6876" text-anchor="middle">telefono, direccion</text>
+  <polygon points="198,60 240,34 282,60 240,86" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="240" y="64" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Posee</text>
+  <rect x="330" y="35" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="390" y="60" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Mascota</text>
+  <text x="390" y="76" font-size="10" fill="#5b6876" text-anchor="middle">nombre, especie, edad</text>
+  <text x="215" y="106" font-size="10" fill="#0e6f6c" text-anchor="middle">total, 1 a N</text>
+  <polygon points="348,170 390,144 432,170 390,196" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="390" y="174" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Genera</text>
+  <text x="470" y="130" font-size="10" fill="#5b6876" text-anchor="middle">parcial en Mascota, 1 a N</text>
+  <rect x="330" y="255" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="390" y="280" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Cita</text>
+  <text x="390" y="296" font-size="10" fill="#5b6876" text-anchor="middle">fecha, hora</text>
+  <polygon points="498,280 540,254 582,280 540,306" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="540" y="284" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Atiende</text>
+  <text x="595" y="265" font-size="10" fill="#5b6876" text-anchor="middle">parcial</text>
+  <rect x="630" y="255" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="690" y="280" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Veterinario</text>
+  <text x="690" y="296" font-size="10" fill="#5b6876" text-anchor="middle">nombre, especialidad</text>
+  <polygon points="348,390 390,364 432,390 390,416" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="390" y="394" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">Incluye</text>
+  <text x="330" y="340" font-size="10" fill="#5b6876" text-anchor="middle">total, N a M</text>
+  <rect x="330" y="475" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="390" y="500" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Tratamiento</text>
+  <text x="390" y="516" font-size="10" fill="#5b6876" text-anchor="middle">parcial, precio_base</text>
+  <ellipse cx="530" cy="390" rx="62" ry="24" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="530" y="394" font-size="11" fill="#12324f" text-anchor="middle">costo_aplicado</text>
+</svg>
+
+:::
+
+Fíjate en que la flecha solo aparece en tres bordes, el de `Dueño` en `Posee`, el de `Mascota` en
+`Genera` y el de `Veterinario` en `Atiende`, siempre sobre el lado que en la Unidad 3 va a recibir la
+llave foránea. `Incluye` no lleva flecha en ningún extremo, porque en una relación muchos a muchos
+ningún lado se limita a una sola instancia del otro.
+
+## El modelo completo, en pata de gallo
+
+Trasladar el modelo anterior a pata de gallo no cambia ninguna decisión de diseño, sigue siendo una
+mascota con un único dueño y una relación muchos a muchos entre cita y tratamiento. Cambia la forma
+de los símbolos, y la relación `Incluye` aparece ya resuelta como una entidad propia,
+`Cita_Tratamiento`, en vez de quedar como un rombo todavía sin resolver, exactamente igual que pasó
+con `Detalle_Pedido` en la cafetería del Tema 2.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El mismo modelo de la veterinaria en notación pata de gallo: Dueño y Mascota conectados directamente con trazo doble hacia Dueño y pata de gallo hacia Mascota; Mascota y Cita, y Veterinario y Cita, conectados con círculo y pata de gallo del lado de Cita porque su participación del otro extremo es parcial; Cita conectada a la entidad asociativa Cita_Tratamiento y esta a Tratamiento, con círculo y pata de gallo del lado de Tratamiento porque su participación es parcial" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El mismo modelo, en notación pata de gallo</text>
+  <line x1="150" y1="60" x2="330" y2="60" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="168" y1="50" x2="168" y2="70" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="180" y1="50" x2="180" y2="70" stroke="#8fb3d1" stroke-width="1.8"/>
+  <text x="174" y="40" font-size="10" fill="#0e6f6c" text-anchor="middle">1..1</text>
+  <line x1="290" y1="50" x2="290" y2="70" stroke="#8fb3d1" stroke-width="1.8"/>
+  <path d="M310,60 L322,50 M310,60 L322,70 M310,60 L326,60" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <text x="304" y="40" font-size="10" fill="#0e6f6c" text-anchor="middle">1..N</text>
+  <line x1="390" y1="85" x2="390" y2="255" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="382" y1="100" x2="398" y2="100" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="382" y1="110" x2="398" y2="110" stroke="#8fb3d1" stroke-width="1.8"/>
+  <text x="420" y="108" font-size="10" fill="#0e6f6c" text-anchor="middle">1..1</text>
+  <circle cx="390" cy="222" r="6" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <path d="M390,238 L380,250 M390,238 L400,250 M390,238 L390,253" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <text x="420" y="235" font-size="10" fill="#5b6876" text-anchor="middle">0..N</text>
+  <line x1="450" y1="280" x2="630" y2="280" stroke="#8fb3d1" stroke-width="1.6"/>
+  <circle cx="470" cy="280" r="6" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <path d="M486,280 L500,270 M486,280 L500,290 M486,280 L504,280" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <text x="480" y="265" font-size="10" fill="#5b6876" text-anchor="middle">0..N</text>
+  <line x1="565" y1="270" x2="565" y2="290" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="577" y1="270" x2="577" y2="290" stroke="#8fb3d1" stroke-width="1.8"/>
+  <text x="571" y="264" font-size="10" fill="#0e6f6c" text-anchor="middle">1..1</text>
+  <line x1="390" y1="305" x2="390" y2="363" stroke="#8fb3d1" stroke-width="1.6"/>
+  <line x1="382" y1="318" x2="398" y2="318" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="382" y1="328" x2="398" y2="328" stroke="#8fb3d1" stroke-width="1.8"/>
+  <text x="418" y="323" font-size="10" fill="#0e6f6c" text-anchor="middle">1..1</text>
+  <path d="M390,340 L380,350 M390,340 L400,350 M390,340 L390,353" fill="none" stroke="#8fb3d1" stroke-width="1.6" transform="rotate(180 390 346)"/>
+  <text x="418" y="350" font-size="10" fill="#5b6876" text-anchor="middle">1..N</text>
+  <line x1="390" y1="413" x2="390" y2="475" stroke="#8fb3d1" stroke-width="1.6"/>
+  <circle cx="390" cy="428" r="6" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+  <path d="M390,442 L380,452 M390,442 L400,452 M390,442 L390,455" fill="none" stroke="#8fb3d1" stroke-width="1.6" transform="rotate(180 390 448)"/>
+  <text x="420" y="440" font-size="10" fill="#5b6876" text-anchor="middle">0..N</text>
+  <line x1="382" y1="458" x2="398" y2="458" stroke="#8fb3d1" stroke-width="1.8"/>
+  <line x1="382" y1="466" x2="398" y2="466" stroke="#8fb3d1" stroke-width="1.8"/>
+  <text x="418" y="463" font-size="10" fill="#0e6f6c" text-anchor="middle">1..1</text>
+  <rect x="30" y="35" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="90" y="65" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Dueño</text>
+  <rect x="330" y="35" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="390" y="65" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Mascota</text>
+  <rect x="330" y="255" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="390" y="285" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Cita</text>
+  <rect x="630" y="255" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="690" y="285" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Veterinario</text>
+  <rect x="300" y="363" width="180" height="50" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="390" y="389" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Cita_Tratamiento</text>
+  <text x="390" y="405" font-size="10" fill="#5b6876" text-anchor="middle">costo_aplicado</text>
+  <rect x="330" y="475" width="120" height="50" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="390" y="505" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">Tratamiento</text>
+</svg>
+
+:::
+
+Lee el símbolo `1..1` junto a `Dueño` como "toda mascota tiene exactamente un dueño", y el símbolo
+`1..N` junto a `Mascota` como "un dueño tiene una o varias mascotas", la misma pareja de hechos que
+ya leíste en Chen con la flecha y la línea doble. El círculo aparece siempre del lado de la
+participación parcial, junto a `Cita` cuando se conecta con `Mascota` o con `Veterinario`, y junto a
+`Tratamiento` cuando se conecta con `Cita_Tratamiento`, porque en los tres casos existe una instancia
+real del negocio, una mascota sin citas, un veterinario sin citas asignadas, un tratamiento del
+catálogo todavía sin aplicar, que puede quedar sin participar.
+
+## Ejercicio para la clase
+
+::: {.callout-tip}
+## Reto 1. Diseña la entidad débil Aplicacion_Vacuna
+
+La clínica quiere guardar el historial de vacunas de cada mascota. Cada aplicación de una vacuna
+solo tiene sentido dentro de la mascota a la que se le aplicó, ninguna aplicación existe suelta ni se
+consulta sin saber de qué mascota es.
+
+Diseña el conjunto de entidades `Aplicacion_Vacuna` como entidad débil, con el mismo patrón que
+`DetallePedido` en el Tema 1. Decide qué atributo propio usarías como discriminador dentro de cada
+mascota, y escribe cuál sería la clave primaria completa una vez combinada con la clave de `Mascota`.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+`Aplicacion_Vacuna` es una entidad débil porque ninguna aplicación tiene sentido fuera de la mascota
+a la que pertenece, y su propietario es `Mascota`. El discriminador puede ser `numero_aplicacion`, un
+consecutivo que solo necesita ser único dentro de cada mascota, así que la primera vacuna que recibe
+Max lleva `numero_aplicacion = 1`, la segunda `numero_aplicacion = 2`, y así sucesivamente, sin que
+ese número tenga que ser distinto frente a las aplicaciones de otra mascota.
+
+La clave primaria completa combina la clave del propietario con el discriminador propio, así que
+queda formada por `id_mascota`, heredado de `Mascota`, más `numero_aplicacion`. Los atributos propios
+de la entidad, `fecha_aplicacion` y `tipo_vacuna`, no forman parte de esa clave, describen cada
+aplicación pero no la identifican.
+:::
+
+::: {.callout-tip}
+## Reto 2. Decide si especialidad debería ser atributo o entidad
+
+La clínica quiere que un mismo veterinario pueda tener más de una especialidad a la vez, medicina
+general y cirugía, por ejemplo, y que de cada especialidad se sepa además en qué universidad se
+certificó. Decide si `especialidad` debería seguir siendo un atributo simple de `Veterinario`, o si
+conviene ascenderlo a entidad propia, con el mismo criterio que usaste en el Tema 1 con el teléfono
+del cliente.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+Con esta nueva regla, `especialidad` deja de alcanzar como atributo simple, porque ya no es
+monovaluado, un mismo veterinario puede tener varias especialidades vigentes a la vez, y porque cada
+valor necesita cargar información adicional propia, la universidad donde se certificó, que ya no cabe
+en un solo texto. Ese es exactamente el criterio del Tema 1, si el dato necesita información propia
+que ya no cabe en un solo valor, conviene ascenderlo a un conjunto de entidades propio.
+
+Lo correcto es crear una entidad `Especialidad`, con sus propios atributos `nombre` y
+`universidad_certificacion`, relacionada con `Veterinario` mediante una relación muchos a muchos, ya
+que un veterinario puede tener varias especialidades y una misma especialidad la certifican varios
+veterinarios distintos.
+:::
+
+::: {.callout-tip}
+## Reto 3. La preinscripción telefónica
+
+La clínica lanza un servicio donde alguien puede registrarse como dueño potencial por teléfono, solo
+con su nombre y su número, antes de traer ninguna mascota a consulta.
+
+Responde en un párrafo, qué cambia en la participación de `Dueño` en la relación `Posee` con esta
+nueva regla de negocio, y si ese cambio obliga a modificar la columna que `Mascota` va a recibir de
+`Dueño` en la Unidad 3.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+La participación de `Dueño` en `Posee` deja de ser total y pasa a ser parcial, porque ahora puede
+existir un dueño registrado por teléfono que todavía no aparece en ninguna fila de `Mascota`. En la
+notación de Chen, la línea entre `Dueño` y el rombo `Posee` pasaría de doble a simple, y en pata de
+gallo el símbolo junto a `Mascota` pasaría de `1..N` a `0..N`, con un círculo en vez de un trazo.
+
+Ese cambio no obliga a modificar ninguna columna de `Mascota`, porque esa columna representa la
+participación de `Mascota` en `Posee`, que sigue siendo total, toda mascota sigue necesitando un
+dueño. La participación de `Dueño` no se refleja en ninguna columna de ningún esquema, el mismo
+límite de la traducción que ya viste en el Tema 2 con el ejemplo de instructor y estudiante.
+:::
+
+## Cómo se trabaja
+
+Recorre los cuatro pasos en el orden de esta guía, en pareja o de forma individual, sin adelantarte a
+mirar el modelo completo antes de intentar tu propia versión de cada paso. Compara tu resultado con
+el diagrama de la guía antes de pasar al siguiente paso, y resuelve los tres retos finales antes de
+salir de la sesión.
+
+## Evaluación
+
+Esta actividad no tiene un porcentaje asignado todavía, porque el curso no tiene un calendario
+acordado con el docente. Se revisa en clase, de forma formativa, contrastando tu propio dibujo de
+cada paso contra el que trae la guía.
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de esta actividad deberías poder explicar, sin mirar la guía, los siguientes puntos:
+
+- [ ] Cómo encontrar las entidades de un negocio nuevo leyendo su descripción en prosa, sin que nadie
+      las marque de antemano
+- [ ] Cómo clasificar los atributos de una entidad nueva en simple, compuesto, multivaluado o
+      derivado
+- [ ] Cómo nombrar las relaciones entre entidades y decidir dónde vive el atributo propio de una
+      relación muchos a muchos
+- [ ] Cómo justificar la cardinalidad y la participación de cada relación con el negocio, no
+      solo con la forma del dibujo
+- [ ] Cómo se ve el mismo modelo completo en notación de Chen y en notación de pata de gallo
+:::
+
+Con esta actividad se cierra la Unidad 2. La veterinaria, igual que la cafetería del Tema 2, terminó
+como un diagrama completo con cinco entidades, cuatro relaciones y una tabla intermedia todavía sin
+escribir en SQL. La Unidad 3 retoma exactamente este mismo diagrama para convertirlo en el
+vocabulario formal del modelo relacional.
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::
