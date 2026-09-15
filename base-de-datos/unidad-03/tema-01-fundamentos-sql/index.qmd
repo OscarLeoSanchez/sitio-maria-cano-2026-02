@@ -1,0 +1,996 @@
+---
+title: "Tema 1. Cómo hacerle preguntas a una tabla"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                |
+|--------|----------------------------------------------------------------|
+| Unidad | Unidad 3. Modelo relacional                                   |
+| Tema   | Tema 1. Fundamentos de SQL, de qué es una base de datos al nivel intermedio |
+:::
+
+[Diapositivas de la sesión](presentacion.qmd)
+
+Todos los temas que siguen en esta unidad escriben sentencias `CREATE TABLE`, corrigen anomalías con
+`UPDATE` y consultan resultados con `SELECT`, dando por hecho que ya sabes leer y escribir esas
+sentencias, que ya sabes qué es un motor de base de datos y cómo se ejecuta una instrucción contra él.
+Hoy es el momento de construir ese vocabulario completo, desde qué es SQL y de dónde sale, hasta cómo
+crear una base de datos entera y la primera tabla dentro de ella, antes de que todo eso aparezca
+mezclado con diagramas entidad-relación y formas normales. No vas a diseñar el modelo de datos de la
+cafetería todavía, ni vas a decidir qué llave le corresponde a qué entidad, eso empieza en el Tema 2.
+Hoy construyes tu propia base de datos de práctica y la llenas con la misma tabla plana de pedidos con
+la que abrió la Unidad 1, la del teléfono de Ana repetido en cada fila, y aprendes a preguntarle
+cosas, a corregirla y a borrar de ella con el lenguaje que cualquier motor relacional entiende.
+
+## Qué es una base de datos, y de dónde sale SQL
+
+Una base de datos es un conjunto organizado de datos persistentes, guardados de forma que un programa
+pueda encontrarlos, relacionarlos y modificarlos sin tener que leer un archivo completo de principio a
+fin cada vez. El programa que administra ese conjunto se llama sistema gestor de bases de datos, SGBD,
+o *DBMS* por sus siglas en inglés, *database management system*. MySQL, PostgreSQL, SQL Server, Oracle
+Database y SQLite son ejemplos de SGBD relacionales concretos, cada uno un programa distinto escrito
+por una empresa o comunidad distinta, y aquí es donde entra SQL, el lenguaje común que le permite a una
+persona hablar con cualquiera de ellos sin tener que aprender un lenguaje nuevo por cada motor.
+
+SQL nació a mediados de la década de 1970, dentro del proyecto System R de IBM, el primer intento serio
+de construir un SGBD relacional siguiendo el modelo teórico que Edgar Codd había publicado en 1970. Los
+investigadores Donald Chamberlin y Raymond Boyce diseñaron un lenguaje de consulta pensado para
+parecerse al inglés en vez de a la notación matemática de Codd, y lo llamaron SEQUEL, *structured
+english query language*. Un conflicto de marca registrada con una empresa británica que ya usaba el
+nombre SEQUEL obligó a acortarlo a SQL, el nombre que quedó. La industria adoptó el lenguaje con tanta
+fuerza que en 1986 el instituto estadounidense de normas ANSI publicó la primera versión estandarizada,
+y la organización internacional de normalización ISO adoptó ese mismo estándar en 1987, con el nombre
+que sigue vigente hoy, ISO/IEC 9075. Desde entonces el estándar se ha revisado varias veces, agregando
+funciones nuevas, pero el núcleo que vas a aprender en este tema, `SELECT`, `INSERT`, `UPDATE`,
+`DELETE` y `CREATE TABLE`, es prácticamente idéntico al de las primeras versiones, y casi todos los
+motores relacionales que existen hoy lo implementan igual.
+
+Hay algo en SQL que lo distingue de un lenguaje de programación como Python o Java, con los que quizás
+ya tengas algo de experiencia, y que conviene dejar explícito desde la primera clase. SQL es un
+lenguaje declarativo, describes qué resultado quieres, no los pasos exactos para conseguirlo. Cuando
+escribes `SELECT * FROM PedidoPlano WHERE valor > 5000`, no le dices al motor que recorra la tabla fila
+por fila comparando cada valor, solo describes la condición que debe cumplir el resultado, y es el
+propio motor el que decide, con su propia lógica interna de optimización, cómo recorrer los datos para
+conseguirlo de la forma más eficiente. Un lenguaje de programación tradicional, en cambio, es
+procedimental, tú mismo escribes el ciclo, la condición y el orden exacto de los pasos. Esa diferencia
+es la razón por la que aprender SQL se siente distinto a aprender a programar, aunque las dos cosas
+compartan símbolos parecidos como `=` o `AND`.
+
+Como el docente todavía no decide el motor concreto del curso, cada ejemplo de esta guía usa
+exactamente ese núcleo común del estándar, sin ninguna función exclusiva de un producto, y la
+documentación de PostgreSQL es la referencia que se usa aquí porque implementa ese núcleo con
+precisión y es de acceso libre.
+
+## Cómo se ejecuta una sentencia SQL en la práctica
+
+SQL es texto plano, y ese texto no hace nada por sí solo, necesita un programa que lo lea y lo
+ejecute. Ese programa es el SGBD, que corre como un servicio, un proceso que queda encendido esperando
+peticiones, casi siempre en segundo plano y sin ventana visible. Para escribirle una sentencia
+necesitas un programa cliente, que se conecta a ese servicio, le envía el texto SQL, y muestra en
+pantalla el resultado que el motor devuelve. Un cliente puede ser tan simple como una terminal de línea
+de comandos, `psql` para PostgreSQL o `mysql` para MySQL, donde escribes la sentencia y presionas
+Enter, o tan elaborado como un programa gráfico como pgAdmin, DBeaver o MySQL Workbench, con ventanas,
+menús y resultados en tablas visuales. Los dos tipos de cliente le envían al motor exactamente el mismo
+texto SQL, la diferencia está solo en la interfaz que usa la persona para escribirlo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una persona escribe una sentencia SQL en un cliente, terminal como psql o programa grafico como pgAdmin; el cliente envia ese texto al motor de base de datos que corre como servicio en segundo plano; el motor interpreta la sentencia, la ejecuta contra los datos guardados en disco, y devuelve un resultado que el cliente muestra en pantalla" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="sql1c" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un cliente envía el texto SQL, el motor lo ejecuta y devuelve el resultado</text>
+  <rect x="20" y="50" width="190" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="115" y="78" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Persona</text>
+  <text x="115" y="98" font-size="10.5" fill="#5b6876" text-anchor="middle">escribe SQL en un</text>
+  <text x="115" y="114" font-size="10.5" fill="#5b6876" text-anchor="middle">cliente, terminal o gráfico</text>
+  <rect x="285" y="50" width="190" height="90" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="78" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Motor de base de datos</text>
+  <text x="380" y="98" font-size="10.5" fill="#3c7d7a" text-anchor="middle">recibe, interpreta y</text>
+  <text x="380" y="114" font-size="10.5" fill="#3c7d7a" text-anchor="middle">ejecuta la sentencia</text>
+  <rect x="550" y="50" width="190" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="645" y="78" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Datos en disco</text>
+  <text x="645" y="98" font-size="10.5" fill="#5b6876" text-anchor="middle">tablas guardadas de</text>
+  <text x="645" y="114" font-size="10.5" fill="#5b6876" text-anchor="middle">forma persistente</text>
+  <path d="M210,80 L281,80" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1c)"/>
+  <text x="245" y="72" font-size="9.5" fill="#5b6876" text-anchor="middle">envía SQL</text>
+  <path d="M475,80 L546,80" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1c)"/>
+  <text x="510" y="72" font-size="9.5" fill="#5b6876" text-anchor="middle">lee o escribe</text>
+  <path d="M285,116 L214,116" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1c)"/>
+  <text x="245" y="132" font-size="9.5" fill="#5b6876" text-anchor="middle">devuelve resultado</text>
+</svg>
+
+:::
+
+El flujo de trabajo típico, sin importar qué motor termine eligiendo el curso, es siempre el mismo,
+instalar el SGBD para que quede corriendo como servicio, abrir un cliente y conectarte a él con una
+dirección, un usuario y una contraseña, y desde ahí escribir las sentencias que esta guía enseña. Toda
+sentencia SQL termina en punto y coma `;`, la marca que le dice al cliente dónde termina una instrucción
+y empieza la siguiente, algo que vas a necesitar recordar en cuanto empieces a escribir varias
+sentencias seguidas.
+
+## Las cinco familias de instrucciones SQL
+
+SQL no es un solo lenguaje homogéneo, agrupa varias familias de instrucciones según lo que hacen sobre
+la base de datos, y entender a qué familia pertenece una sentencia te dice de entrada qué tan
+peligrosa es, si puede perder datos o solo consultarlos.
+
+El **DDL**, sigla de *data definition language*, define y modifica la estructura misma de la base de
+datos, las bases de datos, las tablas y sus columnas, no los datos que viven adentro. `CREATE` crea un
+objeto nuevo, una base de datos o una tabla que todavía no existe. `ALTER` modifica la estructura de un
+objeto que ya existe, por ejemplo agregar una columna a una tabla sin borrar sus filas. `DROP` elimina
+un objeto por completo, con toda la información que contenía, de forma irreversible salvo que exista
+una copia de seguridad aparte.
+
+El **DML**, sigla de *data manipulation language*, cambia los datos que ya viven dentro de una tabla
+que ya existe, sin tocar su estructura. `INSERT` agrega filas nuevas. `UPDATE` modifica el valor de una
+o más columnas en filas que ya existían. `DELETE` quita filas completas. Las tres asumen que la tabla y
+sus columnas ya fueron creadas de antemano con DDL.
+
+La consulta de datos, `SELECT`, se suele nombrar aparte como **DQL**, sigla de *data query language*,
+porque a diferencia de las tres sentencias de DML, no modifica ningún dato, solo lo lee y lo devuelve.
+No todos los textos académicos usan DQL como una categoría formal separada, varios tratan a `SELECT`
+como una sentencia más del DML porque comparte con él buena parte de su sintaxis, pero la distinción es
+frecuente en la práctica profesional y conviene conocerla, porque marca la diferencia entre una
+sentencia que solo mira los datos y una que los cambia.
+
+Dos familias más completan el panorama, aunque quedan fuera del alcance de este curso porque dependen
+de la administración concreta de un motor, algo que esta unidad no cubre. El **DCL**, *data control
+language*, decide qué usuario puede hacer qué sobre qué objeto, con `GRANT` para conceder un permiso y
+`REVOKE` para retirarlo, el mecanismo con el que un administrador de base de datos evita que cualquiera
+pueda borrar cualquier tabla. El **TCL**, *transaction control language*, agrupa varias sentencias de
+DML en una sola unidad indivisible llamada transacción, de forma que se apliquen todas juntas o
+ninguna, con `COMMIT` para confirmar el grupo completo y `ROLLBACK` para deshacerlo entero si algo salió
+mal a mitad de camino. El ejemplo clásico es una transferencia bancaria, restar dinero de una cuenta y
+sumarlo a otra tienen que ocurrir como una sola operación, porque una transferencia que reste sin sumar
+por un corte de luz a mitad de camino deja el dinero perdido en ningún lado. Vas a volver a encontrarte
+DCL y TCL si sigues profundizando en bases de datos más adelante en tu carrera, pero por ahora basta con
+que entiendas para qué existen.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco tarjetas con las familias de instrucciones SQL: DDL define la estructura con CREATE, ALTER y DROP; DML manipula los datos existentes con INSERT, UPDATE y DELETE; DQL consulta datos sin modificarlos con SELECT; DCL controla permisos de usuarios con GRANT y REVOKE; TCL agrupa cambios en transacciones indivisibles con COMMIT y ROLLBACK" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cinco familias, según qué parte de la base de datos afectan</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="10" y="34" width="145" height="150" rx="10"/><rect x="165" y="34" width="145" height="150" rx="10"/><rect x="320" y="34" width="145" height="150" rx="10"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="475" y="34" width="135" height="150" rx="10"/><rect x="615" y="34" width="135" height="150" rx="10"/></g>
+  <g text-anchor="middle">
+    <g font-size="13" font-weight="700" fill="#0e6f6c"><text x="82" y="56">DDL</text><text x="237" y="56">DML</text><text x="392" y="56">DQL</text></g>
+    <g font-size="13" font-weight="700" fill="#5b6876"><text x="542" y="56">DCL</text><text x="682" y="56">TCL</text></g>
+    <g font-size="10" fill="#5b6876"><text x="82" y="74">Define objetos</text><text x="237" y="74">Cambia datos</text><text x="392" y="74">Consulta datos</text><text x="542" y="74">Permisos</text><text x="682" y="74">Transacciones</text></g>
+    <g font-size="11" fill="#12324f"><text x="82" y="100">CREATE</text><text x="82" y="116">ALTER</text><text x="82" y="132">DROP</text><text x="237" y="100">INSERT</text><text x="237" y="116">UPDATE</text><text x="237" y="132">DELETE</text><text x="392" y="100">SELECT</text></g>
+    <g font-size="11" fill="#5b6876"><text x="542" y="100">GRANT</text><text x="542" y="116">REVOKE</text><text x="682" y="100">COMMIT</text><text x="682" y="116">ROLLBACK</text></g>
+    <g font-size="9.5" fill="#5b6876"><text x="82" y="158">Ese curso enseña esta</text><text x="82" y="172">familia completa</text><text x="237" y="158">Este curso enseña esta</text><text x="237" y="172">familia completa</text><text x="392" y="158">Este curso enseña esta</text><text x="392" y="172">familia completa</text><text x="542" y="158">Depende de la</text><text x="542" y="172">administración del motor</text><text x="682" y="158">Depende de la</text><text x="682" y="172">administración del motor</text></g>
+  </g>
+  <text x="380" y="204" font-size="10.5" fill="#5b6876" text-anchor="middle">DQL no es una categoría formal en todos los libros de texto, algunos la agrupan dentro del DML</text>
+  <text x="380" y="222" font-size="10.5" fill="#5b6876" text-anchor="middle">porque una consulta y una modificación de datos comparten buena parte de su sintaxis</text>
+</svg>
+
+:::
+
+## Crear una base de datos
+
+Antes de crear ninguna tabla necesitas un contenedor que la agrupe, la propia base de datos. `CREATE
+DATABASE` es la sentencia de DDL que la crea, con el nombre que elijas.
+
+```sql
+CREATE DATABASE cafeteria;
+```
+
+Con esa sola línea, el motor reserva un espacio nuevo y completamente vacío, sin ninguna tabla
+adentro todavía, identificado por el nombre `cafeteria`. Antes de poder crear una tabla dentro de ella
+necesitas indicarle al cliente que vas a trabajar sobre esa base de datos en concreto, en vez de sobre
+cualquier otra que exista en el mismo servidor. Este paso es uno de los pocos que sí cambia de forma
+visible entre motores, en PostgreSQL el cliente `psql` usa el comando propio `\c cafeteria`, y en MySQL
+la sentencia SQL `USE cafeteria;` hace lo mismo. El resto de esta guía asume que ya diste ese paso, y
+que toda sentencia que sigue se ejecuta con `cafeteria` como base de datos activa.
+
+Si algún día necesitas deshacerte de una base de datos completa, `DROP DATABASE` la elimina, con todas
+las tablas y todos los datos que tuviera adentro, sin posibilidad de deshacer la operación.
+
+```sql
+DROP DATABASE cafeteria;
+```
+
+No vas a ejecutar ese `DROP DATABASE` hoy, ninguna base de datos de este tema necesita borrarse, pero
+conviene que sepas que existe y qué tan definitivo es, porque el mismo patrón, una sentencia de DDL que
+borra sin posibilidad de arrepentimiento, se repite con `DROP TABLE` más adelante en este tema.
+
+::: {.callout-tip}
+## Practica 1. Crea tu propia base de datos
+
+Escribe la sentencia que crea una base de datos llamada `biblioteca`, para un negocio distinto al de
+la cafetería. Esta y las demás prácticas de "Practica N" que vienen a lo largo del tema son
+independientes entre sí, cada resultado que muestra la guía después de una práctica sigue partiendo
+de las cuatro filas originales de `PedidoPlano`, así que si ejecutas de verdad una práctica que
+modifica los datos, puedes deshacerla con el `DELETE` o el `DROP` que corresponda antes de seguir.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución de la Practica 1
+
+```sql
+CREATE DATABASE biblioteca;
+```
+:::
+
+## Crear la primera tabla
+
+Con la base de datos `cafeteria` ya creada y activa, el siguiente paso es crear una tabla real donde
+ejecutar consultas, no solo el dibujo en Markdown que abrió la Unidad 1. La creas con `CREATE TABLE`,
+la sentencia de DDL que declara el nombre de la tabla, sus columnas y el tipo de dato que guarda cada
+una. `INT` guarda números enteros, `VARCHAR(n)` guarda texto de hasta `n` caracteres, y
+`DECIMAL(10,2)` guarda números con dos cifras decimales exactas, el tipo correcto para dinero porque no
+arrastra el error de redondeo binario que sí tienen los tipos de coma flotante.
+
+```sql
+CREATE TABLE PedidoPlano (
+    pedido    INT,
+    cliente   VARCHAR(80),
+    telefono  VARCHAR(20),
+    producto  VARCHAR(80),
+    valor     DECIMAL(10,2)
+);
+```
+
+Fíjate en que esta tabla no declara ninguna llave primaria ni ninguna restricción, a propósito. El
+vocabulario de `PRIMARY KEY` y `REFERENCES` pertenece al Tema 2, cuando ya sepas mapear un diagrama
+entidad-relación. `PedidoPlano` es, tal cual su nombre lo dice, la misma hoja de cálculo sin ninguna
+regla de negocio encima, convertida a SQL exactamente como es, con sus mismos problemas, para que
+practiques sobre datos reales del negocio de la cafetería desde la primera sentencia.
+
+Con la tabla creada, la llenas con `INSERT`, la sentencia de DML que agrega filas nuevas. La palabra
+`INTO` nombra la tabla destino, y entre paréntesis después de ella van los nombres de las columnas que
+vas a llenar, en el orden que tú elijas, no necesariamente el orden en que se declararon en
+`CREATE TABLE`. La palabra `VALUES` introduce, también entre paréntesis, los valores concretos de cada
+fila nueva, uno por cada columna nombrada arriba y en ese mismo orden. Cada valor de texto va entre
+comillas simples, y un número se escribe tal cual, sin comillas.
+
+```sql
+INSERT INTO PedidoPlano (pedido, cliente, telefono, producto, valor) VALUES
+    (1001, 'Ana Ruiz',  '300 111 2233', 'Café',   4500),
+    (1002, 'Ana Ruiz',  '300 111 2233', 'Torta',  23400),
+    (1003, 'Luis Pena', '301 444 5566', 'Café',   4500),
+    (1004, 'Ana Ruiz',  '300 111 2233', 'Jugo',   6800);
+```
+
+Un solo `INSERT` con varias filas separadas por comas, como el de arriba, es equivalente a cuatro
+sentencias `INSERT` separadas, una por fila, y el estándar SQL permite las dos formas. La versión con
+varias filas a la vez es la que vas a usar de aquí en adelante porque es más corta de leer.
+
+::: {.callout-tip}
+## Practica 2. Inserta una fila nueva
+
+Escribe la sentencia `INSERT` que agrega un quinto pedido a `PedidoPlano`, pedido `1005`, cliente
+`Marta Gil`, teléfono `302 555 1122`, producto `Croissant`, valor `5200`.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución de la Practica 2
+
+```sql
+INSERT INTO PedidoPlano (pedido, cliente, telefono, producto, valor) VALUES
+    (1005, 'Marta Gil', '302 555 1122', 'Croissant', 5200);
+```
+:::
+
+## La primera consulta, `SELECT` y `FROM`
+
+`SELECT` es la sentencia de DQL que devuelve datos sin modificar nada. La forma mínima combina
+`SELECT`, que dice qué columnas quieres ver, con `FROM`, que dice de qué tabla las sacas. El asterisco
+`*` en la lista de columnas significa todas, sin tener que escribir una por una.
+
+```sql
+SELECT * FROM PedidoPlano;
+```
+
+| pedido | cliente   | telefono     | producto | valor    |
+|---|---|---|---|---|
+| 1001 | Ana Ruiz  | 300 111 2233 | Café  | 4500.00 |
+| 1002 | Ana Ruiz  | 300 111 2233 | Torta | 23400.00 |
+| 1003 | Luis Pena | 301 444 5566 | Café  | 4500.00 |
+| 1004 | Ana Ruiz  | 300 111 2233 | Jugo  | 6800.00 |
+
+Casi nunca necesitas todas las columnas a la vez. La proyección elige solo las que importan, nombrando
+cada una separada por comas en el mismo orden en que quieres verlas, que no tiene que coincidir con el
+orden en que se declararon en `CREATE TABLE`.
+
+```sql
+SELECT cliente, producto FROM PedidoPlano;
+```
+
+Puedes además renombrar una columna en el resultado con `AS`, sin tocar el nombre real de la columna
+en la tabla. Sirve para que un resultado sea más legible cuando lo lee una persona, o cuando dos
+tablas distintas usan el mismo nombre de columna y hay que distinguirlas, algo que vas a necesitar más
+adelante en el curso.
+
+```sql
+SELECT cliente AS nombre_cliente, valor AS precio FROM PedidoPlano;
+```
+
+::: {.callout-tip}
+## Practica 3. Proyecta tres columnas
+
+Escribe la consulta que muestra, de `PedidoPlano`, solo las columnas `pedido`, `producto` y `valor`,
+en ese orden, renombrando `valor` como `precio` en el resultado.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución de la Practica 3
+
+```sql
+SELECT pedido, producto, valor AS precio FROM PedidoPlano;
+```
+:::
+
+## Filtrar filas con `WHERE`
+
+`SELECT * FROM PedidoPlano` trae las cuatro filas completas, pero casi ninguna pregunta real sobre un
+negocio quiere todas las filas a la vez. La cláusula `WHERE` filtra, dejando pasar solo las filas cuya
+condición se evalúa como verdadera. Los operadores de comparación son `=`, `<>` o `!=` para distinto,
+`<`, `>`, `<=` y `>=`.
+
+```sql
+SELECT * FROM PedidoPlano WHERE cliente = 'Ana Ruiz';
+```
+
+| pedido | cliente  | telefono     | producto | valor    |
+|---|---|---|---|---|
+| 1001 | Ana Ruiz | 300 111 2233 | Café  | 4500.00 |
+| 1002 | Ana Ruiz | 300 111 2233 | Torta | 23400.00 |
+| 1004 | Ana Ruiz | 300 111 2233 | Jugo  | 6800.00 |
+
+```sql
+SELECT pedido, producto, valor FROM PedidoPlano WHERE valor > 5000;
+```
+
+Varias condiciones se combinan con `AND`, que exige que las dos sean verdaderas a la vez, `OR`, que
+exige que al menos una lo sea, y `NOT`, que invierte el resultado de la condición que le sigue. `AND`
+tiene mayor precedencia que `OR`, igual que la multiplicación la tiene sobre la suma en aritmética, así
+que cuando mezclas los dos en la misma condición conviene usar paréntesis para dejar explícito el orden
+en que se evalúan, en vez de confiar en que quien lea la consulta recuerde la regla de precedencia.
+
+```sql
+SELECT * FROM PedidoPlano
+WHERE cliente = 'Ana Ruiz' AND valor > 5000;
+
+SELECT * FROM PedidoPlano
+WHERE producto = 'Café' OR producto = 'Jugo';
+```
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tabla de verdad de AND, OR y NOT sobre dos condiciones A y B: AND es verdadero solo cuando A y B son verdaderas a la vez, OR es verdadero cuando al menos una lo es, y NOT invierte el valor de una sola condición" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">AND exige las dos condiciones, OR exige al menos una</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="32" width="330" height="120" rx="8"/><rect x="400" y="32" width="330" height="120" rx="8"/></g>
+  <text x="195" y="52" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">A AND B</text>
+  <g font-size="11" fill="#12324f" text-anchor="middle"><text x="90" y="76">A</text><text x="150" y="76">B</text><text x="240" y="76">Resultado</text></g>
+  <g font-size="11" fill="#5b6876" text-anchor="middle">
+    <text x="90" y="96">verdadero</text><text x="150" y="96">verdadero</text><text x="240" y="96" fill="#0e6f6c" font-weight="700">verdadero</text>
+    <text x="90" y="114">verdadero</text><text x="150" y="114">falso</text><text x="240" y="114">falso</text>
+    <text x="90" y="132">falso</text><text x="150" y="132">verdadero</text><text x="240" y="132">falso</text>
+  </g>
+  <text x="565" y="52" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">A OR B</text>
+  <g font-size="11" fill="#12324f" text-anchor="middle"><text x="460" y="76">A</text><text x="520" y="76">B</text><text x="610" y="76">Resultado</text></g>
+  <g font-size="11" fill="#5b6876" text-anchor="middle">
+    <text x="460" y="96">verdadero</text><text x="520" y="96">falso</text><text x="610" y="96" fill="#0e6f6c" font-weight="700">verdadero</text>
+    <text x="460" y="114">falso</text><text x="520" y="114">verdadero</text><text x="610" y="114" fill="#0e6f6c" font-weight="700">verdadero</text>
+    <text x="460" y="132">falso</text><text x="520" y="132">falso</text><text x="610" y="132">falso</text>
+  </g>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Practica 4. Combina dos condiciones
+
+Escribe la consulta que muestra los pedidos cuyo cliente es `'Luis Pena'` o cuyo `valor` sea mayor a
+`20000`.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución de la Practica 4
+
+```sql
+SELECT * FROM PedidoPlano
+WHERE cliente = 'Luis Pena' OR valor > 20000;
+```
+
+El resultado trae el pedido 1002, la torta de Ana con `valor = 23400`, y el pedido 1003, el café de
+Luis Pena, cada uno porque cumple una de las dos condiciones, no las dos a la vez.
+:::
+
+Tres operadores más resuelven casos frecuentes sin encadenar varios `OR`. `BETWEEN` prueba que un
+valor caiga dentro de un rango, incluyendo los dos extremos. `IN` prueba que un valor esté dentro de
+una lista concreta, en vez de escribir un `OR` por cada valor posible. `LIKE` busca un patrón de texto
+en vez de una igualdad exacta, usando `%` para cualquier cantidad de caracteres, incluyendo cero, y
+`_` para exactamente un carácter.
+
+```sql
+SELECT * FROM PedidoPlano WHERE valor BETWEEN 4000 AND 10000;
+
+SELECT * FROM PedidoPlano WHERE producto IN ('Café', 'Torta');
+
+SELECT * FROM PedidoPlano WHERE cliente LIKE 'Ana%';
+SELECT * FROM PedidoPlano WHERE telefono LIKE '300 111 22__';
+```
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El comodín porcentaje reemplaza cualquier cantidad de caracteres, incluyendo cero, y el patron Ana porcentaje coincide con Ana Ruiz; el comodin guion bajo reemplaza exactamente un caracter, y el patron 300 111 22 con dos guiones bajos coincide con 300 111 2233" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Dos comodines de LIKE, cero o más caracteres contra exactamente uno</text>
+  <rect x="30" y="32" width="330" height="110" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="195" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">% reemplaza cero o más caracteres</text>
+  <text x="195" y="78" font-size="11.5" fill="#12324f" text-anchor="middle">patrón: 'Ana%'</text>
+  <text x="195" y="98" font-size="11.5" fill="#12324f" text-anchor="middle">coincide: 'Ana Ruiz'</text>
+  <text x="195" y="120" font-size="10.5" fill="#5b6876" text-anchor="middle">no coincide: 'Luis Pena'</text>
+  <rect x="400" y="32" width="330" height="110" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="565" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">_ reemplaza exactamente un carácter</text>
+  <text x="565" y="78" font-size="11.5" fill="#12324f" text-anchor="middle">patrón: '300 111 22__'</text>
+  <text x="565" y="98" font-size="11.5" fill="#12324f" text-anchor="middle">coincide: '300 111 2233'</text>
+  <text x="565" y="120" font-size="10.5" fill="#5b6876" text-anchor="middle">no coincide: '300 111 223' (le falta un dígito)</text>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Practica 5. Escribe un patrón con `LIKE`
+
+Escribe la consulta que muestra los pedidos cuyo `producto` termina en la letra `a`, usando `LIKE`.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución de la Practica 5
+
+```sql
+SELECT * FROM PedidoPlano WHERE producto LIKE '%a';
+```
+
+El resultado trae el pedido 1002, `Torta`, el único producto de los cuatro que termina en `a`. `Café`
+termina en `é`, `Jugo` termina en `o`.
+:::
+
+## El valor que no es ningún valor, `NULL`
+
+Hasta ahora ninguna columna de `PedidoPlano` admite ausencia de dato, pero en la práctica casi toda
+tabla real tiene columnas que a veces no aplican. Imagina que la cafetería agrega un descuento
+opcional por pedido, que no todos los pedidos tienen. `ALTER TABLE` modifica una tabla que ya existe
+sin borrar sus datos, y `ADD COLUMN`, dentro de esa misma sentencia, le agrega una columna nueva con
+su propio tipo de dato, exactamente como si fuera una columna más de un `CREATE TABLE`.
+
+```sql
+ALTER TABLE PedidoPlano ADD COLUMN descuento DECIMAL(10,2);
+
+UPDATE PedidoPlano SET descuento = 500 WHERE pedido = 1002;
+```
+
+La segunda línea ya usa `UPDATE`, la sentencia que vas a estudiar completa más adelante en este mismo
+tema, pero conviene entender desde ya sus tres piezas porque la vas a necesitar de inmediato. `UPDATE`
+nombra la tabla que vas a modificar, `PedidoPlano`. `SET` nombra la columna que cambia y, después del
+signo igual, el valor nuevo que le vas a asignar, aquí `descuento = 500`. Y `WHERE`, la misma cláusula
+que ya conoces de `SELECT`, filtra a cuáles filas se les aplica ese cambio, en este caso solo a la fila
+del pedido 1002.
+
+Después de estas dos sentencias, la columna `descuento` vale `500` en el pedido 1002 y `NULL` en los
+otros tres, porque toda columna nueva empieza en `NULL` para las filas que ya existían, a menos que se
+le dé explícitamente un valor. `NULL` no es cero, no es una cadena vacía, es la ausencia total de
+valor, y esa diferencia importa apenas empiezas a filtrar por esa columna.
+
+```sql
+SELECT * FROM PedidoPlano WHERE descuento = NULL;
+```
+
+Esta consulta no falla, pero devuelve cero filas, incluso para el pedido 1002 que sí tiene descuento.
+`NULL` representa un valor desconocido, y SQL nunca compara dos desconocidos como iguales entre sí, ni
+siquiera cuando comparas `NULL` contra sí mismo, así que `=` con `NULL` no es verdadero ni falso, es
+un tercer resultado, desconocido, y una fila con resultado desconocido no pasa el filtro de `WHERE`.
+La forma correcta de preguntar por ausencia de valor son los operadores `IS NULL` e `IS NOT NULL`, que
+sí entienden esa diferencia.
+
+```sql
+SELECT * FROM PedidoPlano WHERE descuento IS NULL;
+SELECT * FROM PedidoPlano WHERE descuento IS NOT NULL;
+```
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion con NULL: descuento igual a NULL da como resultado desconocido para las cuatro filas, incluida la del pedido 1002 que si tiene 500 de descuento, y ninguna fila pasa el filtro; descuento IS NULL si distingue correctamente, dejando pasar las tres filas sin descuento" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">NULL nunca es igual a nada, ni a otro NULL</text>
+  <rect x="30" y="32" width="330" height="112" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="195" y="54" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">descuento = NULL</text>
+  <text x="195" y="76" font-size="11" fill="#5b6876" text-anchor="middle">para las cuatro filas, el resultado</text>
+  <text x="195" y="92" font-size="11" fill="#5b6876" text-anchor="middle">de la comparación es desconocido</text>
+  <text x="195" y="114" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">0 filas devueltas</text>
+  <rect x="400" y="32" width="330" height="112" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="565" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">descuento IS NULL</text>
+  <text x="565" y="76" font-size="11" fill="#3c7d7a" text-anchor="middle">pregunta directamente por la</text>
+  <text x="565" y="92" font-size="11" fill="#3c7d7a" text-anchor="middle">ausencia de valor, sin comparar</text>
+  <text x="565" y="114" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">3 filas devueltas (1001, 1003, 1004)</text>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Practica 6. Filtra por ausencia de valor
+
+Escribe la consulta que muestra el pedido, el cliente y el descuento de cada fila cuyo `descuento`
+todavía no se ha definido.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución de la Practica 6
+
+```sql
+SELECT pedido, cliente, descuento FROM PedidoPlano WHERE descuento IS NULL;
+```
+
+Trae los pedidos 1001, 1003 y 1004, los tres sin descuento asignado. El pedido 1002, con
+`descuento = 500`, queda fuera porque su descuento sí está definido.
+:::
+
+## Ordenar con `ORDER BY`
+
+Ninguna de las consultas anteriores garantiza un orden concreto en las filas que devuelve, un motor
+real puede regresarlas en el orden que le resulte más eficiente internamente. `ORDER BY` fija un
+orden explícito, ascendente con `ASC`, que es el que se usa si no se escribe nada, o descendente con
+`DESC`. Se puede ordenar por más de una columna, y la segunda solo decide el orden entre filas que
+empataron en la primera.
+
+```sql
+SELECT * FROM PedidoPlano ORDER BY valor DESC;
+
+SELECT * FROM PedidoPlano ORDER BY cliente ASC, valor DESC;
+```
+
+Cuando además de ordenar quieres quedarte solo con las primeras filas, `LIMIT` recorta el resultado a
+un número máximo de filas, y `OFFSET` salta un número de filas antes de empezar a contar. Las dos
+juntas resuelven una pregunta frecuente, cuál es el pedido de mayor valor.
+
+```sql
+SELECT * FROM PedidoPlano ORDER BY valor DESC LIMIT 1;
+```
+
+`LIMIT` y `OFFSET` no son parte del núcleo del estándar ISO/IEC 9075, aunque casi todos los motores
+los implementan con ese mismo nombre. La forma que sí es estándar es `FETCH FIRST n ROWS ONLY`,
+opcional con `OFFSET m ROWS` antes, y hace exactamente lo mismo.
+
+```sql
+SELECT * FROM PedidoPlano ORDER BY valor DESC FETCH FIRST 1 ROWS ONLY;
+```
+
+::: {.callout-tip}
+## Practica 7. Ordena y limita
+
+Escribe la consulta que muestra el pedido y el producto de los dos pedidos de menor valor, del más
+barato al segundo más barato.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución de la Practica 7
+
+```sql
+SELECT pedido, producto FROM PedidoPlano ORDER BY valor ASC FETCH FIRST 2 ROWS ONLY;
+```
+
+Trae el pedido 1001 y el 1003, los dos con `Café` a `4500`, el valor más bajo de la tabla, empatado
+entre los dos.
+:::
+
+## Funciones de agregación, un número que resume varias filas
+
+Hasta aquí cada consulta devuelve un conjunto de filas. Una función de agregación en cambio recibe
+varias filas y devuelve un solo número que las resume, `COUNT` cuenta filas, `SUM` suma una columna
+numérica, `AVG` calcula el promedio, y `MIN` y `MAX` devuelven el valor más pequeño y el más grande.
+
+```sql
+SELECT COUNT(*) FROM PedidoPlano;
+SELECT SUM(valor) FROM PedidoPlano;
+SELECT AVG(valor) FROM PedidoPlano;
+SELECT MIN(valor), MAX(valor) FROM PedidoPlano;
+```
+
+Estas cinco funciones, usadas solas como arriba, resumen la tabla completa en una sola fila de
+resultado. La Unidad 4 de este curso retoma exactamente estas mismas funciones junto con `GROUP BY`,
+que en vez de un solo resumen de toda la tabla arma un resumen por grupo, por ejemplo el total vendido
+de cada cliente en vez del total de todos los clientes junto. Hoy te quedas con el resumen completo,
+sin agrupar, porque `GROUP BY` y su cláusula compañera `HAVING` son contenido propio de esa unidad
+más adelante en el curso.
+
+::: {.callout-tip}
+## Practica 8. Calcula un resumen
+
+Escribe la consulta que devuelve, en una sola fila, cuántos pedidos tiene Ana Ruiz y cuánto suman
+entre todos, usando `WHERE` para quedarte solo con sus pedidos antes de agregar.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución de la Practica 8
+
+```sql
+SELECT COUNT(*), SUM(valor) FROM PedidoPlano WHERE cliente = 'Ana Ruiz';
+```
+
+El motor primero aplica `WHERE`, se queda solo con los tres pedidos de Ana, y después agrega,
+`COUNT(*)` da `3` y `SUM(valor)` da `34700`, la suma de `4500 + 23400 + 6800`.
+:::
+
+## Corregir datos con `UPDATE`
+
+`UPDATE` modifica el valor de una o más columnas en las filas que cumplen una condición de `WHERE`.
+Retoma la primera pregunta que abrió toda la Unidad 1, Ana cambia de teléfono, y ahora tienes el
+comando exacto para corregirlo.
+
+```sql
+UPDATE PedidoPlano
+SET telefono = '300 999 8877'
+WHERE cliente = 'Ana Ruiz';
+```
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes del UPDATE, las tres filas de Ana Ruiz muestran el telefono antiguo 300 111 2233; despues del UPDATE con WHERE cliente igual Ana Ruiz, las tres filas quedan actualizadas al telefono nuevo 300 999 8877 en una sola sentencia, sin tocar la fila de Luis Pena" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un solo UPDATE con WHERE corrige las tres filas de Ana a la vez</text>
+  <text x="195" y="36" font-size="11.5" font-weight="700" fill="#5b6876" text-anchor="middle">Antes</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="30" y="44" width="330" height="34"/><rect x="30" y="78" width="330" height="34"/><rect x="30" y="112" width="330" height="34"/><rect x="30" y="146" width="330" height="34"/></g>
+  <g font-size="10.5" fill="#12324f"><text x="45" y="65">1001 Ana Ruiz</text><text x="230" y="65">300 111 2233</text></g>
+  <g font-size="10.5" fill="#12324f"><text x="45" y="99">1002 Ana Ruiz</text><text x="230" y="99">300 111 2233</text></g>
+  <g font-size="10.5" fill="#5b6876"><text x="45" y="133">1003 Luis Pena</text><text x="230" y="133">301 444 5566</text></g>
+  <g font-size="10.5" fill="#12324f"><text x="45" y="167">1004 Ana Ruiz</text><text x="230" y="167">300 111 2233</text></g>
+  <path d="M380,120 L400,120" fill="none" stroke="#8fb3d1" stroke-width="1.8"/>
+  <text x="565" y="36" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Después</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="400" y="44" width="330" height="34"/><rect x="400" y="78" width="330" height="34"/><rect x="400" y="112" width="330" height="34"/><rect x="400" y="146" width="330" height="34"/></g>
+  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="65">1001 Ana Ruiz</text><text x="600" y="65">300 999 8877</text></g>
+  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="99">1002 Ana Ruiz</text><text x="600" y="99">300 999 8877</text></g>
+  <g font-size="10.5" fill="#5b6876"><text x="415" y="133">1003 Luis Pena</text><text x="600" y="133">301 444 5566 (sin cambio)</text></g>
+  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="167">1004 Ana Ruiz</text><text x="600" y="167">300 999 8877</text></g>
+</svg>
+
+:::
+
+Fíjate en algo importante para el resto del curso, este `UPDATE` corrigió las tres filas de Ana en una
+sola sentencia, sin que tengas que escribir tres `UPDATE` distintos ni acordarte de ninguno. Esa
+comodidad es al mismo tiempo la raíz del problema que vas a nombrar formalmente en el Tema 3, si el
+teléfono vive repetido en tres filas de una tabla que no tiene por qué guardarlo tres veces, corregirlo
+bien depende de que el `WHERE` capture exactamente las filas correctas, ni una fila de Ana sin tocar
+ni una fila de otro cliente tocada por error.
+
+::: {.callout-tip}
+## Practica 9. Aplica un descuento
+
+Escribe la sentencia `UPDATE` que asigna `descuento = 1000` al pedido 1002, la torta de Ana, sin
+tocar el descuento de ningún otro pedido.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución de la Practica 9
+
+```sql
+UPDATE PedidoPlano
+SET descuento = 1000
+WHERE pedido = 1002;
+```
+
+`WHERE pedido = 1002` filtra por la llave más específica posible aquí, el número de pedido, así que
+esta vez solo se modifica una fila, sin riesgo de tocar por error otro pedido con el mismo cliente o
+el mismo producto.
+:::
+
+## Borrar filas con `DELETE`
+
+`DELETE` quita filas completas de la tabla, siempre filtradas por `WHERE`. Retoma la tercera pregunta
+de la Unidad 1, se anula el pedido 1003 y se borra la fila.
+
+```sql
+DELETE FROM PedidoPlano WHERE pedido = 1003;
+```
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DELETE FROM PedidoPlano WHERE pedido igual 1003 borra la fila completa de Luis Pena; con ella se pierde no solo el pedido, sino el unico registro que guardaba el nombre y el telefono de Luis Pena en toda la tabla, porque esta tabla plana no separa al cliente del pedido" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Borrar la fila del pedido borra también al único cliente que vivía solo ahí</text>
+  <rect x="30" y="34" width="700" height="34" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="50" y="55" font-size="11" fill="#5b6876">1001 Ana Ruiz</text><text x="230" y="55" font-size="11" fill="#5b6876">Café</text>
+  <rect x="30" y="70" width="700" height="34" rx="6" fill="#f9dede" stroke="#e0a9a9"/>
+  <text x="50" y="91" font-size="11" fill="#8a3a3a" text-decoration="line-through">1003 Luis Pena, 301 444 5566, Café</text>
+  <text x="480" y="91" font-size="10.5" fill="#8a3a3a" font-weight="700">borrada, se pierde todo</text>
+  <rect x="30" y="106" width="700" height="34" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="50" y="127" font-size="11" fill="#5b6876">1004 Ana Ruiz</text><text x="230" y="127" font-size="11" fill="#5b6876">Jugo</text>
+</svg>
+
+:::
+
+Después de este `DELETE` no queda en ningún lado el nombre de Luis Pena ni su teléfono, porque esta
+tabla plana nunca separó al cliente del pedido, cada fila guarda las dos cosas juntas. Si Luis vuelve a
+pedir mañana, la cafetería tiene que volver a preguntarle su teléfono como si fuera la primera vez.
+Ese es exactamente el problema de borrado que la Unidad 1 planteó como pregunta abierta, y que el
+Tema 3 va a resolver formalmente separando `Cliente` en su propia tabla, para que borrar un pedido
+nunca borre, de paso, al cliente que lo hizo.
+
+`DELETE FROM PedidoPlano;`, sin ningún `WHERE`, borra las cuatro filas de una sola vez, porque una
+condición ausente no filtra nada, deja pasar toda fila. Ese es un error frecuente y costoso, y el
+Reto 2 de más abajo lo pone a prueba antes de que te pase con datos que sí importan.
+
+::: {.callout-tip}
+## Practica 10. Borra un pedido concreto
+
+Escribe la sentencia que borra únicamente el pedido 1004, el jugo de Ana, sin afectar sus otros dos
+pedidos.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución de la Practica 10
+
+```sql
+DELETE FROM PedidoPlano WHERE pedido = 1004;
+```
+
+Igual que en la Practica 9, filtrar por `pedido`, el dato más específico de la fila, es lo que
+garantiza que la operación afecte a una sola fila y no a las tres de Ana.
+:::
+
+## Borrar una tabla completa, `DROP TABLE`
+
+`DELETE` borra filas, pero deja viva la tabla con su estructura, sus columnas y sus tipos de dato
+intactos. Cuando lo que necesitas borrar es la tabla entera, estructura y datos a la vez, la
+sentencia es otra, y pertenece al DDL en vez de al DML, `DROP TABLE`.
+
+```sql
+DROP TABLE PedidoPlano;
+```
+
+Después de ejecutar esta sentencia, `PedidoPlano` deja de existir por completo, no queda ni una
+columna ni una fila, y ninguna consulta futura puede referirse a ella hasta que la vuelvas a crear
+desde cero con `CREATE TABLE`. La diferencia entre `DELETE FROM PedidoPlano;` y
+`DROP TABLE PedidoPlano;` es exactamente la diferencia entre DML y DDL que viste al principio del
+tema, el primero vacía una tabla que sigue existiendo, el segundo hace desaparecer la tabla misma.
+Ninguna de las dos sentencias pide confirmación antes de ejecutarse, y ninguna se puede deshacer con
+un `ROLLBACK` una vez que ya se guardó de forma permanente, así que la misma disciplina de revisar dos
+veces antes de ejecutar que aplica a `UPDATE` y `DELETE` sin `WHERE` aplica todavía con más razón a
+`DROP TABLE` y a `DROP DATABASE`.
+
+## El orden en que un motor procesa tu consulta
+
+Una consulta con varias cláusulas se escribe en un orden fijo, `SELECT`, `FROM`, `WHERE`, `ORDER BY`,
+pero el motor no las ejecuta en ese mismo orden. Primero resuelve `FROM`, para saber de qué tabla
+parte. Después aplica `WHERE`, descartando las filas que no cumplen la condición. Solo entonces evalúa
+`SELECT`, eligiendo o calculando las columnas del resultado. Y al final aplica `ORDER BY` sobre ese
+resultado ya filtrado y proyectado.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Orden escrito de una consulta: SELECT, FROM, WHERE, ORDER BY; orden real de procesamiento del motor: primero FROM, despues WHERE, despues SELECT, y por ultimo ORDER BY, con flechas que muestran como el orden de ejecucion no coincide con el orden en que se escribe la sentencia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="sql1a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El orden en que escribes la consulta no es el orden en que el motor la resuelve</text>
+  <text x="380" y="40" font-size="11" fill="#5b6876" text-anchor="middle">Orden escrito</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="50" width="150" height="40" rx="6"/><rect x="210" y="50" width="150" height="40" rx="6"/><rect x="390" y="50" width="150" height="40" rx="6"/><rect x="570" y="50" width="160" height="40" rx="6"/></g>
+  <g font-size="12" font-weight="700" fill="#12324f" text-anchor="middle"><text x="105" y="75">SELECT</text><text x="285" y="75">FROM</text><text x="465" y="75">WHERE</text><text x="650" y="75">ORDER BY</text></g>
+  <text x="380" y="112" font-size="11" fill="#0e6f6c" text-anchor="middle">Orden real de ejecución</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="30" y="122" width="150" height="40" rx="6"/><rect x="210" y="122" width="150" height="40" rx="6"/><rect x="390" y="122" width="150" height="40" rx="6"/><rect x="570" y="122" width="160" height="40" rx="6"/></g>
+  <g font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle"><text x="105" y="147">1. FROM</text><text x="285" y="147">2. WHERE</text><text x="465" y="147">3. SELECT</text><text x="650" y="147">4. ORDER BY</text></g>
+  <path d="M285,90 L285,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1a)"/>
+  <path d="M465,90 L465,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1a)"/>
+  <path d="M105,90 C105,105 105,105 105,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="3 2" marker-end="url(#sql1a)"/>
+  <path d="M650,90 L650,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1a)"/>
+</svg>
+
+:::
+
+Ese orden real explica por qué un alias creado con `AS` en el `SELECT` no se puede usar todavía dentro
+del `WHERE` de esa misma consulta, en el estándar SQL, `WHERE` se resuelve antes de que el alias exista.
+La Unidad 4 amplía este mismo orden con dos cláusulas nuevas, `GROUP BY` y `HAVING`, que se ubican entre
+`WHERE` y `SELECT`, y que hoy quedan fuera del alcance de este tema.
+
+## Una consulta dentro de otra consulta
+
+El resultado de un `SELECT` puede usarse como valor de comparación dentro de otro `SELECT`, una técnica
+que se llama subconsulta. Sirve, por ejemplo, para comparar cada fila contra un resumen calculado de
+toda la tabla, en vez de contra un número fijo que tendrías que actualizar a mano cada vez que cambien
+los datos.
+
+```sql
+SELECT pedido, producto, valor
+FROM PedidoPlano
+WHERE valor > (SELECT AVG(valor) FROM PedidoPlano);
+```
+
+El motor primero resuelve la subconsulta entre paréntesis, obtiene el promedio de `valor` sobre las
+cuatro filas, y después usa ese único número para filtrar la consulta externa, exactamente como si
+hubieras escrito el número calculado a mano en su lugar.
+
+## Comentarios dentro de una sentencia
+
+Dos guiones seguidos, `--`, convierten en comentario todo lo que sigue hasta el final de esa línea, y
+`/* */` comenta un bloque de una o varias líneas. El motor ignora por completo un comentario, sirve
+solo para que quien lea la sentencia entienda por qué está escrita así.
+
+```sql
+-- Pedidos de Ana con valor superior al promedio de toda la tabla
+SELECT pedido, producto, valor
+FROM PedidoPlano
+WHERE cliente = 'Ana Ruiz' /* filtro por cliente */
+  AND valor > (SELECT AVG(valor) FROM PedidoPlano);
+```
+
+::: {.callout-tip}
+## Reto 1. Predice el resultado antes de ejecutarlo
+
+Sobre la tabla `PedidoPlano` con sus cuatro filas originales, marca cuántas filas devuelve cada
+consulta antes de seguir leyendo.
+
+<label><input type="checkbox"> `SELECT * FROM PedidoPlano WHERE producto = 'Café';` (¿1, 2 o 3 filas?)</label><br>
+<label><input type="checkbox"> `SELECT * FROM PedidoPlano WHERE valor >= 6800 AND cliente = 'Ana Ruiz';` (¿0, 1 o 2 filas?)</label><br>
+<label><input type="checkbox"> `SELECT * FROM PedidoPlano WHERE cliente LIKE '%Pena';` (¿0 o 1 fila?)</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+La primera devuelve 2 filas, los pedidos 1001 y 1003, los dos con `producto = 'Café'`.
+
+La segunda devuelve 1 fila, el pedido 1004, con `valor = 6800` que cumple `>= 6800`, y
+`cliente = 'Ana Ruiz'`. El pedido 1002 tiene `valor = 23400`, que también cumple la primera condición,
+pero como las dos van unidas con `AND`, las dos tienen que ser verdaderas para la misma fila, y aquí
+las dos sí lo son para dos pedidos distintos de Ana, así que en realidad la respuesta correcta es 2
+filas, 1002 y 1004. Si marcaste 1 fila, revisa con cuidado cuáles pedidos de Ana cumplen `valor >=
+6800` al mismo tiempo.
+
+La tercera devuelve 1 fila, el pedido 1003 de Luis Pena, porque `%Pena` coincide con cualquier texto
+que termine en `Pena`, sin importar qué haya antes.
+:::
+
+::: {.callout-tip}
+## Reto 2. El UPDATE que borra el negocio
+
+Un compañero de curso quiere aplicar un descuento del 10% a todos los pedidos de café, y escribe
+esto:
+
+```sql
+UPDATE PedidoPlano
+SET valor = valor * 0.9;
+```
+
+Antes de leer la solución, responde en un párrafo, qué le falta a esta sentencia y qué pasa con las
+cuatro filas de la tabla al ejecutarla tal cual está escrita.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+A la sentencia le falta la cláusula `WHERE producto = 'Café'`. Sin ningún `WHERE`, un `UPDATE` no
+filtra ninguna fila, actualiza todas las filas de la tabla, así que las cuatro filas de `PedidoPlano`
+terminan con su `valor` reducido en un 10%, incluidas la torta, el jugo y el segundo pedido de café que
+nunca debieron descontarse. La corrección exacta es:
+
+```sql
+UPDATE PedidoPlano
+SET valor = valor * 0.9
+WHERE producto = 'Café';
+```
+
+`DELETE` tiene exactamente el mismo riesgo, `DELETE FROM PedidoPlano;` sin `WHERE` borra las cuatro
+filas de una sola vez. `UPDATE` y `DELETE` sin `WHERE` no son sentencias inválidas, el motor las
+ejecuta sin ninguna queja, y esa es justo la razón por la que conviene revisar dos veces la condición
+antes de ejecutarlas contra una tabla con datos reales.
+:::
+
+::: {.callout-tip}
+## Reto 3. Escribe la consulta
+
+Escribe, antes de ver la solución, la sentencia SQL que responde esta pregunta sobre `PedidoPlano`,
+cuáles son el pedido y el producto de todo pedido cuyo valor sea menor a 10000, ordenados del más
+barato al más caro.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+```sql
+SELECT pedido, producto
+FROM PedidoPlano
+WHERE valor < 10000
+ORDER BY valor ASC;
+```
+
+El resultado trae, en este orden, el pedido 1001 y el 1003, los dos con `Café` a `4500`, y el pedido
+1004 con `Jugo` a `6800`. El pedido 1002, la `Torta` a `23400`, queda fuera porque no cumple
+`valor < 10000`.
+:::
+
+::: {.callout-tip}
+## Reto 4. Clasifica cada sentencia
+
+Para cada una de estas cinco sentencias, marca a qué familia pertenece, DDL, DML o DQL, antes de
+seguir leyendo.
+
+<label><input type="checkbox"> `CREATE DATABASE cafeteria;`</label><br>
+<label><input type="checkbox"> `SELECT cliente FROM PedidoPlano WHERE valor > 5000;`</label><br>
+<label><input type="checkbox"> `ALTER TABLE PedidoPlano ADD COLUMN descuento DECIMAL(10,2);`</label><br>
+<label><input type="checkbox"> `DELETE FROM PedidoPlano WHERE pedido = 1003;`</label><br>
+<label><input type="checkbox"> `DROP TABLE PedidoPlano;`</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+`CREATE DATABASE` es DDL, crea un objeto nuevo. `SELECT` es DQL, solo consulta datos sin modificar
+nada. `ALTER TABLE` es DDL, modifica la estructura de una tabla que ya existe, no sus filas. `DELETE`
+es DML, cambia los datos de una tabla que ya existe, no su estructura. `DROP TABLE` es DDL, elimina un
+objeto completo. Fíjate en que la línea que separa DDL de DML no es si la sentencia empieza con una
+palabra parecida, es si toca la estructura, `CREATE`, `ALTER`, `DROP`, o si toca únicamente los datos
+que ya viven dentro de una estructura que no cambia, `INSERT`, `UPDATE`, `DELETE`.
+:::
+
+## Lo que te llevas de hoy
+
+::: {.checklist}
+Al salir de este tema deberías poder explicar, sin mirar la guía, los siguientes puntos:
+
+- [ ] Qué es una base de datos, qué es un SGBD, y de dónde sale el estándar SQL
+- [ ] Por qué SQL es un lenguaje declarativo y no procedimental, y qué diferencia práctica tiene eso
+- [ ] Cómo se ejecuta en la práctica una sentencia SQL, cliente, motor y datos en disco
+- [ ] Las cinco familias de instrucciones SQL, DDL, DML, DQL, DCL y TCL, y cuáles cubre este curso
+- [ ] Cómo crear una base de datos con `CREATE DATABASE` y una tabla dentro de ella con
+      `CREATE TABLE`, y cómo llenarla con `INSERT`
+- [ ] Cómo elegir columnas con `SELECT`, filtrar filas con `WHERE`, y combinar condiciones con `AND`,
+      `OR` y `NOT`
+- [ ] `BETWEEN`, `IN` y `LIKE` con sus dos comodines, `%` y `_`
+- [ ] Por qué `columna = NULL` nunca funciona, y por qué `IS NULL` e `IS NOT NULL` sí
+- [ ] Cómo ordenar con `ORDER BY` y limitar resultados con `LIMIT` o con el estándar
+      `FETCH FIRST n ROWS ONLY`
+- [ ] Las cinco funciones de agregación, `COUNT`, `SUM`, `AVG`, `MIN` y `MAX`, sin agrupar todavía
+- [ ] Cómo corregir datos con `UPDATE` y borrarlos con `DELETE`, y por qué ninguno de los dos filtra
+      nada sin un `WHERE`
+- [ ] La diferencia entre `DELETE`, que vacía una tabla, y `DROP TABLE`, que la hace desaparecer
+- [ ] El orden real en que un motor procesa una consulta, `FROM`, `WHERE`, `SELECT`, `ORDER BY`
+- [ ] Cómo usar una consulta dentro de otra con una subconsulta simple
+:::
+
+## Lo que sigue
+
+Hoy aprendiste a preguntarle cosas a una tabla que ya existía, sin haber diseñado tú esa tabla. El
+Tema 2 cambia el punto de partida, toma el diagrama entidad-relación completo de la cafetería que
+armaste en la Unidad 2 y le enseña las seis reglas que lo convierten en las sentencias `CREATE TABLE`
+correctas, con llaves primarias y foráneas de verdad, algo que `PedidoPlano` deliberadamente no tenía
+todavía. El Tema 3 vuelve sobre esta misma tabla plana de pedidos, la de hoy, y la normaliza paso a
+paso para eliminar de raíz las anomalías que el `UPDATE` y el `DELETE` de hoy solo corrigieron una vez,
+sin evitar que vuelvan a aparecer. Y más adelante, la Unidad 4 completa el SQL que falta aquí, consultas
+sobre varias tablas a la vez y agrupadas con `GROUP BY` y `HAVING`.
+
+## Recursos
+
+- Chamberlin, D. D. y Boyce, R. F. *SEQUEL: A Structured English Query Language.* Actas del taller
+  ACM SIGFIDET sobre descripción, acceso y control de datos, 1974. El artículo original que presenta el
+  lenguaje que, tras el cambio de nombre por el conflicto de marca, se conoció como SQL.
+- Codd, E. F. *A Relational Model of Data for Large Shared Data Banks.* Communications of the ACM,
+  1970. El modelo relacional sobre el que se construyó System R, el proyecto de IBM donde nació SQL.
+- International Organization for Standardization e International Electrotechnical Commission.
+  *ISO/IEC 9075. Information technology, Database languages, SQL.*
+  [Ficha del estándar](https://www.iso.org/standard/76583.html).
+- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Fundamentos de bases de datos.* Capítulo de
+  introducción al SQL, sentencias básicas de definición y manipulación de datos. Material de apoyo
+  oficial de los autores en [db-book.com](https://www.db-book.com).
+- Connolly, T. M. y Begg, C. E. *Database Systems: A Practical Approach to Design, Implementation, and
+  Management.* Capítulos de SQL, lenguaje de definición y lenguaje de manipulación de datos.
+- Elmasri, R. y Navathe, S. B. *Fundamentals of Database Systems.* Capítulo de conceptos básicos de
+  SQL, consultas simples de una sola tabla.
+- PostgreSQL Global Development Group. Documentación oficial, usada como referencia de un motor real
+  que implementa el núcleo común del estándar:
+  [`CREATE DATABASE`](https://www.postgresql.org/docs/current/sql-createdatabase.html),
+  [`DROP DATABASE`](https://www.postgresql.org/docs/current/sql-dropdatabase.html),
+  [`CREATE TABLE`](https://www.postgresql.org/docs/current/sql-createtable.html),
+  [`ALTER TABLE`](https://www.postgresql.org/docs/current/sql-altertable.html),
+  [`DROP TABLE`](https://www.postgresql.org/docs/current/sql-droptable.html),
+  [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html),
+  [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html),
+  [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html),
+  [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html),
+  [comparación de patrones con `LIKE`](https://www.postgresql.org/docs/current/functions-matching.html),
+  [funciones de agregación](https://www.postgresql.org/docs/current/functions-aggregate.html).
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

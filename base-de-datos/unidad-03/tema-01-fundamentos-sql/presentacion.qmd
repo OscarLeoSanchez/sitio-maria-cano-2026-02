@@ -1,0 +1,394 @@
+---
+title: "Tema 1. Cómo hacerle preguntas a una tabla"
+subtitle: "Base de datos (DBA03). Unidad 3"
+author: "Oscar Leonel Sánchez Conde"
+format:
+  revealjs:
+    theme: [default, ../../../estilos/presentacion.scss]
+    slide-number: true
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Hoy {.center}
+
+::: {.tarjetas}
+::: {.tarjeta}
+[SQL desde cero]{.titulo}
+
+Sin diagramas todavía, directo sobre una tabla que ya existe.
+:::
+
+::: {.tarjeta}
+[La tabla plana de pedidos]{.titulo}
+
+La misma de la Unidad 1, con el teléfono de Ana repetido en cada fila.
+:::
+
+::: {.clave}
+[`SELECT`, `INSERT`, `UPDATE`, `DELETE`]{.titulo}
+
+Las cuatro sentencias que vas a usar en el resto del curso.
+:::
+
+::: {.tarjeta}
+[Nivel intermedio]{.titulo}
+
+Filtros, comodines, `NULL`, agregación y subconsultas, sin `GROUP BY` todavía.
+:::
+:::
+
+## Qué es una base de datos, qué es un SGBD {.center}
+
+::: {.pasos}
+1. Una base de datos es un conjunto organizado de datos persistentes
+2. El SGBD (*database management system*) es el programa que la administra: MySQL, PostgreSQL, SQL
+   Server, Oracle, SQLite
+3. SQL es el lenguaje común para hablarle a cualquiera de esos motores, sin aprender uno distinto
+   por cada uno
+:::
+
+## De dónde sale SQL {.center}
+
+::: {.pasos}
+1. Nace a mediados de los 70 en System R, el proyecto de IBM que construyó el primer SGBD relacional
+2. Chamberlin y Boyce lo llamaron SEQUEL, sobre el modelo relacional de Codd (1970)
+3. Un conflicto de marca lo acortó a SQL
+4. ANSI lo estandarizó en 1986, ISO lo adoptó en 1987 como ISO/IEC 9075
+:::
+
+## SQL es declarativo, no procedimental {.center}
+
+::: {.destacado}
+Describes qué resultado quieres, no los pasos exactos para conseguirlo. El motor decide cómo
+recorrer los datos.
+:::
+
+```sql
+SELECT * FROM PedidoPlano WHERE valor > 5000;
+```
+
+::: {.pasos}
+1. No le dices al motor que recorra la tabla fila por fila
+2. Solo describes la condición que debe cumplir el resultado
+3. El propio motor decide, con su lógica interna, cómo conseguirlo de la forma más eficiente
+:::
+
+## Cómo se ejecuta SQL en la práctica {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una persona escribe una sentencia SQL en un cliente, terminal como psql o programa grafico como pgAdmin; el cliente envia ese texto al motor de base de datos que corre como servicio en segundo plano; el motor interpreta la sentencia, la ejecuta contra los datos guardados en disco, y devuelve un resultado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="sql1d" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un cliente envía el texto SQL, el motor lo ejecuta y devuelve el resultado</text>
+  <rect x="20" y="50" width="190" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="115" y="78" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Persona</text>
+  <text x="115" y="98" font-size="10.5" fill="#5b6876" text-anchor="middle">escribe SQL en un</text>
+  <text x="115" y="114" font-size="10.5" fill="#5b6876" text-anchor="middle">cliente, terminal o gráfico</text>
+  <rect x="285" y="50" width="190" height="90" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="78" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Motor de base de datos</text>
+  <text x="380" y="98" font-size="10.5" fill="#3c7d7a" text-anchor="middle">recibe, interpreta y</text>
+  <text x="380" y="114" font-size="10.5" fill="#3c7d7a" text-anchor="middle">ejecuta la sentencia</text>
+  <rect x="550" y="50" width="190" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="645" y="78" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Datos en disco</text>
+  <text x="645" y="98" font-size="10.5" fill="#5b6876" text-anchor="middle">tablas guardadas de</text>
+  <text x="645" y="114" font-size="10.5" fill="#5b6876" text-anchor="middle">forma persistente</text>
+  <path d="M210,80 L281,80" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1d)"/>
+  <path d="M475,80 L546,80" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1d)"/>
+  <path d="M285,116 L214,116" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1d)"/>
+</svg>
+
+:::
+
+::: {.destacado}
+Cliente de terminal (`psql`, `mysql`) o programa gráfico (pgAdmin, DBeaver). Toda sentencia SQL
+termina en `;`.
+:::
+
+## Cinco familias de instrucciones {.center}
+
+::: {.tarjetas}
+::: {.clave}
+[DDL]{.titulo}
+
+*Data definition language*. `CREATE`, `ALTER`, `DROP`. Define la estructura, bases de datos y tablas.
+:::
+
+::: {.clave}
+[DML]{.titulo}
+
+*Data manipulation language*. `INSERT`, `UPDATE`, `DELETE`. Cambia los datos de una tabla que ya
+existe.
+:::
+
+::: {.clave}
+[DQL]{.titulo}
+
+*Data query language*. `SELECT`. Consulta datos sin modificar nada. Algunos autores lo agrupan en
+el DML.
+:::
+
+::: {.tarjeta}
+[DCL]{.titulo}
+
+*Data control language*. `GRANT`, `REVOKE`. Decide qué usuario puede hacer qué.
+:::
+
+::: {.tarjeta}
+[TCL]{.titulo}
+
+*Transaction control language*. `COMMIT`, `ROLLBACK`. Agrupa cambios en una unidad indivisible.
+:::
+:::
+
+## Crear una base de datos {.center}
+
+```sql
+CREATE DATABASE cafeteria;
+```
+
+::: {.pasos}
+1. `CREATE DATABASE` reserva un espacio nuevo y vacío, identificado por su nombre
+2. Hay que indicarle al cliente que trabaje sobre esa base de datos activa
+3. En PostgreSQL (`psql`): `\c cafeteria`. En MySQL: `USE cafeteria;`
+4. `DROP DATABASE cafeteria;` la elimina por completo, sin posibilidad de deshacer
+:::
+
+## La tabla de trabajo, `PedidoPlano` {.center}
+
+```sql
+CREATE TABLE PedidoPlano (
+    pedido    INT,
+    cliente   VARCHAR(80),
+    telefono  VARCHAR(20),
+    producto  VARCHAR(80),
+    valor     DECIMAL(10,2)
+);
+```
+
+## Cargar los datos con `INSERT` {.center}
+
+```sql
+INSERT INTO PedidoPlano (pedido, cliente, telefono, producto, valor) VALUES
+    (1001, 'Ana Ruiz',  '300 111 2233', 'Café',   4500),
+    (1002, 'Ana Ruiz',  '300 111 2233', 'Torta',  23400),
+    (1003, 'Luis Pena', '301 444 5566', 'Café',   4500),
+    (1004, 'Ana Ruiz',  '300 111 2233', 'Jugo',   6800);
+```
+
+::: {.pasos}
+1. `INTO` nombra la tabla destino, seguida de la lista de columnas a llenar
+2. `VALUES` introduce los valores de cada fila, uno por columna, en el mismo orden
+3. El texto va entre comillas simples, los números van sin comillas
+:::
+
+## La primera consulta {.center}
+
+```sql
+SELECT * FROM PedidoPlano;
+```
+
+::: {.pasos}
+1. `SELECT` dice qué columnas quieres ver, `*` significa todas
+2. `FROM` dice de qué tabla las sacas
+3. La proyección elige columnas concretas: `SELECT cliente, producto FROM PedidoPlano;`
+4. `AS` renombra una columna en el resultado sin tocar la tabla
+:::
+
+## Filtrar con `WHERE` {.center}
+
+```sql
+SELECT * FROM PedidoPlano WHERE cliente = 'Ana Ruiz';
+SELECT * FROM PedidoPlano WHERE valor > 5000;
+```
+
+::: {.destacado}
+`=`, `<>`, `<`, `>`, `<=`, `>=`. Sin `WHERE`, ninguna fila se descarta.
+:::
+
+## `AND`, `OR` y `NOT` {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tabla de verdad de AND y OR sobre dos condiciones A y B: AND es verdadero solo cuando A y B son verdaderas a la vez, OR es verdadero cuando al menos una lo es" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">AND exige las dos condiciones, OR exige al menos una</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="32" width="330" height="120" rx="8"/><rect x="400" y="32" width="330" height="120" rx="8"/></g>
+  <text x="195" y="52" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">A AND B</text>
+  <g font-size="11" fill="#12324f" text-anchor="middle"><text x="90" y="76">A</text><text x="150" y="76">B</text><text x="240" y="76">Resultado</text></g>
+  <g font-size="11" fill="#5b6876" text-anchor="middle">
+    <text x="90" y="96">verdadero</text><text x="150" y="96">verdadero</text><text x="240" y="96" fill="#0e6f6c" font-weight="700">verdadero</text>
+    <text x="90" y="114">verdadero</text><text x="150" y="114">falso</text><text x="240" y="114">falso</text>
+    <text x="90" y="132">falso</text><text x="150" y="132">verdadero</text><text x="240" y="132">falso</text>
+  </g>
+  <text x="565" y="52" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">A OR B</text>
+  <g font-size="11" fill="#12324f" text-anchor="middle"><text x="460" y="76">A</text><text x="520" y="76">B</text><text x="610" y="76">Resultado</text></g>
+  <g font-size="11" fill="#5b6876" text-anchor="middle">
+    <text x="460" y="96">verdadero</text><text x="520" y="96">falso</text><text x="610" y="96" fill="#0e6f6c" font-weight="700">verdadero</text>
+    <text x="460" y="114">falso</text><text x="520" y="114">verdadero</text><text x="610" y="114" fill="#0e6f6c" font-weight="700">verdadero</text>
+    <text x="460" y="132">falso</text><text x="520" y="132">falso</text><text x="610" y="132">falso</text>
+  </g>
+</svg>
+
+:::
+
+## `BETWEEN`, `IN`, `LIKE` {.center}
+
+```sql
+SELECT * FROM PedidoPlano WHERE valor BETWEEN 4000 AND 10000;
+SELECT * FROM PedidoPlano WHERE producto IN ('Café', 'Torta');
+SELECT * FROM PedidoPlano WHERE cliente LIKE 'Ana%';
+```
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El comodin porcentaje reemplaza cualquier cantidad de caracteres, y el patron Ana porcentaje coincide con Ana Ruiz; el comodin guion bajo reemplaza exactamente un caracter" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Dos comodines de LIKE, cero o más caracteres contra exactamente uno</text>
+  <rect x="30" y="32" width="330" height="110" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="195" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">% reemplaza cero o más caracteres</text>
+  <text x="195" y="78" font-size="11.5" fill="#12324f" text-anchor="middle">patrón: 'Ana%'</text>
+  <text x="195" y="98" font-size="11.5" fill="#12324f" text-anchor="middle">coincide: 'Ana Ruiz'</text>
+  <text x="195" y="120" font-size="10.5" fill="#5b6876" text-anchor="middle">no coincide: 'Luis Pena'</text>
+  <rect x="400" y="32" width="330" height="110" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="565" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">_ reemplaza exactamente un carácter</text>
+  <text x="565" y="78" font-size="11.5" fill="#12324f" text-anchor="middle">patrón: '300 111 22__'</text>
+  <text x="565" y="98" font-size="11.5" fill="#12324f" text-anchor="middle">coincide: '300 111 2233'</text>
+  <text x="565" y="120" font-size="10.5" fill="#5b6876" text-anchor="middle">no coincide: '300 111 223'</text>
+</svg>
+
+:::
+
+## `NULL` no es igual a nada {.center}
+
+```sql
+SELECT * FROM PedidoPlano WHERE descuento = NULL;    -- 0 filas, siempre
+SELECT * FROM PedidoPlano WHERE descuento IS NULL;    -- forma correcta
+```
+
+::: {.destacado}
+`NULL` es ausencia de valor, no cero ni cadena vacía. Ni siquiera `NULL = NULL` es verdadero.
+:::
+
+## `ORDER BY`, `LIMIT`, `FETCH FIRST` {.center}
+
+```sql
+SELECT * FROM PedidoPlano ORDER BY cliente ASC, valor DESC;
+SELECT * FROM PedidoPlano ORDER BY valor DESC LIMIT 1;
+SELECT * FROM PedidoPlano ORDER BY valor DESC FETCH FIRST 1 ROWS ONLY;
+```
+
+::: {.destacado}
+`LIMIT` no es parte del estándar ISO/IEC 9075, aunque casi todo motor lo implementa igual. `FETCH
+FIRST n ROWS ONLY` sí lo es.
+:::
+
+## Funciones de agregación {.center}
+
+```sql
+SELECT COUNT(*), SUM(valor), AVG(valor), MIN(valor), MAX(valor)
+FROM PedidoPlano;
+```
+
+## `UPDATE` corrige tres filas a la vez {.center}
+
+```sql
+UPDATE PedidoPlano
+SET telefono = '300 999 8877'
+WHERE cliente = 'Ana Ruiz';
+```
+
+::: {.pasos}
+1. `UPDATE` nombra la tabla que cambia, `PedidoPlano`
+2. `SET` nombra la columna y, después del `=`, el valor nuevo
+3. `WHERE` filtra a qué filas se les aplica el cambio, igual que en `SELECT`
+:::
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes del UPDATE, las tres filas de Ana Ruiz muestran el telefono antiguo; despues del UPDATE con WHERE cliente igual Ana Ruiz, las tres filas quedan actualizadas al telefono nuevo en una sola sentencia, sin tocar la fila de Luis Pena" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un solo UPDATE con WHERE corrige las tres filas de Ana a la vez</text>
+  <text x="195" y="36" font-size="11.5" font-weight="700" fill="#5b6876" text-anchor="middle">Antes</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="30" y="44" width="330" height="34"/><rect x="30" y="78" width="330" height="34"/><rect x="30" y="112" width="330" height="34"/><rect x="30" y="146" width="330" height="34"/></g>
+  <g font-size="10.5" fill="#12324f"><text x="45" y="65">1001 Ana Ruiz</text><text x="230" y="65">300 111 2233</text></g>
+  <g font-size="10.5" fill="#12324f"><text x="45" y="99">1002 Ana Ruiz</text><text x="230" y="99">300 111 2233</text></g>
+  <g font-size="10.5" fill="#5b6876"><text x="45" y="133">1003 Luis Pena</text><text x="230" y="133">301 444 5566</text></g>
+  <g font-size="10.5" fill="#12324f"><text x="45" y="167">1004 Ana Ruiz</text><text x="230" y="167">300 111 2233</text></g>
+  <path d="M380,120 L400,120" fill="none" stroke="#8fb3d1" stroke-width="1.8"/>
+  <text x="565" y="36" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Después</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="400" y="44" width="330" height="34"/><rect x="400" y="78" width="330" height="34"/><rect x="400" y="112" width="330" height="34"/><rect x="400" y="146" width="330" height="34"/></g>
+  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="65">1001 Ana Ruiz</text><text x="600" y="65">300 999 8877</text></g>
+  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="99">1002 Ana Ruiz</text><text x="600" y="99">300 999 8877</text></g>
+  <g font-size="10.5" fill="#5b6876"><text x="415" y="133">1003 Luis Pena</text><text x="600" y="133">sin cambio</text></g>
+  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="167">1004 Ana Ruiz</text><text x="600" y="167">300 999 8877</text></g>
+</svg>
+
+:::
+
+## `DELETE` y lo que se pierde con la fila {.center}
+
+```sql
+DELETE FROM PedidoPlano WHERE pedido = 1003;
+```
+
+::: {.destacado}
+Sin una tabla `Cliente` separada, borrar el pedido de Luis Pena borra también su único registro de
+nombre y teléfono en toda la base de datos.
+:::
+
+## Borrar una tabla completa, `DROP TABLE` {.center}
+
+```sql
+DROP TABLE PedidoPlano;
+```
+
+::: {.destacado}
+`DELETE` vacía una tabla que sigue existiendo. `DROP TABLE` es DDL, hace desaparecer la tabla misma,
+estructura y datos, sin `ROLLBACK` posible.
+:::
+
+## El riesgo de olvidar el `WHERE` {.center}
+
+```sql
+UPDATE PedidoPlano SET valor = valor * 0.9;   -- actualiza las CUATRO filas
+DELETE FROM PedidoPlano;                       -- borra las CUATRO filas
+```
+
+::: {.destacado}
+Ninguna de las dos sentencias es inválida. El motor las ejecuta sin queja, y esa es la razón para
+revisar dos veces el `WHERE` antes de ejecutar contra datos reales.
+:::
+
+## El orden real de ejecución {.center}
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Orden escrito de una consulta: SELECT, FROM, WHERE, ORDER BY; orden real de procesamiento del motor: primero FROM, despues WHERE, despues SELECT, y por ultimo ORDER BY" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="sql1b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El orden en que escribes la consulta no es el orden en que el motor la resuelve</text>
+  <text x="380" y="40" font-size="11" fill="#5b6876" text-anchor="middle">Orden escrito</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="50" width="150" height="40" rx="6"/><rect x="210" y="50" width="150" height="40" rx="6"/><rect x="390" y="50" width="150" height="40" rx="6"/><rect x="570" y="50" width="160" height="40" rx="6"/></g>
+  <g font-size="12" font-weight="700" fill="#12324f" text-anchor="middle"><text x="105" y="75">SELECT</text><text x="285" y="75">FROM</text><text x="465" y="75">WHERE</text><text x="650" y="75">ORDER BY</text></g>
+  <text x="380" y="112" font-size="11" fill="#0e6f6c" text-anchor="middle">Orden real de ejecución</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="30" y="122" width="150" height="40" rx="6"/><rect x="210" y="122" width="150" height="40" rx="6"/><rect x="390" y="122" width="150" height="40" rx="6"/><rect x="570" y="122" width="160" height="40" rx="6"/></g>
+  <g font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle"><text x="105" y="147">1. FROM</text><text x="285" y="147">2. WHERE</text><text x="465" y="147">3. SELECT</text><text x="650" y="147">4. ORDER BY</text></g>
+  <path d="M285,90 L285,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1b)"/>
+  <path d="M465,90 L465,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1b)"/>
+  <path d="M650,90 L650,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1b)"/>
+</svg>
+
+:::
+
+## Una consulta dentro de otra {.center}
+
+```sql
+SELECT pedido, producto, valor
+FROM PedidoPlano
+WHERE valor > (SELECT AVG(valor) FROM PedidoPlano);
+```
+
+::: {.destacado}
+El motor resuelve primero la subconsulta entre paréntesis, y usa ese número para filtrar la consulta
+externa.
+:::
