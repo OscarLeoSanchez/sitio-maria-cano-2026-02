@@ -1,0 +1,783 @@
+---
+title: "Tema 1. Vectores o arreglos"
+subtitle: "Estructura de datos (ESD01). Unidad 2"
+author: "Oscar Leonel Sánchez Conde"
+pagetitle: "Tema 1. Vectores o arreglos"
+title-prefix: ""
+format:
+  revealjs:
+    theme: [default, ../../../estilos/presentacion.scss]
+    slide-number: true
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Contenido {.center}
+
+::: {.tarjetas}
+::: {.clave .fragment}
+<span class="titulo">1. Qué es un arreglo</span>
+:::
+::: {.fragment}
+<span class="titulo">2. Recorrer, insertar, eliminar</span>
+:::
+::: {.fragment}
+<span class="titulo">3. Java frente a Python</span>
+:::
+::: {.fragment}
+<span class="titulo">4. Límites y antipatrones</span>
+:::
+:::
+
+## Conceptos previos {.center}
+
+## Qué es la notación O {.center}
+
+::: {.destacado}
+La notación O describe cómo crece el trabajo de un algoritmo a medida que crece la cantidad de
+datos, sin depender de qué tan rápida sea la máquina donde corre.
+:::
+
+::: {.tarjetas}
+::: {.fragment}
+<span class="titulo">Para qué sirve</span>
+
+Compara dos soluciones de forma objetiva, según cómo escalan, no según cuántos milisegundos tardó
+una ejecución en un equipo concreto.
+:::
+::: {.fragment}
+<span class="titulo">Cómo se lee</span>
+
+`O(algo)` responde una pregunta: si `n` (la cantidad de datos) se duplica, ¿el trabajo se queda
+igual, se duplica también, o crece mucho más rápido?
+:::
+:::
+
+## Complejidades relevantes para este tema {.center}
+
+| Notación | Qué significa | Ejemplo |
+|---|---|---|
+| O(1), constante | El trabajo no cambia sin importar cuántos datos haya | Leer `a[5]` |
+| O(n), lineal | El trabajo crece en proporción directa a la cantidad de datos | Recorrer o desplazar un arreglo completo |
+
+::: {.neutro .fragment}
+Con 10 elementos, O(1) sigue siendo 1 operación y O(n) son 10. Con 1000 elementos, O(1) sigue
+siendo 1 y O(n) son 1000: el trabajo de O(n) crece al mismo ritmo que los datos.
+:::
+
+## Comparación de crecimiento: O(1) frente a O(n) {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafico comparativo de complejidad O(1) frente a O(n): la linea O(1) permanece plana al duplicar el tamano de la entrada de n a 2n, mientras la linea O(n) duplica exactamente su altura" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <g stroke="#cfd8e3" stroke-width="1.5" fill="none"><path d="M76,26 L76,254"/><path d="M76,254 L700,254"/></g>
+  <text x="14" y="24" font-size="11.5" fill="#5b6876">operaciones</text>
+  <text x="700" y="276" font-size="11.5" fill="#5b6876" text-anchor="end">tamaño de la entrada (n)</text>
+  <path d="M76,220 L680,220" stroke="#3c7d7a" stroke-width="3" fill="none"/>
+  <path d="M76,250 L680,50" stroke="#12324f" stroke-width="3" fill="none"/>
+  <text x="690" y="224" font-size="12.5" font-weight="600" fill="#3c7d7a">O(1)</text>
+  <text x="690" y="54" font-size="12.5" font-weight="600" fill="#12324f">O(n)</text>
+  <g stroke="#cfd8e3" stroke-width="1.3" stroke-dasharray="4 3" fill="none"><path d="M300,254 L300,175.8"/><path d="M300,175.8 L76,175.8"/><path d="M524,254 L524,101.7"/><path d="M524,101.7 L76,101.7"/></g>
+  <circle cx="300" cy="175.8" r="4" fill="#12324f"/>
+  <circle cx="524" cy="101.7" r="4" fill="#12324f"/>
+  <circle cx="300" cy="220" r="4" fill="#3c7d7a"/>
+  <circle cx="524" cy="220" r="4" fill="#3c7d7a"/>
+  <text x="300" y="270" font-size="11.5" fill="#5b6876" text-anchor="middle">n</text>
+  <text x="524" y="270" font-size="11.5" fill="#5b6876" text-anchor="middle">2n</text>
+  <text x="380" y="292" font-size="11.5" fill="#5b6876" text-anchor="middle">Al duplicar el tamaño de la entrada, el trabajo de O(n) se duplica; el de O(1) permanece igual.</text>
+</svg>
+:::
+
+::: {.neutro .fragment}
+Esta relación, el trabajo de O(n) escala en proporción directa al tamaño de la entrada mientras
+O(1) no depende de él, es la base para justificar la complejidad de cada operación presentada a
+continuación.
+:::
+
+## Qué es una excepción {.center}
+
+::: {.destacado}
+Una excepción es la señal que un programa lanza en tiempo de ejecución cuando algo sale mal, en
+vez de seguir con un resultado incorrecto o fallar en silencio.
+:::
+
+::: {.neutro .fragment}
+Java y Python tienen su propio mecanismo, con nombres distintos para representar el mismo tipo de
+problema. Este tema cubre dos de ellos.
+:::
+
+## Excepciones relevantes para este tema {.center}
+
+| Excepción | Lenguaje | Cuándo aparece |
+|---|---|---|
+| `ArrayIndexOutOfBoundsException` | Java | Acceder a un índice fuera del rango del arreglo |
+| `IndexError` | Python | Acceder a una posición fuera del rango de la lista |
+
+## Qué es un arreglo {.center}
+
+::: {.diagrama .fragment}
+<svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo de cinco casillas contiguas en memoria, cada una con un valor y un indice numerico que empieza en 0" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="140" y="30" width="90" height="60" rx="8"/><rect x="230" y="30" width="90" height="60" rx="8"/><rect x="320" y="30" width="90" height="60" rx="8"/><rect x="410" y="30" width="90" height="60" rx="8"/><rect x="500" y="30" width="90" height="60" rx="8"/></g>
+  <g text-anchor="middle" font-size="14" font-weight="600" fill="#12324f"><text x="185" y="66">10</text><text x="275" y="66">20</text><text x="365" y="66">30</text><text x="455" y="66">40</text><text x="545" y="66">50</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="185" y="108">indice 0</text><text x="275" y="108">indice 1</text><text x="365" y="108">indice 2</text><text x="455" y="108">indice 3</text><text x="545" y="108">indice 4</text></g>
+</svg>
+:::
+
+::: {.destacado .fragment}
+Un arreglo es un bloque de memoria contiguo que guarda un número fijo de elementos del mismo
+tipo, cada uno accesible por un número de posición llamado índice, que empieza en 0.
+:::
+
+## Memoria contigua y la ecuación de acceso {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo de cinco casillas contiguas en memoria, con la casilla de indice 2 resaltada" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">La direccion se calcula, no se busca</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="140" y="40" width="90" height="60" rx="8"/><rect x="230" y="40" width="90" height="60" rx="8"/><rect x="410" y="40" width="90" height="60" rx="8"/><rect x="500" y="40" width="90" height="60" rx="8"/></g>
+  <rect x="320" y="40" width="90" height="60" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="14" font-weight="600" fill="#12324f"><text x="185" y="76">10</text><text x="275" y="76">20</text><text x="365" y="76">30</text><text x="455" y="76">40</text><text x="545" y="76">50</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="185" y="118">indice 0</text><text x="275" y="118">indice 1</text><text x="365" y="118" fill="#0e6f6c" font-weight="600">indice 2</text><text x="455" y="118">indice 3</text><text x="545" y="118">indice 4</text></g>
+</svg>
+:::
+
+::: {.fragment}
+- La dirección de una casilla se calcula con la ecuación
+  `direccion = base + indice * tamaño_elemento`, sin recorrer las casillas anteriores.
+:::
+
+## Los tres términos de la ecuación {.center}
+
+::: {.destacado}
+`direccion = base + indice * tamaño_elemento`
+:::
+
+::: {.tarjetas}
+::: {.fragment}
+<span class="titulo">base</span>
+
+La dirección de memoria donde empieza el arreglo completo, la casilla de índice 0.
+:::
+::: {.clave .fragment}
+<span class="titulo">índice</span>
+
+La posición que se pide, contando siempre desde 0.
+:::
+::: {.fragment}
+<span class="titulo">tamaño_elemento</span>
+
+Cuántos bytes ocupa cada dato del tipo declarado, siempre el mismo en todo el arreglo.
+:::
+:::
+
+## Herramientas para medir en la práctica {.center}
+
+::: {.destacado}
+Antes de seguir, conviene tener tres funciones simples que permitan comprobar en código lo
+explicado hasta ahora: cuánto tarda una operación, cuántos bytes pesa un dato, y en qué dirección
+de memoria vive cada posición de un arreglo.
+:::
+
+::: {.tarjetas}
+::: {.fragment}
+<span class="titulo">Tiempo</span>
+
+Cuánto tarda una operación en ejecutarse.
+:::
+::: {.fragment}
+<span class="titulo">Memoria</span>
+
+Cuántos bytes ocupa un dato.
+:::
+::: {.clave .fragment}
+<span class="titulo">Dirección</span>
+
+En qué posición exacta de memoria vive cada elemento.
+:::
+:::
+
+## Medir tiempo de ejecución {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+public static long medirTiempoNanos(Runnable tarea) {
+    long inicio = System.nanoTime();
+    tarea.run();
+    long fin = System.nanoTime();
+    return fin - inicio;
+}
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+import time
+
+def medir_tiempo(funcion, *args):
+    inicio = time.perf_counter()
+    resultado = funcion(*args)
+    fin = time.perf_counter()
+    return resultado, fin - inicio
+```
+:::
+:::
+
+::: {.neutro .fragment}
+`System.nanoTime()` y `time.perf_counter()` son parte de la biblioteca estándar de cada lenguaje,
+no hay que instalar nada. Ambos miden tiempo transcurrido con un reloj de alta precisión, no la
+fecha y hora del sistema, que es lo correcto para comparar el costo de una operación.
+:::
+
+## Medir el tamaño en memoria de un elemento {.center}
+
+::: {.fragment}
+```python
+import sys
+
+def medir_memoria(elemento):
+    return sys.getsizeof(elemento)
+```
+:::
+
+::: {.destacado .fragment}
+`sys` es parte de la biblioteca estándar de Python. `getsizeof` devuelve los bytes que ocupa el
+objeto en sí, sin contar los objetos a los que hace referencia.
+:::
+
+::: {.fragment}
+```java
+public static long memoriaUsadaAprox() {
+    Runtime rt = Runtime.getRuntime();
+    return rt.totalMemory() - rt.freeMemory();
+}
+```
+:::
+
+::: {.destacado .fragment}
+Java no trae una función equivalente a `sizeof`. Esto solo aproxima la memoria total usada en el
+heap en ese instante, no el peso de un objeto puntual, y varía según cuándo pasó el recolector de
+basura. Medir el tamaño exacto de un objeto requiere una herramienta especializada, como la
+librería Java Object Layout (JOL), fuera del alcance de este curso.
+:::
+
+## Ver la dirección de memoria de cada posición {.center}
+
+::: {.destacado}
+Una lista de Python guarda referencias, no valores, así que no sirve para ver direcciones que
+crezcan de forma predecible. Para eso hace falta un arreglo de datos crudos y contiguos, como los
+que ofrece NumPy.
+:::
+
+::: {.neutro .fragment}
+NumPy es una librería externa, no viene incluida con Python, muy usada para trabajar con arreglos
+numéricos. Se usa aquí por una sola razón: a diferencia de una lista, guarda los valores uno junto
+al otro en memoria, igual que el modelo de arreglo de esta unidad.
+:::
+
+::: {.fragment}
+```python
+import numpy as np
+
+def direccion_elemento(arreglo, indice):
+    return arreglo.ctypes.data + indice * arreglo.itemsize
+```
+:::
+
+## Comprobando la ecuación con código real {.center}
+
+::: {.fragment}
+```python
+arreglo = np.array([10, 20, 30, 40, 50], dtype=np.int32)
+for i in range(len(arreglo)):
+    print(i, direccion_elemento(arreglo, i))
+```
+:::
+
+::: {.fragment}
+```
+0 140712834937920
+1 140712834937924
+2 140712834937928
+3 140712834937932
+4 140712834937936
+```
+:::
+
+::: {.destacado .fragment}
+Cada dirección aumenta exactamente `itemsize` bytes respecto a la anterior, 4 bytes para
+`int32`: la evidencia real de la ecuación `direccion = base + indice * tamaño_elemento`. Los
+números exactos cambian en cada ejecución y en cada equipo; lo que no cambia es el salto constante
+entre casillas consecutivas.
+:::
+
+## Y en Java? {.center}
+
+::: {.destacado}
+Java no permite leer la dirección de memoria real de un objeto. El lenguaje la oculta a propósito,
+porque el recolector de basura puede mover los objetos de lugar en cualquier momento sin avisar al
+programa.
+:::
+
+::: {.fragment}
+```java
+int idHash = System.identityHashCode(objeto);
+```
+:::
+
+::: {.neutro .fragment}
+`identityHashCode` entrega un número casi siempre distinto por objeto, y en algunas
+implementaciones se calcula a partir de la dirección real en el momento de la llamada, pero la
+especificación del lenguaje no lo garantiza ni promete que sea estable si el objeto se mueve.
+Nunca debe tratarse como una dirección de memoria real.
+:::
+
+## Ejercicio 1. Verificar la ecuación de acceso {.center}
+
+::: {.pasos .incremental}
+1. Crea un arreglo NumPy de al menos 10 enteros de 32 bits (`dtype=np.int32`).
+2. Usa `direccion_elemento` para calcular la dirección de cada índice.
+3. Compara cada resultado con `arreglo[i:i+1].ctypes.data`, la dirección real que entrega NumPy
+   para ese mismo índice.
+4. Confirma que las dos coinciden siempre, y que la diferencia entre direcciones consecutivas es
+   igual a `itemsize`.
+:::
+
+## Ejercicio 2. Comprobar que el acceso es O(1) {.center}
+
+::: {.pasos .incremental}
+1. Crea un arreglo o lista con varios millones de elementos.
+2. Usa `medir_tiempo` (o `medirTiempoNanos`) para medir el acceso al índice 0.
+3. Mide también el acceso al último índice.
+4. Compara los dos tiempos: deberían ser prácticamente iguales, sin importar la posición
+   consultada.
+:::
+
+## Tamaño en bytes de tamaño_elemento, según el tipo {.center}
+
+::: {.neutro}
+En Java, cada tipo primitivo tiene un tamaño fijo, definido en la especificación del lenguaje
+(JLS 4.2). Ese número es exactamente el `tamaño_elemento` de la ecuación anterior.
+:::
+
+| Tipo (Java) | Bytes por elemento |
+|---|---|
+| `byte` | 1 |
+| `char` | 2 |
+| `int` | 4 |
+| `long` | 8 |
+| `double` | 8 |
+
+::: {.destacado .fragment}
+Un `int[1000]` pesa aproximadamente 1000 * 4 = 4000 bytes, más una pequeña cabecera fija del
+objeto arreglo. El peso total crece de forma lineal con la cantidad de elementos.
+:::
+
+## Arreglos de referencias frente a arreglos de valores {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda un arreglo de enteros guarda los valores directamente adentro de cada casilla. A la derecha un arreglo de strings guarda referencias del mismo tamano, que apuntan a objetos de texto de tamano variable ubicados aparte" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1f" markerWidth="8" markerHeight="8" refX="6" refY="2.8" orient="auto"><path d="M0,0 L6,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="190" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">int[] numeros</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="100" y="40" width="60" height="44"/><rect x="160" y="40" width="60" height="44"/><rect x="220" y="40" width="60" height="44"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="130" y="67">10</text><text x="190" y="67">20</text><text x="250" y="67">30</text></g>
+  <text x="190" y="105" text-anchor="middle" font-size="10.5" fill="#5b6876">cada casilla mide 4 bytes: el valor vive adentro</text>
+  <text x="565" y="20" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">String[] nombres</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="470" y="40" width="60" height="44"/><rect x="530" y="40" width="60" height="44"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="500" y="67">ref</text><text x="560" y="67">ref</text></g>
+  <path d="M500,84 L485,120" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1f)"/>
+  <path d="M560,84 L620,120" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1f)"/>
+  <rect x="440" y="122" width="90" height="34" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="485" y="144" text-anchor="middle" font-size="12" font-weight="600" fill="#0e6f6c">Ana</text>
+  <rect x="560" y="122" width="170" height="34" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="645" y="144" text-anchor="middle" font-size="12" font-weight="600" fill="#0e6f6c">Un texto mucho mas largo</text>
+  <text x="565" y="184" text-anchor="middle" font-size="10.5" fill="#5b6876">cada casilla mide siempre lo mismo; el String real vive aparte, con su propio tamano</text>
+</svg>
+:::
+
+::: {.destacado .fragment}
+El tamaño de un arreglo de referencias no depende de qué tan largo sea cada objeto al que apunta:
+todas las casillas miden lo mismo, sea una sola letra o un párrafo completo.
+:::
+
+## Python: hasta un entero es un objeto {.center}
+
+```python
+import sys
+print(sys.getsizeof(42))            # 28
+print(sys.getsizeof([1, 2, 3]))     # 88
+```
+
+::: {.destacado .fragment}
+En Python no hay tipos primitivos dentro de una lista: hasta el número 42 es un objeto completo
+de 28 bytes, con su propia cabecera. La lista de 3 elementos solo guarda 3 referencias; los
+objetos enteros viven aparte, igual que los `String` en el ejemplo de Java.
+:::
+
+## Declarar un arreglo {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+int[] numeros = new int[5];
+// JLS 4.12.5: se llena con ceros
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+numeros = [10, 20, 30]
+```
+:::
+:::
+
+::: {.neutro .fragment}
+Java reserva el tamaño desde el inicio y lo rellena con el valor por defecto del tipo. Python
+crea la lista ya con sus valores.
+:::
+
+## Comportamiento fuera de los límites del arreglo {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+```java
+int[] numeros = {10, 20, 30};
+System.out.println(numeros[5]);
+// ArrayIndexOutOfBoundsException
+```
+:::
+::: {.column width="50%"}
+```python
+numeros = [10, 20, 30]
+print(numeros[5])
+# IndexError: list index out of range
+```
+:::
+:::
+
+::: {.destacado .fragment}
+Ninguno de los dos falla en silencio: ambos avisan de inmediato con una de las excepciones
+presentadas anteriormente.
+:::
+
+## Recorrer un arreglo {.center}
+
+::: {.tarjetas}
+::: {.fragment}
+<span class="titulo">Ciclo indexado</span>
+
+Repite mientras un contador `i` va de 0 hasta el tamaño; en cada vuelta accede a `a[i]`.
+:::
+::: {.fragment}
+<span class="titulo">Ciclo por cada elemento</span>
+
+Entrega directamente cada valor, uno por uno, sin exponer el índice.
+:::
+:::
+
+::: {.fragment}
+::: {.columns}
+::: {.column width="50%"}
+```java
+for (int i = 0; i < numeros.length; i++) {
+    System.out.println(numeros[i]);
+}
+for (int n : numeros) {
+    System.out.println(n);
+}
+```
+:::
+::: {.column width="50%"}
+```python
+for i in range(len(numeros)):
+    print(numeros[i])
+for n in numeros:
+    print(n)
+```
+:::
+:::
+:::
+
+::: {.datos .fragment}
+::: {}
+<span class="cifra">O(1)</span>
+<span class="rotulo">acceder a una casilla</span>
+:::
+::: {}
+<span class="cifra">O(n)</span>
+<span class="rotulo">recorrer el arreglo completo</span>
+:::
+:::
+
+## Insertar en el medio, paso a paso {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres estados muestran como insertar 25 en el indice 2: primero el arreglo original, luego el 30 y el 40 desplazados una posicion a la derecha dejando un hueco, y por ultimo el 25 escrito en ese hueco" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="52" font-size="11" font-weight="600" fill="#5b6876">antes</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="30" width="70" height="42"/><rect x="290" y="30" width="70" height="42"/><rect x="360" y="30" width="70" height="42"/><rect x="430" y="30" width="70" height="42"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="56">10</text><text x="325" y="56">20</text><text x="395" y="56">30</text><text x="465" y="56">40</text></g>
+  <text x="500" y="56" font-size="11" fill="#5b6876">insertar 25 en el indice 2</text>
+  <path d="M395,72 L465,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1b)"/>
+  <path d="M465,72 L535,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1b)"/>
+  <text x="130" y="132" font-size="11" font-weight="600" fill="#5b6876">se corre un paso</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="110" width="70" height="42"/><rect x="290" y="110" width="70" height="42"/><rect x="430" y="110" width="70" height="42"/><rect x="500" y="110" width="70" height="42"/></g>
+  <rect x="360" y="110" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"/>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="136">10</text><text x="325" y="136">20</text><text x="465" y="136">30</text><text x="535" y="136">40</text></g>
+  <text x="395" y="136" text-anchor="middle" font-size="11" fill="#5b6876">hueco</text>
+  <path d="M395,152 L395,188" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1b)"/>
+  <text x="130" y="212" font-size="11" font-weight="600" fill="#5b6876">se escribe 25</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="190" width="70" height="42"/><rect x="290" y="190" width="70" height="42"/><rect x="430" y="190" width="70" height="42"/><rect x="500" y="190" width="70" height="42"/></g>
+  <rect x="360" y="190" width="70" height="42" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="13" font-weight="600"><text x="255" y="216" fill="#12324f">10</text><text x="325" y="216" fill="#12324f">20</text><text x="395" y="216" fill="#0e6f6c">25</text><text x="465" y="216" fill="#12324f">30</text><text x="535" y="216" fill="#12324f">40</text></g>
+</svg>
+:::
+
+```python
+numeros = [10, 20, 30, 40]
+numeros.insert(2, 25)
+```
+
+::: {.destacado .fragment}
+Insertar o eliminar en el inicio o en el medio cuesta O(n) porque cada elemento desde el punto de
+inserción hasta el final se mueve una posición.
+:::
+
+## Eliminar del medio, paso a paso {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres estados muestran como eliminar el elemento del indice 1: primero el arreglo original con ese elemento marcado, luego el 30 y el 40 desplazados una posicion a la izquierda, y por ultimo el arreglo final con una casilla libre al final" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1c2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="52" font-size="11" font-weight="600" fill="#5b6876">antes</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="30" width="70" height="42"/><rect x="360" y="30" width="70" height="42"/><rect x="430" y="30" width="70" height="42"/></g>
+  <rect x="290" y="30" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="56">10</text><text x="325" y="56">20</text><text x="395" y="56">30</text><text x="465" y="56">40</text></g>
+  <text x="500" y="56" font-size="11" fill="#5b6876">se elimina el indice 1</text>
+  <path d="M395,72 L325,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1c2)"/>
+  <path d="M465,72 L395,110" stroke="#8fb3d1" stroke-width="2" fill="none" marker-end="url(#b1c2)"/>
+  <text x="130" y="132" font-size="11" font-weight="600" fill="#5b6876">se corre un paso</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="110" width="70" height="42"/><rect x="290" y="110" width="70" height="42"/><rect x="360" y="110" width="70" height="42"/></g>
+  <rect x="430" y="110" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"/>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="136">10</text><text x="325" y="136">30</text><text x="395" y="136">40</text></g>
+  <text x="465" y="136" text-anchor="middle" font-size="11" fill="#5b6876">libre</text>
+  <text x="130" y="212" font-size="11" font-weight="600" fill="#5b6876">resultado final</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="190" width="70" height="42"/><rect x="290" y="190" width="70" height="42"/><rect x="360" y="190" width="70" height="42"/></g>
+  <rect x="430" y="190" width="70" height="42" fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"/>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="255" y="216">10</text><text x="325" y="216">30</text><text x="395" y="216">40</text></g>
+  <text x="520" y="216" text-anchor="start" font-size="11" fill="#5b6876">el tamano logico baja de 4 a 3</text>
+</svg>
+:::
+
+```python
+numeros = [10, 20, 30, 40]
+numeros.pop(1)  # quita y devuelve el 20
+```
+
+::: {.neutro .fragment}
+`pop(indice)` quita el elemento de esa posición y devuelve su valor. Sin argumento, quita el
+último.
+:::
+
+## Complejidad de un arreglo, operación por operación {.center}
+
+| Operación | Complejidad | Por qué |
+|---|---|---|
+| Acceder o leer `a[i]` | O(1) | multiplicación y suma |
+| Modificar `a[i] = x` | O(1) | misma dirección de siempre |
+| Insertar o eliminar al final | O(1) amortizado | sin desplazamiento, si hay espacio |
+| Insertar o eliminar al inicio o en medio | O(n) | desplaza todo lo posterior |
+| Buscar por valor | O(n) | recorrido casilla por casilla |
+
+## Arreglos de Java: tamaño fijo {.center}
+
+::: {.destacado}
+En Java, un arreglo tiene tamaño fijo desde que se crea. No existe una operación para agregarle
+una casilla más: crecer significa crear un arreglo distinto y copiar.
+:::
+
+::: {.diagrama .corto .fragment}
+<svg viewBox="0 0 760 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un arreglo de tres casillas se copia a uno nuevo de seis casillas; el arreglo original queda disponible para el recolector de basura" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="40" y="40" width="60" height="46"/><rect x="100" y="40" width="60" height="46"/><rect x="160" y="40" width="60" height="46"/></g>
+  <g text-anchor="middle" font-size="13" fill="#5b6876"><text x="70" y="68">10</text><text x="130" y="68">20</text><text x="190" y="68">30</text></g>
+  <text x="130" y="102" text-anchor="middle" font-size="10.5" fill="#5b6876">arreglo original, tamano fijo 3</text>
+  <path d="M240,63 L296,63" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b1d)"/>
+  <text x="268" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0e6f6c">copia</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="320" y="40" width="60" height="46"/><rect x="380" y="40" width="60" height="46"/><rect x="440" y="40" width="60" height="46"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="500" y="40" width="60" height="46"/><rect x="560" y="40" width="60" height="46"/><rect x="620" y="40" width="60" height="46"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f"><text x="350" y="68">10</text><text x="410" y="68">20</text><text x="470" y="68">30</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="530" y="68">0</text><text x="590" y="68">0</text><text x="650" y="68">0</text></g>
+  <text x="470" y="102" text-anchor="middle" font-size="10.5" fill="#5b6876">arreglo nuevo, tamano fijo 6</text>
+  <text x="380" y="140" text-anchor="middle" font-size="11.5" fill="#5b6876">El arreglo de 3 casillas queda sin referencias y el recolector de basura lo libera.</text>
+</svg>
+:::
+
+::: {.fragment}
+```java
+int[] original = {10, 20, 30};
+int[] masGrande = Arrays.copyOf(original, 6);
+// masGrande = [10, 20, 30, 0, 0, 0]
+```
+:::
+
+::: {.destacado .fragment}
+Crecer significa crear uno nuevo y copiar, un costo O(n) cada vez que se agota el espacio.
+:::
+
+## Capacidad y tamaño: dos ideas distintas {.center}
+
+::: {.tarjetas}
+::: {.clave .fragment}
+<span class="titulo">tamaño</span>
+
+Cuántos elementos hay usados de verdad. Es lo que devuelve `len()` en Python.
+:::
+::: {.fragment}
+<span class="titulo">capacidad</span>
+
+Cuánto espacio hay reservado en memoria, usado o no. No es visible directamente, pero existe por
+debajo.
+:::
+:::
+
+::: {.destacado .fragment}
+Cuando una estructura dinámica se queda sin capacidad, no reserva una casilla más: reserva de
+golpe un bloque más grande, para no repetir esa operación costosa demasiado seguido.
+:::
+
+## Listas de Python: arreglos dinámicos internamente {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una lista de Python con cinco elementos usados y tres casillas reservadas de mas, sin usar todavia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="100" y="40" width="66" height="50"/><rect x="166" y="40" width="66" height="50"/><rect x="232" y="40" width="66" height="50"/><rect x="298" y="40" width="66" height="50"/><rect x="364" y="40" width="66" height="50"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="430" y="40" width="66" height="50"/><rect x="496" y="40" width="66" height="50"/><rect x="562" y="40" width="66" height="50"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="133" y="70">a</text><text x="199" y="70">b</text><text x="265" y="70">c</text><text x="331" y="70">d</text><text x="397" y="70">e</text></g>
+  <text x="265" y="112" text-anchor="middle" font-size="11" fill="#5b6876">tamano: len() devuelve 5</text>
+  <text x="562" y="30" text-anchor="middle" font-size="11" fill="#5b6876">capacidad reservada, aun libre</text>
+</svg>
+:::
+
+::: {.neutro .fragment}
+La documentación de CPython lo describe así: son arreglos de longitud variable, no listas
+enlazadas. Por debajo hay un bloque contiguo con espacio de sobra.
+:::
+
+## Qué hace append() {.center}
+
+::: {.destacado}
+`append(valor)` agrega `valor` justo después del último elemento usado, sin desplazar nada. Si
+sobra capacidad, cuesta O(1).
+:::
+
+::: {.fragment}
+```python
+lista = []
+for i in range(20):
+    lista.append(i)
+    print(id(lista))
+# el id() no cambia: el buffer interno se reemplaza por dentro
+```
+:::
+
+## Capacidad reservada al crecer una lista {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafico de barras con la secuencia real de capacidades reservadas por CPython al crecer una lista: 0, 4, 8, 16, 24, 32, creciendo cada vez menos en proporcion" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Capacidad reservada al crecer una lista en CPython</text>
+  <g fill="#8fb3d1"><rect x="80" y="188" width="70" height="2"/><rect x="180" y="152" width="70" height="38"/><rect x="280" y="120" width="70" height="70"/><rect x="380" y="70" width="70" height="120"/><rect x="480" y="30" width="70" height="160"/><rect x="580" y="0" width="70" height="190"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="115" y="205">0</text><text x="215" y="205">4</text><text x="315" y="205">8</text><text x="415" y="205">16</text><text x="515" y="205">24</text><text x="615" y="205">32</text></g>
+</svg>
+:::
+
+::: {.neutro .fragment}
+Fuente de la secuencia real: el código de `listobject.c` de CPython. La proporción de crecimiento
+tiende a 1,125 veces el tamaño anterior, no al doble.
+:::
+
+::: {.destacado .fragment}
+`ArrayList` de OpenJDK crece cerca de 1,5 veces, pero eso no es parte del contrato público del
+Javadoc: solo promete O(1) amortizado, el factor exacto es un detalle de implementación.
+:::
+
+## Caso de estudio: complejidad de una cola simulada con lista {.center}
+
+::: {.neutro}
+`pop(0)` quita y devuelve el primer elemento de la lista, desplazando todo lo demás una posición
+hacia el inicio.
+:::
+
+::: {.fragment}
+```python
+tareas = []
+tareas.append(nueva_tarea)      # O(1) amortizado, nada se mueve
+siguiente = tareas.pop(0)       # O(n), todo se recorre y se desplaza
+```
+:::
+
+::: {.destacado .fragment}
+Repetir `pop(0)` en un ciclo cuesta O(n al cuadrado) en total, aunque cada línea se vea inocente. La
+documentación de `collections.deque` advierte justo contra usar una lista como cola por esta razón.
+:::
+
+## Caso de estudio: ausencia de verificación de límites (C) {.center}
+
+```c
+int id_sequence[3];
+id_sequence[3] = 456;  /* escritura fuera de los limites */
+```
+
+::: {.destacado .fragment}
+Esta clase de error, CWE-787, ocupó el primer lugar del Top 25 de MITRE en 2023. La excepción que
+lanzan Java y Python evita esta categoría completa de fallas por diseño.
+:::
+
+## Reto 1 {.center}
+
+::: {.pasos .incremental}
+1. Un ciclo llama a `lista.insert(0, i)` exactamente `n` veces, empezando de una lista vacía.
+2. Cada `insert(0, ...)` cuesta O(n) porque desplaza todo lo que ya está.
+3. ¿Cuál es la complejidad total del ciclo completo?
+:::
+
+## Reto 2 {.center}
+
+```java
+int[] datos = {10, 20, 30, 40};
+for (int i = 0; i <= datos.length; i++) {
+    System.out.println(datos[i]);
+}
+```
+
+::: {.pasos .incremental}
+1. Ejecuta mentalmente el ciclo para `datos.length == 4`.
+2. ¿En qué valor de `i` ocurre el problema, y qué excepción lanza?
+:::
+
+## Resumen {.center}
+
+::: {.recuento .incremental}
+- Qué es un arreglo, por qué es contiguo, y cómo se calcula la dirección de un índice
+- Por qué acceder a `a[i]` es O(1) y por qué insertar o eliminar en medio es O(n)
+- Por qué un arreglo Java no puede crecer, y qué hace `Arrays.copyOf` para simular que crece
+- Por qué una lista de Python es, por dentro, un arreglo dinámico con capacidad y tamaño distintos
+- Por qué usar `pop(0)` para simular una cola con una lista es un antipatrón documentado
+  oficialmente, y qué complejidad produce en un ciclo
+- Por qué la verificación de límites de Java y Python evita una categoría entera de errores graves
+:::
+
+## Continuación: Tema 2. Matrices {.center}
+
+::: {.destacado}
+El arreglo unidimensional presentado corresponde a una fila de casillas indexadas por un único
+número. El Tema 2 extiende este modelo a dos dimensiones, la matriz.
+:::
+
+Cada casilla de una matriz se ubica por fila y por columna, y esas dos coordenadas terminan
+aplanándose sobre la misma memoria contigua presentada en este tema.
