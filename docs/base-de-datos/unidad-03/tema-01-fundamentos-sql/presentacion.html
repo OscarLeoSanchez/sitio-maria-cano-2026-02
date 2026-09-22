@@ -11,7 +11,7 @@
   <meta name="generator" content="quarto-1.9.37">
 
   <meta name="author" content="Oscar Leonel Sánchez Conde">
-  <title>Clases María Cano 2026-02 – Tema 1. Cómo hacerle preguntas a una tabla</title>
+  <title>Tema 1. Del modelo entidad-relación a SQL</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -99,7 +99,7 @@
     code span.vs { color: #20794d; } /* VerbatimString */
     code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </style>
-  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/theme/quarto-f03ff4919a76d13de25441d76e3501d6.css">
+  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/theme/quarto-be79017a54ce7f72cc6f3b176cce56c3.css">
   <link href="../../../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="../../../site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="../../../site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -197,7 +197,7 @@
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">Tema 1. Cómo hacerle preguntas a una tabla</h1>
+  <h1 class="title">Tema 1. Del modelo entidad-relación a SQL</h1>
   <p class="subtitle">Base de datos (DBA03). Unidad 3</p>
 
 <div class="quarto-title-authors">
@@ -209,255 +209,1874 @@ Oscar Leonel Sánchez Conde
 </div>
 
 </section>
-<section id="hoy" class="slide level2 center">
-<h2>Hoy</h2>
+<section id="ya-tenemos-el-modelo" class="slide level2 center">
+<h2>Ya tenemos el modelo</h2>
+<div class="idea">
+<p>¿Cómo hacemos para que esto exista dentro de una base de datos?</p>
+</div>
+<div class="diagrama">
+<svg viewbox="0 0 1120 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Modelo entidad relacion de un sistema de ventas: CLIENTE se relaciona uno a muchos con PEDIDO, PEDIDO se relaciona muchos a muchos con PRODUCTO mediante una relacion con los atributos cantidad y precio unitario, y PRODUCTO se relaciona muchos a uno con CATEGORIA" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s1" x="-20%" y="-20%" width="140%" height="150%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> </defs> <g filter="url(#s1)"> <rect x="20" y="70" width="200" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="20" y="70" width="200" height="40" rx="14" fill="#e3eefb"></rect> <rect x="20" y="92" width="200" height="18" fill="#e3eefb"></rect> </g> <text x="120" y="96" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CLIENTE</text> <text x="120" y="132" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_cliente</text> <text x="120" y="154" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text> <text x="120" y="176" text-anchor="middle" font-size="12.5" fill="#4a5b70">correo</text> <text x="120" y="198" text-anchor="middle" font-size="12.5" fill="#4a5b70">ciudad</text> <g filter="url(#s1)"> <rect x="300" y="81" width="200" height="128" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="300" y="81" width="200" height="40" rx="14" fill="#e3eefb"></rect> <rect x="300" y="103" width="200" height="18" fill="#e3eefb"></rect> </g> <text x="400" y="107" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text> <text x="400" y="143" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_pedido</text> <text x="400" y="165" text-anchor="middle" font-size="12.5" fill="#4a5b70">fecha</text> <text x="400" y="187" text-anchor="middle" font-size="12.5" fill="#4a5b70">estado</text> <g filter="url(#s1)"> <rect x="620" y="70" width="200" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="620" y="70" width="200" height="40" rx="14" fill="#e3eefb"></rect> <rect x="620" y="92" width="200" height="18" fill="#e3eefb"></rect> </g> <text x="720" y="96" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PRODUCTO</text> <text x="720" y="132" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text> <text x="720" y="154" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text> <text x="720" y="176" text-anchor="middle" font-size="12.5" fill="#4a5b70">precio</text> <text x="720" y="198" text-anchor="middle" font-size="12.5" fill="#4a5b70">stock</text> <g filter="url(#s1)"> <rect x="900" y="92" width="200" height="106" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="900" y="92" width="200" height="40" rx="14" fill="#e3eefb"></rect> <rect x="900" y="114" width="200" height="18" fill="#e3eefb"></rect> </g> <text x="1000" y="118" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CATEGORIA</text> <text x="1000" y="154" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_categoria</text> <text x="1000" y="176" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text> <line x1="220" y1="145" x2="300" y2="145" stroke="#7fa6d6" stroke-width="2.2"></line> <rect x="226" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="237" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">1</text> <rect x="272" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="283" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text> <line x1="500" y1="145" x2="620" y2="145" stroke="#7fa6d6" stroke-width="2.2"></line> <rect x="506" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="517" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text> <rect x="592" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="603" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">M</text> <line x1="560" y1="145" x2="560" y2="222" stroke="#7fa6d6" stroke-width="1.6" stroke-dasharray="4 4"></line> <rect x="470" y="222" width="180" height="46" rx="12" fill="#fdf1dc" stroke="#f3ddb0"></rect> <text x="560" y="241" text-anchor="middle" font-size="11.5" fill="#9a6413" font-weight="700">cantidad</text> <text x="560" y="258" text-anchor="middle" font-size="11.5" fill="#9a6413" font-weight="700">precio_unitario</text> <line x1="820" y1="145" x2="900" y2="145" stroke="#7fa6d6" stroke-width="2.2"></line> <rect x="826" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="837" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text> <rect x="872" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="883" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">1</text>
+</svg>
+</div>
+<div class="nota">
+<p>Un sistema de ventas.</p>
+</div>
+</section>
+<section id="el-camino-de-hoy" class="slide level2 center">
+<h2>El camino de hoy</h2>
+<div class="diagrama corto">
+<svg viewbox="0 0 1120 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Seis etapas en linea: del modelo a las tablas, de las tablas a SQL, datos, consultas, relaciones y resumen" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<line x1="100" y1="80" x2="1020" y2="80" stroke="#c9dcf3" stroke-width="3"></line> <g> <circle cx="100" cy="80" r="28" fill="#e3eefb"></circle><text x="100" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#4f86c6">1</text> <text x="100" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">Del modelo</text> <text x="100" y="153" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">a las tablas</text> </g> <g> <circle cx="284" cy="80" r="28" fill="#e1f5ef"></circle><text x="284" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#1e7c66">2</text> <text x="284" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">De las tablas</text> <text x="284" y="153" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">a SQL</text> </g> <g> <circle cx="468" cy="80" r="28" fill="#fdf1dc"></circle><text x="468" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#9a6413">3</text> <text x="468" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">Datos</text> </g> <g> <circle cx="652" cy="80" r="28" fill="#e3eefb"></circle><text x="652" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#4f86c6">4</text> <text x="652" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">Consultas</text> </g> <g> <circle cx="836" cy="80" r="28" fill="#ede9fb"></circle><text x="836" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#5442b3">5</text> <text x="836" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">Relaciones</text> </g> <g> <circle cx="1020" cy="80" r="28" fill="#e1f5ef"></circle><text x="1020" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#1e7c66">6</text> <text x="1020" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">Resumen</text> </g>
+</svg>
+</div>
+</section>
+<section>
+<section id="del-modelo-a-las-tablas" class="title-slide slide level1 seccion center" data-background-color="#e3eefb">
+<h1>Del modelo a las tablas</h1>
+<div class="rotulo" data-numero="1">
+<p>Primera parte</p>
+</div>
+</section>
+<section id="una-entidad-sola" class="slide level2 center">
+<h2>Una entidad, sola</h2>
+<div class="etapa">
+<p>Etapa 1</p>
+</div>
+<div class="dos">
+<div>
+<div class="ficha">
+<div class="cabeza">
+<p>CLIENTE</p>
+</div>
+<ul>
+<li>id_cliente</li>
+<li>nombre</li>
+<li>correo</li>
+<li>ciudad</li>
+</ul>
+</div>
+</div>
+<div>
+<div class="pregunta">
+<p>Si CLIENTE se convierte en una tabla, ¿cómo quedaría?</p>
+</div>
+</div>
+</div>
+</section>
+<section id="la-misma-entidad-como-tabla" class="slide level2 center">
+<h2>La misma entidad, como tabla</h2>
+<div class="etapa">
+<p>Etapa 1</p>
+</div>
+<div class="vacia">
+<table class="caption-top">
+<caption>cliente</caption>
+<thead>
+<tr class="header">
+<th>id_cliente</th>
+<th>nombre</th>
+<th>correo</th>
+<th>ciudad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mapa fragment">
+<ul>
+<li><span class="origen">Entidad</span> <span class="flecha"></span> <span class="destino">tabla</span></li>
+<li><span class="origen">Atributo</span> <span class="flecha"></span> <span class="destino">columna</span></li>
+<li><span class="origen">Instancia</span> <span class="flecha"></span> <span class="destino">fila</span></li>
+</ul>
+</div>
+</section>
+<section id="una-instancia-se-convierte-en-una-fila" class="slide level2 center">
+<h2>Una instancia se convierte en una fila</h2>
+<div class="etapa">
+<p>Etapa 1</p>
+</div>
+<div class="diagrama corto">
+<svg viewbox="0 0 1000 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda una ficha con los datos de un cliente concreto, Ana, ana arroba email punto com, Medellin; una flecha la convierte en una fila de la tabla cliente, con id_cliente 1" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s3" x="-20%" y="-20%" width="140%" height="150%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> <marker id="f3" markerwidth="10" markerheight="10" refx="8" refy="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7fa6d6"></path></marker> </defs> <g filter="url(#s3)"> <rect x="40" y="50" width="250" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="40" y="50" width="250" height="40" rx="14" fill="#e1f5ef"></rect> <rect x="40" y="72" width="250" height="18" fill="#e1f5ef"></rect> </g> <text x="165" y="76" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e7c66">Un cliente concreto</text> <text x="165" y="118" text-anchor="middle" font-size="15" font-weight="650" fill="#1b2a41">Ana</text> <text x="165" y="146" text-anchor="middle" font-size="15" fill="#4a5b70">ana@email.com</text> <text x="165" y="174" text-anchor="middle" font-size="15" fill="#4a5b70">Medellín</text> <line x1="310" y1="125" x2="380" y2="125" stroke="#7fa6d6" stroke-width="2.4" marker-end="url(#f3)"></line> <text x="410" y="62" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">cliente</text> <g filter="url(#s3)"> <rect x="410" y="72" width="550" height="118" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> </g> <rect x="410" y="72" width="550" height="40" rx="14" fill="#e3eefb"></rect> <rect x="410" y="94" width="550" height="18" fill="#e3eefb"></rect> <line x1="410" y1="112" x2="960" y2="112" stroke="#c9dcf3"></line> <g font-size="13" font-weight="700" fill="#1b2a41"> <text x="432" y="98">id_cliente</text> <text x="548" y="98">nombre</text> <text x="660" y="98">correo</text> <text x="850" y="98">ciudad</text> </g> <rect x="411" y="113" width="548" height="76" fill="#e1f5ef"></rect> <g font-size="14" fill="#1b2a41"> <text x="432" y="158" font-weight="700">1</text> <text x="548" y="158">Ana</text> <text x="660" y="158">ana@email.com</text> <text x="850" y="158">Medellín</text> </g>
+</svg>
+</div>
+<div class="nota">
+<p>El identificador no venía en la ficha: lo asigna el sistema para que ninguna fila se confunda con otra.</p>
+</div>
+</section>
+<section id="qué-distingue-a-un-cliente-de-otro" class="slide level2 center">
+<h2>¿Qué distingue a un cliente de otro?</h2>
+<div class="etapa">
+<p>Etapa 2</p>
+</div>
+<div class="dos">
+<div>
+<div class="ficha">
+<div class="cabeza">
+<p>CLIENTE</p>
+</div>
+<ul>
+<li>id_cliente</li>
+<li>nombre</li>
+<li>correo</li>
+<li>ciudad</li>
+</ul>
+</div>
+</div>
+<div>
+<div class="pregunta">
+<p>¿Qué atributo identifica de manera única a cada cliente?</p>
+</div>
+<div class="respuesta fragment">
+<p><code>id_cliente</code>. Dos personas pueden llamarse igual o vivir en la misma ciudad; el identificador no se repite.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="clave-primaria" class="slide level2 center">
+<h2>Clave primaria</h2>
+<div class="etapa">
+<p>Etapa 2</p>
+</div>
+<table class="caption-top">
+<caption>cliente</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id_cliente <span class="pk">PK</span></th>
+<th>nombre</th>
+<th>correo</th>
+<th>ciudad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Ana</td>
+<td>ana@email.com</td>
+<td>Medellín</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>Carlos</td>
+<td>carlos@email.com</td>
+<td>Bogotá</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td>Laura</td>
+<td>laura@email.com</td>
+<td>Cali</td>
+</tr>
+</tbody>
+</table>
+<div class="pregunta fragment">
+<p>¿Podríamos tener dos clientes con <code>id_cliente = 3</code>?</p>
+</div>
+<div class="respuesta fragment">
+<p>No.&nbsp;Ese es exactamente el trabajo de la clave primaria: un valor único por fila, y nunca vacío.</p>
+</div>
+</section>
+<section id="una-línea-entre-dos-entidades" class="slide level2 center">
+<h2>Una línea entre dos entidades</h2>
+<div class="etapa">
+<p>Etapa 3</p>
+</div>
+<div class="diagrama corto">
+<svg viewbox="0 0 900 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CLIENTE y PEDIDO unidos por una linea con cardinalidad uno a muchos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s4" x="-20%" y="-20%" width="140%" height="160%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> </defs> <g filter="url(#s4)"> <rect x="60" y="50" width="240" height="70" rx="16" fill="#e3eefb"></rect> <rect x="600" y="50" width="240" height="70" rx="16" fill="#e3eefb"></rect> </g> <text x="180" y="92" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CLIENTE</text> <text x="720" y="92" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text> <line x1="300" y1="85" x2="600" y2="85" stroke="#7fa6d6" stroke-width="2.6"></line> <rect x="312" y="60" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="327" y="77" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">1</text> <rect x="558" y="60" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="573" y="77" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">N</text>
+</svg>
+</div>
+<div class="pregunta">
+<p>¿Cómo representamos esta línea dentro de las tablas?</p>
+</div>
+</section>
+<section id="dos-tablas-que-no-se-hablan" class="slide level2 center">
+<h2>Dos tablas que no se hablan</h2>
+<div class="etapa">
+<p>Etapa 3</p>
+</div>
+<div class="dos arriba">
+<div>
+<table class="caption-top">
+<caption>cliente</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id_cliente <span class="pk">PK</span></th>
+<th>nombre</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Ana</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>Carlos</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table class="caption-top">
+<caption>pedido</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id_pedido <span class="pk">PK</span></th>
+<th>fecha</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">101</td>
+<td>2026-09-20</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">102</td>
+<td>2026-09-21</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="pregunta">
+<p>Con estas dos tablas, ¿quién hizo el pedido 101?</p>
+</div>
+<div class="respuesta fragment">
+<p>No hay forma de saberlo. La línea del modelo se perdió en el camino.</p>
+</div>
+</section>
+<section id="la-columna-que-falta" class="slide level2 center">
+<h2>La columna que falta</h2>
+<div class="etapa">
+<p>Etapa 3</p>
+</div>
+<div class="diagrama">
+<svg viewbox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La tabla pedido recibe una columna id_cliente; cada valor de esa columna apunta con una flecha a la fila correspondiente de la tabla cliente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s5" x="-20%" y="-20%" width="140%" height="150%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> <marker id="f5" markerwidth="10" markerheight="10" refx="8" refy="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"></path></marker> </defs> <text x="40" y="52" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">pedido</text> <g filter="url(#s5)"><rect x="40" y="62" width="380" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect></g> <rect x="40" y="62" width="380" height="40" rx="14" fill="#e3eefb"></rect> <rect x="40" y="84" width="380" height="18" fill="#e3eefb"></rect> <rect x="290" y="62" width="130" height="150" rx="14" fill="#ede9fb" opacity="0.8"></rect> <rect x="290" y="62" width="14" height="150" fill="#ede9fb" opacity="0.8"></rect> <g font-size="13" font-weight="700" fill="#1b2a41"> <text x="62" y="88">id_pedido</text> <text x="160" y="88">fecha</text> <text x="308" y="88" fill="#5442b3">id_cliente</text> </g> <line x1="40" y1="102" x2="420" y2="102" stroke="#c9dcf3"></line> <line x1="40" y1="157" x2="420" y2="157" stroke="#edf2f8"></line> <g font-size="14" fill="#1b2a41"> <text x="62" y="136">101</text><text x="160" y="136">2026-09-20</text><text x="308" y="136" font-weight="700" fill="#5442b3">1</text> <text x="62" y="191">102</text><text x="160" y="191">2026-09-21</text><text x="308" y="191" font-weight="700" fill="#5442b3">2</text> </g> <text x="640" y="52" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">cliente</text> <g filter="url(#s5)"><rect x="640" y="62" width="320" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect></g> <rect x="640" y="62" width="320" height="40" rx="14" fill="#e3eefb"></rect> <rect x="640" y="84" width="320" height="18" fill="#e3eefb"></rect> <g font-size="13" font-weight="700" fill="#1b2a41"> <text x="662" y="88">id_cliente</text> <text x="800" y="88">nombre</text> </g> <line x1="640" y1="102" x2="960" y2="102" stroke="#c9dcf3"></line> <line x1="640" y1="157" x2="960" y2="157" stroke="#edf2f8"></line> <g font-size="14" fill="#1b2a41"> <text x="662" y="136" font-weight="700">1</text><text x="800" y="136">Ana</text> <text x="662" y="191" font-weight="700">2</text><text x="800" y="191">Carlos</text> </g> <line x1="420" y1="131" x2="640" y2="131" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#f5)"></line> <line x1="420" y1="186" x2="640" y2="186" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#f5)"></line> <text x="500" y="262" text-anchor="middle" font-size="14" fill="#4a5b70">cada valor de pedido.id_cliente existe en cliente.id_cliente</text>
+</svg>
+</div>
+</section>
+<section id="clave-foránea" class="slide level2 center">
+<h2>Clave foránea</h2>
+<div class="etapa">
+<p>Etapa 3</p>
+</div>
+<div class="diagrama corto">
+<svg viewbox="0 0 900 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CLIENTE uno a muchos PEDIDO; debajo de PEDIDO, en el lado muchos, aparece la columna id_cliente marcada como clave foranea" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s6" x="-20%" y="-20%" width="140%" height="160%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> </defs> <g filter="url(#s6)"> <rect x="60" y="30" width="240" height="70" rx="16" fill="#e3eefb"></rect> <rect x="600" y="30" width="240" height="70" rx="16" fill="#e3eefb"></rect> </g> <text x="180" y="72" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CLIENTE</text> <text x="720" y="72" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text> <line x1="300" y1="65" x2="600" y2="65" stroke="#7fa6d6" stroke-width="2.6"></line> <rect x="312" y="40" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="327" y="57" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">1</text> <rect x="558" y="40" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="573" y="57" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">N</text> <line x1="720" y1="100" x2="720" y2="128" stroke="#7c6ad8" stroke-width="2" stroke-dasharray="4 4"></line> <rect x="620" y="128" width="200" height="40" rx="12" fill="#ede9fb" stroke="#d8d0f5"></rect> <text x="720" y="153" text-anchor="middle" font-size="14.5" font-weight="700" fill="#5442b3" font-family="Consolas, monospace">id_cliente FK</text>
+</svg>
+</div>
+<div class="idea">
+<p>La clave foránea vive en el lado N</p>
+</div>
+<div class="nota">
+<p>Primera regla de transformación. Un cliente tiene muchos pedidos; cada pedido guarda a quién pertenece.</p>
+</div>
+</section>
+<section id="ahora-ustedes" class="slide level2 center">
+<h2>Ahora ustedes</h2>
+<div class="etapa">
+<p>Etapa 4</p>
+</div>
+<div class="diagrama corto">
+<svg viewbox="0 0 900 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CATEGORIA con id_categoria y nombre, relacionada uno a muchos con PRODUCTO, que tiene id_producto, nombre, precio y stock" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s7" x="-20%" y="-20%" width="140%" height="150%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> </defs> <g filter="url(#s7)"> <rect x="80" y="52" width="220" height="106" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="80" y="52" width="220" height="40" rx="14" fill="#e3eefb"></rect> <rect x="80" y="74" width="220" height="18" fill="#e3eefb"></rect> </g> <text x="190" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CATEGORIA</text> <text x="190" y="114" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_categoria</text> <text x="190" y="136" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text> <g filter="url(#s7)"> <rect x="600" y="30" width="220" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="600" y="30" width="220" height="40" rx="14" fill="#e3eefb"></rect> <rect x="600" y="52" width="220" height="18" fill="#e3eefb"></rect> </g> <text x="710" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PRODUCTO</text> <text x="710" y="92" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text> <text x="710" y="114" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text> <text x="710" y="136" text-anchor="middle" font-size="12.5" fill="#4a5b70">precio</text> <text x="710" y="158" text-anchor="middle" font-size="12.5" fill="#4a5b70">stock</text> <line x1="300" y1="105" x2="600" y2="105" stroke="#7fa6d6" stroke-width="2.6"></line> <rect x="312" y="80" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="327" y="97" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">1</text> <rect x="558" y="80" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="573" y="97" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">N</text>
+</svg>
+</div>
+<div class="pregunta">
+<p>Dibujen cómo quedarían las dos tablas, con sus claves.</p>
+</div>
+</section>
+<section id="así-quedan" class="slide level2 center">
+<h2>Así quedan</h2>
+<div class="etapa">
+<p>Etapa 4</p>
+</div>
+<div class="dos arriba">
+<div>
+<div class="ficha">
+<div class="cabeza">
+<p>categoria</p>
+</div>
+<ul>
+<li>id_categoria <span class="pk">PK</span></li>
+<li>nombre</li>
+</ul>
+</div>
+</div>
+<div>
+<div class="ficha">
+<div class="cabeza">
+<p>producto</p>
+</div>
+<ul>
+<li>id_producto <span class="pk">PK</span></li>
+<li>nombre</li>
+<li>precio</li>
+<li>stock</li>
+<li>id_categoria <span class="fk">FK</span></li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<section id="muchos-a-muchos" class="slide level2 center">
+<h2>Muchos a muchos</h2>
+<div class="etapa">
+<p>Etapa 5</p>
+</div>
+<div class="diagrama corto">
+<svg viewbox="0 0 900 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PEDIDO y PRODUCTO unidos por una linea con cardinalidad muchos a muchos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s8" x="-20%" y="-20%" width="140%" height="160%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> </defs> <g filter="url(#s8)"> <rect x="60" y="50" width="240" height="70" rx="16" fill="#e3eefb"></rect> <rect x="600" y="50" width="240" height="70" rx="16" fill="#e3eefb"></rect> </g> <text x="180" y="92" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text> <text x="720" y="92" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PRODUCTO</text> <line x1="300" y1="85" x2="600" y2="85" stroke="#7fa6d6" stroke-width="2.6"></line> <rect x="312" y="60" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="327" y="77" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">N</text> <rect x="558" y="60" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="573" y="77" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">M</text>
+</svg>
+</div>
+<div class="pregunta">
+<p>¿Dónde colocamos la clave foránea?</p>
+</div>
+</section>
+<section id="ninguno-de-los-dos-lados-funciona" class="slide level2 center">
+<h2>Ninguno de los dos lados funciona</h2>
+<div class="etapa">
+<p>Etapa 5</p>
+</div>
+<div class="diagrama">
+<svg viewbox="0 0 1000 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos intentos fallidos: poner id_producto dentro de PEDIDO limita cada pedido a un solo producto; poner id_pedido dentro de PRODUCTO limita cada producto a un solo pedido" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s9" x="-20%" y="-20%" width="140%" height="150%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> </defs> <g filter="url(#s9)"> <rect x="60" y="30" width="360" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="60" y="30" width="360" height="40" rx="14" fill="#e3eefb"></rect> <rect x="60" y="52" width="360" height="18" fill="#e3eefb"></rect> </g> <text x="240" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text> <text x="240" y="94" text-anchor="middle" font-size="13" fill="#4a5b70">id_pedido, fecha, estado</text> <rect x="150" y="110" width="180" height="30" rx="10" fill="#fbe7ec" stroke="#f3c6d2"></rect> <text x="240" y="130" text-anchor="middle" font-size="13.5" font-weight="700" fill="#b23a52" font-family="Consolas, monospace">id_producto FK</text> <text x="240" y="212" text-anchor="middle" font-size="14" fill="#b23a52" font-weight="650">cada pedido tendría un solo producto</text> <g filter="url(#s9)"> <rect x="580" y="30" width="360" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="580" y="30" width="360" height="40" rx="14" fill="#e3eefb"></rect> <rect x="580" y="52" width="360" height="18" fill="#e3eefb"></rect> </g> <text x="760" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PRODUCTO</text> <text x="760" y="94" text-anchor="middle" font-size="13" fill="#4a5b70">id_producto, nombre, precio, stock</text> <rect x="675" y="110" width="170" height="30" rx="10" fill="#fbe7ec" stroke="#f3c6d2"></rect> <text x="760" y="130" text-anchor="middle" font-size="13.5" font-weight="700" fill="#b23a52" font-family="Consolas, monospace">id_pedido FK</text> <text x="760" y="212" text-anchor="middle" font-size="14" fill="#b23a52" font-weight="650">cada producto pertenecería a un solo pedido</text>
+</svg>
+</div>
+</section>
+<section id="una-tabla-nueva-en-el-medio" class="slide level2 center">
+<h2>Una tabla nueva en el medio</h2>
+<div class="etapa">
+<p>Etapa 5</p>
+</div>
+<div class="diagrama corto">
+<svg viewbox="0 0 1000 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PEDIDO uno a muchos DETALLE_PEDIDO, y DETALLE_PEDIDO muchos a uno PRODUCTO; la tabla intermedia reemplaza la relacion muchos a muchos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s10" x="-20%" y="-20%" width="140%" height="160%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> </defs> <g filter="url(#s10)"> <rect x="30" y="40" width="220" height="70" rx="16" fill="#e3eefb"></rect> <rect x="360" y="40" width="280" height="70" rx="16" fill="#ede9fb"></rect> <rect x="750" y="40" width="220" height="70" rx="16" fill="#e3eefb"></rect> </g> <text x="140" y="82" text-anchor="middle" font-size="19" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text> <text x="500" y="82" text-anchor="middle" font-size="19" font-weight="700" fill="#5442b3" font-family="Consolas, monospace">DETALLE_PEDIDO</text> <text x="860" y="82" text-anchor="middle" font-size="19" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PRODUCTO</text> <line x1="250" y1="75" x2="360" y2="75" stroke="#7fa6d6" stroke-width="2.6"></line> <rect x="258" y="50" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="271" y="66" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">1</text> <rect x="326" y="50" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="339" y="66" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">N</text> <line x1="640" y1="75" x2="750" y2="75" stroke="#7fa6d6" stroke-width="2.6"></line> <rect x="648" y="50" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="661" y="66" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">N</text> <rect x="716" y="50" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="729" y="66" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">1</text>
+</svg>
+</div>
+<table class="caption-top">
+<caption>detalle_pedido</caption>
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id_pedido <span class="pk">PK</span> <span class="fk">FK</span></th>
+<th style="text-align: right;">id_producto <span class="pk">PK</span> <span class="fk">FK</span></th>
+<th style="text-align: right;">cantidad</th>
+<th style="text-align: right;">precio_unitario</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">80000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">150000</td>
+</tr>
+</tbody>
+</table>
+<div class="idea fragment">
+<p>Una relación N:M se convierte en una tabla</p>
+</div>
+<div class="nota fragment">
+<p>Y esa tabla puede tener atributos propios. La cantidad y el precio del momento no son del pedido ni del producto: son de la línea que los une.</p>
+</div>
+</section>
+<section id="el-modelo-relacional-completo" class="slide level2 center">
+<h2>El modelo relacional completo</h2>
+<div class="etapa">
+<p>Etapa 6</p>
+</div>
+<div class="diagrama alto">
+<svg viewbox="0 0 1120 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco tablas con sus columnas: cliente, pedido, producto, categoria y detalle_pedido; flechas desde cada clave foranea hacia la clave primaria que referencia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s11" x="-20%" y="-20%" width="140%" height="150%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> <marker id="f11" markerwidth="10" markerheight="10" refx="8" refy="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"></path></marker> </defs> <g filter="url(#s11)"> <rect x="20" y="40" width="220" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="20" y="40" width="220" height="40" rx="14" fill="#e3eefb"></rect> <rect x="20" y="62" width="220" height="18" fill="#e3eefb"></rect> </g> <text x="130" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">cliente</text> <text x="40" y="104" font-size="12.5" fill="#1b2a41" font-weight="600">id_cliente</text> <rect x="180" y="92" width="30" height="16" rx="8" fill="#fdf1dc"></rect><text x="195" y="104" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text> <text x="40" y="128" font-size="12.5" fill="#4a5b70">nombre</text> <text x="40" y="150" font-size="12.5" fill="#4a5b70">correo</text> <text x="40" y="172" font-size="12.5" fill="#4a5b70">ciudad</text> <g filter="url(#s11)"> <rect x="300" y="40" width="220" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="300" y="40" width="220" height="40" rx="14" fill="#e3eefb"></rect> <rect x="300" y="62" width="220" height="18" fill="#e3eefb"></rect> </g> <text x="410" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">pedido</text> <text x="320" y="104" font-size="12.5" fill="#1b2a41" font-weight="600">id_pedido</text> <rect x="460" y="92" width="30" height="16" rx="8" fill="#fdf1dc"></rect><text x="475" y="104" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text> <text x="320" y="128" font-size="12.5" fill="#4a5b70">fecha</text> <text x="320" y="150" font-size="12.5" fill="#4a5b70">estado</text> <text x="320" y="172" font-size="12.5" fill="#5442b3" font-weight="600">id_cliente</text> <rect x="460" y="160" width="30" height="16" rx="8" fill="#ede9fb"></rect><text x="475" y="172" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text> <g filter="url(#s11)"> <rect x="600" y="40" width="220" height="172" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="600" y="40" width="220" height="40" rx="14" fill="#e3eefb"></rect> <rect x="600" y="62" width="220" height="18" fill="#e3eefb"></rect> </g> <text x="710" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">producto</text> <text x="620" y="104" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text> <rect x="760" y="92" width="30" height="16" rx="8" fill="#fdf1dc"></rect><text x="775" y="104" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text> <text x="620" y="128" font-size="12.5" fill="#4a5b70">nombre</text> <text x="620" y="150" font-size="12.5" fill="#4a5b70">precio</text> <text x="620" y="172" font-size="12.5" fill="#4a5b70">stock</text> <text x="620" y="194" font-size="12.5" fill="#5442b3" font-weight="600">id_categoria</text> <rect x="760" y="182" width="30" height="16" rx="8" fill="#ede9fb"></rect><text x="775" y="194" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text> <g filter="url(#s11)"> <rect x="880" y="106" width="220" height="106" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="880" y="106" width="220" height="40" rx="14" fill="#e3eefb"></rect> <rect x="880" y="128" width="220" height="18" fill="#e3eefb"></rect> </g> <text x="990" y="132" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">categoria</text> <text x="900" y="170" font-size="12.5" fill="#1b2a41" font-weight="600">id_categoria</text> <rect x="1040" y="158" width="30" height="16" rx="8" fill="#fdf1dc"></rect><text x="1055" y="170" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text> <text x="900" y="194" font-size="12.5" fill="#4a5b70">nombre</text> <g filter="url(#s11)"> <rect x="450" y="262" width="260" height="150" rx="14" fill="#ffffff" stroke="#d8d0f5"></rect> <rect x="450" y="262" width="260" height="40" rx="14" fill="#ede9fb"></rect> <rect x="450" y="284" width="260" height="18" fill="#ede9fb"></rect> </g> <text x="580" y="288" text-anchor="middle" font-size="14" font-weight="700" fill="#5442b3" font-family="Consolas, monospace">detalle_pedido</text> <text x="470" y="326" font-size="12.5" fill="#1b2a41" font-weight="600">id_pedido</text> <rect x="592" y="314" width="30" height="16" rx="8" fill="#fdf1dc"></rect><text x="607" y="326" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text> <rect x="626" y="314" width="30" height="16" rx="8" fill="#ede9fb"></rect><text x="641" y="326" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text> <text x="470" y="350" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text> <rect x="592" y="338" width="30" height="16" rx="8" fill="#fdf1dc"></rect><text x="607" y="350" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text> <rect x="626" y="338" width="30" height="16" rx="8" fill="#ede9fb"></rect><text x="641" y="350" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text> <text x="470" y="374" font-size="12.5" fill="#4a5b70">cantidad</text> <text x="470" y="398" font-size="12.5" fill="#4a5b70">precio_unitario</text> <line x1="300" y1="168" x2="240" y2="168" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f11)"></line> <line x1="820" y1="190" x2="880" y2="190" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f11)"></line> <line x1="490" y1="262" x2="490" y2="190" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f11)"></line> <line x1="670" y1="262" x2="670" y2="212" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f11)"></line>
+</svg>
+</div>
+</section>
+<section id="una-pausa" class="slide level2 center">
+<h2>Una pausa</h2>
+<div class="etapa">
+<p>Etapa 6</p>
+</div>
+<div class="dos estrecha">
+<div>
+<div class="pregunta">
+<p>¿Qué parte de este esquema salió directamente del modelo entidad-relación?</p>
+</div>
+<div class="respuesta fragment">
+<p>Prácticamente todo. Cada entidad es una tabla, cada relación 1:N es una clave foránea, y la relación N:M es una tabla más. Los dos mundos son el mismo, escrito de dos formas.</p>
+</div>
+</div>
+<div>
+<div class="diagrama">
+<svg viewbox="0 0 460 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El modelo entidad relacion en vertical: CLIENTE uno a muchos PEDIDO, PEDIDO muchos a muchos PRODUCTO con cantidad y precio unitario, PRODUCTO muchos a uno CATEGORIA" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s18" x="-20%" y="-20%" width="140%" height="150%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> </defs> <g filter="url(#s18)"> <rect x="110" y="16" width="240" height="56" rx="14" fill="#e3eefb"></rect> <rect x="110" y="128" width="240" height="56" rx="14" fill="#e3eefb"></rect> <rect x="110" y="240" width="240" height="56" rx="14" fill="#e3eefb"></rect> <rect x="110" y="352" width="240" height="56" rx="14" fill="#e3eefb"></rect> </g> <g font-size="17" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace" text-anchor="middle"> <text x="230" y="50">CLIENTE</text> <text x="230" y="162">PEDIDO</text> <text x="230" y="274">PRODUCTO</text> <text x="230" y="386">CATEGORIA</text> </g> <line x1="230" y1="72" x2="230" y2="128" stroke="#7fa6d6" stroke-width="2.4"></line> <rect x="242" y="76" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect><text x="255" y="90" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">1</text> <rect x="242" y="104" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect><text x="255" y="118" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text> <line x1="230" y1="184" x2="230" y2="240" stroke="#7fa6d6" stroke-width="2.4"></line> <rect x="242" y="188" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect><text x="255" y="202" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text> <rect x="242" y="216" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect><text x="255" y="230" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">M</text> <line x1="230" y1="212" x2="150" y2="212" stroke="#7fa6d6" stroke-width="1.6" stroke-dasharray="4 4"></line> <rect x="10" y="190" width="140" height="44" rx="12" fill="#fdf1dc" stroke="#f3ddb0"></rect> <text x="80" y="208" text-anchor="middle" font-size="11" fill="#9a6413" font-weight="700">cantidad</text> <text x="80" y="224" text-anchor="middle" font-size="11" fill="#9a6413" font-weight="700">precio_unitario</text> <line x1="230" y1="296" x2="230" y2="352" stroke="#7fa6d6" stroke-width="2.4"></line> <rect x="242" y="300" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect><text x="255" y="314" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text> <rect x="242" y="328" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"></rect><text x="255" y="342" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">1</text>
+</svg>
+</div>
+</div>
+</div>
+</section></section>
+<section>
+<section id="hacer-que-exista" class="title-slide slide level1 seccion center" data-background-color="#e1f5ef">
+<h1>Hacer que exista</h1>
+<div class="rotulo" data-numero="2">
+<p>Segunda parte</p>
+</div>
+</section>
+<section id="la-primera-tabla" class="slide level2 center">
+<h2>La primera tabla</h2>
+<div class="etapa">
+<p>Etapa 7</p>
+</div>
+<div class="dos estrecha arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb1-1"><a></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> cliente (</span>
+<span id="cb1-2"><a></a>    id_cliente  <span class="dt">INTEGER</span>,</span>
+<span id="cb1-3"><a></a>    nombre      <span class="dt">VARCHAR</span>(<span class="dv">100</span>),</span>
+<span id="cb1-4"><a></a>    correo      <span class="dt">VARCHAR</span>(<span class="dv">150</span>),</span>
+<span id="cb1-5"><a></a>    ciudad      <span class="dt">VARCHAR</span>(<span class="dv">80</span>)</span>
+<span id="cb1-6"><a></a>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<div class="anotaciones">
+<ul>
+<li><code>CREATE TABLE</code> crear una tabla</li>
+<li><code>cliente</code> el nombre de la tabla</li>
+<li><code>id_cliente INTEGER</code> una columna que guarda números enteros</li>
+<li><code>nombre VARCHAR(100)</code> una columna de texto, hasta 100 caracteres</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<section id="la-tabla-existe-pero-está-vacía" class="slide level2 center">
+<h2>La tabla existe, pero está vacía</h2>
+<div class="etapa">
+<p>Etapa 7</p>
+</div>
+<div class="vacia">
+<table class="caption-top">
+<caption>cliente</caption>
+<thead>
+<tr class="header">
+<th>id_cliente</th>
+<th>nombre</th>
+<th>correo</th>
+<th>ciudad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr class="even">
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="idea">
+<p>Estructura sí. Datos, todavía no.</p>
+</div>
+</section>
+<section id="qué-falta-respecto-al-modelo" class="slide level2 center">
+<h2>¿Qué falta respecto al modelo?</h2>
+<div class="etapa">
+<p>Etapa 8</p>
+</div>
+<div class="dos">
+<div>
+<div class="pregunta">
+<p>Comparen la tabla creada con el modelo relacional. ¿Qué se quedó por fuera?</p>
+</div>
+<div class="respuesta fragment">
+<p>La clave primaria. Sin ella, nada impide dos clientes con el mismo identificador.</p>
+</div>
+</div>
+<div class="fragment">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb2-1"><a></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> cliente (</span>
+<span id="cb2-2"><a></a>    id_cliente  <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb2-3"><a></a>    nombre      <span class="dt">VARCHAR</span>(<span class="dv">100</span>),</span>
+<span id="cb2-4"><a></a>    correo      <span class="dt">VARCHAR</span>(<span class="dv">150</span>),</span>
+<span id="cb2-5"><a></a>    ciudad      <span class="dt">VARCHAR</span>(<span class="dv">80</span>)</span>
+<span id="cb2-6"><a></a>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</section>
+<section id="cada-restricción-nace-de-una-necesidad" class="slide level2 center">
+<h2>Cada restricción nace de una necesidad</h2>
+<div class="etapa">
+<p>Etapa 8</p>
+</div>
+<div class="dos estrecha arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb3-1"><a></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> cliente (</span>
+<span id="cb3-2"><a></a>    id_cliente  <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb3-3"><a></a>    nombre      <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-4"><a></a>    correo      <span class="dt">VARCHAR</span>(<span class="dv">150</span>) <span class="kw">UNIQUE</span>,</span>
+<span id="cb3-5"><a></a>    ciudad      <span class="dt">VARCHAR</span>(<span class="dv">80</span>)</span>
+<span id="cb3-6"><a></a>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<div class="anotaciones ambar">
+<ul>
+<li><code>PRIMARY KEY</code> no se repiten identificadores</li>
+<li><code>NOT NULL</code> un cliente debe tener nombre</li>
+<li><code>UNIQUE</code> no quiero dos clientes con el mismo correo</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<section id="ahora-ustedes-categoria" class="slide level2 center">
+<h2>Ahora ustedes: categoria</h2>
+<div class="etapa">
+<p>Etapa 9</p>
+</div>
+<div class="dos">
+<div>
+<div class="ficha">
+<div class="cabeza">
+<p>categoria</p>
+</div>
+<ul>
+<li>id_categoria <span class="pk">PK</span></li>
+<li>nombre</li>
+</ul>
+</div>
+</div>
+<div>
+<div class="pregunta">
+<p>Escriban el <code>CREATE TABLE</code>.</p>
+</div>
+</div>
+</div>
+<div class="fragment">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb4-1"><a></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> categoria (</span>
+<span id="cb4-2"><a></a>    id_categoria  <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb4-3"><a></a>    nombre        <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb4-4"><a></a>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="ahora-ustedes-producto" class="slide level2 center">
+<h2>Ahora ustedes: producto</h2>
+<div class="etapa">
+<p>Etapa 9</p>
+</div>
+<div class="dos">
+<div>
+<div class="ficha">
+<div class="cabeza">
+<p>producto</p>
+</div>
+<ul>
+<li>id_producto <span class="pk">PK</span></li>
+<li>nombre</li>
+<li>precio</li>
+<li>stock</li>
+<li>id_categoria <span class="fk">FK</span></li>
+</ul>
+</div>
+</div>
+<div>
+<div class="pregunta">
+<p>Escriban el <code>CREATE TABLE</code>. Hay una columna que todavía no sabemos declarar del todo.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="una-columna-que-apunta-a-otra-tabla" class="slide level2 center">
+<h2>Una columna que apunta a otra tabla</h2>
+<div class="etapa">
+<p>Etapa 10</p>
+</div>
+<div class="dos estrecha">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb5-1"><a></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> producto (</span>
+<span id="cb5-2"><a></a>    id_producto   <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb5-3"><a></a>    nombre        <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb5-4"><a></a>    precio        <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>),</span>
+<span id="cb5-5"><a></a>    stock         <span class="dt">INTEGER</span>,</span>
+<span id="cb5-6"><a></a>    id_categoria  <span class="dt">INTEGER</span></span>
+<span id="cb5-7"><a></a>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<div class="pregunta fragment">
+<p>¿Sabe SQL que <code>id_categoria</code> corresponde a la tabla <code>categoria</code>?</p>
+</div>
+<div class="respuesta fragment">
+<p>No.&nbsp;Para SQL es un número entero más. Hay que decírselo.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="declarar-la-clave-foránea" class="slide level2 center">
+<h2>Declarar la clave foránea</h2>
+<div class="etapa">
+<p>Etapa 10</p>
+</div>
+<div class="dos arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb6-1"><a></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> producto (</span>
+<span id="cb6-2"><a></a>    id_producto   <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb6-3"><a></a>    nombre        <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb6-4"><a></a>    precio        <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>),</span>
+<span id="cb6-5"><a></a>    stock         <span class="dt">INTEGER</span>,</span>
+<span id="cb6-6"><a></a>    id_categoria  <span class="dt">INTEGER</span>,</span>
+<span id="cb6-7"><a></a></span>
+<span id="cb6-8"><a></a>    <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (id_categoria)</span>
+<span id="cb6-9"><a></a>        <span class="kw">REFERENCES</span> categoria(id_categoria)</span>
+<span id="cb6-10"><a></a>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<div class="diagrama corto">
+<svg viewbox="0 0 520 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La columna id_categoria de producto apunta con una flecha a la clave primaria id_categoria de categoria" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s12" x="-20%" y="-20%" width="140%" height="150%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> <marker id="f12" markerwidth="10" markerheight="10" refx="8" refy="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"></path></marker> </defs> <g filter="url(#s12)"> <rect x="20" y="20" width="210" height="106" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="20" y="20" width="210" height="40" rx="14" fill="#e3eefb"></rect> <rect x="20" y="42" width="210" height="18" fill="#e3eefb"></rect> </g> <text x="125" y="46" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">categoria</text> <text x="38" y="84" font-size="12.5" fill="#1b2a41" font-weight="600">id_categoria</text> <rect x="175" y="72" width="30" height="16" rx="8" fill="#fdf1dc"></rect><text x="190" y="84" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text> <text x="38" y="108" font-size="12.5" fill="#4a5b70">nombre</text> <g filter="url(#s12)"> <rect x="290" y="80" width="210" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="290" y="80" width="210" height="40" rx="14" fill="#e3eefb"></rect> <rect x="290" y="102" width="210" height="18" fill="#e3eefb"></rect> </g> <text x="395" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">producto</text> <text x="308" y="144" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text> <rect x="445" y="132" width="30" height="16" rx="8" fill="#fdf1dc"></rect><text x="460" y="144" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text> <text x="308" y="168" font-size="12.5" fill="#4a5b70">nombre, precio, stock</text> <rect x="298" y="184" width="194" height="32" rx="10" fill="#ede9fb"></rect> <text x="308" y="205" font-size="12.5" fill="#5442b3" font-weight="700">id_categoria</text> <rect x="445" y="192" width="30" height="16" rx="8" fill="#ffffff"></rect><text x="460" y="204" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text> <path d="M298,200 L262,200 L262,84 L230,84" fill="none" stroke="#7c6ad8" stroke-width="2.2" stroke-linejoin="round" marker-end="url(#f12)"></path>
+</svg>
+</div>
+</div>
+</div>
+<div class="idea">
+<p>FOREIGN KEY es la relación del modelo, escrita en SQL</p>
+</div>
+</section></section>
+<section>
+<section id="datos" class="title-slide slide level1 seccion center" data-background-color="#fdf1dc">
+<h1>Datos</h1>
+<div class="rotulo" data-numero="3">
+<p>Tercera parte</p>
+</div>
+</section>
+<section id="tabla-no-es-lo-mismo-que-datos" class="slide level2 center">
+<h2>Tabla no es lo mismo que datos</h2>
+<div class="etapa">
+<p>Etapa 11</p>
+</div>
+<div class="dos estrecha">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb7-1"><a></a><span class="kw">INSERT</span> <span class="kw">INTO</span> cliente</span>
+<span id="cb7-2"><a></a>    (id_cliente, nombre, correo, ciudad)</span>
+<span id="cb7-3"><a></a><span class="kw">VALUES</span></span>
+<span id="cb7-4"><a></a>    (<span class="dv">1</span>, <span class="st">'Ana'</span>, <span class="st">'ana@email.com'</span>, <span class="st">'Medellín'</span>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="pregunta">
+<p>Antes de ejecutarlo: ¿cómo va a quedar la tabla?</p>
+</div>
+</div>
+<div class="resaltada fragment">
+<table class="caption-top">
+<caption>cliente</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id_cliente <span class="pk">PK</span></th>
+<th>nombre</th>
+<th>correo</th>
+<th>ciudad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Ana</td>
+<td>ana@email.com</td>
+<td>Medellín</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="una-fila-más" class="slide level2 center">
+<h2>Una fila más</h2>
+<div class="etapa">
+<p>Etapa 11</p>
+</div>
+<div class="dos estrecha">
+<div>
+<div class="pregunta">
+<p>Inserten a Carlos: <code>carlos@email.com</code>, de Bogotá.</p>
+</div>
+<div class="fragment">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb8-1"><a></a><span class="kw">INSERT</span> <span class="kw">INTO</span> cliente</span>
+<span id="cb8-2"><a></a>    (id_cliente, nombre, correo, ciudad)</span>
+<span id="cb8-3"><a></a><span class="kw">VALUES</span></span>
+<span id="cb8-4"><a></a>    (<span class="dv">2</span>, <span class="st">'Carlos'</span>, <span class="st">'carlos@email.com'</span>, <span class="st">'Bogotá'</span>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div class="fragment">
+<table class="caption-top">
+<caption>cliente</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id_cliente <span class="pk">PK</span></th>
+<th>nombre</th>
+<th>correo</th>
+<th>ciudad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Ana</td>
+<td>ana@email.com</td>
+<td>Medellín</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>Carlos</td>
+<td>carlos@email.com</td>
+<td>Bogotá</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="diez-insert-para-diez-clientes" class="slide level2 center">
+<h2>¿Diez INSERT para diez clientes?</h2>
+<div class="etapa">
+<p>Etapa 12</p>
+</div>
+<div class="dos estrecha arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb9-1"><a></a><span class="kw">INSERT</span> <span class="kw">INTO</span> cliente (id_cliente, nombre, correo, ciudad)</span>
+<span id="cb9-2"><a></a><span class="kw">VALUES</span></span>
+<span id="cb9-3"><a></a>    (<span class="dv">3</span>, <span class="st">'Laura'</span>, <span class="st">'laura@email.com'</span>, <span class="st">'Cali'</span>),</span>
+<span id="cb9-4"><a></a>    (<span class="dv">4</span>, <span class="st">'Juan'</span>,  <span class="st">'juan@email.com'</span>,  <span class="st">'Medellín'</span>),</span>
+<span id="cb9-5"><a></a>    (<span class="dv">5</span>, <span class="st">'Sara'</span>,  <span class="st">'sara@email.com'</span>,  <span class="st">'Bogotá'</span>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<table class="caption-top">
+<caption>cliente</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id_cliente</th>
+<th>nombre</th>
+<th>ciudad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Ana</td>
+<td>Medellín</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>Carlos</td>
+<td>Bogotá</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td>Laura</td>
+<td>Cali</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td>Juan</td>
+<td>Medellín</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td>Sara</td>
+<td>Bogotá</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="nota">
+<p>Una sola sentencia, varias filas.</p>
+</div>
+</section>
+<section id="hagamos-que-falle" class="slide level2 center">
+<h2>Hagamos que falle</h2>
+<div class="etapa">
+<p>Etapa 13</p>
+</div>
+<div class="dos estrecha">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb10-1"><a></a><span class="kw">INSERT</span> <span class="kw">INTO</span> cliente</span>
+<span id="cb10-2"><a></a>    (id_cliente, nombre, correo, ciudad)</span>
+<span id="cb10-3"><a></a><span class="kw">VALUES</span></span>
+<span id="cb10-4"><a></a>    (<span class="dv">1</span>, <span class="st">'Pedro'</span>, <span class="st">'pedro@email.com'</span>, <span class="st">'Cali'</span>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<div class="pregunta">
+<p>Ya existe un cliente con <code>id_cliente = 1</code>. ¿Qué va a pasar?</p>
+</div>
+<div class="error fragment">
+<p>Clave primaria duplicada. La base de datos rechaza la fila completa.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="otra-vez" class="slide level2 center">
+<h2>Otra vez</h2>
+<div class="etapa">
+<p>Etapa 13</p>
+</div>
+<div class="dos estrecha">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb11-1"><a></a><span class="kw">INSERT</span> <span class="kw">INTO</span> producto</span>
+<span id="cb11-2"><a></a>    (id_producto, nombre, precio, stock, id_categoria)</span>
+<span id="cb11-3"><a></a><span class="kw">VALUES</span></span>
+<span id="cb11-4"><a></a>    (<span class="dv">10</span>, <span class="st">'Mouse'</span>, <span class="dv">80000</span>, <span class="dv">20</span>, <span class="dv">999</span>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<div class="pregunta">
+<p>No existe ninguna categoría con <code>id_categoria = 999</code>. ¿Qué va a pasar?</p>
+</div>
+<div class="error fragment">
+<p>Violación de clave foránea. La fila apunta a una categoría que no existe, y la base de datos no la deja entrar.</p>
+</div>
+</div>
+</div>
+<div class="idea fragment">
+<p>La base de datos protege las reglas que diseñamos</p>
+</div>
+</section>
+<section id="con-todas-las-tablas-cargadas" class="slide level2 center">
+<h2>Con todas las tablas cargadas</h2>
+<div class="etapa">
+<p>Etapa 13</p>
+</div>
+<div class="tres">
+<div>
+<table class="caption-top">
+<caption>categoria</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id_categoria</th>
+<th>nombre</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Periféricos</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>Pantallas</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td>Fotografía</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table class="caption-top">
+<caption>producto</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id_producto</th>
+<th>nombre</th>
+<th style="text-align: right;">precio</th>
+<th style="text-align: right;">stock</th>
+<th style="text-align: right;">id_categoria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Mouse</td>
+<td style="text-align: right;">80000</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>Monitor</td>
+<td style="text-align: right;">900000</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td>Teclado</td>
+<td style="text-align: right;">150000</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td>Cámara</td>
+<td style="text-align: right;">500000</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<table class="caption-top">
+<caption>pedido</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id_pedido</th>
+<th>fecha</th>
+<th>estado</th>
+<th style="text-align: right;">id_cliente</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">101</td>
+<td>2026-09-20</td>
+<td>pendiente</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">102</td>
+<td>2026-09-21</td>
+<td>pagado</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">103</td>
+<td>2026-09-21</td>
+<td>pagado</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section></section>
+<section>
+<section id="preguntar" class="title-slide slide level1 seccion center" data-background-color="#e3eefb">
+<h1>Preguntar</h1>
+<div class="rotulo" data-numero="4">
+<p>Cuarta parte</p>
+</div>
+</section>
+<section id="ya-tenemos-datos.-cómo-los-vemos" class="slide level2 center">
+<h2>Ya tenemos datos. ¿Cómo los vemos?</h2>
+<div class="etapa">
+<p>Etapa 14</p>
+</div>
+<div class="dos estrecha arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb12-1"><a></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb12-2"><a></a><span class="kw">FROM</span> cliente;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="anotaciones">
+<ul>
+<li><code>SELECT</code> qué quiero ver</li>
+<li><code>FROM</code> de qué tabla</li>
+<li><code>*</code> todas las columnas</li>
+</ul>
+</div>
+</div>
+<div class="fragment">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: right;">id_cliente</th>
+<th>nombre</th>
+<th>correo</th>
+<th>ciudad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Ana</td>
+<td>ana@email.com</td>
+<td>Medellín</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>Carlos</td>
+<td>carlos@email.com</td>
+<td>Bogotá</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td>Laura</td>
+<td>laura@email.com</td>
+<td>Cali</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td>Juan</td>
+<td>juan@email.com</td>
+<td>Medellín</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td>Sara</td>
+<td>sara@email.com</td>
+<td>Bogotá</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="solo-nombre-y-ciudad" class="slide level2 center">
+<h2>Solo nombre y ciudad</h2>
+<div class="etapa">
+<p>Etapa 15</p>
+</div>
+<div class="pregunta">
+<p>No quiero todas las columnas. Solo <code>nombre</code> y <code>ciudad</code>. ¿Qué cambia en la consulta?</p>
+</div>
+<div class="dos estrecha arriba fragment">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb13-1"><a></a><span class="kw">SELECT</span> nombre, ciudad</span>
+<span id="cb13-2"><a></a><span class="kw">FROM</span> cliente;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>nombre</th>
+<th>ciudad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ana</td>
+<td>Medellín</td>
+</tr>
+<tr class="even">
+<td>Carlos</td>
+<td>Bogotá</td>
+</tr>
+<tr class="odd">
+<td>Laura</td>
+<td>Cali</td>
+</tr>
+<tr class="even">
+<td>Juan</td>
+<td>Medellín</td>
+</tr>
+<tr class="odd">
+<td>Sara</td>
+<td>Bogotá</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="tres-retos-rápidos" class="slide level2 center">
+<h2>Tres retos rápidos</h2>
+<div class="etapa">
+<p>Etapa 15</p>
+</div>
 <div class="tarjetas">
-<div class="tarjeta">
-<p><span class="titulo">SQL desde cero</span></p>
-<p>Sin diagramas todavía, directo sobre una tabla que ya existe.</p>
+<div class="azul">
+<p><span class="titulo">1</span></p>
+<p>Nombre y correo de cada cliente.</p>
 </div>
-<div class="tarjeta">
-<p><span class="titulo">La tabla plana de pedidos</span></p>
-<p>La misma de la Unidad 1, con el teléfono de Ana repetido en cada fila.</p>
+<div class="azul">
+<p><span class="titulo">2</span></p>
+<p>Únicamente la ciudad.</p>
 </div>
-<div class="clave">
-<p><span class="titulo"><code>SELECT</code>, <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code></span></p>
-<p>Las cuatro sentencias que vas a usar en el resto del curso.</p>
+<div class="azul">
+<p><span class="titulo">3</span></p>
+<p>Nombre y precio de cada producto.</p>
 </div>
-<div class="tarjeta">
-<p><span class="titulo">Nivel intermedio</span></p>
-<p>Filtros, comodines, <code>NULL</code>, agregación y subconsultas, sin <code>GROUP BY</code> todavía.</p>
+</div>
+<div class="fragment">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb14-1"><a></a><span class="kw">SELECT</span> nombre, correo <span class="kw">FROM</span> cliente;</span>
+<span id="cb14-2"><a></a></span>
+<span id="cb14-3"><a></a><span class="kw">SELECT</span> ciudad <span class="kw">FROM</span> cliente;</span>
+<span id="cb14-4"><a></a></span>
+<span id="cb14-5"><a></a><span class="kw">SELECT</span> nombre, precio <span class="kw">FROM</span> producto;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="solo-los-clientes-de-medellín" class="slide level2 center">
+<h2>Solo los clientes de Medellín</h2>
+<div class="etapa">
+<p>Etapa 16</p>
+</div>
+<div class="pregunta">
+<p><code>SELECT nombre, ciudad FROM cliente</code> sigue mostrando a todos. ¿Qué le falta?</p>
+</div>
+<div class="respuesta fragment">
+<p>Una condición.</p>
+</div>
+<div class="dos estrecha arriba fragment">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb15-1"><a></a><span class="kw">SELECT</span> nombre, ciudad</span>
+<span id="cb15-2"><a></a><span class="kw">FROM</span> cliente</span>
+<span id="cb15-3"><a></a><span class="kw">WHERE</span> ciudad <span class="op">=</span> <span class="st">'Medellín'</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="anotaciones">
+<ul>
+<li><code>SELECT</code> qué</li>
+<li><code>FROM</code> de dónde</li>
+<li><code>WHERE</code> bajo qué condición</li>
+</ul>
+</div>
+</div>
+<div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>nombre</th>
+<th>ciudad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ana</td>
+<td>Medellín</td>
+</tr>
+<tr class="even">
+<td>Juan</td>
+<td>Medellín</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </section>
-<section id="qué-es-una-base-de-datos-qué-es-un-sgbd" class="slide level2 center">
-<h2>Qué es una base de datos, qué es un SGBD</h2>
-<div class="pasos">
-<ol type="1">
-<li>Una base de datos es un conjunto organizado de datos persistentes</li>
-<li>El SGBD (<em>database management system</em>) es el programa que la administra: MySQL, PostgreSQL, SQL Server, Oracle, SQLite</li>
-<li>SQL es el lenguaje común para hablarle a cualquiera de esos motores, sin aprender uno distinto por cada uno</li>
-</ol>
+<section id="retos-de-where" class="slide level2 center">
+<h2>Retos de WHERE</h2>
+<div class="etapa">
+<p>Etapa 17</p>
 </div>
-</section>
-<section id="de-dónde-sale-sql" class="slide level2 center">
-<h2>De dónde sale SQL</h2>
-<div class="pasos">
-<ol type="1">
-<li>Nace a mediados de los 70 en System R, el proyecto de IBM que construyó el primer SGBD relacional</li>
-<li>Chamberlin y Boyce lo llamaron SEQUEL, sobre el modelo relacional de Codd (1970)</li>
-<li>Un conflicto de marca lo acortó a SQL</li>
-<li>ANSI lo estandarizó en 1986, ISO lo adoptó en 1987 como ISO/IEC 9075</li>
-</ol>
-</div>
-</section>
-<section id="sql-es-declarativo-no-procedimental" class="slide level2 center">
-<h2>SQL es declarativo, no procedimental</h2>
-<div class="destacado">
-<p>Describes qué resultado quieres, no los pasos exactos para conseguirlo. El motor decide cómo recorrer los datos.</p>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb1-1"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">WHERE</span> valor <span class="op">&gt;</span> <span class="dv">5000</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="pasos">
-<ol type="1">
-<li>No le dices al motor que recorra la tabla fila por fila</li>
-<li>Solo describes la condición que debe cumplir el resultado</li>
-<li>El propio motor decide, con su lógica interna, cómo conseguirlo de la forma más eficiente</li>
-</ol>
-</div>
-</section>
-<section id="cómo-se-ejecuta-sql-en-la-práctica" class="slide level2 center">
-<h2>Cómo se ejecuta SQL en la práctica</h2>
-<div class="diagrama">
-<svg viewbox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una persona escribe una sentencia SQL en un cliente, terminal como psql o programa grafico como pgAdmin; el cliente envia ese texto al motor de base de datos que corre como servicio en segundo plano; el motor interpreta la sentencia, la ejecuta contra los datos guardados en disco, y devuelve un resultado" font-family="Segoe UI, Inter, system-ui, sans-serif">
-<defs><marker id="sql1d" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un cliente envía el texto SQL, el motor lo ejecuta y devuelve el resultado</text> <rect x="20" y="50" width="190" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="115" y="78" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Persona</text> <text x="115" y="98" font-size="10.5" fill="#5b6876" text-anchor="middle">escribe SQL en un</text> <text x="115" y="114" font-size="10.5" fill="#5b6876" text-anchor="middle">cliente, terminal o gráfico</text> <rect x="285" y="50" width="190" height="90" rx="8" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="380" y="78" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Motor de base de datos</text> <text x="380" y="98" font-size="10.5" fill="#3c7d7a" text-anchor="middle">recibe, interpreta y</text> <text x="380" y="114" font-size="10.5" fill="#3c7d7a" text-anchor="middle">ejecuta la sentencia</text> <rect x="550" y="50" width="190" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"></rect> <text x="645" y="78" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Datos en disco</text> <text x="645" y="98" font-size="10.5" fill="#5b6876" text-anchor="middle">tablas guardadas de</text> <text x="645" y="114" font-size="10.5" fill="#5b6876" text-anchor="middle">forma persistente</text> <path d="M210,80 L281,80" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1d)"></path> <path d="M475,80 L546,80" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1d)"></path> <path d="M285,116 L214,116" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1d)"></path>
-</svg>
-</div>
-<div class="destacado">
-<p>Cliente de terminal (<code>psql</code>, <code>mysql</code>) o programa gráfico (pgAdmin, DBeaver). Toda sentencia SQL termina en <code>;</code>.</p>
-</div>
-</section>
-<section id="cinco-familias-de-instrucciones" class="slide level2 center">
-<h2>Cinco familias de instrucciones</h2>
 <div class="tarjetas">
-<div class="clave">
-<p><span class="titulo">DDL</span></p>
-<p><em>Data definition language</em>. <code>CREATE</code>, <code>ALTER</code>, <code>DROP</code>. Define la estructura, bases de datos y tablas.</p>
+<div class="azul">
+<p><span class="titulo">1</span></p>
+<p>Productos con precio superior a 100.000.</p>
 </div>
-<div class="clave">
-<p><span class="titulo">DML</span></p>
-<p><em>Data manipulation language</em>. <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>. Cambia los datos de una tabla que ya existe.</p>
+<div class="azul">
+<p><span class="titulo">2</span></p>
+<p>Productos con stock menor a 10.</p>
 </div>
-<div class="clave">
-<p><span class="titulo">DQL</span></p>
-<p><em>Data query language</em>. <code>SELECT</code>. Consulta datos sin modificar nada. Algunos autores lo agrupan en el DML.</p>
+<div class="azul">
+<p><span class="titulo">3</span></p>
+<p>Clientes que no sean de Medellín.</p>
 </div>
-<div class="tarjeta">
-<p><span class="titulo">DCL</span></p>
-<p><em>Data control language</em>. <code>GRANT</code>, <code>REVOKE</code>. Decide qué usuario puede hacer qué.</p>
+<div class="azul">
+<p><span class="titulo">4</span></p>
+<p>Productos con precio entre 100.000 y 500.000.</p>
 </div>
-<div class="tarjeta">
-<p><span class="titulo">TCL</span></p>
-<p><em>Transaction control language</em>. <code>COMMIT</code>, <code>ROLLBACK</code>. Agrupa cambios en una unidad indivisible.</p>
+<div class="azul">
+<p><span class="titulo">5</span></p>
+<p>Clientes de Medellín o Bogotá.</p>
+</div>
+</div>
+</section>
+<section id="soluciones" class="slide level2 center">
+<h2>Soluciones</h2>
+<div class="etapa">
+<p>Etapa 17</p>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb16-1"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> producto <span class="kw">WHERE</span> precio <span class="op">&gt;</span> <span class="dv">100000</span>;</span>
+<span id="cb16-2"><a></a></span>
+<span id="cb16-3"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> producto <span class="kw">WHERE</span> stock <span class="op">&lt;</span> <span class="dv">10</span>;</span>
+<span id="cb16-4"><a></a></span>
+<span id="cb16-5"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> cliente  <span class="kw">WHERE</span> ciudad <span class="op">&lt;&gt;</span> <span class="st">'Medellín'</span>;</span>
+<span id="cb16-6"><a></a></span>
+<span id="cb16-7"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> producto <span class="kw">WHERE</span> precio <span class="kw">BETWEEN</span> <span class="dv">100000</span> <span class="kw">AND</span> <span class="dv">500000</span>;</span>
+<span id="cb16-8"><a></a></span>
+<span id="cb16-9"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> cliente  <span class="kw">WHERE</span> ciudad <span class="kw">IN</span> (<span class="st">'Medellín'</span>, <span class="st">'Bogotá'</span>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="anotaciones">
+<ul>
+<li><code>&gt; &lt; &gt;= &lt;= &lt;&gt;</code> comparar</li>
+<li><code>AND OR</code> combinar condiciones</li>
+<li><code>BETWEEN</code> un rango, extremos incluidos</li>
+<li><code>IN</code> cualquiera de una lista</li>
+</ul>
+</div>
+</section>
+<section id="predigan-antes-de-ejecutar" class="slide level2 center">
+<h2>Predigan antes de ejecutar</h2>
+<div class="etapa">
+<p>Etapa 18</p>
+</div>
+<div class="dos arriba">
+<div>
+<table class="caption-top">
+<caption>producto</caption>
+<thead>
+<tr class="header">
+<th>nombre</th>
+<th style="text-align: right;">precio</th>
+<th style="text-align: right;">stock</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mouse</td>
+<td style="text-align: right;">80000</td>
+<td style="text-align: right;">20</td>
+</tr>
+<tr class="even">
+<td>Monitor</td>
+<td style="text-align: right;">900000</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="odd">
+<td>Teclado</td>
+<td style="text-align: right;">150000</td>
+<td style="text-align: right;">15</td>
+</tr>
+<tr class="even">
+<td>Cámara</td>
+<td style="text-align: right;">500000</td>
+<td style="text-align: right;">3</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb17-1"><a></a><span class="kw">SELECT</span> <span class="op">*</span></span>
+<span id="cb17-2"><a></a><span class="kw">FROM</span> producto</span>
+<span id="cb17-3"><a></a><span class="kw">WHERE</span> precio <span class="op">&gt;</span> <span class="dv">100000</span></span>
+<span id="cb17-4"><a></a>  <span class="kw">AND</span> stock <span class="op">&gt;</span> <span class="dv">10</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="pregunta">
+<p>Sin ejecutar: ¿qué productos aparecen?</p>
+</div>
+</div>
+</div>
+<div class="respuesta fragment">
+<p>Solo Teclado. El Mouse falla en el precio; Monitor y Cámara fallan en el stock. Leer SQL importa tanto como escribirlo.</p>
+</div>
+</section>
+<section id="del-más-caro-al-más-barato" class="slide level2 center">
+<h2>Del más caro al más barato</h2>
+<div class="etapa">
+<p>Etapa 19</p>
+</div>
+<div class="dos estrecha arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb18-1"><a></a><span class="kw">SELECT</span> nombre, precio</span>
+<span id="cb18-2"><a></a><span class="kw">FROM</span> producto</span>
+<span id="cb18-3"><a></a><span class="kw">ORDER</span> <span class="kw">BY</span> precio <span class="kw">DESC</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="anotaciones">
+<ul>
+<li><code>ORDER BY</code> ordenar por una columna</li>
+<li><code>DESC</code> de mayor a menor</li>
+<li><code>ASC</code> de menor a mayor, el valor por defecto</li>
+</ul>
+</div>
+</div>
+<div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>nombre</th>
+<th style="text-align: right;">precio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Monitor</td>
+<td style="text-align: right;">900000</td>
+</tr>
+<tr class="even">
+<td>Cámara</td>
+<td style="text-align: right;">500000</td>
+</tr>
+<tr class="odd">
+<td>Teclado</td>
+<td style="text-align: right;">150000</td>
+</tr>
+<tr class="even">
+<td>Mouse</td>
+<td style="text-align: right;">80000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="pregunta fragment">
+<p>¿Y si solo quiero los tres más caros?</p>
+</div>
+<div class="fragment">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb19-1"><a></a><span class="kw">SELECT</span> nombre, precio <span class="kw">FROM</span> producto <span class="kw">ORDER</span> <span class="kw">BY</span> precio <span class="kw">DESC</span> <span class="kw">LIMIT</span> <span class="dv">3</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="el-mouse-ahora-cuesta-95.000" class="slide level2 center">
+<h2>El Mouse ahora cuesta 95.000</h2>
+<div class="etapa">
+<p>Etapa 20</p>
+</div>
+<div class="pregunta">
+<p>¿Hay que insertar el producto otra vez?</p>
+</div>
+<div class="respuesta fragment">
+<p>No.&nbsp;La fila ya existe; lo que cambia es un valor dentro de ella.</p>
+</div>
+<div class="dos estrecha arriba fragment">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb20-1"><a></a><span class="kw">UPDATE</span> producto</span>
+<span id="cb20-2"><a></a><span class="kw">SET</span> precio <span class="op">=</span> <span class="dv">95000</span></span>
+<span id="cb20-3"><a></a><span class="kw">WHERE</span> id_producto <span class="op">=</span> <span class="dv">1</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<div class="anotaciones">
+<ul>
+<li><code>UPDATE</code> qué tabla cambia</li>
+<li><code>SET</code> qué columna, y su valor nuevo</li>
+<li><code>WHERE</code> a qué filas se aplica</li>
+</ul>
+</div>
 </div>
 </div>
 </section>
-<section id="crear-una-base-de-datos" class="slide level2 center">
-<h2>Crear una base de datos</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb2-1"><a></a><span class="kw">CREATE</span> <span class="kw">DATABASE</span> cafeteria;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="pasos">
-<ol type="1">
-<li><code>CREATE DATABASE</code> reserva un espacio nuevo y vacío, identificado por su nombre</li>
-<li>Hay que indicarle al cliente que trabaje sobre esa base de datos activa</li>
-<li>En PostgreSQL (<code>psql</code>): <code>\c cafeteria</code>. En MySQL: <code>USE cafeteria;</code></li>
-<li><code>DROP DATABASE cafeteria;</code> la elimina por completo, sin posibilidad de deshacer</li>
-</ol>
+<section id="el-mismo-update-sin-where" class="slide level2 center">
+<h2>El mismo UPDATE, sin WHERE</h2>
+<div class="etapa">
+<p>Etapa 20</p>
+</div>
+<div class="dos">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb21-1"><a></a><span class="kw">UPDATE</span> producto</span>
+<span id="cb21-2"><a></a><span class="kw">SET</span> precio <span class="op">=</span> <span class="dv">95000</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<div class="pregunta">
+<p>¿Qué va a pasar?</p>
+</div>
+<div class="error fragment">
+<p>Todos los productos pasan a costar 95.000. La sentencia es válida, el motor la ejecuta sin preguntar, y no hay forma de deshacerla con un clic.</p>
+</div>
+</div>
 </div>
 </section>
-<section id="la-tabla-de-trabajo-pedidoplano" class="slide level2 center">
-<h2>La tabla de trabajo, <code>PedidoPlano</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb3-1"><a></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> PedidoPlano (</span>
-<span id="cb3-2"><a></a>    pedido    <span class="dt">INT</span>,</span>
-<span id="cb3-3"><a></a>    cliente   <span class="dt">VARCHAR</span>(<span class="dv">80</span>),</span>
-<span id="cb3-4"><a></a>    telefono  <span class="dt">VARCHAR</span>(<span class="dv">20</span>),</span>
-<span id="cb3-5"><a></a>    producto  <span class="dt">VARCHAR</span>(<span class="dv">80</span>),</span>
-<span id="cb3-6"><a></a>    valor     <span class="dt">DECIMAL</span>(<span class="dv">10</span>,<span class="dv">2</span>)</span>
-<span id="cb3-7"><a></a>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="cargar-los-datos-con-insert" class="slide level2 center">
-<h2>Cargar los datos con <code>INSERT</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb4-1"><a></a><span class="kw">INSERT</span> <span class="kw">INTO</span> PedidoPlano (pedido, cliente, telefono, producto, valor) <span class="kw">VALUES</span></span>
-<span id="cb4-2"><a></a>    (<span class="dv">1001</span>, <span class="st">'Ana Ruiz'</span>,  <span class="st">'300 111 2233'</span>, <span class="st">'Café'</span>,   <span class="dv">4500</span>),</span>
-<span id="cb4-3"><a></a>    (<span class="dv">1002</span>, <span class="st">'Ana Ruiz'</span>,  <span class="st">'300 111 2233'</span>, <span class="st">'Torta'</span>,  <span class="dv">23400</span>),</span>
-<span id="cb4-4"><a></a>    (<span class="dv">1003</span>, <span class="st">'Luis Pena'</span>, <span class="st">'301 444 5566'</span>, <span class="st">'Café'</span>,   <span class="dv">4500</span>),</span>
-<span id="cb4-5"><a></a>    (<span class="dv">1004</span>, <span class="st">'Ana Ruiz'</span>,  <span class="st">'300 111 2233'</span>, <span class="st">'Jugo'</span>,   <span class="dv">6800</span>);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="pasos">
-<ol type="1">
-<li><code>INTO</code> nombra la tabla destino, seguida de la lista de columnas a llenar</li>
-<li><code>VALUES</code> introduce los valores de cada fila, uno por columna, en el mismo orden</li>
-<li>El texto va entre comillas simples, los números van sin comillas</li>
-</ol>
+<section id="eliminar" class="slide level2 center">
+<h2>Eliminar</h2>
+<div class="etapa">
+<p>Etapa 21</p>
+</div>
+<div class="dos arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb22-1"><a></a><span class="kw">DELETE</span> <span class="kw">FROM</span> cliente</span>
+<span id="cb22-2"><a></a><span class="kw">WHERE</span> id_cliente <span class="op">=</span> <span class="dv">5</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="nota">
+<p>Sara ya no debe estar en el sistema. Se va una fila, la que cumple la condición.</p>
+</div>
+</div>
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb23-1"><a></a><span class="kw">DELETE</span> <span class="kw">FROM</span> cliente;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="pregunta">
+<p>¿Y esto?</p>
+</div>
+<div class="error fragment">
+<p>Vacía la tabla completa. Sin aviso.</p>
+</div>
+</div>
+</div>
+</section></section>
+<section>
+<section id="recorrer-las-relaciones" class="title-slide slide level1 seccion center" data-background-color="#ede9fb">
+<h1>Recorrer las relaciones</h1>
+<div class="rotulo" data-numero="5">
+<p>Quinta parte</p>
 </div>
 </section>
-<section id="la-primera-consulta" class="slide level2 center">
-<h2>La primera consulta</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb5-1"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="pasos">
-<ol type="1">
-<li><code>SELECT</code> dice qué columnas quieres ver, <code>*</code> significa todas</li>
-<li><code>FROM</code> dice de qué tabla las sacas</li>
-<li>La proyección elige columnas concretas: <code>SELECT cliente, producto FROM PedidoPlano;</code></li>
-<li><code>AS</code> renombra una columna en el resultado sin tocar la tabla</li>
-</ol>
+<section id="volvemos-al-modelo" class="slide level2 center">
+<h2>Volvemos al modelo</h2>
+<div class="etapa">
+<p>Etapa 22</p>
+</div>
+<div class="diagrama corto">
+<svg viewbox="0 0 900 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CLIENTE y PEDIDO unidos por una linea con cardinalidad uno a muchos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s13" x="-20%" y="-20%" width="140%" height="160%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> </defs> <g filter="url(#s13)"> <rect x="60" y="35" width="240" height="70" rx="16" fill="#e3eefb"></rect> <rect x="600" y="35" width="240" height="70" rx="16" fill="#e3eefb"></rect> </g> <text x="180" y="77" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CLIENTE</text> <text x="720" y="77" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text> <line x1="300" y1="70" x2="600" y2="70" stroke="#7fa6d6" stroke-width="2.6"></line> <rect x="312" y="45" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="327" y="62" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">1</text> <rect x="558" y="45" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="573" y="62" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">N</text>
+</svg>
+</div>
+<div class="pregunta">
+<p>Quiero el nombre del cliente que hizo cada pedido. ¿Qué tablas necesito, y qué columnas las conectan?</p>
+</div>
+<div class="respuesta fragment">
+<p><code>cliente</code> y <code>pedido</code>. Las conecta <code>id_cliente</code>: clave primaria en una, clave foránea en la otra.</p>
 </div>
 </section>
-<section id="filtrar-con-where" class="slide level2 center">
-<h2>Filtrar con <code>WHERE</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb6-1"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">WHERE</span> cliente <span class="op">=</span> <span class="st">'Ana Ruiz'</span>;</span>
-<span id="cb6-2"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">WHERE</span> valor <span class="op">&gt;</span> <span class="dv">5000</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="destacado">
-<p><code>=</code>, <code>&lt;&gt;</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>. Sin <code>WHERE</code>, ninguna fila se descarta.</p>
+<section id="seguir-la-flecha-fila-por-fila" class="slide level2 center">
+<h2>Seguir la flecha, fila por fila</h2>
+<div class="etapa">
+<p>Etapa 23</p>
 </div>
-</section>
-<section id="and-or-y-not" class="slide level2 center">
-<h2><code>AND</code>, <code>OR</code> y <code>NOT</code></h2>
 <div class="diagrama">
-<svg viewbox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tabla de verdad de AND y OR sobre dos condiciones A y B: AND es verdadero solo cuando A y B son verdaderas a la vez, OR es verdadero cuando al menos una lo es" font-family="Segoe UI, Inter, system-ui, sans-serif">
-<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">AND exige las dos condiciones, OR exige al menos una</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="32" width="330" height="120" rx="8"></rect><rect x="400" y="32" width="330" height="120" rx="8"></rect></g> <text x="195" y="52" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">A AND B</text> <g font-size="11" fill="#12324f" text-anchor="middle"><text x="90" y="76">A</text><text x="150" y="76">B</text><text x="240" y="76">Resultado</text></g> <g font-size="11" fill="#5b6876" text-anchor="middle"> <text x="90" y="96">verdadero</text><text x="150" y="96">verdadero</text><text x="240" y="96" fill="#0e6f6c" font-weight="700">verdadero</text> <text x="90" y="114">verdadero</text><text x="150" y="114">falso</text><text x="240" y="114">falso</text> <text x="90" y="132">falso</text><text x="150" y="132">verdadero</text><text x="240" y="132">falso</text> </g> <text x="565" y="52" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">A OR B</text> <g font-size="11" fill="#12324f" text-anchor="middle"><text x="460" y="76">A</text><text x="520" y="76">B</text><text x="610" y="76">Resultado</text></g> <g font-size="11" fill="#5b6876" text-anchor="middle"> <text x="460" y="96">verdadero</text><text x="520" y="96">falso</text><text x="610" y="96" fill="#0e6f6c" font-weight="700">verdadero</text> <text x="460" y="114">falso</text><text x="520" y="114">verdadero</text><text x="610" y="114" fill="#0e6f6c" font-weight="700">verdadero</text> <text x="460" y="132">falso</text><text x="520" y="132">falso</text><text x="610" y="132">falso</text> </g>
+<svg viewbox="0 0 1000 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres filas de pedido, con id_cliente 1, 2 y 1, conectadas por flechas a las filas de cliente Ana y Carlos; a la derecha, el resultado combinado: pedido 101 Ana, 102 Carlos, 103 Ana" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s14" x="-20%" y="-20%" width="140%" height="150%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> <marker id="f14" markerwidth="10" markerheight="10" refx="8" refy="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"></path></marker> </defs> <text x="40" y="52" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">pedido</text> <g filter="url(#s14)"><rect x="40" y="62" width="330" height="200" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect></g> <rect x="40" y="62" width="330" height="40" rx="14" fill="#e3eefb"></rect> <rect x="40" y="84" width="330" height="18" fill="#e3eefb"></rect> <g font-size="13" font-weight="700" fill="#1b2a41"> <text x="62" y="88">id_pedido</text><text x="160" y="88">fecha</text><text x="270" y="88" fill="#5442b3">id_cliente</text> </g> <line x1="40" y1="102" x2="370" y2="102" stroke="#c9dcf3"></line> <line x1="40" y1="155" x2="370" y2="155" stroke="#edf2f8"></line> <line x1="40" y1="208" x2="370" y2="208" stroke="#edf2f8"></line> <g font-size="14" fill="#1b2a41"> <text x="62" y="134">101</text><text x="160" y="134">20/09</text><text x="270" y="134" font-weight="700" fill="#5442b3">1</text> <text x="62" y="187">102</text><text x="160" y="187">21/09</text><text x="270" y="187" font-weight="700" fill="#5442b3">2</text> <text x="62" y="240">103</text><text x="160" y="240">21/09</text><text x="270" y="240" font-weight="700" fill="#5442b3">1</text> </g> <text x="470" y="52" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">cliente</text> <g filter="url(#s14)"><rect x="470" y="62" width="230" height="147" rx="14" fill="#ffffff" stroke="#d6e3f3"></rect></g> <rect x="470" y="62" width="230" height="40" rx="14" fill="#e3eefb"></rect> <rect x="470" y="84" width="230" height="18" fill="#e3eefb"></rect> <g font-size="13" font-weight="700" fill="#1b2a41"> <text x="492" y="88">id_cliente</text><text x="610" y="88">nombre</text> </g> <line x1="470" y1="102" x2="700" y2="102" stroke="#c9dcf3"></line> <line x1="470" y1="155" x2="700" y2="155" stroke="#edf2f8"></line> <g font-size="14" fill="#1b2a41"> <text x="492" y="134" font-weight="700">1</text><text x="610" y="134">Ana</text> <text x="492" y="187" font-weight="700">2</text><text x="610" y="187">Carlos</text> </g> <line x1="370" y1="122" x2="470" y2="122" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f14)"></line> <line x1="370" y1="181" x2="470" y2="181" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f14)"></line> <path d="M370,234 L410,234 L410,138 L470,138" fill="none" stroke="#7c6ad8" stroke-width="2" stroke-linejoin="round" marker-end="url(#f14)"></path> <text x="780" y="52" font-size="13" font-weight="700" fill="#1e7c66" font-family="Consolas, monospace">resultado</text> <g filter="url(#s14)"><rect x="780" y="62" width="200" height="200" rx="14" fill="#ffffff" stroke="#bfe7db"></rect></g> <rect x="780" y="62" width="200" height="40" rx="14" fill="#e1f5ef"></rect> <rect x="780" y="84" width="200" height="18" fill="#e1f5ef"></rect> <g font-size="13" font-weight="700" fill="#1b2a41"> <text x="800" y="88">pedido</text><text x="890" y="88">cliente</text> </g> <line x1="780" y1="102" x2="980" y2="102" stroke="#bfe7db"></line> <line x1="780" y1="155" x2="980" y2="155" stroke="#edf2f8"></line> <line x1="780" y1="208" x2="980" y2="208" stroke="#edf2f8"></line> <g font-size="14" fill="#1b2a41"> <text x="800" y="134">101</text><text x="890" y="134">Ana</text> <text x="800" y="187">102</text><text x="890" y="187">Carlos</text> <text x="800" y="240">103</text><text x="890" y="240">Ana</text> </g> <text x="500" y="305" text-anchor="middle" font-size="14" fill="#4a5b70">cada fila de pedido se empareja con la fila de cliente que tiene el mismo id_cliente</text>
 </svg>
 </div>
 </section>
-<section id="between-in-like" class="slide level2 center">
-<h2><code>BETWEEN</code>, <code>IN</code>, <code>LIKE</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb7-1"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">WHERE</span> valor <span class="kw">BETWEEN</span> <span class="dv">4000</span> <span class="kw">AND</span> <span class="dv">10000</span>;</span>
-<span id="cb7-2"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">WHERE</span> producto <span class="kw">IN</span> (<span class="st">'Café'</span>, <span class="st">'Torta'</span>);</span>
-<span id="cb7-3"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">WHERE</span> cliente <span class="kw">LIKE</span> <span class="st">'Ana%'</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="diagrama">
-<svg viewbox="0 0 760 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El comodin porcentaje reemplaza cualquier cantidad de caracteres, y el patron Ana porcentaje coincide con Ana Ruiz; el comodin guion bajo reemplaza exactamente un caracter" font-family="Segoe UI, Inter, system-ui, sans-serif">
-<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Dos comodines de LIKE, cero o más caracteres contra exactamente uno</text> <rect x="30" y="32" width="330" height="110" rx="8" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="195" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">% reemplaza cero o más caracteres</text> <text x="195" y="78" font-size="11.5" fill="#12324f" text-anchor="middle">patrón: ‘Ana%’</text> <text x="195" y="98" font-size="11.5" fill="#12324f" text-anchor="middle">coincide: ‘Ana Ruiz’</text> <text x="195" y="120" font-size="10.5" fill="#5b6876" text-anchor="middle">no coincide: ‘Luis Pena’</text> <rect x="400" y="32" width="330" height="110" rx="8" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="565" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">_ reemplaza exactamente un carácter</text> <text x="565" y="78" font-size="11.5" fill="#12324f" text-anchor="middle">patrón: ’300 111 22__‘</text> <text x="565" y="98" font-size="11.5" fill="#12324f" text-anchor="middle">coincide: ’300 111 2233’</text> <text x="565" y="120" font-size="10.5" fill="#5b6876" text-anchor="middle">no coincide: ‘300 111 223’</text>
+<section id="el-primer-join" class="slide level2 center">
+<h2>El primer JOIN</h2>
+<div class="etapa">
+<p>Etapa 23</p>
+</div>
+<div class="dos estrecha arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb24-1"><a></a><span class="kw">SELECT</span> pedido.id_pedido,</span>
+<span id="cb24-2"><a></a>       cliente.nombre</span>
+<span id="cb24-3"><a></a><span class="kw">FROM</span> pedido</span>
+<span id="cb24-4"><a></a><span class="kw">JOIN</span> cliente</span>
+<span id="cb24-5"><a></a>  <span class="kw">ON</span> pedido.id_cliente <span class="op">=</span> cliente.id_cliente;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<div class="anotaciones">
+<ul>
+<li><code>JOIN</code> combinar con otra tabla</li>
+<li><code>ON</code> la condición para emparejar filas</li>
+<li><code>pedido.id_cliente</code> tabla punto columna, para que no haya ambigüedad</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="idea">
+<p>JOIN sigue las relaciones que diseñamos en el modelo</p>
+</div>
+</section>
+<section id="ahora-ustedes-producto-y-categoría" class="slide level2 center">
+<h2>Ahora ustedes: producto y categoría</h2>
+<div class="etapa">
+<p>Etapa 24</p>
+</div>
+<div class="dos">
+<div>
+<div class="pregunta">
+<p>Muestren el nombre del producto, su precio y el nombre de su categoría.</p>
+</div>
+<div class="respuesta fragment">
+<p>Dos tablas, unidas por <code>id_categoria</code>. El mismo patrón del <code>JOIN</code> anterior.</p>
+</div>
+</div>
+<div class="fragment">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb25-1"><a></a><span class="kw">SELECT</span> producto.nombre,</span>
+<span id="cb25-2"><a></a>       producto.precio,</span>
+<span id="cb25-3"><a></a>       categoria.nombre</span>
+<span id="cb25-4"><a></a><span class="kw">FROM</span> producto</span>
+<span id="cb25-5"><a></a><span class="kw">JOIN</span> categoria</span>
+<span id="cb25-6"><a></a>  <span class="kw">ON</span> producto.id_categoria</span>
+<span id="cb25-7"><a></a>   <span class="op">=</span> categoria.id_categoria;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</section>
+<section id="alias" class="slide level2 center">
+<h2>Alias</h2>
+<div class="etapa">
+<p>Etapa 24</p>
+</div>
+<div class="dos estrecha arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb26-1"><a></a><span class="kw">SELECT</span> p.nombre,</span>
+<span id="cb26-2"><a></a>       p.precio,</span>
+<span id="cb26-3"><a></a>       c.nombre <span class="kw">AS</span> categoria</span>
+<span id="cb26-4"><a></a><span class="kw">FROM</span> producto p</span>
+<span id="cb26-5"><a></a><span class="kw">JOIN</span> categoria c</span>
+<span id="cb26-6"><a></a>  <span class="kw">ON</span> p.id_categoria <span class="op">=</span> c.id_categoria;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>nombre</th>
+<th style="text-align: right;">precio</th>
+<th>categoria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mouse</td>
+<td style="text-align: right;">95000</td>
+<td>Periféricos</td>
+</tr>
+<tr class="even">
+<td>Monitor</td>
+<td style="text-align: right;">900000</td>
+<td>Pantallas</td>
+</tr>
+<tr class="odd">
+<td>Teclado</td>
+<td style="text-align: right;">150000</td>
+<td>Periféricos</td>
+</tr>
+<tr class="even">
+<td>Cámara</td>
+<td style="text-align: right;">500000</td>
+<td>Fotografía</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="anotaciones">
+<ul>
+<li><code>producto p</code> un nombre corto para la tabla, válido dentro de la consulta</li>
+<li><code>AS categoria</code> un nombre para la columna en el resultado</li>
+</ul>
+</div>
+</section>
+<section id="qué-productos-compró-cada-cliente" class="slide level2 center">
+<h2>¿Qué productos compró cada cliente?</h2>
+<div class="etapa">
+<p>Etapa 25</p>
+</div>
+<div class="pregunta">
+<p>Antes de escribir SQL: dibujen el camino en el modelo. ¿Por qué tablas hay que pasar?</p>
+</div>
+<div class="diagrama corto fragment">
+<svg viewbox="0 0 1000 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Camino de cuatro tablas: cliente, pedido, detalle_pedido y producto, unidas por flechas rotuladas con la columna que las conecta: id_cliente, id_pedido, id_producto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s15" x="-20%" y="-20%" width="140%" height="160%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> <marker id="f15" markerwidth="10" markerheight="10" refx="8" refy="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"></path></marker> </defs> <g filter="url(#s15)"> <rect x="20" y="40" width="180" height="60" rx="14" fill="#e3eefb"></rect> <rect x="290" y="40" width="180" height="60" rx="14" fill="#e3eefb"></rect> <rect x="560" y="40" width="200" height="60" rx="14" fill="#ede9fb"></rect> <rect x="850" y="40" width="130" height="60" rx="14" fill="#e3eefb"></rect> </g> <g font-size="16" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace" text-anchor="middle"> <text x="110" y="76">cliente</text> <text x="380" y="76">pedido</text> <text x="660" y="76" fill="#5442b3">detalle_pedido</text> <text x="915" y="76">producto</text> </g> <line x1="200" y1="70" x2="282" y2="70" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#f15)"></line> <line x1="470" y1="70" x2="552" y2="70" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#f15)"></line> <line x1="760" y1="70" x2="842" y2="70" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#f15)"></line> <g font-size="12.5" fill="#5442b3" font-weight="700" font-family="Consolas, monospace" text-anchor="middle"> <text x="245" y="126">id_cliente</text> <text x="515" y="126">id_pedido</text> <text x="805" y="126">id_producto</text> </g>
 </svg>
 </div>
 </section>
-<section id="null-no-es-igual-a-nada" class="slide level2 center">
-<h2><code>NULL</code> no es igual a nada</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb8-1"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">WHERE</span> descuento <span class="op">=</span> <span class="kw">NULL</span>;    <span class="co">-- 0 filas, siempre</span></span>
-<span id="cb8-2"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">WHERE</span> descuento <span class="kw">IS</span> <span class="kw">NULL</span>;    <span class="co">-- forma correcta</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="destacado">
-<p><code>NULL</code> es ausencia de valor, no cero ni cadena vacía. Ni siquiera <code>NULL = NULL</code> es verdadero.</p>
+<section id="cuatro-tablas-tres-join" class="slide level2 center">
+<h2>Cuatro tablas, tres JOIN</h2>
+<div class="etapa">
+<p>Etapa 25</p>
+</div>
+<div class="dos estrecha arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb27-1"><a></a><span class="kw">SELECT</span> c.nombre   <span class="kw">AS</span> cliente,</span>
+<span id="cb27-2"><a></a>       p.nombre   <span class="kw">AS</span> producto,</span>
+<span id="cb27-3"><a></a>       d.cantidad</span>
+<span id="cb27-4"><a></a><span class="kw">FROM</span> cliente c</span>
+<span id="cb27-5"><a></a><span class="kw">JOIN</span> pedido pe</span>
+<span id="cb27-6"><a></a>  <span class="kw">ON</span> c.id_cliente <span class="op">=</span> pe.id_cliente</span>
+<span id="cb27-7"><a></a><span class="kw">JOIN</span> detalle_pedido d</span>
+<span id="cb27-8"><a></a>  <span class="kw">ON</span> pe.id_pedido <span class="op">=</span> d.id_pedido</span>
+<span id="cb27-9"><a></a><span class="kw">JOIN</span> producto p</span>
+<span id="cb27-10"><a></a>  <span class="kw">ON</span> d.id_producto <span class="op">=</span> p.id_producto;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>cliente</th>
+<th>producto</th>
+<th style="text-align: right;">cantidad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ana</td>
+<td>Mouse</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td>Ana</td>
+<td>Teclado</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td>Carlos</td>
+<td>Monitor</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td>Ana</td>
+<td>Cámara</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td>Ana</td>
+<td>Mouse</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="nota">
+<p>No es una consulta enorme. Es el camino del diagrama anterior, un <code>JOIN</code> por cada flecha.</p>
+</div>
+</section></section>
+<section>
+<section id="resumir" class="title-slide slide level1 seccion center" data-background-color="#e1f5ef">
+<h1>Resumir</h1>
+<div class="rotulo" data-numero="6">
+<p>Sexta parte</p>
 </div>
 </section>
-<section id="order-by-limit-fetch-first" class="slide level2 center">
-<h2><code>ORDER BY</code>, <code>LIMIT</code>, <code>FETCH FIRST</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb9-1"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">ORDER</span> <span class="kw">BY</span> cliente <span class="kw">ASC</span>, valor <span class="kw">DESC</span>;</span>
-<span id="cb9-2"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">ORDER</span> <span class="kw">BY</span> valor <span class="kw">DESC</span> <span class="kw">LIMIT</span> <span class="dv">1</span>;</span>
-<span id="cb9-3"><a></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">ORDER</span> <span class="kw">BY</span> valor <span class="kw">DESC</span> FETCH <span class="fu">FIRST</span> <span class="dv">1</span> <span class="kw">ROWS</span> <span class="kw">ONLY</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="destacado">
-<p><code>LIMIT</code> no es parte del estándar ISO/IEC 9075, aunque casi todo motor lo implementa igual. <code>FETCH FIRST n ROWS ONLY</code> sí lo es.</p>
+<section id="preguntas-de-una-sola-cifra" class="slide level2 center">
+<h2>Preguntas de una sola cifra</h2>
+<div class="etapa">
+<p>Etapa 26</p>
+</div>
+<div class="tres">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb28-1"><a></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>)</span>
+<span id="cb28-2"><a></a><span class="kw">FROM</span> producto;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="nota">
+<p>¿Cuántos productos hay? <strong>4</strong></p>
+</div>
+</div>
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb29-1"><a></a><span class="kw">SELECT</span> <span class="fu">AVG</span>(precio)</span>
+<span id="cb29-2"><a></a><span class="kw">FROM</span> producto;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="nota">
+<p>¿Cuál es el precio promedio? <strong>411250</strong></p>
+</div>
+</div>
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb30-1"><a></a><span class="kw">SELECT</span> <span class="fu">MAX</span>(precio)</span>
+<span id="cb30-2"><a></a><span class="kw">FROM</span> producto;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="nota">
+<p>¿Cuál es el más caro? <strong>900000</strong></p>
+</div>
+</div>
+</div>
+<div class="anotaciones">
+<ul>
+<li><code>COUNT</code> cuántas filas</li>
+<li><code>SUM</code> la suma</li>
+<li><code>AVG</code> el promedio</li>
+<li><code>MIN</code> <code>MAX</code> el menor y el mayor</li>
+</ul>
 </div>
 </section>
-<section id="funciones-de-agregación" class="slide level2 center">
-<h2>Funciones de agregación</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb10-1"><a></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>), <span class="fu">SUM</span>(valor), <span class="fu">AVG</span>(valor), <span class="fu">MIN</span>(valor), <span class="fu">MAX</span>(valor)</span>
-<span id="cb10-2"><a></a><span class="kw">FROM</span> PedidoPlano;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="cuántos-clientes-hay-en-cada-ciudad" class="slide level2 center">
+<h2>¿Cuántos clientes hay en cada ciudad?</h2>
+<div class="etapa">
+<p>Etapa 27</p>
+</div>
+<div class="diagrama corto">
+<svg viewbox="0 0 1000 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco clientes repartidos en tres grupos por ciudad: Medellin con Ana y Juan, dos; Bogota con Carlos y Sara, dos; Cali con Laura, uno" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s16" x="-20%" y="-20%" width="140%" height="150%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> </defs> <g filter="url(#s16)"> <rect x="60" y="30" width="250" height="180" rx="16" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="375" y="30" width="250" height="180" rx="16" fill="#ffffff" stroke="#d6e3f3"></rect> <rect x="690" y="30" width="250" height="180" rx="16" fill="#ffffff" stroke="#d6e3f3"></rect> </g> <g font-size="15" font-weight="700" fill="#4f86c6"> <text x="85" y="64">Medellín</text> <text x="400" y="64">Bogotá</text> <text x="715" y="64">Cali</text> </g> <g font-size="15" fill="#1b2a41"> <text x="85" y="108">Ana</text><text x="85" y="138">Juan</text> <text x="400" y="108">Carlos</text><text x="400" y="138">Sara</text> <text x="715" y="108">Laura</text> </g> <g> <circle cx="262" cy="160" r="26" fill="#e1f5ef"></circle><text x="262" y="168" text-anchor="middle" font-size="20" font-weight="800" fill="#1e7c66">2</text> <circle cx="577" cy="160" r="26" fill="#e1f5ef"></circle><text x="577" y="168" text-anchor="middle" font-size="20" font-weight="800" fill="#1e7c66">2</text> <circle cx="892" cy="160" r="26" fill="#e1f5ef"></circle><text x="892" y="168" text-anchor="middle" font-size="20" font-weight="800" fill="#1e7c66">1</text> </g>
+</svg>
+</div>
+<div class="pregunta">
+<p>Primero se agrupan las filas por ciudad. Después se cuenta dentro de cada grupo. ¿Cómo se escribe eso?</p>
+</div>
 </section>
-<section id="update-corrige-tres-filas-a-la-vez" class="slide level2 center">
-<h2><code>UPDATE</code> corrige tres filas a la vez</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb11-1"><a></a><span class="kw">UPDATE</span> PedidoPlano</span>
-<span id="cb11-2"><a></a><span class="kw">SET</span> telefono <span class="op">=</span> <span class="st">'300 999 8877'</span></span>
-<span id="cb11-3"><a></a><span class="kw">WHERE</span> cliente <span class="op">=</span> <span class="st">'Ana Ruiz'</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="group-by" class="slide level2 center">
+<h2>GROUP BY</h2>
+<div class="etapa">
+<p>Etapa 27</p>
+</div>
+<div class="dos estrecha arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb31-1"><a></a><span class="kw">SELECT</span> ciudad,</span>
+<span id="cb31-2"><a></a>       <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> cantidad</span>
+<span id="cb31-3"><a></a><span class="kw">FROM</span> cliente</span>
+<span id="cb31-4"><a></a><span class="kw">GROUP</span> <span class="kw">BY</span> ciudad;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>ciudad</th>
+<th style="text-align: right;">cantidad</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Medellín</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td>Bogotá</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td>Cali</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="idea">
+<p>Cuando la pregunta dice “por cada”, hay que agrupar</p>
+</div>
+<div class="nota">
+<p>Ventas por producto. Clientes por ciudad. Pedidos por estado. La palabra que delata al <code>GROUP BY</code>.</p>
+</div>
+</section>
+<section id="misión-final" class="slide level2 center">
+<h2>Misión final</h2>
+<div class="etapa">
+<p>Etapa 28</p>
+</div>
+<div class="dos">
+<div>
+<div class="pregunta">
+<p>Gerencia quiere conocer los tres productos que más dinero han vendido.</p>
+</div>
+</div>
+<div>
 <div class="pasos">
 <ol type="1">
-<li><code>UPDATE</code> nombra la tabla que cambia, <code>PedidoPlano</code></li>
-<li><code>SET</code> nombra la columna y, después del <code>=</code>, el valor nuevo</li>
-<li><code>WHERE</code> filtra a qué filas se les aplica el cambio, igual que en <code>SELECT</code></li>
+<li class="fragment">¿Qué tablas hacen falta? <code>producto</code> y <code>detalle_pedido</code></li>
+<li class="fragment">¿Cuánto produjo cada línea? <code>cantidad * precio_unitario</code></li>
+<li class="fragment">¿Qué columna las conecta? <code>id_producto</code></li>
+<li class="fragment">¿Qué significa “por producto”? <code>GROUP BY</code></li>
+<li class="fragment">¿Qué significa “los tres que más”? <code>ORDER BY ... DESC LIMIT 3</code></li>
 </ol>
 </div>
-<div class="diagrama">
-<svg viewbox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes del UPDATE, las tres filas de Ana Ruiz muestran el telefono antiguo; despues del UPDATE con WHERE cliente igual Ana Ruiz, las tres filas quedan actualizadas al telefono nuevo en una sola sentencia, sin tocar la fila de Luis Pena" font-family="Segoe UI, Inter, system-ui, sans-serif">
-<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un solo UPDATE con WHERE corrige las tres filas de Ana a la vez</text> <text x="195" y="36" font-size="11.5" font-weight="700" fill="#5b6876" text-anchor="middle">Antes</text> <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="30" y="44" width="330" height="34"></rect><rect x="30" y="78" width="330" height="34"></rect><rect x="30" y="112" width="330" height="34"></rect><rect x="30" y="146" width="330" height="34"></rect></g> <g font-size="10.5" fill="#12324f"><text x="45" y="65">1001 Ana Ruiz</text><text x="230" y="65">300 111 2233</text></g> <g font-size="10.5" fill="#12324f"><text x="45" y="99">1002 Ana Ruiz</text><text x="230" y="99">300 111 2233</text></g> <g font-size="10.5" fill="#5b6876"><text x="45" y="133">1003 Luis Pena</text><text x="230" y="133">301 444 5566</text></g> <g font-size="10.5" fill="#12324f"><text x="45" y="167">1004 Ana Ruiz</text><text x="230" y="167">300 111 2233</text></g> <path d="M380,120 L400,120" fill="none" stroke="#8fb3d1" stroke-width="1.8"></path> <text x="565" y="36" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Después</text> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="400" y="44" width="330" height="34"></rect><rect x="400" y="78" width="330" height="34"></rect><rect x="400" y="112" width="330" height="34"></rect><rect x="400" y="146" width="330" height="34"></rect></g> <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="65">1001 Ana Ruiz</text><text x="600" y="65">300 999 8877</text></g> <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="99">1002 Ana Ruiz</text><text x="600" y="99">300 999 8877</text></g> <g font-size="10.5" fill="#5b6876"><text x="415" y="133">1003 Luis Pena</text><text x="600" y="133">sin cambio</text></g> <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="167">1004 Ana Ruiz</text><text x="600" y="167">300 999 8877</text></g>
+</div>
+</div>
+</section>
+<section id="la-consulta-completa" class="slide level2 center">
+<h2>La consulta completa</h2>
+<div class="etapa">
+<p>Etapa 28</p>
+</div>
+<div class="dos estrecha arriba">
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb32-1"><a></a><span class="kw">SELECT</span> p.nombre,</span>
+<span id="cb32-2"><a></a>       <span class="fu">SUM</span>(d.cantidad <span class="op">*</span> d.precio_unitario) <span class="kw">AS</span> ventas</span>
+<span id="cb32-3"><a></a><span class="kw">FROM</span> producto p</span>
+<span id="cb32-4"><a></a><span class="kw">JOIN</span> detalle_pedido d</span>
+<span id="cb32-5"><a></a>  <span class="kw">ON</span> p.id_producto <span class="op">=</span> d.id_producto</span>
+<span id="cb32-6"><a></a><span class="kw">GROUP</span> <span class="kw">BY</span> p.id_producto, p.nombre</span>
+<span id="cb32-7"><a></a><span class="kw">ORDER</span> <span class="kw">BY</span> ventas <span class="kw">DESC</span></span>
+<span id="cb32-8"><a></a><span class="kw">LIMIT</span> <span class="dv">3</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>nombre</th>
+<th style="text-align: right;">ventas</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Monitor</td>
+<td style="text-align: right;">900000</td>
+</tr>
+<tr class="even">
+<td>Cámara</td>
+<td style="text-align: right;">500000</td>
+</tr>
+<tr class="odd">
+<td>Mouse</td>
+<td style="text-align: right;">240000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="lo-que-cambió-en-una-sesión" class="slide level2 center">
+<h2>Lo que cambió en una sesión</h2>
+<div class="dos arriba">
+<div>
+<div class="diagrama corto">
+<svg viewbox="0 0 480 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CLIENTE uno a muchos PEDIDO" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs> <filter id="s17" x="-20%" y="-20%" width="140%" height="160%"><fedropshadow dx="0" dy="6" stddeviation="7" flood-color="#1b2a41" flood-opacity="0.12"></fedropshadow></filter> </defs> <g filter="url(#s17)"> <rect x="20" y="30" width="160" height="60" rx="14" fill="#e3eefb"></rect> <rect x="300" y="30" width="160" height="60" rx="14" fill="#e3eefb"></rect> </g> <text x="100" y="66" text-anchor="middle" font-size="17" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CLIENTE</text> <text x="380" y="66" text-anchor="middle" font-size="17" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text> <line x1="180" y1="60" x2="300" y2="60" stroke="#7fa6d6" stroke-width="2.4"></line> <rect x="188" y="38" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="201" y="54" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">1</text> <rect x="266" y="38" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"></rect> <text x="279" y="54" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">N</text>
 </svg>
 </div>
-</section>
-<section id="delete-y-lo-que-se-pierde-con-la-fila" class="slide level2 center">
-<h2><code>DELETE</code> y lo que se pierde con la fila</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb12-1"><a></a><span class="kw">DELETE</span> <span class="kw">FROM</span> PedidoPlano <span class="kw">WHERE</span> pedido <span class="op">=</span> <span class="dv">1003</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="destacado">
-<p>Sin una tabla <code>Cliente</code> separada, borrar el pedido de Luis Pena borra también su único registro de nombre y teléfono en toda la base de datos.</p>
+<div class="nota">
+<p>De mirar una línea entre dos entidades…</p>
+</div>
+</div>
+<div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb33-1"><a></a><span class="kw">SELECT</span> c.nombre, p.id_pedido</span>
+<span id="cb33-2"><a></a><span class="kw">FROM</span> cliente c</span>
+<span id="cb33-3"><a></a><span class="kw">JOIN</span> pedido p</span>
+<span id="cb33-4"><a></a>  <span class="kw">ON</span> c.id_cliente <span class="op">=</span> p.id_cliente</span>
+<span id="cb33-5"><a></a><span class="kw">WHERE</span> c.ciudad <span class="op">=</span> <span class="st">'Medellín'</span></span>
+<span id="cb33-6"><a></a><span class="kw">ORDER</span> <span class="kw">BY</span> p.fecha <span class="kw">DESC</span>;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="nota">
+<p>…a poder explicar por qué existe cada línea de esta consulta.</p>
+</div>
+</div>
 </div>
 </section>
-<section id="borrar-una-tabla-completa-drop-table" class="slide level2 center">
-<h2>Borrar una tabla completa, <code>DROP TABLE</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb13-1"><a></a><span class="kw">DROP</span> <span class="kw">TABLE</span> PedidoPlano;</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="destacado">
-<p><code>DELETE</code> vacía una tabla que sigue existiendo. <code>DROP TABLE</code> es DDL, hace desaparecer la tabla misma, estructura y datos, sin <code>ROLLBACK</code> posible.</p>
+<section id="la-progresión" class="slide level2 center">
+<h2>La progresión</h2>
+<div class="progresion">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Momento</th>
+<th>Lo que se aprendió</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Entidad a tabla</td>
+<td>Entidad, atributo, fila</td>
+</tr>
+<tr class="even">
+<td>Relación 1:N</td>
+<td>Clave primaria y clave foránea</td>
+</tr>
+<tr class="odd">
+<td>Relación N:M</td>
+<td>Tabla intermedia</td>
+</tr>
+<tr class="even">
+<td><code>CREATE TABLE</code></td>
+<td>Crear la estructura</td>
+</tr>
+<tr class="odd">
+<td><code>INSERT</code> y restricciones</td>
+<td>Guardar y proteger datos</td>
+</tr>
+<tr class="even">
+<td><code>SELECT</code>, <code>WHERE</code>, <code>ORDER BY</code></td>
+<td>Consultar, filtrar, ordenar</td>
+</tr>
+<tr class="odd">
+<td><code>UPDATE</code>, <code>DELETE</code></td>
+<td>Modificar y eliminar, con cuidado</td>
+</tr>
+<tr class="even">
+<td><code>JOIN</code></td>
+<td>Recorrer las relaciones</td>
+</tr>
+<tr class="odd">
+<td>Agregación y <code>GROUP BY</code></td>
+<td>Resumir por grupos</td>
+</tr>
+</tbody>
+</table>
 </div>
 </section>
-<section id="el-riesgo-de-olvidar-el-where" class="slide level2 center">
-<h2>El riesgo de olvidar el <code>WHERE</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb14-1"><a></a><span class="kw">UPDATE</span> PedidoPlano <span class="kw">SET</span> valor <span class="op">=</span> valor <span class="op">*</span> <span class="fl">0.9</span>;   <span class="co">-- actualiza las CUATRO filas</span></span>
-<span id="cb14-2"><a></a><span class="kw">DELETE</span> <span class="kw">FROM</span> PedidoPlano;                       <span class="co">-- borra las CUATRO filas</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="destacado">
-<p>Ninguna de las dos sentencias es inválida. El motor las ejecuta sin queja, y esa es la razón para revisar dos veces el <code>WHERE</code> antes de ejecutar contra datos reales.</p>
+<section id="lo-que-sigue" class="slide level2 center">
+<h2>Lo que sigue</h2>
+<div class="tarjetas">
+<div class="lila">
+<p><span class="titulo">LEFT JOIN</span></p>
+<p>Clientes que todavía no han hecho ningún pedido.</p>
 </div>
-</section>
-<section id="el-orden-real-de-ejecución" class="slide level2 center">
-<h2>El orden real de ejecución</h2>
-<div class="diagrama">
-<svg viewbox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Orden escrito de una consulta: SELECT, FROM, WHERE, ORDER BY; orden real de procesamiento del motor: primero FROM, despues WHERE, despues SELECT, y por ultimo ORDER BY" font-family="Segoe UI, Inter, system-ui, sans-serif">
-<defs><marker id="sql1b" markerwidth="9" markerheight="9" refx="7" refy="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El orden en que escribes la consulta no es el orden en que el motor la resuelve</text> <text x="380" y="40" font-size="11" fill="#5b6876" text-anchor="middle">Orden escrito</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="50" width="150" height="40" rx="6"></rect><rect x="210" y="50" width="150" height="40" rx="6"></rect><rect x="390" y="50" width="150" height="40" rx="6"></rect><rect x="570" y="50" width="160" height="40" rx="6"></rect></g> <g font-size="12" font-weight="700" fill="#12324f" text-anchor="middle"><text x="105" y="75">SELECT</text><text x="285" y="75">FROM</text><text x="465" y="75">WHERE</text><text x="650" y="75">ORDER BY</text></g> <text x="380" y="112" font-size="11" fill="#0e6f6c" text-anchor="middle">Orden real de ejecución</text> <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="30" y="122" width="150" height="40" rx="6"></rect><rect x="210" y="122" width="150" height="40" rx="6"></rect><rect x="390" y="122" width="150" height="40" rx="6"></rect><rect x="570" y="122" width="160" height="40" rx="6"></rect></g> <g font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle"><text x="105" y="147">1. FROM</text><text x="285" y="147">2. WHERE</text><text x="465" y="147">3. SELECT</text><text x="650" y="147">4. ORDER BY</text></g> <path d="M285,90 L285,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1b)"></path> <path d="M465,90 L465,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1b)"></path> <path d="M650,90 L650,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1b)"></path>
-</svg>
+<div class="menta">
+<p><span class="titulo">HAVING</span></p>
+<p>Filtrar después de agrupar: ciudades con más de un cliente.</p>
 </div>
-</section>
-<section id="una-consulta-dentro-de-otra" class="slide level2 center">
-<h2>Una consulta dentro de otra</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource sql number-lines code-with-copy"><code class="sourceCode sql"><span id="cb15-1"><a></a><span class="kw">SELECT</span> pedido, producto, valor</span>
-<span id="cb15-2"><a></a><span class="kw">FROM</span> PedidoPlano</span>
-<span id="cb15-3"><a></a><span class="kw">WHERE</span> valor <span class="op">&gt;</span> (<span class="kw">SELECT</span> <span class="fu">AVG</span>(valor) <span class="kw">FROM</span> PedidoPlano);</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="destacado">
-<p>El motor resuelve primero la subconsulta entre paréntesis, y usa ese número para filtrar la consulta externa.</p>
+<div class="azul">
+<p><span class="titulo">Subconsultas</span></p>
+<p>Productos más caros que el promedio.</p>
+</div>
+<div class="ambar">
+<p><span class="titulo">Transacciones</span></p>
+<p>Varios cambios que ocurren todos, o ninguno.</p>
+</div>
 </div>
 
 
-</section>
+</section></section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">

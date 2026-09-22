@@ -1,990 +1,1702 @@
 ---
-title: "Tema 1. Cómo hacerle preguntas a una tabla"
+title: "Tema 1. Del modelo entidad-relación a SQL"
 author: "Oscar Leonel Sánchez Conde"
 date: last-modified
 date-format: "D [de] MMMM [de] YYYY"
 ---
 
 ::: {.ficha}
-|        |                                                                |
-|--------|----------------------------------------------------------------|
-| Unidad | Unidad 3. Modelo relacional                                   |
-| Tema   | Tema 1. Fundamentos de SQL, de qué es una base de datos al nivel intermedio |
+|        |                                                |
+|--------|------------------------------------------------|
+| Unidad | Unidad 3. Modelo relacional                    |
+| Tema   | Tema 1. Del modelo entidad-relación a SQL      |
 :::
 
-[Diapositivas de la sesión](presentacion.qmd)
+[Abrir la presentación de la sesión](presentacion.qmd){.btn-presentacion}
 
-Todos los temas que siguen en esta unidad escriben sentencias `CREATE TABLE`, corrigen anomalías con
-`UPDATE` y consultan resultados con `SELECT`, dando por hecho que ya sabes leer y escribir esas
-sentencias, que ya sabes qué es un motor de base de datos y cómo se ejecuta una instrucción contra él.
-Hoy es el momento de construir ese vocabulario completo, desde qué es SQL y de dónde sale, hasta cómo
-crear una base de datos entera y la primera tabla dentro de ella, antes de que todo eso aparezca
-mezclado con diagramas entidad-relación y formas normales. No vas a diseñar el modelo de datos de la
-cafetería todavía, ni vas a decidir qué llave le corresponde a qué entidad, eso empieza en el Tema 2.
-Hoy construyes tu propia base de datos de práctica y la llenas con la misma tabla plana de pedidos con
-la que abrió la Unidad 1, la del teléfono de Ana repetido en cada fila, y aprendes a preguntarle
-cosas, a corregirla y a borrar de ella con el lenguaje que cualquier motor relacional entiende.
+La presentación recorre, con una pregunta antes de cada respuesta, las mismas 28 etapas que esta guía
+desarrolla en detalle.
 
-## Qué es una base de datos, y de dónde sale SQL
+Tienes un modelo entidad-relación terminado. Sabes leerlo: entidades, atributos, relaciones,
+cardinalidades. La pregunta de este tema es la que viene justo después de dibujarlo: cómo haces para
+que ese modelo exista de verdad dentro de una base de datos, de modo que PostgreSQL, MySQL o SQL
+Server lo puedan almacenar, proteger y consultar. La respuesta es SQL, y la vas a construir por capas
+sobre un mismo caso, un sistema de ventas pequeño, desde la primera tabla hasta una consulta que
+combina cuatro tablas, agrupa y ordena. Cada etapa parte de una pregunta concreta, y el código aparece
+solo cuando esa pregunta lo hace necesario.
 
-Una base de datos es un conjunto organizado de datos persistentes, guardados de forma que un programa
-pueda encontrarlos, relacionarlos y modificarlos sin tener que leer un archivo completo de principio a
-fin cada vez. El programa que administra ese conjunto se llama sistema gestor de bases de datos, SGBD,
-o *DBMS* por sus siglas en inglés, *database management system*. MySQL, PostgreSQL, SQL Server, Oracle
-Database y SQLite son ejemplos de SGBD relacionales concretos, cada uno un programa distinto escrito
-por una empresa o comunidad distinta, y aquí es donde entra SQL, el lenguaje común que le permite a una
-persona hablar con cualquiera de ellos sin tener que aprender un lenguaje nuevo por cada motor.
+## El caso: un sistema de ventas
 
-SQL nació a mediados de la década de 1970, dentro del proyecto System R de IBM, el primer intento serio
-de construir un SGBD relacional siguiendo el modelo teórico que Edgar Codd había publicado en 1970. Los
-investigadores Donald Chamberlin y Raymond Boyce diseñaron un lenguaje de consulta pensado para
-parecerse al inglés en vez de a la notación matemática de Codd, y lo llamaron SEQUEL, *structured
-english query language*. Un conflicto de marca registrada con una empresa británica que ya usaba el
-nombre SEQUEL obligó a acortarlo a SQL, el nombre que quedó. La industria adoptó el lenguaje con tanta
-fuerza que en 1986 el instituto estadounidense de normas ANSI publicó la primera versión estandarizada,
-y la organización internacional de normalización ISO adoptó ese mismo estándar en 1987, con el nombre
-que sigue vigente hoy, ISO/IEC 9075. Desde entonces el estándar se ha revisado varias veces, agregando
-funciones nuevas, pero el núcleo que vas a aprender en este tema, `SELECT`, `INSERT`, `UPDATE`,
-`DELETE` y `CREATE TABLE`, es prácticamente idéntico al de las primeras versiones, y casi todos los
-motores relacionales que existen hoy lo implementan igual.
-
-Hay algo en SQL que lo distingue de un lenguaje de programación como Python o Java, con los que quizás
-ya tengas algo de experiencia, y que conviene dejar explícito desde la primera clase. SQL es un
-lenguaje declarativo, describes qué resultado quieres, no los pasos exactos para conseguirlo. Cuando
-escribes `SELECT * FROM PedidoPlano WHERE valor > 5000`, no le dices al motor que recorra la tabla fila
-por fila comparando cada valor, solo describes la condición que debe cumplir el resultado, y es el
-propio motor el que decide, con su propia lógica interna de optimización, cómo recorrer los datos para
-conseguirlo de la forma más eficiente. Un lenguaje de programación tradicional, en cambio, es
-procedimental, tú mismo escribes el ciclo, la condición y el orden exacto de los pasos. Esa diferencia
-es la razón por la que aprender SQL se siente distinto a aprender a programar, aunque las dos cosas
-compartan símbolos parecidos como `=` o `AND`.
-
-Como el docente todavía no decide el motor concreto del curso, cada ejemplo de esta guía usa
-exactamente ese núcleo común del estándar, sin ninguna función exclusiva de un producto, y la
-documentación de PostgreSQL es la referencia que se usa aquí porque implementa ese núcleo con
-precisión y es de acceso libre.
-
-## Cómo se ejecuta una sentencia SQL en la práctica
-
-SQL es texto plano, y ese texto no hace nada por sí solo, necesita un programa que lo lea y lo
-ejecute. Ese programa es el SGBD, que corre como un servicio, un proceso que queda encendido esperando
-peticiones, casi siempre en segundo plano y sin ventana visible. Para escribirle una sentencia
-necesitas un programa cliente, que se conecta a ese servicio, le envía el texto SQL, y muestra en
-pantalla el resultado que el motor devuelve. Un cliente puede ser tan simple como una terminal de línea
-de comandos, `psql` para PostgreSQL o `mysql` para MySQL, donde escribes la sentencia y presionas
-Enter, o tan elaborado como un programa gráfico como pgAdmin, DBeaver o MySQL Workbench, con ventanas,
-menús y resultados en tablas visuales. Los dos tipos de cliente le envían al motor exactamente el mismo
-texto SQL, la diferencia está solo en la interfaz que usa la persona para escribirlo.
+Todo el tema usa el mismo negocio. Una tienda vende productos organizados por categorías; los clientes
+hacen pedidos, y cada pedido puede incluir varios productos, cada uno con su cantidad y con el precio
+que tenía en ese momento. El modelo entidad-relación de ese negocio es este:
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una persona escribe una sentencia SQL en un cliente, terminal como psql o programa grafico como pgAdmin; el cliente envia ese texto al motor de base de datos que corre como servicio en segundo plano; el motor interpreta la sentencia, la ejecuta contra los datos guardados en disco, y devuelve un resultado que el cliente muestra en pantalla" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <defs><marker id="sql1c" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un cliente envía el texto SQL, el motor lo ejecuta y devuelve el resultado</text>
-  <rect x="20" y="50" width="190" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
-  <text x="115" y="78" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Persona</text>
-  <text x="115" y="98" font-size="10.5" fill="#5b6876" text-anchor="middle">escribe SQL en un</text>
-  <text x="115" y="114" font-size="10.5" fill="#5b6876" text-anchor="middle">cliente, terminal o gráfico</text>
-  <rect x="285" y="50" width="190" height="90" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
-  <text x="380" y="78" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Motor de base de datos</text>
-  <text x="380" y="98" font-size="10.5" fill="#3c7d7a" text-anchor="middle">recibe, interpreta y</text>
-  <text x="380" y="114" font-size="10.5" fill="#3c7d7a" text-anchor="middle">ejecuta la sentencia</text>
-  <rect x="550" y="50" width="190" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
-  <text x="645" y="78" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Datos en disco</text>
-  <text x="645" y="98" font-size="10.5" fill="#5b6876" text-anchor="middle">tablas guardadas de</text>
-  <text x="645" y="114" font-size="10.5" fill="#5b6876" text-anchor="middle">forma persistente</text>
-  <path d="M210,80 L281,80" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1c)"/>
-  <text x="245" y="72" font-size="9.5" fill="#5b6876" text-anchor="middle">envía SQL</text>
-  <path d="M475,80 L546,80" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1c)"/>
-  <text x="510" y="72" font-size="9.5" fill="#5b6876" text-anchor="middle">lee o escribe</text>
-  <path d="M285,116 L214,116" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1c)"/>
-  <text x="245" y="132" font-size="9.5" fill="#5b6876" text-anchor="middle">devuelve resultado</text>
-</svg>
-
-:::
-
-El flujo de trabajo típico, sin importar qué motor termine eligiendo el curso, es siempre el mismo,
-instalar el SGBD para que quede corriendo como servicio, abrir un cliente y conectarte a él con una
-dirección, un usuario y una contraseña, y desde ahí escribir las sentencias que esta guía enseña. Toda
-sentencia SQL termina en punto y coma `;`, la marca que le dice al cliente dónde termina una instrucción
-y empieza la siguiente, algo que vas a necesitar recordar en cuanto empieces a escribir varias
-sentencias seguidas.
-
-## Las cinco familias de instrucciones SQL
-
-SQL no es un solo lenguaje homogéneo, agrupa varias familias de instrucciones según lo que hacen sobre
-la base de datos, y entender a qué familia pertenece una sentencia te dice de entrada qué tan
-peligrosa es, si puede perder datos o solo consultarlos.
-
-El **DDL**, sigla de *data definition language*, define y modifica la estructura misma de la base de
-datos, las bases de datos, las tablas y sus columnas, no los datos que viven adentro. `CREATE` crea un
-objeto nuevo, una base de datos o una tabla que todavía no existe. `ALTER` modifica la estructura de un
-objeto que ya existe, por ejemplo agregar una columna a una tabla sin borrar sus filas. `DROP` elimina
-un objeto por completo, con toda la información que contenía, de forma irreversible salvo que exista
-una copia de seguridad aparte.
-
-El **DML**, sigla de *data manipulation language*, cambia los datos que ya viven dentro de una tabla
-que ya existe, sin tocar su estructura. `INSERT` agrega filas nuevas. `UPDATE` modifica el valor de una
-o más columnas en filas que ya existían. `DELETE` quita filas completas. Las tres asumen que la tabla y
-sus columnas ya fueron creadas de antemano con DDL.
-
-La consulta de datos, `SELECT`, se suele nombrar aparte como **DQL**, sigla de *data query language*,
-porque a diferencia de las tres sentencias de DML, no modifica ningún dato, solo lo lee y lo devuelve.
-No todos los textos académicos usan DQL como una categoría formal separada, varios tratan a `SELECT`
-como una sentencia más del DML porque comparte con él buena parte de su sintaxis, pero la distinción es
-frecuente en la práctica profesional y conviene conocerla, porque marca la diferencia entre una
-sentencia que solo mira los datos y una que los cambia.
-
-Dos familias más completan el panorama, aunque quedan fuera del alcance de este curso porque dependen
-de la administración concreta de un motor, algo que esta unidad no cubre. El **DCL**, *data control
-language*, decide qué usuario puede hacer qué sobre qué objeto, con `GRANT` para conceder un permiso y
-`REVOKE` para retirarlo, el mecanismo con el que un administrador de base de datos evita que cualquiera
-pueda borrar cualquier tabla. El **TCL**, *transaction control language*, agrupa varias sentencias de
-DML en una sola unidad indivisible llamada transacción, de forma que se apliquen todas juntas o
-ninguna, con `COMMIT` para confirmar el grupo completo y `ROLLBACK` para deshacerlo entero si algo salió
-mal a mitad de camino. El ejemplo clásico es una transferencia bancaria, restar dinero de una cuenta y
-sumarlo a otra tienen que ocurrir como una sola operación, porque una transferencia que reste sin sumar
-por un corte de luz a mitad de camino deja el dinero perdido en ningún lado. Vas a volver a encontrarte
-DCL y TCL si sigues profundizando en bases de datos más adelante en tu carrera, pero por ahora basta con
-que entiendas para qué existen.
-
-::: {.diagrama}
-
-<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco tarjetas con las familias de instrucciones SQL: DDL define la estructura con CREATE, ALTER y DROP; DML manipula los datos existentes con INSERT, UPDATE y DELETE; DQL consulta datos sin modificarlos con SELECT; DCL controla permisos de usuarios con GRANT y REVOKE; TCL agrupa cambios en transacciones indivisibles con COMMIT y ROLLBACK" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cinco familias, según qué parte de la base de datos afectan</text>
-  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="10" y="34" width="145" height="150" rx="10"/><rect x="165" y="34" width="145" height="150" rx="10"/><rect x="320" y="34" width="145" height="150" rx="10"/></g>
-  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="475" y="34" width="135" height="150" rx="10"/><rect x="615" y="34" width="135" height="150" rx="10"/></g>
-  <g text-anchor="middle">
-    <g font-size="13" font-weight="700" fill="#0e6f6c"><text x="82" y="56">DDL</text><text x="237" y="56">DML</text><text x="392" y="56">DQL</text></g>
-    <g font-size="13" font-weight="700" fill="#5b6876"><text x="542" y="56">DCL</text><text x="682" y="56">TCL</text></g>
-    <g font-size="10" fill="#5b6876"><text x="82" y="74">Define objetos</text><text x="237" y="74">Cambia datos</text><text x="392" y="74">Consulta datos</text><text x="542" y="74">Permisos</text><text x="682" y="74">Transacciones</text></g>
-    <g font-size="11" fill="#12324f"><text x="82" y="100">CREATE</text><text x="82" y="116">ALTER</text><text x="82" y="132">DROP</text><text x="237" y="100">INSERT</text><text x="237" y="116">UPDATE</text><text x="237" y="132">DELETE</text><text x="392" y="100">SELECT</text></g>
-    <g font-size="11" fill="#5b6876"><text x="542" y="100">GRANT</text><text x="542" y="116">REVOKE</text><text x="682" y="100">COMMIT</text><text x="682" y="116">ROLLBACK</text></g>
-    <g font-size="9.5" fill="#5b6876"><text x="82" y="158">Ese curso enseña esta</text><text x="82" y="172">familia completa</text><text x="237" y="158">Este curso enseña esta</text><text x="237" y="172">familia completa</text><text x="392" y="158">Este curso enseña esta</text><text x="392" y="172">familia completa</text><text x="542" y="158">Depende de la</text><text x="542" y="172">administración del motor</text><text x="682" y="158">Depende de la</text><text x="682" y="172">administración del motor</text></g>
+<svg viewBox="0 0 1120 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Modelo entidad relacion de un sistema de ventas: CLIENTE se relaciona uno a muchos con PEDIDO, PEDIDO se relaciona muchos a muchos con PRODUCTO mediante una relacion con los atributos cantidad y precio unitario, y PRODUCTO se relaciona muchos a uno con CATEGORIA" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="g1s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#g1s)">
+    <rect x="20" y="70" width="200" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="20" y="70" width="200" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="20" y="92" width="200" height="18" fill="#e3eefb"/>
   </g>
-  <text x="380" y="204" font-size="10.5" fill="#5b6876" text-anchor="middle">DQL no es una categoría formal en todos los libros de texto, algunos la agrupan dentro del DML</text>
-  <text x="380" y="222" font-size="10.5" fill="#5b6876" text-anchor="middle">porque una consulta y una modificación de datos comparten buena parte de su sintaxis</text>
+  <text x="120" y="96" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CLIENTE</text>
+  <text x="120" y="132" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_cliente</text>
+  <text x="120" y="154" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text>
+  <text x="120" y="176" text-anchor="middle" font-size="12.5" fill="#4a5b70">correo</text>
+  <text x="120" y="198" text-anchor="middle" font-size="12.5" fill="#4a5b70">ciudad</text>
+  <g filter="url(#g1s)">
+    <rect x="300" y="81" width="200" height="128" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="300" y="81" width="200" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="300" y="103" width="200" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="400" y="107" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text>
+  <text x="400" y="143" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_pedido</text>
+  <text x="400" y="165" text-anchor="middle" font-size="12.5" fill="#4a5b70">fecha</text>
+  <text x="400" y="187" text-anchor="middle" font-size="12.5" fill="#4a5b70">estado</text>
+  <g filter="url(#g1s)">
+    <rect x="620" y="70" width="200" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="620" y="70" width="200" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="620" y="92" width="200" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="720" y="96" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PRODUCTO</text>
+  <text x="720" y="132" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text>
+  <text x="720" y="154" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text>
+  <text x="720" y="176" text-anchor="middle" font-size="12.5" fill="#4a5b70">precio</text>
+  <text x="720" y="198" text-anchor="middle" font-size="12.5" fill="#4a5b70">stock</text>
+  <g filter="url(#g1s)">
+    <rect x="900" y="92" width="200" height="106" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="900" y="92" width="200" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="900" y="114" width="200" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="1000" y="118" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CATEGORIA</text>
+  <text x="1000" y="154" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_categoria</text>
+  <text x="1000" y="176" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text>
+  <line x1="220" y1="145" x2="300" y2="145" stroke="#7fa6d6" stroke-width="2.2"/>
+  <rect x="226" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="237" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">1</text>
+  <rect x="272" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="283" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text>
+  <line x1="500" y1="145" x2="620" y2="145" stroke="#7fa6d6" stroke-width="2.2"/>
+  <rect x="506" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="517" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text>
+  <rect x="592" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="603" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">M</text>
+  <line x1="560" y1="145" x2="560" y2="222" stroke="#7fa6d6" stroke-width="1.6" stroke-dasharray="4 4"/>
+  <rect x="470" y="222" width="180" height="46" rx="12" fill="#fdf1dc" stroke="#f3ddb0"/>
+  <text x="560" y="241" text-anchor="middle" font-size="11.5" fill="#9a6413" font-weight="700">cantidad</text>
+  <text x="560" y="258" text-anchor="middle" font-size="11.5" fill="#9a6413" font-weight="700">precio_unitario</text>
+  <line x1="820" y1="145" x2="900" y2="145" stroke="#7fa6d6" stroke-width="2.2"/>
+  <rect x="826" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="837" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text>
+  <rect x="872" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="883" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">1</text>
 </svg>
 
 :::
 
-## Crear una base de datos
+Cuatro entidades y tres relaciones. `CLIENTE` realiza pedidos, uno a muchos: un cliente puede tener
+muchos pedidos, cada pedido pertenece a un solo cliente. `PEDIDO` contiene productos, muchos a muchos:
+un pedido lleva varios productos y un mismo producto aparece en muchos pedidos; esa relación tiene dos
+atributos propios, `cantidad` y `precio_unitario`, porque describen a la combinación pedido-producto y
+no a ninguno de los dos por separado. `PRODUCTO` pertenece a una categoría, muchos a uno.
 
-Antes de crear ninguna tabla necesitas un contenedor que la agrupe, la propia base de datos. `CREATE
-DATABASE` es la sentencia de DDL que la crea, con el nombre que elijas.
+El tema se organiza en seis partes. La primera convierte el modelo en tablas sin escribir código. La
+segunda crea esas tablas con SQL. La tercera las llena de datos. La cuarta consulta una tabla a la
+vez. La quinta cruza tablas siguiendo las relaciones. La sexta resume datos con funciones de
+agregación y agrupación.
 
-```sql
-CREATE DATABASE cafeteria;
-```
+## Primera parte. Del modelo a las tablas
 
-Con esa sola línea, el motor reserva un espacio nuevo y completamente vacío, sin ninguna tabla
-adentro todavía, identificado por el nombre `cafeteria`. Antes de poder crear una tabla dentro de ella
-necesitas indicarle al cliente que vas a trabajar sobre esa base de datos en concreto, en vez de sobre
-cualquier otra que exista en el mismo servidor. Este paso es uno de los pocos que sí cambia de forma
-visible entre motores, en PostgreSQL el cliente `psql` usa el comando propio `\c cafeteria`, y en MySQL
-la sentencia SQL `USE cafeteria;` hace lo mismo. El resto de esta guía asume que ya diste ese paso, y
-que toda sentencia que sigue se ejecuta con `cafeteria` como base de datos activa.
+### Etapa 1. Una entidad, sola
 
-Si algún día necesitas deshacerte de una base de datos completa, `DROP DATABASE` la elimina, con todas
-las tablas y todos los datos que tuviera adentro, sin posibilidad de deshacer la operación.
+Empieza por la entidad más simple del modelo, `CLIENTE`, con sus cuatro atributos: `id_cliente`,
+`nombre`, `correo` y `ciudad`. Si esa entidad tuviera que guardarse dentro de una base de datos
+relacional, la única estructura disponible es la tabla: una rejilla de filas y columnas. La pregunta
+entonces es cómo queda `CLIENTE` dibujado como tabla. La respuesta es una tabla llamada `cliente` con
+una columna por cada atributo:
 
-```sql
-DROP DATABASE cafeteria;
-```
+| id_cliente | nombre | correo | ciudad |
+|---|---|---|---|
+| | | | |
 
-No vas a ejecutar ese `DROP DATABASE` hoy, ninguna base de datos de este tema necesita borrarse, pero
-conviene que sepas que existe y qué tan definitivo es, porque el mismo patrón, una sentencia de DDL que
-borra sin posibilidad de arrepentimiento, se repite con `DROP TABLE` más adelante en este tema.
+Esa correspondencia es la primera regla del modelo relacional, y conviene fijarla con precisión
+porque todo lo que sigue se apoya en ella:
+
+| En el modelo entidad-relación | En la base de datos |
+|---|---|
+| Entidad | Tabla |
+| Atributo | Columna |
+| Instancia (una entidad concreta) | Fila |
+
+La tabla es el molde; la fila es cada ejemplar que se fabrica con ese molde. Un cliente concreto,
+Ana, con correo `ana@email.com` y ciudad Medellín, se convierte en una fila:
+
+| id_cliente | nombre | correo | ciudad |
+|---:|---|---|---|
+| 1 | Ana | ana@email.com | Medellín |
+
+Observa que el identificador, el `1`, no venía en la descripción de Ana. Lo asigna el sistema, y su
+único trabajo es que ninguna fila se confunda con otra. Ese detalle es el tema de la etapa siguiente.
 
 ::: {.callout-tip}
-## Practica 1. Crea tu propia base de datos
+## Ejercicio 1.1
 
-Escribe la sentencia que crea una base de datos llamada `biblioteca`, para un negocio distinto al de
-la cafetería. Esta y las demás prácticas de "Practica N" que vienen a lo largo del tema son
-independientes entre sí, cada resultado que muestra la guía después de una práctica sigue partiendo
-de las cuatro filas originales de `PedidoPlano`, así que si ejecutas de verdad una práctica que
-modifica los datos, puedes deshacerla con el `DELETE` o el `DROP` que corresponda antes de seguir.
+Toma la entidad `PRODUCTO` del modelo. Dibuja la tabla vacía que le corresponde, con sus columnas, y
+después escribe la fila que representa a un producto concreto: un teclado de 150.000 pesos del que
+hay 15 unidades en existencia.
 :::
 
 ::: {.callout-note collapse="true"}
-## Solución de la Practica 1
+## Solución
 
-```sql
-CREATE DATABASE biblioteca;
-```
+| id_producto | nombre | precio | stock |
+|---:|---|---:|---:|
+| 3 | Teclado | 150000 | 15 |
+
+La entidad `PRODUCTO` produce la tabla `producto`; cada atributo es una columna; el teclado es una
+fila. El identificador `3` lo asigna el sistema, no viene en la descripción del producto.
 :::
 
-## Crear la primera tabla
+### Etapa 2. La clave primaria
 
-Con la base de datos `cafeteria` ya creada y activa, el siguiente paso es crear una tabla real donde
-ejecutar consultas, no solo el dibujo en Markdown que abrió la Unidad 1. La creas con `CREATE TABLE`,
-la sentencia de DDL que declara el nombre de la tabla, sus columnas y el tipo de dato que guarda cada
-una. `INT` guarda números enteros, `VARCHAR(n)` guarda texto de hasta `n` caracteres, y
-`DECIMAL(10,2)` guarda números con dos cifras decimales exactas, el tipo correcto para dinero porque no
-arrastra el error de redondeo binario que sí tienen los tipos de coma flotante.
+Vuelve al modelo y pregúntate qué atributo identifica de manera única a cada cliente. No es el
+nombre: dos personas pueden llamarse igual. No es la ciudad: muchos clientes viven en la misma. El
+correo se acerca, pero un cliente puede cambiarlo. El atributo que existe justamente para eso es
+`id_cliente`. En el modelo relacional ese atributo recibe un nombre técnico, *clave primaria*
+(*primary key*, PK), y una definición exacta: una columna, o una combinación de columnas, cuyo valor
+no se repite en ninguna otra fila de la tabla y nunca está vacío.
+
+| id_cliente (PK) | nombre | correo | ciudad |
+|---:|---|---|---|
+| 1 | Ana | ana@email.com | Medellín |
+| 2 | Carlos | carlos@email.com | Bogotá |
+| 3 | Laura | laura@email.com | Cali |
+
+Con esa definición, la pregunta "¿podríamos tener dos clientes con `id_cliente = 3`?" tiene una sola
+respuesta: no. No porque alguien lo prohíba en una reunión, sino porque la base de datos, cuando
+declares esa clave más adelante, va a rechazar cualquier intento de insertar un segundo `3`. La
+clave primaria es la primera regla del negocio que la base de datos vigila por sí misma.
+
+::: {.callout-tip}
+## Ejercicio 2.1
+
+Para cada una de las otras tres entidades del modelo, `PEDIDO`, `PRODUCTO` y `CATEGORIA`, indica cuál
+atributo es la clave primaria y explica en una frase por qué ninguno de los demás atributos sirve.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución
+
+`PEDIDO` usa `id_pedido`: la fecha se repite entre pedidos del mismo día y el estado toma solo unos
+pocos valores. `PRODUCTO` usa `id_producto`: dos productos pueden compartir nombre, precio o stock.
+`CATEGORIA` usa `id_categoria`: el nombre podría servir hoy, pero cambiarlo obligaría a corregir todas
+las referencias, y un identificador numérico nunca cambia.
+:::
+
+### Etapa 3. Una línea entre dos entidades
+
+El modelo dice que `CLIENTE` se relaciona con `PEDIDO`, uno a muchos. Esa línea existe en el dibujo,
+pero una tabla no tiene líneas: solo columnas y filas. Mira las dos tablas convertidas de forma
+ingenua, cada una con sus propios atributos:
+
+::: {.tabla-ancha}
+| id_cliente (PK) | nombre |
+|---:|---|
+| 1 | Ana |
+| 2 | Carlos |
+:::
+
+::: {.tabla-ancha}
+| id_pedido (PK) | fecha |
+|---:|---|
+| 101 | 2026-09-20 |
+| 102 | 2026-09-21 |
+:::
+
+Con estas dos tablas, ¿quién hizo el pedido 101? No hay forma de saberlo. La relación se perdió en el
+camino. Para recuperarla hace falta que cada pedido guarde a quién pertenece, y la única manera de
+guardar algo en una tabla es una columna más:
+
+| id_pedido (PK) | fecha | id_cliente |
+|---:|---|---:|
+| 101 | 2026-09-20 | 1 |
+| 102 | 2026-09-21 | 2 |
+
+Ahora cada valor de `pedido.id_cliente` existe en `cliente.id_cliente`: el pedido 101 apunta a Ana, el
+102 a Carlos. Esa columna que apunta a la clave primaria de otra tabla es una *clave foránea*
+(*foreign key*, FK). Y de aquí sale la segunda regla del modelo relacional, la regla de las
+relaciones uno a muchos:
+
+> La clave foránea vive en el lado N.
+
+Es decir, en la tabla que está del lado "muchos" de la relación. Un cliente tiene muchos pedidos, así
+que es cada pedido el que carga el identificador de su cliente. Si intentaras hacerlo al revés, poner
+`id_pedido` dentro de `cliente`, un cliente con tres pedidos necesitaría tres valores en una sola
+celda, y una celda guarda un solo valor. La regla no es arbitraria: es la única que cabe en una tabla.
+
+### Etapa 4. La relación categoría-producto
+
+Aplica la misma regla a la otra relación uno a muchos del modelo: `CATEGORIA` tiene muchos
+productos, cada producto pertenece a una categoría. Antes de mirar la solución, dibuja cómo quedan
+las dos tablas.
+
+::: {.callout-note collapse="true"}
+## Solución
+
+```
+categoria
+----------------
+id_categoria   PK
+nombre
+
+producto
+----------------
+id_producto    PK
+nombre
+precio
+stock
+id_categoria   FK
+```
+
+`producto` está del lado N, así que recibe la clave foránea `id_categoria`. `categoria` no cambia:
+del lado 1 no se agrega nada.
+:::
+
+Hasta aquí el trabajo es puramente de modelo relacional: tablas, columnas, claves primarias y
+foráneas. Ese paso intermedio importa porque el SQL que escribas después es la transcripción literal
+de estas decisiones. Si el modelo relacional está bien, el `CREATE TABLE` sale solo.
+
+### Etapa 5. Muchos a muchos
+
+Queda la relación más interesante: `PEDIDO` contiene `PRODUCTO`, muchos a muchos. Intenta aplicar la
+regla de la etapa 3 y verás que falla en los dos sentidos. Si pones `id_producto` dentro de `pedido`,
+cada pedido podría tener un solo producto, y un pedido real lleva varios. Si pones `id_pedido` dentro
+de `producto`, cada producto pertenecería a un solo pedido, y el mismo mouse se vende muchas veces.
+Ninguno de los dos lados puede cargar la clave foránea, porque los dos son el lado "muchos".
+
+La solución es una tabla nueva, que no estaba como entidad en el modelo, y que existe solo para
+representar la relación:
+
+| id_pedido (PK, FK) | id_producto (PK, FK) | cantidad | precio_unitario |
+|---:|---:|---:|---:|
+| 101 | 1 | 2 | 80000 |
+| 101 | 3 | 1 | 150000 |
+
+Se llama `detalle_pedido`, y cada fila suya es una línea de un pedido: el pedido 101 lleva dos
+unidades del producto 1 y una unidad del producto 3. Fíjate en tres cosas. Primera, la tabla tiene dos
+claves foráneas, una hacia `pedido` y otra hacia `producto`. Segunda, su clave primaria es la
+combinación de las dos: un mismo producto no debería aparecer dos veces dentro del mismo pedido, así
+que la pareja `(id_pedido, id_producto)` identifica a cada fila. Tercera, los atributos propios de la
+relación, `cantidad` y `precio_unitario`, viven aquí y en ningún otro lugar, porque describen a la
+línea, no al pedido ni al producto. De ahí la tercera regla:
+
+> Una relación muchos a muchos se convierte en una tabla nueva, y esa tabla puede tener atributos
+> propios.
+
+En el modelo, esto equivale a leer `PEDIDO 1 --- N DETALLE_PEDIDO N --- 1 PRODUCTO`: la relación N:M
+se descompone en dos relaciones 1:N que pasan por la tabla intermedia.
+
+::: {.callout-tip}
+## Ejercicio 5.1
+
+Guardar el precio en `detalle_pedido` parece redundante, porque `producto` ya tiene una columna
+`precio`. Explica por qué `precio_unitario` existe de todas formas.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución
+
+`producto.precio` es el precio de hoy; `detalle_pedido.precio_unitario` es el precio al que se vendió
+en ese pedido concreto. Si el mouse sube de 80.000 a 95.000 la semana próxima, los pedidos viejos
+deben seguir mostrando 80.000, porque eso fue lo que el cliente pagó. Sin esa columna, cambiar el
+precio de un producto reescribiría el historial de ventas.
+:::
+
+### Etapa 6. El modelo relacional completo
+
+Al reunir las tres reglas, el modelo entidad-relación completo se convierte en cinco tablas:
+
+::: {.diagrama}
+
+<svg viewBox="0 0 1120 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco tablas con sus columnas: cliente, pedido, producto, categoria y detalle_pedido; flechas desde cada clave foranea hacia la clave primaria que referencia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="g2s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+    <marker id="g2f" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"/></marker>
+  </defs>
+  <g filter="url(#g2s)">
+    <rect x="20" y="40" width="220" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="20" y="40" width="220" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="20" y="62" width="220" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="130" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">cliente</text>
+  <text x="40" y="104" font-size="12.5" fill="#1b2a41" font-weight="600">id_cliente</text>
+  <rect x="180" y="92" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="195" y="104" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <text x="40" y="128" font-size="12.5" fill="#4a5b70">nombre</text>
+  <text x="40" y="150" font-size="12.5" fill="#4a5b70">correo</text>
+  <text x="40" y="172" font-size="12.5" fill="#4a5b70">ciudad</text>
+  <g filter="url(#g2s)">
+    <rect x="300" y="40" width="220" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="300" y="40" width="220" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="300" y="62" width="220" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="410" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">pedido</text>
+  <text x="320" y="104" font-size="12.5" fill="#1b2a41" font-weight="600">id_pedido</text>
+  <rect x="460" y="92" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="475" y="104" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <text x="320" y="128" font-size="12.5" fill="#4a5b70">fecha</text>
+  <text x="320" y="150" font-size="12.5" fill="#4a5b70">estado</text>
+  <text x="320" y="172" font-size="12.5" fill="#5442b3" font-weight="600">id_cliente</text>
+  <rect x="460" y="160" width="30" height="16" rx="8" fill="#ede9fb"/><text x="475" y="172" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text>
+  <g filter="url(#g2s)">
+    <rect x="600" y="40" width="220" height="172" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="600" y="40" width="220" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="600" y="62" width="220" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="710" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">producto</text>
+  <text x="620" y="104" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text>
+  <rect x="760" y="92" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="775" y="104" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <text x="620" y="128" font-size="12.5" fill="#4a5b70">nombre</text>
+  <text x="620" y="150" font-size="12.5" fill="#4a5b70">precio</text>
+  <text x="620" y="172" font-size="12.5" fill="#4a5b70">stock</text>
+  <text x="620" y="194" font-size="12.5" fill="#5442b3" font-weight="600">id_categoria</text>
+  <rect x="760" y="182" width="30" height="16" rx="8" fill="#ede9fb"/><text x="775" y="194" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text>
+  <g filter="url(#g2s)">
+    <rect x="880" y="106" width="220" height="106" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="880" y="106" width="220" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="880" y="128" width="220" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="990" y="132" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">categoria</text>
+  <text x="900" y="170" font-size="12.5" fill="#1b2a41" font-weight="600">id_categoria</text>
+  <rect x="1040" y="158" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="1055" y="170" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <text x="900" y="194" font-size="12.5" fill="#4a5b70">nombre</text>
+  <g filter="url(#g2s)">
+    <rect x="450" y="262" width="260" height="150" rx="14" fill="#ffffff" stroke="#d8d0f5"/>
+    <rect x="450" y="262" width="260" height="40" rx="14" fill="#ede9fb"/>
+    <rect x="450" y="284" width="260" height="18" fill="#ede9fb"/>
+  </g>
+  <text x="580" y="288" text-anchor="middle" font-size="14" font-weight="700" fill="#5442b3" font-family="Consolas, monospace">detalle_pedido</text>
+  <text x="470" y="326" font-size="12.5" fill="#1b2a41" font-weight="600">id_pedido</text>
+  <rect x="592" y="314" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="607" y="326" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <rect x="626" y="314" width="30" height="16" rx="8" fill="#ede9fb"/><text x="641" y="326" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text>
+  <text x="470" y="350" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text>
+  <rect x="592" y="338" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="607" y="350" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <rect x="626" y="338" width="30" height="16" rx="8" fill="#ede9fb"/><text x="641" y="350" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text>
+  <text x="470" y="374" font-size="12.5" fill="#4a5b70">cantidad</text>
+  <text x="470" y="398" font-size="12.5" fill="#4a5b70">precio_unitario</text>
+  <line x1="300" y1="168" x2="240" y2="168" stroke="#7c6ad8" stroke-width="2" marker-end="url(#g2f)"/>
+  <line x1="820" y1="190" x2="880" y2="190" stroke="#7c6ad8" stroke-width="2" marker-end="url(#g2f)"/>
+  <line x1="490" y1="262" x2="490" y2="190" stroke="#7c6ad8" stroke-width="2" marker-end="url(#g2f)"/>
+  <line x1="670" y1="262" x2="670" y2="212" stroke="#7c6ad8" stroke-width="2" marker-end="url(#g2f)"/>
+</svg>
+
+:::
+
+Cada flecha sale de una clave foránea y llega a la clave primaria que referencia. Si te preguntas qué
+parte de este esquema salió directamente del modelo entidad-relación, la respuesta es prácticamente
+todo: cada entidad es una tabla, cada relación 1:N es una clave foránea, y la relación N:M es una
+tabla más. Los dos mundos son el mismo, escrito de dos formas. Todo lo que sigue es escribir este
+esquema en SQL.
+
+## Segunda parte. Hacer que exista
+
+### Etapa 7. La primera tabla
+
+SQL es el lenguaje con el que se le habla a un motor de base de datos relacional. Sus sentencias se
+escriben como texto, terminan en punto y coma, y no distinguen mayúsculas de minúsculas en las
+palabras reservadas; por convención se escriben en mayúsculas para que se distingan de los nombres que
+tú eliges. La sentencia que crea una tabla es `CREATE TABLE`:
 
 ```sql
-CREATE TABLE PedidoPlano (
-    pedido    INT,
-    cliente   VARCHAR(80),
-    telefono  VARCHAR(20),
-    producto  VARCHAR(80),
-    valor     DECIMAL(10,2)
+CREATE TABLE cliente (
+    id_cliente  INTEGER,
+    nombre      VARCHAR(100),
+    correo      VARCHAR(150),
+    ciudad      VARCHAR(80)
 );
 ```
 
-Fíjate en que esta tabla no declara ninguna llave primaria ni ninguna restricción, a propósito. El
-vocabulario de `PRIMARY KEY` y `REFERENCES` pertenece al Tema 2, cuando ya sepas mapear un diagrama
-entidad-relación. `PedidoPlano` es, tal cual su nombre lo dice, la misma hoja de cálculo sin ninguna
-regla de negocio encima, convertida a SQL exactamente como es, con sus mismos problemas, para que
-practiques sobre datos reales del negocio de la cafetería desde la primera sentencia.
+Léela línea por línea. `CREATE TABLE cliente` crea una tabla llamada `cliente`. Entre paréntesis va la
+lista de columnas, separadas por coma, y cada columna tiene dos partes: su nombre y su *tipo de
+dato*, que le dice al motor qué clase de valores va a guardar. `id_cliente INTEGER` crea una columna
+que almacena números enteros. `nombre VARCHAR(100)` crea una columna de texto de longitud variable,
+hasta 100 caracteres. Al ejecutarla, la tabla existe, con sus cuatro columnas y ninguna fila:
 
-Con la tabla creada, la llenas con `INSERT`, la sentencia de DML que agrega filas nuevas. La palabra
-`INTO` nombra la tabla destino, y entre paréntesis después de ella van los nombres de las columnas que
-vas a llenar, en el orden que tú elijas, no necesariamente el orden en que se declararon en
-`CREATE TABLE`. La palabra `VALUES` introduce, también entre paréntesis, los valores concretos de cada
-fila nueva, uno por cada columna nombrada arriba y en ese mismo orden. Cada valor de texto va entre
-comillas simples, y un número se escribe tal cual, sin comillas.
+| id_cliente | nombre | correo | ciudad |
+|---|---|---|---|
+| | | | |
+
+Estructura sí; datos, todavía no. Los tipos de dato que vas a usar en este curso son pocos:
+
+| Tipo | Qué guarda | Ejemplo |
+|---|---|---|
+| `INTEGER` | Números enteros, positivos o negativos | `20`, `-3` |
+| `DECIMAL(p, s)` | Números con decimales, `p` dígitos en total y `s` después del punto | `DECIMAL(10,2)` guarda hasta `99999999.99` |
+| `VARCHAR(n)` | Texto de longitud variable, hasta `n` caracteres | `'Medellín'` |
+| `DATE` | Una fecha, sin hora | `'2026-09-20'` |
+| `BOOLEAN` | Verdadero o falso | `TRUE`, `FALSE` |
+
+Dos detalles que producen errores frecuentes. El texto y las fechas van siempre entre comillas
+simples, `'Ana'`, `'2026-09-20'`; los números, nunca. Y `DECIMAL` es el tipo correcto para dinero:
+los tipos de coma flotante como `FLOAT` redondean de formas que no conviene en un precio.
+
+### Etapa 8. Cada restricción nace de una necesidad
+
+Compara la tabla que acabas de crear con el modelo relacional de la etapa 6. Se quedó por fuera la
+clave primaria. Sin ella, nada impide insertar dos clientes con el mismo identificador. Se declara
+con dos palabras a continuación del tipo de dato:
 
 ```sql
-INSERT INTO PedidoPlano (pedido, cliente, telefono, producto, valor) VALUES
-    (1001, 'Ana Ruiz',  '300 111 2233', 'Café',   4500),
-    (1002, 'Ana Ruiz',  '300 111 2233', 'Torta',  23400),
-    (1003, 'Luis Pena', '301 444 5566', 'Café',   4500),
-    (1004, 'Ana Ruiz',  '300 111 2233', 'Jugo',   6800);
+CREATE TABLE cliente (
+    id_cliente  INTEGER PRIMARY KEY,
+    nombre      VARCHAR(100),
+    correo      VARCHAR(150),
+    ciudad      VARCHAR(80)
+);
 ```
 
-Un solo `INSERT` con varias filas separadas por comas, como el de arriba, es equivalente a cuatro
-sentencias `INSERT` separadas, una por fila, y el estándar SQL permite las dos formas. La versión con
-varias filas a la vez es la que vas a usar de aquí en adelante porque es más corta de leer.
+`PRIMARY KEY` es una *restricción* (*constraint*): una regla que el motor verifica cada vez que
+alguien intenta insertar o modificar una fila, y que rechaza la operación si la regla se rompe. Hay
+otras dos que vas a necesitar en casi todas las tablas:
+
+```sql
+CREATE TABLE cliente (
+    id_cliente  INTEGER PRIMARY KEY,
+    nombre      VARCHAR(100) NOT NULL,
+    correo      VARCHAR(150) UNIQUE,
+    ciudad      VARCHAR(80)
+);
+```
+
+| Restricción | Regla que impone | Necesidad de negocio |
+|---|---|---|
+| `PRIMARY KEY` | El valor no se repite y no puede estar vacío | No puedo duplicar identificadores |
+| `NOT NULL` | La columna no puede quedar vacía | Un cliente debe tener nombre |
+| `UNIQUE` | El valor no se repite, pero sí puede estar vacío | No quiero dos clientes con el mismo correo |
+
+La diferencia entre `PRIMARY KEY` y `UNIQUE` es sutil pero real: las dos prohíben repetidos, pero
+`UNIQUE` admite valores vacíos y una tabla puede tener varias columnas `UNIQUE`, mientras que solo
+tiene una clave primaria. `ciudad` no lleva restricción a propósito: un cliente puede registrarse sin
+indicar su ciudad, y varios clientes comparten la misma.
+
+Si ya creaste la tabla sin restricciones y quieres agregarlas sin borrarla, `ALTER TABLE` modifica una
+tabla existente:
+
+```sql
+ALTER TABLE cliente ADD CONSTRAINT correo_unico UNIQUE (correo);
+```
+
+Y si necesitas empezar de cero, `DROP TABLE cliente;` elimina la tabla con todo lo que contiene, sin
+confirmación y sin vuelta atrás.
+
+### Etapa 9. Las tablas categoría y producto
+
+Escribe, sin mirar, el `CREATE TABLE` de `categoria`. Tiene dos columnas: el identificador, clave
+primaria, y el nombre, que no puede faltar.
+
+::: {.callout-note collapse="true"}
+## Solución
+
+```sql
+CREATE TABLE categoria (
+    id_categoria  INTEGER PRIMARY KEY,
+    nombre        VARCHAR(100) NOT NULL
+);
+```
+:::
+
+Ahora `producto`: identificador, nombre obligatorio, precio con decimales, stock entero, y la
+columna `id_categoria` que en el modelo relacional marcaste como clave foránea.
+
+```sql
+CREATE TABLE producto (
+    id_producto   INTEGER PRIMARY KEY,
+    nombre        VARCHAR(100) NOT NULL,
+    precio        DECIMAL(10,2),
+    stock         INTEGER,
+    id_categoria  INTEGER
+);
+```
+
+Esta sentencia es válida y crea la tabla. Pero pregúntate: ¿sabe SQL que `id_categoria` corresponde
+a la tabla `categoria`? No. Para el motor es un número entero más, igual que `stock`. Nada le impide
+guardar en esa columna un `999` que no corresponde a ninguna categoría. La relación existe en tu
+cabeza y en el diagrama, pero todavía no en la base de datos.
+
+### Etapa 10. Declarar la clave foránea
+
+La clave foránea también se declara como restricción, con una línea adicional al final de la lista
+de columnas:
+
+```sql
+CREATE TABLE producto (
+    id_producto   INTEGER PRIMARY KEY,
+    nombre        VARCHAR(100) NOT NULL,
+    precio        DECIMAL(10,2),
+    stock         INTEGER,
+    id_categoria  INTEGER,
+
+    FOREIGN KEY (id_categoria)
+        REFERENCES categoria(id_categoria)
+);
+```
+
+`FOREIGN KEY (id_categoria)` nombra la columna de esta tabla que actúa como clave foránea;
+`REFERENCES categoria(id_categoria)` indica a qué tabla y a qué columna apunta. A partir de ese
+momento el motor exige que cada valor de `producto.id_categoria` exista en `categoria.id_categoria`,
+y rechaza cualquier fila que apunte a una categoría inexistente. `FOREIGN KEY` no es sintaxis
+arbitraria: es la relación del modelo entidad-relación, escrita en SQL.
+
+Hay una consecuencia práctica: el orden de creación importa. `categoria` tiene que existir antes que
+`producto`, porque la restricción referencia una tabla que debe estar creada. En general, primero las
+tablas del lado 1, después las del lado N. Con esa regla, las cinco tablas del sistema de ventas se
+crean en este orden:
+
+```sql
+CREATE TABLE cliente (
+    id_cliente  INTEGER PRIMARY KEY,
+    nombre      VARCHAR(100) NOT NULL,
+    correo      VARCHAR(150) UNIQUE,
+    ciudad      VARCHAR(80)
+);
+
+CREATE TABLE categoria (
+    id_categoria  INTEGER PRIMARY KEY,
+    nombre        VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE producto (
+    id_producto   INTEGER PRIMARY KEY,
+    nombre        VARCHAR(100) NOT NULL,
+    precio        DECIMAL(10,2),
+    stock         INTEGER,
+    id_categoria  INTEGER,
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
+);
+
+CREATE TABLE pedido (
+    id_pedido   INTEGER PRIMARY KEY,
+    fecha       DATE NOT NULL,
+    estado      VARCHAR(20) NOT NULL,
+    id_cliente  INTEGER NOT NULL,
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente)
+);
+
+CREATE TABLE detalle_pedido (
+    id_pedido        INTEGER,
+    id_producto      INTEGER,
+    cantidad         INTEGER NOT NULL,
+    precio_unitario  DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (id_pedido, id_producto),
+    FOREIGN KEY (id_pedido)   REFERENCES pedido(id_pedido),
+    FOREIGN KEY (id_producto) REFERENCES producto(id_producto)
+);
+```
+
+Fíjate en `detalle_pedido`. Su clave primaria es compuesta, así que no se declara al lado de una
+columna sino como restricción aparte: `PRIMARY KEY (id_pedido, id_producto)`. Y tiene dos claves
+foráneas, una hacia cada tabla que conecta. Es la traducción exacta de la tabla intermedia de la
+etapa 5.
 
 ::: {.callout-tip}
-## Practica 2. Inserta una fila nueva
+## Ejercicio 10.1
 
-Escribe la sentencia `INSERT` que agrega un quinto pedido a `PedidoPlano`, pedido `1005`, cliente
-`Marta Gil`, teléfono `302 555 1122`, producto `Croissant`, valor `5200`.
+En `pedido`, la columna `id_cliente` lleva `NOT NULL` además de la clave foránea. Explica qué regla de
+negocio expresa esa combinación, y qué pasaría si quitaras el `NOT NULL`.
 :::
 
 ::: {.callout-note collapse="true"}
-## Solución de la Practica 2
+## Solución
 
-```sql
-INSERT INTO PedidoPlano (pedido, cliente, telefono, producto, valor) VALUES
-    (1005, 'Marta Gil', '302 555 1122', 'Croissant', 5200);
-```
+`FOREIGN KEY` garantiza que, si hay un valor, corresponda a un cliente real. `NOT NULL` garantiza que
+siempre haya un valor. Juntas expresan que todo pedido pertenece obligatoriamente a un cliente
+existente. Sin `NOT NULL`, la base de datos aceptaría pedidos sin cliente, con la columna vacía, y la
+clave foránea no lo impediría, porque un valor vacío no apunta a nada y por tanto no viola la
+referencia.
 :::
 
-## La primera consulta, `SELECT` y `FROM`
+## Tercera parte. Datos
 
-`SELECT` es la sentencia de DQL que devuelve datos sin modificar nada. La forma mínima combina
-`SELECT`, que dice qué columnas quieres ver, con `FROM`, que dice de qué tabla las sacas. El asterisco
-`*` en la lista de columnas significa todas, sin tener que escribir una por una.
+### Etapa 11. Tabla no es lo mismo que datos
 
-```sql
-SELECT * FROM PedidoPlano;
-```
-
-| pedido | cliente   | telefono     | producto | valor    |
-|---|---|---|---|---|
-| 1001 | Ana Ruiz  | 300 111 2233 | Café  | 4500.00 |
-| 1002 | Ana Ruiz  | 300 111 2233 | Torta | 23400.00 |
-| 1003 | Luis Pena | 301 444 5566 | Café  | 4500.00 |
-| 1004 | Ana Ruiz  | 300 111 2233 | Jugo  | 6800.00 |
-
-Casi nunca necesitas todas las columnas a la vez. La proyección elige solo las que importan, nombrando
-cada una separada por comas en el mismo orden en que quieres verlas, que no tiene que coincidir con el
-orden en que se declararon en `CREATE TABLE`.
+Las tablas existen, pero están vacías. La sentencia que agrega una fila es `INSERT`:
 
 ```sql
-SELECT cliente, producto FROM PedidoPlano;
+INSERT INTO cliente (id_cliente, nombre, correo, ciudad)
+VALUES (1, 'Ana', 'ana@email.com', 'Medellín');
 ```
 
-Puedes además renombrar una columna en el resultado con `AS`, sin tocar el nombre real de la columna
-en la tabla. Sirve para que un resultado sea más legible cuando lo lee una persona, o cuando dos
-tablas distintas usan el mismo nombre de columna y hay que distinguirlas, algo que vas a necesitar más
-adelante en el curso.
+`INSERT INTO cliente` nombra la tabla destino. Entre el primer par de paréntesis va la lista de
+columnas que vas a llenar; entre el segundo, después de `VALUES`, los valores, en el mismo orden y en
+la misma cantidad. Texto entre comillas simples, números sin comillas. Antes de ejecutarla, predice
+cómo queda la tabla; después, comprueba:
+
+| id_cliente | nombre | correo | ciudad |
+|---:|---|---|---|
+| 1 | Ana | ana@email.com | Medellín |
+
+Ahora inserta tú a Carlos, con correo `carlos@email.com`, de Bogotá.
+
+::: {.callout-note collapse="true"}
+## Solución
 
 ```sql
-SELECT cliente AS nombre_cliente, valor AS precio FROM PedidoPlano;
+INSERT INTO cliente (id_cliente, nombre, correo, ciudad)
+VALUES (2, 'Carlos', 'carlos@email.com', 'Bogotá');
 ```
+
+| id_cliente | nombre | correo | ciudad |
+|---:|---|---|---|
+| 1 | Ana | ana@email.com | Medellín |
+| 2 | Carlos | carlos@email.com | Bogotá |
+:::
+
+La lista de columnas puede omitirse si das los valores de todas las columnas en el orden en que
+fueron creadas, `INSERT INTO cliente VALUES (2, 'Carlos', ...)`. Es más corto y más frágil: si alguien
+agrega una columna a la tabla, la sentencia deja de funcionar. Escribir la lista de columnas es la
+forma segura.
+
+### Etapa 12. Varias filas de una vez
+
+Diez clientes no necesitan diez sentencias. `VALUES` admite varias tuplas separadas por coma:
+
+```sql
+INSERT INTO cliente (id_cliente, nombre, correo, ciudad)
+VALUES
+    (3, 'Laura', 'laura@email.com', 'Cali'),
+    (4, 'Juan',  'juan@email.com',  'Medellín'),
+    (5, 'Sara',  'sara@email.com',  'Bogotá');
+```
+
+Con eso, y con los datos de las demás tablas, el sistema de ventas queda cargado así. Estos son los
+datos que usan todas las consultas del resto de la guía:
+
+```sql
+INSERT INTO categoria (id_categoria, nombre)
+VALUES (1, 'Periféricos'), (2, 'Pantallas'), (3, 'Fotografía');
+
+INSERT INTO producto (id_producto, nombre, precio, stock, id_categoria)
+VALUES
+    (1, 'Mouse',   80000,  20, 1),
+    (2, 'Monitor', 900000,  4, 2),
+    (3, 'Teclado', 150000, 15, 1),
+    (4, 'Cámara',  500000,  3, 3);
+
+INSERT INTO pedido (id_pedido, fecha, estado, id_cliente)
+VALUES
+    (101, '2026-09-20', 'pendiente', 1),
+    (102, '2026-09-21', 'pagado',    2),
+    (103, '2026-09-21', 'pagado',    1);
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario)
+VALUES
+    (101, 1, 2, 80000),
+    (101, 3, 1, 150000),
+    (102, 2, 1, 900000),
+    (103, 4, 1, 500000),
+    (103, 1, 1, 80000);
+```
+
+| id_cliente | nombre | correo | ciudad |
+|---:|---|---|---|
+| 1 | Ana | ana@email.com | Medellín |
+| 2 | Carlos | carlos@email.com | Bogotá |
+| 3 | Laura | laura@email.com | Cali |
+| 4 | Juan | juan@email.com | Medellín |
+| 5 | Sara | sara@email.com | Bogotá |
+
+| id_categoria | nombre |
+|---:|---|
+| 1 | Periféricos |
+| 2 | Pantallas |
+| 3 | Fotografía |
+
+| id_producto | nombre | precio | stock | id_categoria |
+|---:|---|---:|---:|---:|
+| 1 | Mouse | 80000 | 20 | 1 |
+| 2 | Monitor | 900000 | 4 | 2 |
+| 3 | Teclado | 150000 | 15 | 1 |
+| 4 | Cámara | 500000 | 3 | 3 |
+
+| id_pedido | fecha | estado | id_cliente |
+|---:|---|---|---:|
+| 101 | 2026-09-20 | pendiente | 1 |
+| 102 | 2026-09-21 | pagado | 2 |
+| 103 | 2026-09-21 | pagado | 1 |
+
+| id_pedido | id_producto | cantidad | precio_unitario |
+|---:|---:|---:|---:|
+| 101 | 1 | 2 | 80000 |
+| 101 | 3 | 1 | 150000 |
+| 102 | 2 | 1 | 900000 |
+| 103 | 4 | 1 | 500000 |
+| 103 | 1 | 1 | 80000 |
+
+El orden de los `INSERT` sigue la misma regla que el de los `CREATE TABLE`: primero las tablas
+referenciadas, después las que referencian. No puedes insertar un pedido de Ana antes de que Ana
+exista en `cliente`.
+
+### Etapa 13. Hacer que la base de datos falle
+
+Las restricciones se entienden mejor cuando las ves actuar. Intenta insertar un cliente con un
+identificador que ya existe:
+
+```sql
+INSERT INTO cliente (id_cliente, nombre, correo, ciudad)
+VALUES (1, 'Pedro', 'pedro@email.com', 'Cali');
+```
+
+::: {.error-caso}
+### Clave primaria duplicada
+[Error]{.etiqueta}
+
+El motor rechaza la sentencia completa. Ya existe una fila con `id_cliente = 1`, y `PRIMARY KEY`
+prohíbe un segundo `1`. No se inserta nada: una fila que viola una restricción no entra a medias.
+PostgreSQL lo reporta como `duplicate key value violates unique constraint "cliente_pkey"`; cada motor
+usa su propio mensaje, pero todos nombran la restricción que se violó.
+:::
+
+Ahora intenta insertar un producto que apunta a una categoría inexistente:
+
+```sql
+INSERT INTO producto (id_producto, nombre, precio, stock, id_categoria)
+VALUES (10, 'Mouse', 80000, 20, 999);
+```
+
+::: {.error-caso}
+### Violación de clave foránea
+[Error]{.etiqueta}
+
+No existe ninguna categoría con `id_categoria = 999`, así que `FOREIGN KEY` rechaza la fila. El
+mensaje típico es `insert or update on table "producto" violates foreign key constraint`. La regla
+también actúa en sentido contrario: si intentas borrar la categoría 1 mientras existan productos que
+la referencian, el motor se niega, porque dejaría filas de `producto` apuntando a nada.
+:::
+
+Esto es lo que compras al declarar restricciones: la base de datos protege las reglas que diseñaste,
+sin que ningún programa tenga que verificarlas por su cuenta. Un identificador duplicado, un pedido
+sin cliente, un producto de una categoría inexistente, ya no pueden existir.
 
 ::: {.callout-tip}
-## Practica 3. Proyecta tres columnas
+## Ejercicio 13.1
 
-Escribe la consulta que muestra, de `PedidoPlano`, solo las columnas `pedido`, `producto` y `valor`,
-en ese orden, renombrando `valor` como `precio` en el resultado.
+Sin ejecutarlas, indica cuáles de estas tres sentencias fallan, y por qué:
+
+```sql
+INSERT INTO cliente (id_cliente, correo, ciudad) VALUES (6, 'pedro@email.com', 'Cali');
+INSERT INTO cliente (id_cliente, nombre, correo) VALUES (7, 'Pedro', 'ana@email.com');
+INSERT INTO cliente (id_cliente, nombre) VALUES (8, 'Pedro');
+```
 :::
 
 ::: {.callout-note collapse="true"}
-## Solución de la Practica 3
+## Solución
+
+La primera falla: no da valor a `nombre`, que es `NOT NULL`. La segunda falla: `ana@email.com` ya
+existe y `correo` es `UNIQUE`. La tercera funciona: `correo` y `ciudad` quedan vacías, y ninguna de las
+dos lo prohíbe.
+:::
+
+## Cuarta parte. Preguntar
+
+### Etapa 14. La primera consulta
+
+Ya hay datos. La sentencia que los muestra es `SELECT`, y su forma mínima tiene dos partes:
 
 ```sql
-SELECT pedido, producto, valor AS precio FROM PedidoPlano;
+SELECT *
+FROM cliente;
+```
+
+`SELECT` dice qué quieres ver; el asterisco significa "todas las columnas". `FROM` dice de qué tabla.
+El resultado es la tabla completa:
+
+| id_cliente | nombre | correo | ciudad |
+|---:|---|---|---|
+| 1 | Ana | ana@email.com | Medellín |
+| 2 | Carlos | carlos@email.com | Bogotá |
+| 3 | Laura | laura@email.com | Cali |
+| 4 | Juan | juan@email.com | Medellín |
+| 5 | Sara | sara@email.com | Bogotá |
+
+Una consulta nunca modifica la tabla. Devuelve un resultado, que también tiene forma de tabla, y la
+tabla original sigue intacta. Esa es la diferencia entre `SELECT`, que lee, y `INSERT`, `UPDATE` y
+`DELETE`, que escriben.
+
+### Etapa 15. Elegir columnas
+
+Casi nunca quieres todas las columnas. Para ver solo `nombre` y `ciudad`, reemplaza el asterisco por
+la lista de columnas, separadas por coma:
+
+```sql
+SELECT nombre, ciudad
+FROM cliente;
+```
+
+| nombre | ciudad |
+|---|---|
+| Ana | Medellín |
+| Carlos | Bogotá |
+| Laura | Cali |
+| Juan | Medellín |
+| Sara | Bogotá |
+
+Elegir columnas se llama *proyección*. El orden en que las escribes es el orden en que aparecen en el
+resultado, independiente del orden en la tabla. Dos herramientas relacionadas:
+
+`DISTINCT` elimina las filas repetidas del resultado. Si preguntas solo por la ciudad, Medellín y
+Bogotá aparecen dos veces cada una; con `DISTINCT` aparecen una:
+
+```sql
+SELECT DISTINCT ciudad
+FROM cliente;
+```
+
+| ciudad |
+|---|
+| Medellín |
+| Bogotá |
+| Cali |
+
+`AS` le pone un nombre a una columna del resultado, sin cambiar nada en la tabla. Es útil cuando el
+nombre de la columna no es claro para quien lee, o cuando la columna es un cálculo:
+
+```sql
+SELECT nombre AS producto, precio * stock AS valor_inventario
+FROM producto;
+```
+
+| producto | valor_inventario |
+|---|---:|
+| Mouse | 1600000 |
+| Monitor | 3600000 |
+| Teclado | 2250000 |
+| Cámara | 1500000 |
+
+::: {.callout-tip}
+## Ejercicio 15.1
+
+Escribe tres consultas: el nombre y el correo de cada cliente; únicamente la ciudad de cada cliente,
+sin repetidos; el nombre y el precio de cada producto.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución
+
+```sql
+SELECT nombre, correo FROM cliente;
+
+SELECT DISTINCT ciudad FROM cliente;
+
+SELECT nombre, precio FROM producto;
 ```
 :::
 
-## Filtrar filas con `WHERE`
+### Etapa 16. Filtrar filas
 
-`SELECT * FROM PedidoPlano` trae las cuatro filas completas, pero casi ninguna pregunta real sobre un
-negocio quiere todas las filas a la vez. La cláusula `WHERE` filtra, dejando pasar solo las filas cuya
-condición se evalúa como verdadera. Los operadores de comparación son `=`, `<>` o `!=` para distinto,
-`<`, `>`, `<=` y `>=`.
+`SELECT nombre, ciudad FROM cliente` muestra a todos los clientes. Para ver solo los de Medellín le
+falta una condición, y la condición va en una tercera cláusula, `WHERE`:
 
 ```sql
-SELECT * FROM PedidoPlano WHERE cliente = 'Ana Ruiz';
+SELECT nombre, ciudad
+FROM cliente
+WHERE ciudad = 'Medellín';
 ```
 
-| pedido | cliente  | telefono     | producto | valor    |
-|---|---|---|---|---|
-| 1001 | Ana Ruiz | 300 111 2233 | Café  | 4500.00 |
-| 1002 | Ana Ruiz | 300 111 2233 | Torta | 23400.00 |
-| 1004 | Ana Ruiz | 300 111 2233 | Jugo  | 6800.00 |
+| nombre | ciudad |
+|---|---|
+| Ana | Medellín |
+| Juan | Medellín |
+
+Las tres cláusulas se leen como una frase: qué (`SELECT`), de dónde (`FROM`), bajo qué condición
+(`WHERE`). El motor evalúa la condición fila por fila y conserva solo las que la cumplen. Fíjate en que
+la comparación de texto distingue mayúsculas de minúsculas y tildes en la mayoría de motores:
+`'medellin'` no es igual a `'Medellín'`.
+
+### Etapa 17. Los operadores de WHERE
+
+Una condición compara una columna con un valor, o combina varias comparaciones. Los operadores que
+necesitas son estos:
+
+| Operador | Significado | Ejemplo |
+|---|---|---|
+| `=` | igual | `ciudad = 'Cali'` |
+| `<>` | distinto | `ciudad <> 'Medellín'` |
+| `>` `<` `>=` `<=` | mayor, menor, mayor o igual, menor o igual | `precio > 100000` |
+| `AND` | las dos condiciones a la vez | `precio > 100000 AND stock > 10` |
+| `OR` | al menos una de las dos | `ciudad = 'Medellín' OR ciudad = 'Bogotá'` |
+| `NOT` | niega la condición | `NOT ciudad = 'Cali'` |
+| `BETWEEN a AND b` | dentro de un rango, extremos incluidos | `precio BETWEEN 100000 AND 500000` |
+| `IN (lista)` | cualquiera de los valores de la lista | `ciudad IN ('Medellín', 'Bogotá')` |
+| `LIKE patrón` | texto que coincide con un patrón | `nombre LIKE 'M%'` |
+| `IS NULL` | la columna está vacía | `ciudad IS NULL` |
+
+Resuelve los cinco retos en orden; cada uno necesita un operador nuevo.
+
+1. Productos con precio superior a 100.000.
+2. Productos con stock menor a 10.
+3. Clientes que no sean de Medellín.
+4. Productos con precio entre 100.000 y 500.000.
+5. Clientes de Medellín o de Bogotá.
+
+::: {.callout-note collapse="true"}
+## Solución
 
 ```sql
-SELECT pedido, producto, valor FROM PedidoPlano WHERE valor > 5000;
+SELECT * FROM producto WHERE precio > 100000;
+
+SELECT * FROM producto WHERE stock < 10;
+
+SELECT * FROM cliente  WHERE ciudad <> 'Medellín';
+
+SELECT * FROM producto WHERE precio BETWEEN 100000 AND 500000;
+
+SELECT * FROM cliente  WHERE ciudad IN ('Medellín', 'Bogotá');
 ```
 
-Varias condiciones se combinan con `AND`, que exige que las dos sean verdaderas a la vez, `OR`, que
-exige que al menos una lo sea, y `NOT`, que invierte el resultado de la condición que le sigue. `AND`
-tiene mayor precedencia que `OR`, igual que la multiplicación la tiene sobre la suma en aritmética, así
-que cuando mezclas los dos en la misma condición conviene usar paréntesis para dejar explícito el orden
-en que se evalúan, en vez de confiar en que quien lea la consulta recuerde la regla de precedencia.
+La primera devuelve Monitor, Teclado y Cámara. La segunda, Monitor y Cámara. La tercera, Carlos, Laura
+y Sara. La cuarta, Teclado y Cámara: `BETWEEN` incluye los extremos, y ninguno de los dos precios cae
+justo en 100.000 o 500.000, pero si existiera uno, entraría. La quinta, Ana, Carlos, Juan y Sara.
+:::
+
+Dos operadores merecen explicación aparte. `LIKE` compara texto contra un patrón con dos comodines:
+`%` reemplaza cualquier cantidad de caracteres, incluida ninguna, y `_` reemplaza exactamente uno.
+`nombre LIKE 'M%'` encuentra los nombres que empiezan por M, Mouse y Monitor; `correo LIKE '%@email.com'`
+encuentra los correos que terminan en ese dominio; `nombre LIKE '_ara'` encuentra nombres de cuatro
+letras que terminan en "ara", como Sara.
+
+`NULL` representa la ausencia de valor: una celda que no tiene nada, ni cero ni cadena vacía. Como no
+es un valor, no se compara con `=`. La consulta `WHERE ciudad = NULL` no devuelve ninguna fila nunca,
+ni siquiera para las filas cuya ciudad está vacía, porque la comparación con `NULL` no es ni verdadera
+ni falsa. La forma correcta es `WHERE ciudad IS NULL`, y su contraria, `WHERE ciudad IS NOT NULL`.
+
+### Etapa 18. Predecir antes de ejecutar
+
+Leer SQL importa tanto como escribirlo. Con la tabla `producto` a la vista:
+
+| nombre | precio | stock |
+|---|---:|---:|
+| Mouse | 80000 | 20 |
+| Monitor | 900000 | 4 |
+| Teclado | 150000 | 15 |
+| Cámara | 500000 | 3 |
+
+predice, sin ejecutar, qué filas devuelve esta consulta:
 
 ```sql
-SELECT * FROM PedidoPlano
-WHERE cliente = 'Ana Ruiz' AND valor > 5000;
-
-SELECT * FROM PedidoPlano
-WHERE producto = 'Café' OR producto = 'Jugo';
+SELECT *
+FROM producto
+WHERE precio > 100000
+  AND stock > 10;
 ```
+
+::: {.callout-note collapse="true"}
+## Solución
+
+Solo Teclado. El Mouse falla en el precio; Monitor y Cámara cumplen el precio pero fallan en el stock.
+`AND` exige que las dos condiciones sean verdaderas a la vez para la misma fila.
+:::
+
+Y esta otra, que cambia una sola palabra:
+
+```sql
+SELECT *
+FROM producto
+WHERE precio > 100000
+  OR stock > 10;
+```
+
+::: {.callout-note collapse="true"}
+## Solución
+
+Las cuatro filas. Monitor, Teclado y Cámara entran por el precio; Mouse entra por el stock. Con `OR`
+basta que una de las dos condiciones sea verdadera.
+:::
+
+Cuando mezclas `AND` y `OR` en la misma condición, `AND` se evalúa primero. `a OR b AND c` significa
+`a OR (b AND c)`. Usa paréntesis siempre que combines los dos: son gratis y evitan un resultado que
+parece correcto y no lo es.
+
+### Etapa 19. Ordenar y limitar
+
+El motor devuelve las filas en el orden que le resulte más cómodo, que no tiene por qué ser el orden
+de inserción. Para ver los productos del más caro al más barato, `ORDER BY` indica la columna, y
+`DESC` la dirección descendente:
+
+```sql
+SELECT nombre, precio
+FROM producto
+ORDER BY precio DESC;
+```
+
+| nombre | precio |
+|---|---:|
+| Monitor | 900000 |
+| Cámara | 500000 |
+| Teclado | 150000 |
+| Mouse | 80000 |
+
+`ASC`, ascendente, es el valor por defecto: `ORDER BY precio` y `ORDER BY precio ASC` son lo mismo.
+Puedes ordenar por varias columnas: `ORDER BY ciudad, nombre` ordena por ciudad, y dentro de cada
+ciudad por nombre. Si solo quieres los tres más caros, `LIMIT` corta el resultado:
+
+```sql
+SELECT nombre, precio
+FROM producto
+ORDER BY precio DESC
+LIMIT 3;
+```
+
+`LIMIT` sin `ORDER BY` devuelve tres filas cualesquiera, no las tres más caras: el corte se aplica
+sobre el orden que tenga el resultado, así que los dos van casi siempre juntos. `LIMIT` lo entienden
+PostgreSQL, MySQL y SQLite; el estándar SQL escribe lo mismo como `FETCH FIRST 3 ROWS ONLY`, y SQL
+Server usa `SELECT TOP 3`.
+
+::: {.callout-tip}
+## Ejercicio 19.1
+
+Escribe la consulta que muestre el nombre y el stock de los dos productos con menos existencias.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución
+
+```sql
+SELECT nombre, stock
+FROM producto
+ORDER BY stock ASC
+LIMIT 2;
+```
+
+Devuelve Cámara, con 3, y Monitor, con 4.
+:::
+
+### Etapa 20. Modificar datos
+
+El Mouse ahora cuesta 95.000. No hace falta borrarlo e insertarlo de nuevo: la fila ya existe, y lo
+que cambia es un valor dentro de ella. La sentencia es `UPDATE`:
+
+```sql
+UPDATE producto
+SET precio = 95000
+WHERE id_producto = 1;
+```
+
+`UPDATE producto` nombra la tabla que cambia; `SET precio = 95000` nombra la columna y su valor
+nuevo; `WHERE id_producto = 1` dice a qué filas se aplica el cambio. Puedes cambiar varias columnas
+en la misma sentencia, `SET precio = 95000, stock = 18`, y el valor nuevo puede calcularse a partir
+del viejo, `SET precio = precio * 1.1`.
+
+Ahora la sentencia sin la última línea:
+
+```sql
+UPDATE producto
+SET precio = 95000;
+```
+
+::: {.error-caso}
+### UPDATE sin WHERE
+[Riesgo]{.etiqueta}
+
+Todos los productos pasan a costar 95.000. La sentencia es válida, el motor la ejecuta sin preguntar,
+y no hay forma de deshacerla con un clic. `WHERE` no es opcional en la práctica: sin él, el cambio se
+aplica a todas las filas de la tabla. Antes de ejecutar un `UPDATE`, ejecuta un `SELECT` con el mismo
+`WHERE` y confirma que devuelve exactamente las filas que quieres cambiar.
+:::
+
+### Etapa 21. Eliminar datos
+
+Sara ya no debe estar en el sistema. `DELETE` borra filas completas:
+
+```sql
+DELETE FROM cliente
+WHERE id_cliente = 5;
+```
+
+Se va una fila, la que cumple la condición. Y la versión sin condición:
+
+```sql
+DELETE FROM cliente;
+```
+
+::: {.error-caso}
+### DELETE sin WHERE
+[Riesgo]{.etiqueta}
+
+Vacía la tabla completa, sin aviso. La tabla sigue existiendo, con sus columnas y restricciones, pero
+sin ninguna fila. La misma precaución que con `UPDATE`: primero el `SELECT` con ese `WHERE`, después
+el `DELETE`.
+:::
+
+Las claves foráneas también intervienen aquí. Si intentaras borrar a Ana, `id_cliente = 1`, el motor
+se negaría, porque los pedidos 101 y 103 la referencian y quedarían apuntando a un cliente que ya no
+existe. Para borrar a Ana tendrías que borrar antes sus pedidos, y antes de eso las líneas de esos
+pedidos en `detalle_pedido`. La base de datos obliga a desmontar las relaciones en el orden inverso al
+que las construiste. Sara sí se pudo borrar porque ningún pedido la referencia.
+
+::: {.callout-tip}
+## Ejercicio 21.1
+
+Escribe las sentencias necesarias, en el orden correcto, para eliminar por completo el pedido 102 y
+todo lo que depende de él.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución
+
+```sql
+DELETE FROM detalle_pedido WHERE id_pedido = 102;
+DELETE FROM pedido WHERE id_pedido = 102;
+```
+
+Primero las líneas, que referencian al pedido; después el pedido. Al revés, la primera sentencia
+fallaría por la clave foránea de `detalle_pedido`.
+:::
+
+## Quinta parte. Recorrer las relaciones
+
+### Etapa 22. Volver al modelo
+
+Hasta aquí cada consulta miró una sola tabla. Las preguntas reales cruzan varias. Por ejemplo: el
+nombre del cliente que hizo cada pedido. El nombre está en `cliente`; el pedido, en `pedido`. Antes
+de escribir nada, responde dos preguntas con el modelo a la vista: qué tablas necesitas, y qué
+columnas las conectan. Necesitas `cliente` y `pedido`, y las conecta `id_cliente`: clave primaria en
+la primera, clave foránea en la segunda. Esa columna compartida es la que permite combinar las dos.
+
+### Etapa 23. El primer JOIN
+
+Mira las dos tablas fila por fila. Cada fila de `pedido` trae un `id_cliente`; ese valor apunta a
+exactamente una fila de `cliente`. Combinar las dos tablas es seguir esa flecha para cada fila:
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tabla de verdad de AND, OR y NOT sobre dos condiciones A y B: AND es verdadero solo cuando A y B son verdaderas a la vez, OR es verdadero cuando al menos una lo es, y NOT invierte el valor de una sola condición" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">AND exige las dos condiciones, OR exige al menos una</text>
-  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="32" width="330" height="120" rx="8"/><rect x="400" y="32" width="330" height="120" rx="8"/></g>
-  <text x="195" y="52" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">A AND B</text>
-  <g font-size="11" fill="#12324f" text-anchor="middle"><text x="90" y="76">A</text><text x="150" y="76">B</text><text x="240" y="76">Resultado</text></g>
-  <g font-size="11" fill="#5b6876" text-anchor="middle">
-    <text x="90" y="96">verdadero</text><text x="150" y="96">verdadero</text><text x="240" y="96" fill="#0e6f6c" font-weight="700">verdadero</text>
-    <text x="90" y="114">verdadero</text><text x="150" y="114">falso</text><text x="240" y="114">falso</text>
-    <text x="90" y="132">falso</text><text x="150" y="132">verdadero</text><text x="240" y="132">falso</text>
+<svg viewBox="0 0 1000 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres filas de pedido, con id_cliente 1, 2 y 1, conectadas por flechas a las filas de cliente Ana y Carlos; a la derecha, el resultado combinado: pedido 101 Ana, 102 Carlos, 103 Ana" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="g3s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+    <marker id="g3f" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"/></marker>
+  </defs>
+  <text x="40" y="52" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">pedido</text>
+  <g filter="url(#g3s)"><rect x="40" y="62" width="330" height="200" rx="14" fill="#ffffff" stroke="#d6e3f3"/></g>
+  <rect x="40" y="62" width="330" height="40" rx="14" fill="#e3eefb"/>
+  <rect x="40" y="84" width="330" height="18" fill="#e3eefb"/>
+  <g font-size="13" font-weight="700" fill="#1b2a41">
+    <text x="62" y="88">id_pedido</text><text x="160" y="88">fecha</text><text x="270" y="88" fill="#5442b3">id_cliente</text>
   </g>
-  <text x="565" y="52" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">A OR B</text>
-  <g font-size="11" fill="#12324f" text-anchor="middle"><text x="460" y="76">A</text><text x="520" y="76">B</text><text x="610" y="76">Resultado</text></g>
-  <g font-size="11" fill="#5b6876" text-anchor="middle">
-    <text x="460" y="96">verdadero</text><text x="520" y="96">falso</text><text x="610" y="96" fill="#0e6f6c" font-weight="700">verdadero</text>
-    <text x="460" y="114">falso</text><text x="520" y="114">verdadero</text><text x="610" y="114" fill="#0e6f6c" font-weight="700">verdadero</text>
-    <text x="460" y="132">falso</text><text x="520" y="132">falso</text><text x="610" y="132">falso</text>
+  <line x1="40" y1="102" x2="370" y2="102" stroke="#c9dcf3"/>
+  <line x1="40" y1="155" x2="370" y2="155" stroke="#edf2f8"/>
+  <line x1="40" y1="208" x2="370" y2="208" stroke="#edf2f8"/>
+  <g font-size="14" fill="#1b2a41">
+    <text x="62" y="134">101</text><text x="160" y="134">20/09</text><text x="270" y="134" font-weight="700" fill="#5442b3">1</text>
+    <text x="62" y="187">102</text><text x="160" y="187">21/09</text><text x="270" y="187" font-weight="700" fill="#5442b3">2</text>
+    <text x="62" y="240">103</text><text x="160" y="240">21/09</text><text x="270" y="240" font-weight="700" fill="#5442b3">1</text>
+  </g>
+  <text x="470" y="52" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">cliente</text>
+  <g filter="url(#g3s)"><rect x="470" y="62" width="230" height="147" rx="14" fill="#ffffff" stroke="#d6e3f3"/></g>
+  <rect x="470" y="62" width="230" height="40" rx="14" fill="#e3eefb"/>
+  <rect x="470" y="84" width="230" height="18" fill="#e3eefb"/>
+  <g font-size="13" font-weight="700" fill="#1b2a41">
+    <text x="492" y="88">id_cliente</text><text x="610" y="88">nombre</text>
+  </g>
+  <line x1="470" y1="102" x2="700" y2="102" stroke="#c9dcf3"/>
+  <line x1="470" y1="155" x2="700" y2="155" stroke="#edf2f8"/>
+  <g font-size="14" fill="#1b2a41">
+    <text x="492" y="134" font-weight="700">1</text><text x="610" y="134">Ana</text>
+    <text x="492" y="187" font-weight="700">2</text><text x="610" y="187">Carlos</text>
+  </g>
+  <line x1="370" y1="122" x2="470" y2="122" stroke="#7c6ad8" stroke-width="2" marker-end="url(#g3f)"/>
+  <line x1="370" y1="181" x2="470" y2="181" stroke="#7c6ad8" stroke-width="2" marker-end="url(#g3f)"/>
+  <path d="M370,234 L410,234 L410,138 L470,138" fill="none" stroke="#7c6ad8" stroke-width="2" stroke-linejoin="round" marker-end="url(#g3f)"/>
+  <text x="780" y="52" font-size="13" font-weight="700" fill="#1e7c66" font-family="Consolas, monospace">resultado</text>
+  <g filter="url(#g3s)"><rect x="780" y="62" width="200" height="200" rx="14" fill="#ffffff" stroke="#bfe7db"/></g>
+  <rect x="780" y="62" width="200" height="40" rx="14" fill="#e1f5ef"/>
+  <rect x="780" y="84" width="200" height="18" fill="#e1f5ef"/>
+  <g font-size="13" font-weight="700" fill="#1b2a41">
+    <text x="800" y="88">pedido</text><text x="890" y="88">cliente</text>
+  </g>
+  <line x1="780" y1="102" x2="980" y2="102" stroke="#bfe7db"/>
+  <line x1="780" y1="155" x2="980" y2="155" stroke="#edf2f8"/>
+  <line x1="780" y1="208" x2="980" y2="208" stroke="#edf2f8"/>
+  <g font-size="14" fill="#1b2a41">
+    <text x="800" y="134">101</text><text x="890" y="134">Ana</text>
+    <text x="800" y="187">102</text><text x="890" y="187">Carlos</text>
+    <text x="800" y="240">103</text><text x="890" y="240">Ana</text>
+  </g>
+  <text x="500" y="305" text-anchor="middle" font-size="14" fill="#4a5b70">cada fila de pedido se empareja con la fila de cliente que tiene el mismo id_cliente</text>
+</svg>
+
+:::
+
+En SQL, esa operación es `JOIN`:
+
+```sql
+SELECT pedido.id_pedido,
+       cliente.nombre
+FROM pedido
+JOIN cliente
+  ON pedido.id_cliente = cliente.id_cliente;
+```
+
+| id_pedido | nombre |
+|---:|---|
+| 101 | Ana |
+| 102 | Carlos |
+| 103 | Ana |
+
+Léela por partes. `FROM pedido JOIN cliente` combina las dos tablas. `ON pedido.id_cliente =
+cliente.id_cliente` es la condición de emparejamiento: una fila de `pedido` se une con la fila de
+`cliente` cuyo `id_cliente` coincide. Como las dos tablas tienen una columna llamada `id_cliente`, el
+nombre solo sería ambiguo; por eso se escribe `tabla.columna`. En `SELECT` puedes pedir columnas de
+cualquiera de las dos tablas.
+
+El resultado tiene tres filas, una por cada pedido, porque cada pedido se empareja con exactamente un
+cliente. Ana aparece dos veces, una por cada uno de sus pedidos: `JOIN` no elimina repetidos, produce
+una fila por cada pareja que cumple la condición. Y la idea central: `JOIN` no inventa conexiones,
+sigue las relaciones que diseñaste en el modelo. La condición del `ON` es siempre clave foránea igual
+a clave primaria.
+
+### Etapa 24. Producto y categoría, con alias
+
+Aplica el mismo patrón a la otra relación 1:N. Muestra el nombre del producto, su precio y el nombre
+de su categoría.
+
+::: {.callout-note collapse="true"}
+## Solución
+
+```sql
+SELECT producto.nombre,
+       producto.precio,
+       categoria.nombre
+FROM producto
+JOIN categoria
+  ON producto.id_categoria = categoria.id_categoria;
+```
+
+Dos tablas, unidas por `id_categoria`. Es el mismo patrón del `JOIN` anterior.
+:::
+
+Escribir `producto.` y `categoria.` delante de cada columna cansa rápido, y el resultado tiene dos
+columnas llamadas `nombre` que no se distinguen. Los *alias* resuelven las dos cosas: un nombre corto
+para cada tabla, válido dentro de la consulta, y un nombre claro para la columna del resultado:
+
+```sql
+SELECT p.nombre,
+       p.precio,
+       c.nombre AS categoria
+FROM producto p
+JOIN categoria c
+  ON p.id_categoria = c.id_categoria;
+```
+
+| nombre | precio | categoria |
+|---|---:|---|
+| Mouse | 95000 | Periféricos |
+| Monitor | 900000 | Pantallas |
+| Teclado | 150000 | Periféricos |
+| Cámara | 500000 | Fotografía |
+
+`producto p` declara el alias `p` para la tabla; a partir de ahí, `p.nombre` es `producto.nombre`. El
+Mouse aparece a 95.000 porque el `UPDATE` de la etapa 20 ya se ejecutó. Un alias se elige una vez en el
+`FROM` o en el `JOIN` y se usa en todas las demás cláusulas, incluidas `WHERE` y `ORDER BY`.
+
+### Etapa 25. La consulta que une todo
+
+¿Qué productos compró cada cliente? El nombre del cliente está en `cliente`; el nombre del producto,
+en `producto`. Entre las dos no hay relación directa: el camino pasa por `pedido` y por
+`detalle_pedido`. Antes de escribir SQL, dibuja el camino en el modelo:
+
+::: {.diagrama}
+
+<svg viewBox="0 0 1000 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Camino de cuatro tablas: cliente, pedido, detalle_pedido y producto, unidas por flechas rotuladas con la columna que las conecta: id_cliente, id_pedido, id_producto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="g4s" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+    <marker id="g4f" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"/></marker>
+  </defs>
+  <g filter="url(#g4s)">
+    <rect x="20" y="40" width="180" height="60" rx="14" fill="#e3eefb"/>
+    <rect x="290" y="40" width="180" height="60" rx="14" fill="#e3eefb"/>
+    <rect x="560" y="40" width="200" height="60" rx="14" fill="#ede9fb"/>
+    <rect x="850" y="40" width="130" height="60" rx="14" fill="#e3eefb"/>
+  </g>
+  <g font-size="16" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace" text-anchor="middle">
+    <text x="110" y="76">cliente</text>
+    <text x="380" y="76">pedido</text>
+    <text x="660" y="76" fill="#5442b3">detalle_pedido</text>
+    <text x="915" y="76">producto</text>
+  </g>
+  <line x1="200" y1="70" x2="282" y2="70" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#g4f)"/>
+  <line x1="470" y1="70" x2="552" y2="70" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#g4f)"/>
+  <line x1="760" y1="70" x2="842" y2="70" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#g4f)"/>
+  <g font-size="12.5" fill="#5442b3" font-weight="700" font-family="Consolas, monospace" text-anchor="middle">
+    <text x="245" y="126">id_cliente</text>
+    <text x="515" y="126">id_pedido</text>
+    <text x="805" y="126">id_producto</text>
   </g>
 </svg>
 
 :::
 
-::: {.callout-tip}
-## Practica 4. Combina dos condiciones
+Cuatro tablas, tres flechas, y cada flecha es un `JOIN` con su condición:
 
-Escribe la consulta que muestra los pedidos cuyo cliente es `'Luis Pena'` o cuyo `valor` sea mayor a
-`20000`.
+```sql
+SELECT c.nombre   AS cliente,
+       p.nombre   AS producto,
+       d.cantidad
+FROM cliente c
+JOIN pedido pe
+  ON c.id_cliente = pe.id_cliente
+JOIN detalle_pedido d
+  ON pe.id_pedido = d.id_pedido
+JOIN producto p
+  ON d.id_producto = p.id_producto;
+```
+
+| cliente | producto | cantidad |
+|---|---|---:|
+| Ana | Mouse | 2 |
+| Ana | Teclado | 1 |
+| Carlos | Monitor | 1 |
+| Ana | Cámara | 1 |
+| Ana | Mouse | 1 |
+
+No es una consulta enorme: es el camino del diagrama, un `JOIN` por cada flecha. Los `JOIN` se
+encadenan, cada uno agrega una tabla más al conjunto y la conecta con alguna de las anteriores. El
+resultado tiene cinco filas porque `detalle_pedido` tiene cinco líneas: es la tabla más detallada del
+camino, y el resultado hereda su granularidad. Ana compró Mouse dos veces en pedidos distintos, y por
+eso aparece en dos filas.
+
+Cuando una consulta de varios `JOIN` no te sale, vuelve a este método: marca en el modelo las tablas
+donde están las columnas que quieres mostrar, traza el camino que las une, y escribe un `JOIN` por
+cada tramo.
+
+::: {.callout-tip}
+## Ejercicio 25.1
+
+Muestra, para cada línea de pedido, la fecha del pedido, el nombre del producto y el nombre de su
+categoría. Dibuja primero el camino.
 :::
 
 ::: {.callout-note collapse="true"}
-## Solución de la Practica 4
+## Solución
+
+El camino es `pedido`, `detalle_pedido`, `producto`, `categoria`. Tres `JOIN`:
 
 ```sql
-SELECT * FROM PedidoPlano
-WHERE cliente = 'Luis Pena' OR valor > 20000;
+SELECT pe.fecha,
+       p.nombre  AS producto,
+       c.nombre  AS categoria
+FROM pedido pe
+JOIN detalle_pedido d ON pe.id_pedido = d.id_pedido
+JOIN producto p       ON d.id_producto = p.id_producto
+JOIN categoria c      ON p.id_categoria = c.id_categoria;
 ```
-
-El resultado trae el pedido 1002, la torta de Ana con `valor = 23400`, y el pedido 1003, el café de
-Luis Pena, cada uno porque cumple una de las dos condiciones, no las dos a la vez.
 :::
 
-Tres operadores más resuelven casos frecuentes sin encadenar varios `OR`. `BETWEEN` prueba que un
-valor caiga dentro de un rango, incluyendo los dos extremos. `IN` prueba que un valor esté dentro de
-una lista concreta, en vez de escribir un `OR` por cada valor posible. `LIKE` busca un patrón de texto
-en vez de una igualdad exacta, usando `%` para cualquier cantidad de caracteres, incluyendo cero, y
-`_` para exactamente un carácter.
+## Sexta parte. Resumir
+
+### Etapa 26. Preguntas de una sola cifra
+
+Hay preguntas cuya respuesta no es un conjunto de filas sino un número: cuántos productos hay, cuál
+es el precio promedio, cuál es el más caro. Las responden las *funciones de agregación*, que toman
+todas las filas y devuelven un solo valor:
 
 ```sql
-SELECT * FROM PedidoPlano WHERE valor BETWEEN 4000 AND 10000;
-
-SELECT * FROM PedidoPlano WHERE producto IN ('Café', 'Torta');
-
-SELECT * FROM PedidoPlano WHERE cliente LIKE 'Ana%';
-SELECT * FROM PedidoPlano WHERE telefono LIKE '300 111 22__';
+SELECT COUNT(*) FROM producto;
 ```
 
-::: {.diagrama}
+| count |
+|---:|
+| 4 |
 
-<svg viewBox="0 0 760 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El comodín porcentaje reemplaza cualquier cantidad de caracteres, incluyendo cero, y el patron Ana porcentaje coincide con Ana Ruiz; el comodin guion bajo reemplaza exactamente un caracter, y el patron 300 111 22 con dos guiones bajos coincide con 300 111 2233" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Dos comodines de LIKE, cero o más caracteres contra exactamente uno</text>
-  <rect x="30" y="32" width="330" height="110" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
-  <text x="195" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">% reemplaza cero o más caracteres</text>
-  <text x="195" y="78" font-size="11.5" fill="#12324f" text-anchor="middle">patrón: 'Ana%'</text>
-  <text x="195" y="98" font-size="11.5" fill="#12324f" text-anchor="middle">coincide: 'Ana Ruiz'</text>
-  <text x="195" y="120" font-size="10.5" fill="#5b6876" text-anchor="middle">no coincide: 'Luis Pena'</text>
-  <rect x="400" y="32" width="330" height="110" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
-  <text x="565" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">_ reemplaza exactamente un carácter</text>
-  <text x="565" y="78" font-size="11.5" fill="#12324f" text-anchor="middle">patrón: '300 111 22__'</text>
-  <text x="565" y="98" font-size="11.5" fill="#12324f" text-anchor="middle">coincide: '300 111 2233'</text>
-  <text x="565" y="120" font-size="10.5" fill="#5b6876" text-anchor="middle">no coincide: '300 111 223' (le falta un dígito)</text>
-</svg>
+```sql
+SELECT AVG(precio) FROM producto;
+```
 
-:::
+| avg |
+|---:|
+| 411250 |
+
+```sql
+SELECT MAX(precio) FROM producto;
+```
+
+| max |
+|---:|
+| 900000 |
+
+Las cinco funciones son estas:
+
+| Función | Devuelve |
+|---|---|
+| `COUNT(*)` | Cuántas filas hay |
+| `COUNT(columna)` | Cuántas filas tienen esa columna no vacía |
+| `SUM(columna)` | La suma |
+| `AVG(columna)` | El promedio |
+| `MIN(columna)` | El valor más pequeño |
+| `MAX(columna)` | El valor más grande |
+
+`COUNT(*)` cuenta filas; `COUNT(ciudad)` cuenta solo las filas cuya ciudad no es `NULL`. Si dos
+clientes se registraron sin ciudad, `COUNT(*)` da 5 y `COUNT(ciudad)` da 3. Las demás funciones
+también ignoran los `NULL`: `AVG(precio)` promedia solo los productos que tienen precio.
+
+Las funciones se combinan con `WHERE`, que filtra antes de agregar, y con `AS`, que nombra el
+resultado:
+
+```sql
+SELECT COUNT(*) AS perifericos, SUM(stock) AS unidades
+FROM producto
+WHERE id_categoria = 1;
+```
+
+| perifericos | unidades |
+|---:|---:|
+| 2 | 35 |
+
+### Etapa 27. Agrupar
+
+¿Cuántos clientes hay en cada ciudad? La pregunta pide una cifra, pero no una sola: una por ciudad.
+Mira los datos: Ana y Juan son de Medellín; Carlos y Sara, de Bogotá; Laura, de Cali. Primero se
+agrupan las filas por ciudad; después se cuenta dentro de cada grupo. En SQL esa primera operación es
+`GROUP BY`:
+
+```sql
+SELECT ciudad,
+       COUNT(*) AS cantidad
+FROM cliente
+GROUP BY ciudad;
+```
+
+| ciudad | cantidad |
+|---|---:|
+| Medellín | 2 |
+| Bogotá | 2 |
+| Cali | 1 |
+
+`GROUP BY ciudad` reúne en un solo grupo todas las filas que comparten ciudad, y a partir de ahí cada
+función de agregación se calcula por grupo, no sobre la tabla completa. El resultado tiene una fila por
+grupo. Hay una regla estricta: en el `SELECT` de una consulta con `GROUP BY` solo pueden aparecer las
+columnas por las que agrupas y funciones de agregación. `SELECT nombre, ciudad, COUNT(*) ... GROUP BY
+ciudad` es un error, porque dentro del grupo Medellín hay dos nombres y el motor no sabe cuál mostrar.
+
+La palabra que delata al `GROUP BY` es "por cada": ventas por producto, clientes por ciudad, pedidos
+por estado. Cuando la pregunta la contenga, agrupa.
+
+Para filtrar los grupos ya formados existe `HAVING`. `WHERE` filtra filas antes de agrupar; `HAVING`
+filtra grupos después, y por eso puede usar funciones de agregación:
+
+```sql
+SELECT ciudad, COUNT(*) AS cantidad
+FROM cliente
+GROUP BY ciudad
+HAVING COUNT(*) > 1;
+```
+
+| ciudad | cantidad |
+|---|---:|
+| Medellín | 2 |
+| Bogotá | 2 |
 
 ::: {.callout-tip}
-## Practica 5. Escribe un patrón con `LIKE`
+## Ejercicio 27.1
 
-Escribe la consulta que muestra los pedidos cuyo `producto` termina en la letra `a`, usando `LIKE`.
+Cuántos pedidos hay en cada estado, y cuántos productos hay en cada categoría (muestra el
+identificador de la categoría).
 :::
 
 ::: {.callout-note collapse="true"}
-## Solución de la Practica 5
+## Solución
 
 ```sql
-SELECT * FROM PedidoPlano WHERE producto LIKE '%a';
+SELECT estado, COUNT(*) AS pedidos
+FROM pedido
+GROUP BY estado;
+
+SELECT id_categoria, COUNT(*) AS productos
+FROM producto
+GROUP BY id_categoria;
 ```
 
-El resultado trae el pedido 1002, `Torta`, el único producto de los cuatro que termina en `a`. `Café`
-termina en `é`, `Jugo` termina en `o`.
+La primera devuelve pendiente 1, pagado 2. La segunda, categoría 1 con 2 productos, y categorías 2 y 3
+con 1 cada una. Para mostrar el nombre de la categoría en vez del identificador, combina el `GROUP BY`
+con un `JOIN` a `categoria`, como en la etapa siguiente.
 :::
 
-## El valor que no es ningún valor, `NULL`
+### Etapa 28. La misión final
 
-Hasta ahora ninguna columna de `PedidoPlano` admite ausencia de dato, pero en la práctica casi toda
-tabla real tiene columnas que a veces no aplican. Imagina que la cafetería agrega un descuento
-opcional por pedido, que no todos los pedidos tienen. `ALTER TABLE` modifica una tabla que ya existe
-sin borrar sus datos, y `ADD COLUMN`, dentro de esa misma sentencia, le agrega una columna nueva con
-su propio tipo de dato, exactamente como si fuera una columna más de un `CREATE TABLE`.
+Gerencia quiere conocer los tres productos que más dinero han vendido. Es la pregunta más elaborada
+del tema, y se resuelve sin escribir nada todavía, respondiendo cinco preguntas en orden:
 
-```sql
-ALTER TABLE PedidoPlano ADD COLUMN descuento DECIMAL(10,2);
+1. ¿Qué tablas hacen falta? El nombre está en `producto`; lo vendido, en `detalle_pedido`.
+2. ¿Cuánto produjo cada línea? `cantidad * precio_unitario`.
+3. ¿Qué columna conecta las dos tablas? `id_producto`.
+4. ¿Qué significa "por producto"? `GROUP BY`.
+5. ¿Qué significa "los tres que más"? `ORDER BY ... DESC LIMIT 3`.
 
-UPDATE PedidoPlano SET descuento = 500 WHERE pedido = 1002;
-```
-
-La segunda línea ya usa `UPDATE`, la sentencia que vas a estudiar completa más adelante en este mismo
-tema, pero conviene entender desde ya sus tres piezas porque la vas a necesitar de inmediato. `UPDATE`
-nombra la tabla que vas a modificar, `PedidoPlano`. `SET` nombra la columna que cambia y, después del
-signo igual, el valor nuevo que le vas a asignar, aquí `descuento = 500`. Y `WHERE`, la misma cláusula
-que ya conoces de `SELECT`, filtra a cuáles filas se les aplica ese cambio, en este caso solo a la fila
-del pedido 1002.
-
-Después de estas dos sentencias, la columna `descuento` vale `500` en el pedido 1002 y `NULL` en los
-otros tres, porque toda columna nueva empieza en `NULL` para las filas que ya existían, a menos que se
-le dé explícitamente un valor. `NULL` no es cero, no es una cadena vacía, es la ausencia total de
-valor, y esa diferencia importa apenas empiezas a filtrar por esa columna.
+Cada respuesta es una pieza de la consulta:
 
 ```sql
-SELECT * FROM PedidoPlano WHERE descuento = NULL;
+SELECT p.nombre,
+       SUM(d.cantidad * d.precio_unitario) AS ventas
+FROM producto p
+JOIN detalle_pedido d
+  ON p.id_producto = d.id_producto
+GROUP BY p.id_producto, p.nombre
+ORDER BY ventas DESC
+LIMIT 3;
 ```
 
-Esta consulta no falla, pero devuelve cero filas, incluso para el pedido 1002 que sí tiene descuento.
-`NULL` representa un valor desconocido, y SQL nunca compara dos desconocidos como iguales entre sí, ni
-siquiera cuando comparas `NULL` contra sí mismo, así que `=` con `NULL` no es verdadero ni falso, es
-un tercer resultado, desconocido, y una fila con resultado desconocido no pasa el filtro de `WHERE`.
-La forma correcta de preguntar por ausencia de valor son los operadores `IS NULL` e `IS NOT NULL`, que
-sí entienden esa diferencia.
+| nombre | ventas |
+|---|---:|
+| Monitor | 900000 |
+| Cámara | 500000 |
+| Mouse | 240000 |
 
-```sql
-SELECT * FROM PedidoPlano WHERE descuento IS NULL;
-SELECT * FROM PedidoPlano WHERE descuento IS NOT NULL;
-```
+Verifícalo a mano. El Mouse se vendió dos unidades en el pedido 101 y una en el 103, siempre a
+80.000: 240.000. El Teclado, una unidad a 150.000, queda en cuarto lugar y `LIMIT 3` lo deja fuera.
+Observa que el `GROUP BY` incluye `p.id_producto` además de `p.nombre`: agrupar por el identificador
+garantiza que dos productos distintos con el mismo nombre no se sumen juntos.
 
-::: {.diagrama}
-
-<svg viewBox="0 0 760 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion con NULL: descuento igual a NULL da como resultado desconocido para las cuatro filas, incluida la del pedido 1002 que si tiene 500 de descuento, y ninguna fila pasa el filtro; descuento IS NULL si distingue correctamente, dejando pasar las tres filas sin descuento" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">NULL nunca es igual a nada, ni a otro NULL</text>
-  <rect x="30" y="32" width="330" height="112" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
-  <text x="195" y="54" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">descuento = NULL</text>
-  <text x="195" y="76" font-size="11" fill="#5b6876" text-anchor="middle">para las cuatro filas, el resultado</text>
-  <text x="195" y="92" font-size="11" fill="#5b6876" text-anchor="middle">de la comparación es desconocido</text>
-  <text x="195" y="114" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">0 filas devueltas</text>
-  <rect x="400" y="32" width="330" height="112" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
-  <text x="565" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">descuento IS NULL</text>
-  <text x="565" y="76" font-size="11" fill="#3c7d7a" text-anchor="middle">pregunta directamente por la</text>
-  <text x="565" y="92" font-size="11" fill="#3c7d7a" text-anchor="middle">ausencia de valor, sin comparar</text>
-  <text x="565" y="114" font-size="11" font-weight="600" fill="#0e6f6c" text-anchor="middle">3 filas devueltas (1001, 1003, 1004)</text>
-</svg>
-
-:::
+Esta consulta usa todo lo del tema: un `JOIN` que sigue una relación del modelo, una operación
+aritmética, una función de agregación, un `GROUP BY`, un alias y un `ORDER BY` con `LIMIT`. Cada línea
+responde a una de las cinco preguntas.
 
 ::: {.callout-tip}
-## Practica 6. Filtra por ausencia de valor
+## Ejercicio 28.1
 
-Escribe la consulta que muestra el pedido, el cliente y el descuento de cada fila cuyo `descuento`
-todavía no se ha definido.
+Cuánto ha gastado cada cliente en total, del que más al que menos. Responde primero las cinco
+preguntas del método.
 :::
 
 ::: {.callout-note collapse="true"}
-## Solución de la Practica 6
+## Solución
+
+Tablas: `cliente`, `pedido` y `detalle_pedido`. Cada línea vale `cantidad * precio_unitario`. Camino:
+`cliente` a `pedido` por `id_cliente`, `pedido` a `detalle_pedido` por `id_pedido`. "Por cliente":
+`GROUP BY`. "Del que más al que menos": `ORDER BY ... DESC`.
 
 ```sql
-SELECT pedido, cliente, descuento FROM PedidoPlano WHERE descuento IS NULL;
+SELECT c.nombre,
+       SUM(d.cantidad * d.precio_unitario) AS total
+FROM cliente c
+JOIN pedido pe        ON c.id_cliente = pe.id_cliente
+JOIN detalle_pedido d ON pe.id_pedido = d.id_pedido
+GROUP BY c.id_cliente, c.nombre
+ORDER BY total DESC;
 ```
 
-Trae los pedidos 1001, 1003 y 1004, los tres sin descuento asignado. El pedido 1002, con
-`descuento = 500`, queda fuera porque su descuento sí está definido.
+Ana, 890.000 (160.000 + 150.000 + 500.000 + 80.000); Carlos, 900.000. Carlos queda primero. Laura,
+Juan y Sara no aparecen, porque un `JOIN` solo produce filas para los clientes que tienen pedidos.
 :::
 
-## Ordenar con `ORDER BY`
+## El orden en que el motor lee una consulta
 
-Ninguna de las consultas anteriores garantiza un orden concreto en las filas que devuelve, un motor
-real puede regresarlas en el orden que le resulte más eficiente internamente. `ORDER BY` fija un
-orden explícito, ascendente con `ASC`, que es el que se usa si no se escribe nada, o descendente con
-`DESC`. Se puede ordenar por más de una columna, y la segunda solo decide el orden entre filas que
-empataron en la primera.
+Una consulta se escribe en un orden y se evalúa en otro. Conocer el orden real explica varias reglas
+que de otro modo parecen caprichos:
+
+| Orden de evaluación | Cláusula | Qué hace |
+|---:|---|---|
+| 1 | `FROM` y `JOIN` | Reúne las tablas y las combina |
+| 2 | `WHERE` | Descarta filas |
+| 3 | `GROUP BY` | Forma los grupos |
+| 4 | `HAVING` | Descarta grupos |
+| 5 | `SELECT` | Elige columnas y calcula expresiones |
+| 6 | `ORDER BY` | Ordena el resultado |
+| 7 | `LIMIT` | Corta el resultado |
+
+De aquí salen tres consecuencias. `WHERE` no puede usar funciones de agregación, porque se evalúa
+antes de que existan los grupos; para eso está `HAVING`. Un alias definido en `SELECT` no puede usarse
+en `WHERE`, porque `WHERE` corre antes; sí puede usarse en `ORDER BY`, que corre después, y por eso
+`ORDER BY ventas DESC` funcionó en la misión final. Y `LIMIT` corta al final, sobre las filas ya
+ordenadas, lo que explica por qué sin `ORDER BY` devuelve filas arbitrarias.
+
+## Referencia rápida
 
 ```sql
-SELECT * FROM PedidoPlano ORDER BY valor DESC;
+-- Estructura
+CREATE TABLE tabla (
+    columna  TIPO [PRIMARY KEY | NOT NULL | UNIQUE],
+    ...,
+    PRIMARY KEY (columna, columna),
+    FOREIGN KEY (columna) REFERENCES otra_tabla(columna)
+);
+ALTER TABLE tabla ADD COLUMN columna TIPO;
+DROP TABLE tabla;
 
-SELECT * FROM PedidoPlano ORDER BY cliente ASC, valor DESC;
+-- Datos
+INSERT INTO tabla (col1, col2) VALUES (v1, v2), (v1, v2);
+UPDATE tabla SET col1 = valor WHERE condicion;
+DELETE FROM tabla WHERE condicion;
+
+-- Consulta
+SELECT [DISTINCT] columnas | funciones [AS alias]
+FROM tabla [alias]
+[JOIN otra [alias] ON tabla.fk = otra.pk]
+[WHERE condicion]
+[GROUP BY columnas]
+[HAVING condicion_sobre_grupos]
+[ORDER BY columna [ASC | DESC]]
+[LIMIT n];
 ```
 
-Cuando además de ordenar quieres quedarte solo con las primeras filas, `LIMIT` recorta el resultado a
-un número máximo de filas, y `OFFSET` salta un número de filas antes de empezar a contar. Las dos
-juntas resuelven una pregunta frecuente, cuál es el pedido de mayor valor.
-
-```sql
-SELECT * FROM PedidoPlano ORDER BY valor DESC LIMIT 1;
-```
-
-`LIMIT` y `OFFSET` no son parte del núcleo del estándar ISO/IEC 9075, aunque casi todos los motores
-los implementan con ese mismo nombre. La forma que sí es estándar es `FETCH FIRST n ROWS ONLY`,
-opcional con `OFFSET m ROWS` antes, y hace exactamente lo mismo.
-
-```sql
-SELECT * FROM PedidoPlano ORDER BY valor DESC FETCH FIRST 1 ROWS ONLY;
-```
-
-::: {.callout-tip}
-## Practica 7. Ordena y limita
-
-Escribe la consulta que muestra el pedido y el producto de los dos pedidos de menor valor, del más
-barato al segundo más barato.
-:::
-
-::: {.callout-note collapse="true"}
-## Solución de la Practica 7
-
-```sql
-SELECT pedido, producto FROM PedidoPlano ORDER BY valor ASC FETCH FIRST 2 ROWS ONLY;
-```
-
-Trae el pedido 1001 y el 1003, los dos con `Café` a `4500`, el valor más bajo de la tabla, empatado
-entre los dos.
-:::
-
-## Funciones de agregación, un número que resume varias filas
-
-Hasta aquí cada consulta devuelve un conjunto de filas. Una función de agregación en cambio recibe
-varias filas y devuelve un solo número que las resume, `COUNT` cuenta filas, `SUM` suma una columna
-numérica, `AVG` calcula el promedio, y `MIN` y `MAX` devuelven el valor más pequeño y el más grande.
-
-```sql
-SELECT COUNT(*) FROM PedidoPlano;
-SELECT SUM(valor) FROM PedidoPlano;
-SELECT AVG(valor) FROM PedidoPlano;
-SELECT MIN(valor), MAX(valor) FROM PedidoPlano;
-```
-
-Estas cinco funciones, usadas solas como arriba, resumen la tabla completa en una sola fila de
-resultado. La Unidad 4 de este curso retoma exactamente estas mismas funciones junto con `GROUP BY`,
-que en vez de un solo resumen de toda la tabla arma un resumen por grupo, por ejemplo el total vendido
-de cada cliente en vez del total de todos los clientes junto. Hoy te quedas con el resumen completo,
-sin agrupar, porque `GROUP BY` y su cláusula compañera `HAVING` son contenido propio de esa unidad
-más adelante en el curso.
-
-::: {.callout-tip}
-## Practica 8. Calcula un resumen
-
-Escribe la consulta que devuelve, en una sola fila, cuántos pedidos tiene Ana Ruiz y cuánto suman
-entre todos, usando `WHERE` para quedarte solo con sus pedidos antes de agregar.
-:::
-
-::: {.callout-note collapse="true"}
-## Solución de la Practica 8
-
-```sql
-SELECT COUNT(*), SUM(valor) FROM PedidoPlano WHERE cliente = 'Ana Ruiz';
-```
-
-El motor primero aplica `WHERE`, se queda solo con los tres pedidos de Ana, y después agrega,
-`COUNT(*)` da `3` y `SUM(valor)` da `34700`, la suma de `4500 + 23400 + 6800`.
-:::
-
-## Corregir datos con `UPDATE`
-
-`UPDATE` modifica el valor de una o más columnas en las filas que cumplen una condición de `WHERE`.
-Retoma la primera pregunta que abrió toda la Unidad 1, Ana cambia de teléfono, y ahora tienes el
-comando exacto para corregirlo.
-
-```sql
-UPDATE PedidoPlano
-SET telefono = '300 999 8877'
-WHERE cliente = 'Ana Ruiz';
-```
-
-::: {.diagrama}
-
-<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes del UPDATE, las tres filas de Ana Ruiz muestran el telefono antiguo 300 111 2233; despues del UPDATE con WHERE cliente igual Ana Ruiz, las tres filas quedan actualizadas al telefono nuevo 300 999 8877 en una sola sentencia, sin tocar la fila de Luis Pena" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un solo UPDATE con WHERE corrige las tres filas de Ana a la vez</text>
-  <text x="195" y="36" font-size="11.5" font-weight="700" fill="#5b6876" text-anchor="middle">Antes</text>
-  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="30" y="44" width="330" height="34"/><rect x="30" y="78" width="330" height="34"/><rect x="30" y="112" width="330" height="34"/><rect x="30" y="146" width="330" height="34"/></g>
-  <g font-size="10.5" fill="#12324f"><text x="45" y="65">1001 Ana Ruiz</text><text x="230" y="65">300 111 2233</text></g>
-  <g font-size="10.5" fill="#12324f"><text x="45" y="99">1002 Ana Ruiz</text><text x="230" y="99">300 111 2233</text></g>
-  <g font-size="10.5" fill="#5b6876"><text x="45" y="133">1003 Luis Pena</text><text x="230" y="133">301 444 5566</text></g>
-  <g font-size="10.5" fill="#12324f"><text x="45" y="167">1004 Ana Ruiz</text><text x="230" y="167">300 111 2233</text></g>
-  <path d="M380,120 L400,120" fill="none" stroke="#8fb3d1" stroke-width="1.8"/>
-  <text x="565" y="36" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Después</text>
-  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="400" y="44" width="330" height="34"/><rect x="400" y="78" width="330" height="34"/><rect x="400" y="112" width="330" height="34"/><rect x="400" y="146" width="330" height="34"/></g>
-  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="65">1001 Ana Ruiz</text><text x="600" y="65">300 999 8877</text></g>
-  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="99">1002 Ana Ruiz</text><text x="600" y="99">300 999 8877</text></g>
-  <g font-size="10.5" fill="#5b6876"><text x="415" y="133">1003 Luis Pena</text><text x="600" y="133">301 444 5566 (sin cambio)</text></g>
-  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="167">1004 Ana Ruiz</text><text x="600" y="167">300 999 8877</text></g>
-</svg>
-
-:::
-
-Fíjate en algo importante para el resto del curso, este `UPDATE` corrigió las tres filas de Ana en una
-sola sentencia, sin que tengas que escribir tres `UPDATE` distintos ni acordarte de ninguno. Esa
-comodidad es al mismo tiempo la raíz del problema que vas a nombrar formalmente en el Tema 3, si el
-teléfono vive repetido en tres filas de una tabla que no tiene por qué guardarlo tres veces, corregirlo
-bien depende de que el `WHERE` capture exactamente las filas correctas, ni una fila de Ana sin tocar
-ni una fila de otro cliente tocada por error.
-
-::: {.callout-tip}
-## Practica 9. Aplica un descuento
-
-Escribe la sentencia `UPDATE` que asigna `descuento = 1000` al pedido 1002, la torta de Ana, sin
-tocar el descuento de ningún otro pedido.
-:::
-
-::: {.callout-note collapse="true"}
-## Solución de la Practica 9
-
-```sql
-UPDATE PedidoPlano
-SET descuento = 1000
-WHERE pedido = 1002;
-```
-
-`WHERE pedido = 1002` filtra por la llave más específica posible aquí, el número de pedido, así que
-esta vez solo se modifica una fila, sin riesgo de tocar por error otro pedido con el mismo cliente o
-el mismo producto.
-:::
-
-## Borrar filas con `DELETE`
-
-`DELETE` quita filas completas de la tabla, siempre filtradas por `WHERE`. Retoma la tercera pregunta
-de la Unidad 1, se anula el pedido 1003 y se borra la fila.
-
-```sql
-DELETE FROM PedidoPlano WHERE pedido = 1003;
-```
-
-::: {.diagrama}
-
-<svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DELETE FROM PedidoPlano WHERE pedido igual 1003 borra la fila completa de Luis Pena; con ella se pierde no solo el pedido, sino el unico registro que guardaba el nombre y el telefono de Luis Pena en toda la tabla, porque esta tabla plana no separa al cliente del pedido" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Borrar la fila del pedido borra también al único cliente que vivía solo ahí</text>
-  <rect x="30" y="34" width="700" height="34" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
-  <text x="50" y="55" font-size="11" fill="#5b6876">1001 Ana Ruiz</text><text x="230" y="55" font-size="11" fill="#5b6876">Café</text>
-  <rect x="30" y="70" width="700" height="34" rx="6" fill="#f9dede" stroke="#e0a9a9"/>
-  <text x="50" y="91" font-size="11" fill="#8a3a3a" text-decoration="line-through">1003 Luis Pena, 301 444 5566, Café</text>
-  <text x="480" y="91" font-size="10.5" fill="#8a3a3a" font-weight="700">borrada, se pierde todo</text>
-  <rect x="30" y="106" width="700" height="34" rx="6" fill="#f5f7fa" stroke="#cfd8e3"/>
-  <text x="50" y="127" font-size="11" fill="#5b6876">1004 Ana Ruiz</text><text x="230" y="127" font-size="11" fill="#5b6876">Jugo</text>
-</svg>
-
-:::
-
-Después de este `DELETE` no queda en ningún lado el nombre de Luis Pena ni su teléfono, porque esta
-tabla plana nunca separó al cliente del pedido, cada fila guarda las dos cosas juntas. Si Luis vuelve a
-pedir mañana, la cafetería tiene que volver a preguntarle su teléfono como si fuera la primera vez.
-Ese es exactamente el problema de borrado que la Unidad 1 planteó como pregunta abierta, y que el
-Tema 3 va a resolver formalmente separando `Cliente` en su propia tabla, para que borrar un pedido
-nunca borre, de paso, al cliente que lo hizo.
-
-`DELETE FROM PedidoPlano;`, sin ningún `WHERE`, borra las cuatro filas de una sola vez, porque una
-condición ausente no filtra nada, deja pasar toda fila. Ese es un error frecuente y costoso, y el
-Reto 2 de más abajo lo pone a prueba antes de que te pase con datos que sí importan.
-
-::: {.callout-tip}
-## Practica 10. Borra un pedido concreto
-
-Escribe la sentencia que borra únicamente el pedido 1004, el jugo de Ana, sin afectar sus otros dos
-pedidos.
-:::
-
-::: {.callout-note collapse="true"}
-## Solución de la Practica 10
-
-```sql
-DELETE FROM PedidoPlano WHERE pedido = 1004;
-```
-
-Igual que en la Practica 9, filtrar por `pedido`, el dato más específico de la fila, es lo que
-garantiza que la operación afecte a una sola fila y no a las tres de Ana.
-:::
-
-## Borrar una tabla completa, `DROP TABLE`
-
-`DELETE` borra filas, pero deja viva la tabla con su estructura, sus columnas y sus tipos de dato
-intactos. Cuando lo que necesitas borrar es la tabla entera, estructura y datos a la vez, la
-sentencia es otra, y pertenece al DDL en vez de al DML, `DROP TABLE`.
-
-```sql
-DROP TABLE PedidoPlano;
-```
-
-Después de ejecutar esta sentencia, `PedidoPlano` deja de existir por completo, no queda ni una
-columna ni una fila, y ninguna consulta futura puede referirse a ella hasta que la vuelvas a crear
-desde cero con `CREATE TABLE`. La diferencia entre `DELETE FROM PedidoPlano;` y
-`DROP TABLE PedidoPlano;` es exactamente la diferencia entre DML y DDL que viste al principio del
-tema, el primero vacía una tabla que sigue existiendo, el segundo hace desaparecer la tabla misma.
-Ninguna de las dos sentencias pide confirmación antes de ejecutarse, y ninguna se puede deshacer con
-un `ROLLBACK` una vez que ya se guardó de forma permanente, así que la misma disciplina de revisar dos
-veces antes de ejecutar que aplica a `UPDATE` y `DELETE` sin `WHERE` aplica todavía con más razón a
-`DROP TABLE` y a `DROP DATABASE`.
-
-## El orden en que un motor procesa tu consulta
-
-Una consulta con varias cláusulas se escribe en un orden fijo, `SELECT`, `FROM`, `WHERE`, `ORDER BY`,
-pero el motor no las ejecuta en ese mismo orden. Primero resuelve `FROM`, para saber de qué tabla
-parte. Después aplica `WHERE`, descartando las filas que no cumplen la condición. Solo entonces evalúa
-`SELECT`, eligiendo o calculando las columnas del resultado. Y al final aplica `ORDER BY` sobre ese
-resultado ya filtrado y proyectado.
-
-::: {.diagrama}
-
-<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Orden escrito de una consulta: SELECT, FROM, WHERE, ORDER BY; orden real de procesamiento del motor: primero FROM, despues WHERE, despues SELECT, y por ultimo ORDER BY, con flechas que muestran como el orden de ejecucion no coincide con el orden en que se escribe la sentencia" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <defs><marker id="sql1a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El orden en que escribes la consulta no es el orden en que el motor la resuelve</text>
-  <text x="380" y="40" font-size="11" fill="#5b6876" text-anchor="middle">Orden escrito</text>
-  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="50" width="150" height="40" rx="6"/><rect x="210" y="50" width="150" height="40" rx="6"/><rect x="390" y="50" width="150" height="40" rx="6"/><rect x="570" y="50" width="160" height="40" rx="6"/></g>
-  <g font-size="12" font-weight="700" fill="#12324f" text-anchor="middle"><text x="105" y="75">SELECT</text><text x="285" y="75">FROM</text><text x="465" y="75">WHERE</text><text x="650" y="75">ORDER BY</text></g>
-  <text x="380" y="112" font-size="11" fill="#0e6f6c" text-anchor="middle">Orden real de ejecución</text>
-  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="30" y="122" width="150" height="40" rx="6"/><rect x="210" y="122" width="150" height="40" rx="6"/><rect x="390" y="122" width="150" height="40" rx="6"/><rect x="570" y="122" width="160" height="40" rx="6"/></g>
-  <g font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle"><text x="105" y="147">1. FROM</text><text x="285" y="147">2. WHERE</text><text x="465" y="147">3. SELECT</text><text x="650" y="147">4. ORDER BY</text></g>
-  <path d="M285,90 L285,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1a)"/>
-  <path d="M465,90 L465,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1a)"/>
-  <path d="M105,90 C105,105 105,105 105,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="3 2" marker-end="url(#sql1a)"/>
-  <path d="M650,90 L650,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1a)"/>
-</svg>
-
-:::
-
-Ese orden real explica por qué un alias creado con `AS` en el `SELECT` no se puede usar todavía dentro
-del `WHERE` de esa misma consulta, en el estándar SQL, `WHERE` se resuelve antes de que el alias exista.
-La Unidad 4 amplía este mismo orden con dos cláusulas nuevas, `GROUP BY` y `HAVING`, que se ubican entre
-`WHERE` y `SELECT`, y que hoy quedan fuera del alcance de este tema.
-
-## Una consulta dentro de otra consulta
-
-El resultado de un `SELECT` puede usarse como valor de comparación dentro de otro `SELECT`, una técnica
-que se llama subconsulta. Sirve, por ejemplo, para comparar cada fila contra un resumen calculado de
-toda la tabla, en vez de contra un número fijo que tendrías que actualizar a mano cada vez que cambien
-los datos.
-
-```sql
-SELECT pedido, producto, valor
-FROM PedidoPlano
-WHERE valor > (SELECT AVG(valor) FROM PedidoPlano);
-```
-
-El motor primero resuelve la subconsulta entre paréntesis, obtiene el promedio de `valor` sobre las
-cuatro filas, y después usa ese único número para filtrar la consulta externa, exactamente como si
-hubieras escrito el número calculado a mano en su lugar.
-
-## Comentarios dentro de una sentencia
-
-Dos guiones seguidos, `--`, convierten en comentario todo lo que sigue hasta el final de esa línea, y
-`/* */` comenta un bloque de una o varias líneas. El motor ignora por completo un comentario, sirve
-solo para que quien lea la sentencia entienda por qué está escrita así.
-
-```sql
--- Pedidos de Ana con valor superior al promedio de toda la tabla
-SELECT pedido, producto, valor
-FROM PedidoPlano
-WHERE cliente = 'Ana Ruiz' /* filtro por cliente */
-  AND valor > (SELECT AVG(valor) FROM PedidoPlano);
-```
-
-::: {.callout-tip}
-## Reto 1. Predice el resultado antes de ejecutarlo
-
-Sobre la tabla `PedidoPlano` con sus cuatro filas originales, marca cuántas filas devuelve cada
-consulta antes de seguir leyendo.
-
-<label><input type="checkbox"> `SELECT * FROM PedidoPlano WHERE producto = 'Café';` (¿1, 2 o 3 filas?)</label><br>
-<label><input type="checkbox"> `SELECT * FROM PedidoPlano WHERE valor >= 6800 AND cliente = 'Ana Ruiz';` (¿0, 1 o 2 filas?)</label><br>
-<label><input type="checkbox"> `SELECT * FROM PedidoPlano WHERE cliente LIKE '%Pena';` (¿0 o 1 fila?)</label>
-:::
-
-::: {.callout-note collapse="true"}
-## Solución del Reto 1
-
-La primera devuelve 2 filas, los pedidos 1001 y 1003, los dos con `producto = 'Café'`.
-
-La segunda devuelve 1 fila, el pedido 1004, con `valor = 6800` que cumple `>= 6800`, y
-`cliente = 'Ana Ruiz'`. El pedido 1002 tiene `valor = 23400`, que también cumple la primera condición,
-pero como las dos van unidas con `AND`, las dos tienen que ser verdaderas para la misma fila, y aquí
-las dos sí lo son para dos pedidos distintos de Ana, así que en realidad la respuesta correcta es 2
-filas, 1002 y 1004. Si marcaste 1 fila, revisa con cuidado cuáles pedidos de Ana cumplen `valor >=
-6800` al mismo tiempo.
-
-La tercera devuelve 1 fila, el pedido 1003 de Luis Pena, porque `%Pena` coincide con cualquier texto
-que termine en `Pena`, sin importar qué haya antes.
-:::
-
-::: {.callout-tip}
-## Reto 2. El UPDATE que borra el negocio
-
-Un compañero de curso quiere aplicar un descuento del 10% a todos los pedidos de café, y escribe
-esto:
-
-```sql
-UPDATE PedidoPlano
-SET valor = valor * 0.9;
-```
-
-Antes de leer la solución, responde en un párrafo, qué le falta a esta sentencia y qué pasa con las
-cuatro filas de la tabla al ejecutarla tal cual está escrita.
-:::
-
-::: {.callout-note collapse="true"}
-## Solución del Reto 2
-
-A la sentencia le falta la cláusula `WHERE producto = 'Café'`. Sin ningún `WHERE`, un `UPDATE` no
-filtra ninguna fila, actualiza todas las filas de la tabla, así que las cuatro filas de `PedidoPlano`
-terminan con su `valor` reducido en un 10%, incluidas la torta, el jugo y el segundo pedido de café que
-nunca debieron descontarse. La corrección exacta es:
-
-```sql
-UPDATE PedidoPlano
-SET valor = valor * 0.9
-WHERE producto = 'Café';
-```
-
-`DELETE` tiene exactamente el mismo riesgo, `DELETE FROM PedidoPlano;` sin `WHERE` borra las cuatro
-filas de una sola vez. `UPDATE` y `DELETE` sin `WHERE` no son sentencias inválidas, el motor las
-ejecuta sin ninguna queja, y esa es justo la razón por la que conviene revisar dos veces la condición
-antes de ejecutarlas contra una tabla con datos reales.
-:::
-
-::: {.callout-tip}
-## Reto 3. Escribe la consulta
-
-Escribe, antes de ver la solución, la sentencia SQL que responde esta pregunta sobre `PedidoPlano`,
-cuáles son el pedido y el producto de todo pedido cuyo valor sea menor a 10000, ordenados del más
-barato al más caro.
-:::
-
-::: {.callout-note collapse="true"}
-## Solución del Reto 3
-
-```sql
-SELECT pedido, producto
-FROM PedidoPlano
-WHERE valor < 10000
-ORDER BY valor ASC;
-```
-
-El resultado trae, en este orden, el pedido 1001 y el 1003, los dos con `Café` a `4500`, y el pedido
-1004 con `Jugo` a `6800`. El pedido 1002, la `Torta` a `23400`, queda fuera porque no cumple
-`valor < 10000`.
-:::
-
-::: {.callout-tip}
-## Reto 4. Clasifica cada sentencia
-
-Para cada una de estas cinco sentencias, marca a qué familia pertenece, DDL, DML o DQL, antes de
-seguir leyendo.
-
-<label><input type="checkbox"> `CREATE DATABASE cafeteria;`</label><br>
-<label><input type="checkbox"> `SELECT cliente FROM PedidoPlano WHERE valor > 5000;`</label><br>
-<label><input type="checkbox"> `ALTER TABLE PedidoPlano ADD COLUMN descuento DECIMAL(10,2);`</label><br>
-<label><input type="checkbox"> `DELETE FROM PedidoPlano WHERE pedido = 1003;`</label><br>
-<label><input type="checkbox"> `DROP TABLE PedidoPlano;`</label>
-:::
-
-::: {.callout-note collapse="true"}
-## Solución del Reto 4
-
-`CREATE DATABASE` es DDL, crea un objeto nuevo. `SELECT` es DQL, solo consulta datos sin modificar
-nada. `ALTER TABLE` es DDL, modifica la estructura de una tabla que ya existe, no sus filas. `DELETE`
-es DML, cambia los datos de una tabla que ya existe, no su estructura. `DROP TABLE` es DDL, elimina un
-objeto completo. Fíjate en que la línea que separa DDL de DML no es si la sentencia empieza con una
-palabra parecida, es si toca la estructura, `CREATE`, `ALTER`, `DROP`, o si toca únicamente los datos
-que ya viven dentro de una estructura que no cambia, `INSERT`, `UPDATE`, `DELETE`.
-:::
-
-## Lo que te llevas de hoy
+| Quiero... | Uso |
+|---|---|
+| Todas las columnas | `SELECT *` |
+| Algunas columnas | `SELECT a, b` |
+| Sin repetidos | `SELECT DISTINCT a` |
+| Filas que cumplen algo | `WHERE condicion` |
+| Rango, lista, patrón, vacío | `BETWEEN`, `IN`, `LIKE`, `IS NULL` |
+| Ordenar | `ORDER BY a DESC` |
+| Solo las primeras n | `ORDER BY a DESC LIMIT n` |
+| Cruzar dos tablas | `JOIN otra ON fk = pk` |
+| Una cifra de toda la tabla | `COUNT`, `SUM`, `AVG`, `MIN`, `MAX` |
+| Una cifra por cada grupo | `GROUP BY` |
+| Filtrar grupos | `HAVING` |
+
+## Lo que te llevas de este tema
 
 ::: {.checklist}
-Al salir de este tema deberías poder explicar, sin mirar la guía, los siguientes puntos:
+Al terminar este tema deberías poder hacer, sin mirar la guía, cada una de estas cosas:
 
-- [ ] Qué es una base de datos, qué es un SGBD, y de dónde sale el estándar SQL
-- [ ] Por qué SQL es un lenguaje declarativo y no procedimental, y qué diferencia práctica tiene eso
-- [ ] Cómo se ejecuta en la práctica una sentencia SQL, cliente, motor y datos en disco
-- [ ] Las cinco familias de instrucciones SQL, DDL, DML, DQL, DCL y TCL, y cuáles cubre este curso
-- [ ] Cómo crear una base de datos con `CREATE DATABASE` y una tabla dentro de ella con
-      `CREATE TABLE`, y cómo llenarla con `INSERT`
-- [ ] Cómo elegir columnas con `SELECT`, filtrar filas con `WHERE`, y combinar condiciones con `AND`,
-      `OR` y `NOT`
-- [ ] `BETWEEN`, `IN` y `LIKE` con sus dos comodines, `%` y `_`
-- [ ] Por qué `columna = NULL` nunca funciona, y por qué `IS NULL` e `IS NOT NULL` sí
-- [ ] Cómo ordenar con `ORDER BY` y limitar resultados con `LIMIT` o con el estándar
-      `FETCH FIRST n ROWS ONLY`
-- [ ] Las cinco funciones de agregación, `COUNT`, `SUM`, `AVG`, `MIN` y `MAX`, sin agrupar todavía
-- [ ] Cómo corregir datos con `UPDATE` y borrarlos con `DELETE`, y por qué ninguno de los dos filtra
-      nada sin un `WHERE`
-- [ ] La diferencia entre `DELETE`, que vacía una tabla, y `DROP TABLE`, que la hace desaparecer
-- [ ] El orden real en que un motor procesa una consulta, `FROM`, `WHERE`, `SELECT`, `ORDER BY`
-- [ ] Cómo usar una consulta dentro de otra con una subconsulta simple
+- [ ] Convertir una entidad del modelo en una tabla, sus atributos en columnas y una instancia en una fila
+- [ ] Identificar la clave primaria de una entidad y explicar por qué los demás atributos no sirven
+- [ ] Ubicar la clave foránea de una relación 1:N en el lado N, y justificarlo
+- [ ] Convertir una relación N:M en una tabla intermedia con clave primaria compuesta y atributos propios
+- [ ] Escribir `CREATE TABLE` con los tipos `INTEGER`, `DECIMAL`, `VARCHAR`, `DATE` y `BOOLEAN`
+- [ ] Declarar `PRIMARY KEY`, `NOT NULL`, `UNIQUE` y `FOREIGN KEY`, y explicar qué regla impone cada una
+- [ ] Ordenar los `CREATE TABLE` y los `INSERT` de modo que las referencias existan antes de usarse
+- [ ] Predecir qué `INSERT` va a fallar y por cuál restricción
+- [ ] Consultar con `SELECT`, elegir columnas, usar `DISTINCT` y `AS`
+- [ ] Filtrar con `WHERE` usando comparaciones, `AND`, `OR`, `NOT`, `BETWEEN`, `IN`, `LIKE` e `IS NULL`
+- [ ] Predecir el resultado de una consulta antes de ejecutarla
+- [ ] Ordenar con `ORDER BY` y limitar con `LIMIT`
+- [ ] Modificar con `UPDATE` y borrar con `DELETE`, siempre con `WHERE`, y explicar qué pasa sin él
+- [ ] Combinar tablas con `JOIN` siguiendo las relaciones del modelo, con alias
+- [ ] Encadenar varios `JOIN` trazando primero el camino en el modelo
+- [ ] Resumir con `COUNT`, `SUM`, `AVG`, `MIN` y `MAX`, y distinguir `COUNT(*)` de `COUNT(columna)`
+- [ ] Agrupar con `GROUP BY`, filtrar grupos con `HAVING`, y reconocer el "por cada" en una pregunta
+- [ ] Explicar el orden en que el motor evalúa las cláusulas y qué reglas se derivan de él
 :::
 
-## Lo que sigue
-
-Hoy aprendiste a preguntarle cosas a una tabla que ya existía, sin haber diseñado tú esa tabla. El
-Tema 2 cambia el punto de partida, toma el diagrama entidad-relación completo de la cafetería que
-armaste en la Unidad 2 y le enseña las seis reglas que lo convierten en las sentencias `CREATE TABLE`
-correctas, con llaves primarias y foráneas de verdad, algo que `PedidoPlano` deliberadamente no tenía
-todavía. El Tema 3 vuelve sobre esta misma tabla plana de pedidos, la de hoy, y la normaliza paso a
-paso para eliminar de raíz las anomalías que el `UPDATE` y el `DELETE` de hoy solo corrigieron una vez,
-sin evitar que vuelvan a aparecer. Y más adelante, la Unidad 4 completa el SQL que falta aquí, consultas
-sobre varias tablas a la vez y agrupadas con `GROUP BY` y `HAVING`.
+Más adelante en el curso, sobre esta misma base, aparecen `LEFT JOIN` para incluir a los clientes que
+todavía no han hecho ningún pedido, las subconsultas para preguntas como "productos más caros que el
+promedio", y las transacciones para agrupar varios cambios que deben ocurrir todos o ninguno.
 
 ## Recursos
 
-- Chamberlin, D. D. y Boyce, R. F. *SEQUEL: A Structured English Query Language.* Actas del taller
-  ACM SIGFIDET sobre descripción, acceso y control de datos, 1974. El artículo original que presenta el
-  lenguaje que, tras el cambio de nombre por el conflicto de marca, se conoció como SQL.
-- Codd, E. F. *A Relational Model of Data for Large Shared Data Banks.* Communications of the ACM,
-  1970. El modelo relacional sobre el que se construyó System R, el proyecto de IBM donde nació SQL.
-- International Organization for Standardization e International Electrotechnical Commission.
-  *ISO/IEC 9075. Information technology, Database languages, SQL.*
-  [Ficha del estándar](https://www.iso.org/standard/76583.html).
-- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Fundamentos de bases de datos.* Capítulo de
-  introducción al SQL, sentencias básicas de definición y manipulación de datos. Material de apoyo
-  oficial de los autores en [db-book.com](https://www.db-book.com).
+- Silberschatz, A., Korth, H. F. y Sudarshan, S. *Fundamentos de bases de datos.* Capítulos de
+  introducción al SQL y de SQL intermedio: definición de datos, consultas básicas, agregación y
+  reunión de tablas. Material de apoyo oficial de los autores en [db-book.com](https://www.db-book.com).
+- Elmasri, R. y Navathe, S. B. *Fundamentals of Database Systems.* Capítulos de SQL básico y de
+  consultas complejas, y el capítulo de diseño relacional a partir del modelo entidad-relación.
 - Connolly, T. M. y Begg, C. E. *Database Systems: A Practical Approach to Design, Implementation, and
-  Management.* Capítulos de SQL, lenguaje de definición y lenguaje de manipulación de datos.
-- Elmasri, R. y Navathe, S. B. *Fundamentals of Database Systems.* Capítulo de conceptos básicos de
-  SQL, consultas simples de una sola tabla.
+  Management.* Capítulos de SQL, lenguaje de definición y de manipulación de datos.
 - PostgreSQL Global Development Group. Documentación oficial, usada como referencia de un motor real
   que implementa el núcleo común del estándar:
-  [`CREATE DATABASE`](https://www.postgresql.org/docs/current/sql-createdatabase.html),
-  [`DROP DATABASE`](https://www.postgresql.org/docs/current/sql-dropdatabase.html),
   [`CREATE TABLE`](https://www.postgresql.org/docs/current/sql-createtable.html),
-  [`ALTER TABLE`](https://www.postgresql.org/docs/current/sql-altertable.html),
-  [`DROP TABLE`](https://www.postgresql.org/docs/current/sql-droptable.html),
-  [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html),
   [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html),
+  [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html),
   [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html),
   [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html),
-  [comparación de patrones con `LIKE`](https://www.postgresql.org/docs/current/functions-matching.html),
   [funciones de agregación](https://www.postgresql.org/docs/current/functions-aggregate.html).
 
 ::: {.pie-doc}

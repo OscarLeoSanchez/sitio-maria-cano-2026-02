@@ -1,10 +1,12 @@
 ---
-title: "Tema 1. Cómo hacerle preguntas a una tabla"
+title: "Tema 1. Del modelo entidad-relación a SQL"
 subtitle: "Base de datos (DBA03). Unidad 3"
 author: "Oscar Leonel Sánchez Conde"
+pagetitle: "Tema 1. Del modelo entidad-relación a SQL"
+title-prefix: ""
 format:
   revealjs:
-    theme: [default, ../../../estilos/presentacion.scss]
+    theme: [default, presentacion-estilos.scss]
     slide-number: true
     controls: true
     progress: true
@@ -13,382 +15,2087 @@ format:
     height: 720
 ---
 
-## Hoy {.center}
+## Ya tenemos el modelo {.center}
 
-::: {.tarjetas}
-::: {.tarjeta}
-[SQL desde cero]{.titulo}
-
-Sin diagramas todavía, directo sobre una tabla que ya existe.
+::: {.idea}
+¿Cómo hacemos para que esto exista dentro de una base de datos?
 :::
-
-::: {.tarjeta}
-[La tabla plana de pedidos]{.titulo}
-
-La misma de la Unidad 1, con el teléfono de Ana repetido en cada fila.
-:::
-
-::: {.clave}
-[`SELECT`, `INSERT`, `UPDATE`, `DELETE`]{.titulo}
-
-Las cuatro sentencias que vas a usar en el resto del curso.
-:::
-
-::: {.tarjeta}
-[Nivel intermedio]{.titulo}
-
-Filtros, comodines, `NULL`, agregación y subconsultas, sin `GROUP BY` todavía.
-:::
-:::
-
-## Qué es una base de datos, qué es un SGBD {.center}
-
-::: {.pasos}
-1. Una base de datos es un conjunto organizado de datos persistentes
-2. El SGBD (*database management system*) es el programa que la administra: MySQL, PostgreSQL, SQL
-   Server, Oracle, SQLite
-3. SQL es el lenguaje común para hablarle a cualquiera de esos motores, sin aprender uno distinto
-   por cada uno
-:::
-
-## De dónde sale SQL {.center}
-
-::: {.pasos}
-1. Nace a mediados de los 70 en System R, el proyecto de IBM que construyó el primer SGBD relacional
-2. Chamberlin y Boyce lo llamaron SEQUEL, sobre el modelo relacional de Codd (1970)
-3. Un conflicto de marca lo acortó a SQL
-4. ANSI lo estandarizó en 1986, ISO lo adoptó en 1987 como ISO/IEC 9075
-:::
-
-## SQL es declarativo, no procedimental {.center}
-
-::: {.destacado}
-Describes qué resultado quieres, no los pasos exactos para conseguirlo. El motor decide cómo
-recorrer los datos.
-:::
-
-```sql
-SELECT * FROM PedidoPlano WHERE valor > 5000;
-```
-
-::: {.pasos}
-1. No le dices al motor que recorra la tabla fila por fila
-2. Solo describes la condición que debe cumplir el resultado
-3. El propio motor decide, con su lógica interna, cómo conseguirlo de la forma más eficiente
-:::
-
-## Cómo se ejecuta SQL en la práctica {.center}
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una persona escribe una sentencia SQL en un cliente, terminal como psql o programa grafico como pgAdmin; el cliente envia ese texto al motor de base de datos que corre como servicio en segundo plano; el motor interpreta la sentencia, la ejecuta contra los datos guardados en disco, y devuelve un resultado" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <defs><marker id="sql1d" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un cliente envía el texto SQL, el motor lo ejecuta y devuelve el resultado</text>
-  <rect x="20" y="50" width="190" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
-  <text x="115" y="78" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Persona</text>
-  <text x="115" y="98" font-size="10.5" fill="#5b6876" text-anchor="middle">escribe SQL en un</text>
-  <text x="115" y="114" font-size="10.5" fill="#5b6876" text-anchor="middle">cliente, terminal o gráfico</text>
-  <rect x="285" y="50" width="190" height="90" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
-  <text x="380" y="78" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Motor de base de datos</text>
-  <text x="380" y="98" font-size="10.5" fill="#3c7d7a" text-anchor="middle">recibe, interpreta y</text>
-  <text x="380" y="114" font-size="10.5" fill="#3c7d7a" text-anchor="middle">ejecuta la sentencia</text>
-  <rect x="550" y="50" width="190" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
-  <text x="645" y="78" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Datos en disco</text>
-  <text x="645" y="98" font-size="10.5" fill="#5b6876" text-anchor="middle">tablas guardadas de</text>
-  <text x="645" y="114" font-size="10.5" fill="#5b6876" text-anchor="middle">forma persistente</text>
-  <path d="M210,80 L281,80" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1d)"/>
-  <path d="M475,80 L546,80" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1d)"/>
-  <path d="M285,116 L214,116" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#sql1d)"/>
+<svg viewBox="0 0 1120 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Modelo entidad relacion de un sistema de ventas: CLIENTE se relaciona uno a muchos con PEDIDO, PEDIDO se relaciona muchos a muchos con PRODUCTO mediante una relacion con los atributos cantidad y precio unitario, y PRODUCTO se relaciona muchos a uno con CATEGORIA" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s1" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#s1)">
+    <rect x="20" y="70" width="200" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="20" y="70" width="200" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="20" y="92" width="200" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="120" y="96" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CLIENTE</text>
+  <text x="120" y="132" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_cliente</text>
+  <text x="120" y="154" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text>
+  <text x="120" y="176" text-anchor="middle" font-size="12.5" fill="#4a5b70">correo</text>
+  <text x="120" y="198" text-anchor="middle" font-size="12.5" fill="#4a5b70">ciudad</text>
+  <g filter="url(#s1)">
+    <rect x="300" y="81" width="200" height="128" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="300" y="81" width="200" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="300" y="103" width="200" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="400" y="107" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text>
+  <text x="400" y="143" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_pedido</text>
+  <text x="400" y="165" text-anchor="middle" font-size="12.5" fill="#4a5b70">fecha</text>
+  <text x="400" y="187" text-anchor="middle" font-size="12.5" fill="#4a5b70">estado</text>
+  <g filter="url(#s1)">
+    <rect x="620" y="70" width="200" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="620" y="70" width="200" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="620" y="92" width="200" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="720" y="96" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PRODUCTO</text>
+  <text x="720" y="132" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text>
+  <text x="720" y="154" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text>
+  <text x="720" y="176" text-anchor="middle" font-size="12.5" fill="#4a5b70">precio</text>
+  <text x="720" y="198" text-anchor="middle" font-size="12.5" fill="#4a5b70">stock</text>
+  <g filter="url(#s1)">
+    <rect x="900" y="92" width="200" height="106" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="900" y="92" width="200" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="900" y="114" width="200" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="1000" y="118" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CATEGORIA</text>
+  <text x="1000" y="154" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_categoria</text>
+  <text x="1000" y="176" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text>
+  <line x1="220" y1="145" x2="300" y2="145" stroke="#7fa6d6" stroke-width="2.2"/>
+  <rect x="226" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="237" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">1</text>
+  <rect x="272" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="283" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text>
+  <line x1="500" y1="145" x2="620" y2="145" stroke="#7fa6d6" stroke-width="2.2"/>
+  <rect x="506" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="517" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text>
+  <rect x="592" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="603" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">M</text>
+  <line x1="560" y1="145" x2="560" y2="222" stroke="#7fa6d6" stroke-width="1.6" stroke-dasharray="4 4"/>
+  <rect x="470" y="222" width="180" height="46" rx="12" fill="#fdf1dc" stroke="#f3ddb0"/>
+  <text x="560" y="241" text-anchor="middle" font-size="11.5" fill="#9a6413" font-weight="700">cantidad</text>
+  <text x="560" y="258" text-anchor="middle" font-size="11.5" fill="#9a6413" font-weight="700">precio_unitario</text>
+  <line x1="820" y1="145" x2="900" y2="145" stroke="#7fa6d6" stroke-width="2.2"/>
+  <rect x="826" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="837" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text>
+  <rect x="872" y="122" width="22" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="883" y="136" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">1</text>
 </svg>
 
 :::
 
-::: {.destacado}
-Cliente de terminal (`psql`, `mysql`) o programa gráfico (pgAdmin, DBeaver). Toda sentencia SQL
-termina en `;`.
+::: {.nota}
+Un sistema de ventas.
 :::
 
-## Cinco familias de instrucciones {.center}
+## El camino de hoy {.center}
 
-::: {.tarjetas}
-::: {.clave}
-[DDL]{.titulo}
+::: {.diagrama .corto}
 
-*Data definition language*. `CREATE`, `ALTER`, `DROP`. Define la estructura, bases de datos y tablas.
+<svg viewBox="0 0 1120 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Seis etapas en linea: del modelo a las tablas, de las tablas a SQL, datos, consultas, relaciones y resumen" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <line x1="100" y1="80" x2="1020" y2="80" stroke="#c9dcf3" stroke-width="3"/>
+  <g>
+    <circle cx="100" cy="80" r="28" fill="#e3eefb"/><text x="100" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#4f86c6">1</text>
+    <text x="100" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">Del modelo</text>
+    <text x="100" y="153" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">a las tablas</text>
+  </g>
+  <g>
+    <circle cx="284" cy="80" r="28" fill="#e1f5ef"/><text x="284" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#1e7c66">2</text>
+    <text x="284" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">De las tablas</text>
+    <text x="284" y="153" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">a SQL</text>
+  </g>
+  <g>
+    <circle cx="468" cy="80" r="28" fill="#fdf1dc"/><text x="468" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#9a6413">3</text>
+    <text x="468" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">Datos</text>
+  </g>
+  <g>
+    <circle cx="652" cy="80" r="28" fill="#e3eefb"/><text x="652" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#4f86c6">4</text>
+    <text x="652" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">Consultas</text>
+  </g>
+  <g>
+    <circle cx="836" cy="80" r="28" fill="#ede9fb"/><text x="836" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#5442b3">5</text>
+    <text x="836" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">Relaciones</text>
+  </g>
+  <g>
+    <circle cx="1020" cy="80" r="28" fill="#e1f5ef"/><text x="1020" y="86" text-anchor="middle" font-size="16" font-weight="800" fill="#1e7c66">6</text>
+    <text x="1020" y="135" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1b2a41">Resumen</text>
+  </g>
+</svg>
+
 :::
 
-::: {.clave}
-[DML]{.titulo}
+# Del modelo a las tablas {.seccion background-color="#e3eefb"}
 
-*Data manipulation language*. `INSERT`, `UPDATE`, `DELETE`. Cambia los datos de una tabla que ya
-existe.
+::: {.rotulo data-numero="1"}
+Primera parte
 :::
 
-::: {.clave}
-[DQL]{.titulo}
+## Una entidad, sola {.center}
 
-*Data query language*. `SELECT`. Consulta datos sin modificar nada. Algunos autores lo agrupan en
-el DML.
+::: {.etapa}
+Etapa 1
 :::
 
-::: {.tarjeta}
-[DCL]{.titulo}
-
-*Data control language*. `GRANT`, `REVOKE`. Decide qué usuario puede hacer qué.
+::: {.dos}
+::: {}
+::: {.ficha}
+::: {.cabeza}
+CLIENTE
+:::
+- id_cliente
+- nombre
+- correo
+- ciudad
+:::
+:::
+::: {}
+::: {.pregunta}
+Si CLIENTE se convierte en una tabla, ¿cómo quedaría?
+:::
+:::
 :::
 
-::: {.tarjeta}
-[TCL]{.titulo}
+## La misma entidad, como tabla {.center}
 
-*Transaction control language*. `COMMIT`, `ROLLBACK`. Agrupa cambios en una unidad indivisible.
+::: {.etapa}
+Etapa 1
+:::
+
+::: {.vacia}
+| id_cliente | nombre | correo | ciudad |
+|---|---|---|---|
+| . | . | . | . |
+
+: cliente
+:::
+
+::: {.mapa .fragment}
+- [Entidad]{.origen} [ ]{.flecha} [tabla]{.destino}
+- [Atributo]{.origen} [ ]{.flecha} [columna]{.destino}
+- [Instancia]{.origen} [ ]{.flecha} [fila]{.destino}
+:::
+
+## Una instancia se convierte en una fila {.center}
+
+::: {.etapa}
+Etapa 1
+:::
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 1000 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda una ficha con los datos de un cliente concreto, Ana, ana arroba email punto com, Medellin; una flecha la convierte en una fila de la tabla cliente, con id_cliente 1" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s3" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+    <marker id="f3" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7fa6d6"/></marker>
+  </defs>
+  <g filter="url(#s3)">
+    <rect x="40" y="50" width="250" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="40" y="50" width="250" height="40" rx="14" fill="#e1f5ef"/>
+    <rect x="40" y="72" width="250" height="18" fill="#e1f5ef"/>
+  </g>
+  <text x="165" y="76" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e7c66">Un cliente concreto</text>
+  <text x="165" y="118" text-anchor="middle" font-size="15" font-weight="650" fill="#1b2a41">Ana</text>
+  <text x="165" y="146" text-anchor="middle" font-size="15" fill="#4a5b70">ana@email.com</text>
+  <text x="165" y="174" text-anchor="middle" font-size="15" fill="#4a5b70">Medellín</text>
+  <line x1="310" y1="125" x2="380" y2="125" stroke="#7fa6d6" stroke-width="2.4" marker-end="url(#f3)"/>
+  <text x="410" y="62" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">cliente</text>
+  <g filter="url(#s3)">
+    <rect x="410" y="72" width="550" height="118" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+  </g>
+  <rect x="410" y="72" width="550" height="40" rx="14" fill="#e3eefb"/>
+  <rect x="410" y="94" width="550" height="18" fill="#e3eefb"/>
+  <line x1="410" y1="112" x2="960" y2="112" stroke="#c9dcf3"/>
+  <g font-size="13" font-weight="700" fill="#1b2a41">
+    <text x="432" y="98">id_cliente</text>
+    <text x="548" y="98">nombre</text>
+    <text x="660" y="98">correo</text>
+    <text x="850" y="98">ciudad</text>
+  </g>
+  <rect x="411" y="113" width="548" height="76" fill="#e1f5ef"/>
+  <g font-size="14" fill="#1b2a41">
+    <text x="432" y="158" font-weight="700">1</text>
+    <text x="548" y="158">Ana</text>
+    <text x="660" y="158">ana@email.com</text>
+    <text x="850" y="158">Medellín</text>
+  </g>
+</svg>
+
+:::
+
+::: {.nota}
+El identificador no venía en la ficha: lo asigna el sistema para que ninguna fila se confunda con otra.
+:::
+
+## ¿Qué distingue a un cliente de otro? {.center}
+
+::: {.etapa}
+Etapa 2
+:::
+
+::: {.dos}
+::: {}
+::: {.ficha}
+::: {.cabeza}
+CLIENTE
+:::
+- id_cliente
+- nombre
+- correo
+- ciudad
+:::
+:::
+::: {}
+::: {.pregunta}
+¿Qué atributo identifica de manera única a cada cliente?
+:::
+
+::: {.respuesta .fragment}
+`id_cliente`. Dos personas pueden llamarse igual o vivir en la misma ciudad; el identificador no
+se repite.
+:::
+:::
+:::
+
+## Clave primaria {.center}
+
+::: {.etapa}
+Etapa 2
+:::
+
+| id_cliente [PK]{.pk} | nombre | correo | ciudad |
+|---:|---|---|---|
+| 1 | Ana | ana@email.com | Medellín |
+| 2 | Carlos | carlos@email.com | Bogotá |
+| 3 | Laura | laura@email.com | Cali |
+
+: cliente
+
+::: {.pregunta .fragment}
+¿Podríamos tener dos clientes con `id_cliente = 3`?
+:::
+
+::: {.respuesta .fragment}
+No. Ese es exactamente el trabajo de la clave primaria: un valor único por fila, y nunca vacío.
+:::
+
+## Una línea entre dos entidades {.center}
+
+::: {.etapa}
+Etapa 3
+:::
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 900 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CLIENTE y PEDIDO unidos por una linea con cardinalidad uno a muchos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s4" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#s4)">
+    <rect x="60" y="50" width="240" height="70" rx="16" fill="#e3eefb"/>
+    <rect x="600" y="50" width="240" height="70" rx="16" fill="#e3eefb"/>
+  </g>
+  <text x="180" y="92" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CLIENTE</text>
+  <text x="720" y="92" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text>
+  <line x1="300" y1="85" x2="600" y2="85" stroke="#7fa6d6" stroke-width="2.6"/>
+  <rect x="312" y="60" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="327" y="77" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">1</text>
+  <rect x="558" y="60" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="573" y="77" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">N</text>
+</svg>
+
+:::
+
+::: {.pregunta}
+¿Cómo representamos esta línea dentro de las tablas?
+:::
+
+## Dos tablas que no se hablan {.center}
+
+::: {.etapa}
+Etapa 3
+:::
+
+::: {.dos .arriba}
+::: {}
+| id_cliente [PK]{.pk} | nombre |
+|---:|---|
+| 1 | Ana |
+| 2 | Carlos |
+
+: cliente
+:::
+::: {}
+| id_pedido [PK]{.pk} | fecha |
+|---:|---|
+| 101 | 2026-09-20 |
+| 102 | 2026-09-21 |
+
+: pedido
 :::
 :::
 
-## Crear una base de datos {.center}
+::: {.pregunta}
+Con estas dos tablas, ¿quién hizo el pedido 101?
+:::
 
+::: {.respuesta .fragment}
+No hay forma de saberlo. La línea del modelo se perdió en el camino.
+:::
+
+## La columna que falta {.center}
+
+::: {.etapa}
+Etapa 3
+:::
+
+::: {.diagrama}
+
+<svg viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La tabla pedido recibe una columna id_cliente; cada valor de esa columna apunta con una flecha a la fila correspondiente de la tabla cliente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s5" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+    <marker id="f5" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"/></marker>
+  </defs>
+  <text x="40" y="52" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">pedido</text>
+  <g filter="url(#s5)"><rect x="40" y="62" width="380" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/></g>
+  <rect x="40" y="62" width="380" height="40" rx="14" fill="#e3eefb"/>
+  <rect x="40" y="84" width="380" height="18" fill="#e3eefb"/>
+  <rect x="290" y="62" width="130" height="150" rx="14" fill="#ede9fb" opacity="0.8"/>
+  <rect x="290" y="62" width="14" height="150" fill="#ede9fb" opacity="0.8"/>
+  <g font-size="13" font-weight="700" fill="#1b2a41">
+    <text x="62" y="88">id_pedido</text>
+    <text x="160" y="88">fecha</text>
+    <text x="308" y="88" fill="#5442b3">id_cliente</text>
+  </g>
+  <line x1="40" y1="102" x2="420" y2="102" stroke="#c9dcf3"/>
+  <line x1="40" y1="157" x2="420" y2="157" stroke="#edf2f8"/>
+  <g font-size="14" fill="#1b2a41">
+    <text x="62" y="136">101</text><text x="160" y="136">2026-09-20</text><text x="308" y="136" font-weight="700" fill="#5442b3">1</text>
+    <text x="62" y="191">102</text><text x="160" y="191">2026-09-21</text><text x="308" y="191" font-weight="700" fill="#5442b3">2</text>
+  </g>
+  <text x="640" y="52" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">cliente</text>
+  <g filter="url(#s5)"><rect x="640" y="62" width="320" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/></g>
+  <rect x="640" y="62" width="320" height="40" rx="14" fill="#e3eefb"/>
+  <rect x="640" y="84" width="320" height="18" fill="#e3eefb"/>
+  <g font-size="13" font-weight="700" fill="#1b2a41">
+    <text x="662" y="88">id_cliente</text>
+    <text x="800" y="88">nombre</text>
+  </g>
+  <line x1="640" y1="102" x2="960" y2="102" stroke="#c9dcf3"/>
+  <line x1="640" y1="157" x2="960" y2="157" stroke="#edf2f8"/>
+  <g font-size="14" fill="#1b2a41">
+    <text x="662" y="136" font-weight="700">1</text><text x="800" y="136">Ana</text>
+    <text x="662" y="191" font-weight="700">2</text><text x="800" y="191">Carlos</text>
+  </g>
+  <line x1="420" y1="131" x2="640" y2="131" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#f5)"/>
+  <line x1="420" y1="186" x2="640" y2="186" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#f5)"/>
+  <text x="500" y="262" text-anchor="middle" font-size="14" fill="#4a5b70">cada valor de pedido.id_cliente existe en cliente.id_cliente</text>
+</svg>
+
+:::
+
+## Clave foránea {.center}
+
+::: {.etapa}
+Etapa 3
+:::
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CLIENTE uno a muchos PEDIDO; debajo de PEDIDO, en el lado muchos, aparece la columna id_cliente marcada como clave foranea" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s6" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#s6)">
+    <rect x="60" y="30" width="240" height="70" rx="16" fill="#e3eefb"/>
+    <rect x="600" y="30" width="240" height="70" rx="16" fill="#e3eefb"/>
+  </g>
+  <text x="180" y="72" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CLIENTE</text>
+  <text x="720" y="72" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text>
+  <line x1="300" y1="65" x2="600" y2="65" stroke="#7fa6d6" stroke-width="2.6"/>
+  <rect x="312" y="40" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="327" y="57" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">1</text>
+  <rect x="558" y="40" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="573" y="57" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">N</text>
+  <line x1="720" y1="100" x2="720" y2="128" stroke="#7c6ad8" stroke-width="2" stroke-dasharray="4 4"/>
+  <rect x="620" y="128" width="200" height="40" rx="12" fill="#ede9fb" stroke="#d8d0f5"/>
+  <text x="720" y="153" text-anchor="middle" font-size="14.5" font-weight="700" fill="#5442b3" font-family="Consolas, monospace">id_cliente  FK</text>
+</svg>
+
+:::
+
+::: {.idea}
+La clave foránea vive en el lado N
+:::
+
+::: {.nota}
+Primera regla de transformación. Un cliente tiene muchos pedidos; cada pedido guarda a quién pertenece.
+:::
+
+## Ahora ustedes {.center}
+
+::: {.etapa}
+Etapa 4
+:::
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 900 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CATEGORIA con id_categoria y nombre, relacionada uno a muchos con PRODUCTO, que tiene id_producto, nombre, precio y stock" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s7" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#s7)">
+    <rect x="80" y="52" width="220" height="106" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="80" y="52" width="220" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="80" y="74" width="220" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="190" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CATEGORIA</text>
+  <text x="190" y="114" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_categoria</text>
+  <text x="190" y="136" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text>
+  <g filter="url(#s7)">
+    <rect x="600" y="30" width="220" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="600" y="30" width="220" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="600" y="52" width="220" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="710" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PRODUCTO</text>
+  <text x="710" y="92" text-anchor="middle" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text>
+  <text x="710" y="114" text-anchor="middle" font-size="12.5" fill="#4a5b70">nombre</text>
+  <text x="710" y="136" text-anchor="middle" font-size="12.5" fill="#4a5b70">precio</text>
+  <text x="710" y="158" text-anchor="middle" font-size="12.5" fill="#4a5b70">stock</text>
+  <line x1="300" y1="105" x2="600" y2="105" stroke="#7fa6d6" stroke-width="2.6"/>
+  <rect x="312" y="80" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="327" y="97" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">1</text>
+  <rect x="558" y="80" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="573" y="97" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">N</text>
+</svg>
+
+:::
+
+::: {.pregunta}
+Dibujen cómo quedarían las dos tablas, con sus claves.
+:::
+
+## Así quedan {.center}
+
+::: {.etapa}
+Etapa 4
+:::
+
+::: {.dos .arriba}
+::: {}
+::: {.ficha}
+::: {.cabeza}
+categoria
+:::
+- id_categoria [PK]{.pk}
+- nombre
+:::
+:::
+::: {}
+::: {.ficha}
+::: {.cabeza}
+producto
+:::
+- id_producto [PK]{.pk}
+- nombre
+- precio
+- stock
+- id_categoria [FK]{.fk}
+:::
+:::
+:::
+
+## Muchos a muchos {.center}
+
+::: {.etapa}
+Etapa 5
+:::
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 900 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PEDIDO y PRODUCTO unidos por una linea con cardinalidad muchos a muchos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s8" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#s8)">
+    <rect x="60" y="50" width="240" height="70" rx="16" fill="#e3eefb"/>
+    <rect x="600" y="50" width="240" height="70" rx="16" fill="#e3eefb"/>
+  </g>
+  <text x="180" y="92" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text>
+  <text x="720" y="92" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PRODUCTO</text>
+  <line x1="300" y1="85" x2="600" y2="85" stroke="#7fa6d6" stroke-width="2.6"/>
+  <rect x="312" y="60" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="327" y="77" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">N</text>
+  <rect x="558" y="60" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="573" y="77" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">M</text>
+</svg>
+
+:::
+
+::: {.pregunta}
+¿Dónde colocamos la clave foránea?
+:::
+
+## Ninguno de los dos lados funciona {.center}
+
+::: {.etapa}
+Etapa 5
+:::
+
+::: {.diagrama}
+
+<svg viewBox="0 0 1000 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos intentos fallidos: poner id_producto dentro de PEDIDO limita cada pedido a un solo producto; poner id_pedido dentro de PRODUCTO limita cada producto a un solo pedido" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s9" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#s9)">
+    <rect x="60" y="30" width="360" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="60" y="30" width="360" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="60" y="52" width="360" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="240" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text>
+  <text x="240" y="94" text-anchor="middle" font-size="13" fill="#4a5b70">id_pedido, fecha, estado</text>
+  <rect x="150" y="110" width="180" height="30" rx="10" fill="#fbe7ec" stroke="#f3c6d2"/>
+  <text x="240" y="130" text-anchor="middle" font-size="13.5" font-weight="700" fill="#b23a52" font-family="Consolas, monospace">id_producto  FK</text>
+  <text x="240" y="212" text-anchor="middle" font-size="14" fill="#b23a52" font-weight="650">cada pedido tendría un solo producto</text>
+  <g filter="url(#s9)">
+    <rect x="580" y="30" width="360" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="580" y="30" width="360" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="580" y="52" width="360" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="760" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PRODUCTO</text>
+  <text x="760" y="94" text-anchor="middle" font-size="13" fill="#4a5b70">id_producto, nombre, precio, stock</text>
+  <rect x="675" y="110" width="170" height="30" rx="10" fill="#fbe7ec" stroke="#f3c6d2"/>
+  <text x="760" y="130" text-anchor="middle" font-size="13.5" font-weight="700" fill="#b23a52" font-family="Consolas, monospace">id_pedido  FK</text>
+  <text x="760" y="212" text-anchor="middle" font-size="14" fill="#b23a52" font-weight="650">cada producto pertenecería a un solo pedido</text>
+</svg>
+
+:::
+
+## Una tabla nueva en el medio {.center}
+
+::: {.etapa}
+Etapa 5
+:::
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 1000 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PEDIDO uno a muchos DETALLE_PEDIDO, y DETALLE_PEDIDO muchos a uno PRODUCTO; la tabla intermedia reemplaza la relacion muchos a muchos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s10" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#s10)">
+    <rect x="30" y="40" width="220" height="70" rx="16" fill="#e3eefb"/>
+    <rect x="360" y="40" width="280" height="70" rx="16" fill="#ede9fb"/>
+    <rect x="750" y="40" width="220" height="70" rx="16" fill="#e3eefb"/>
+  </g>
+  <text x="140" y="82" text-anchor="middle" font-size="19" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text>
+  <text x="500" y="82" text-anchor="middle" font-size="19" font-weight="700" fill="#5442b3" font-family="Consolas, monospace">DETALLE_PEDIDO</text>
+  <text x="860" y="82" text-anchor="middle" font-size="19" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PRODUCTO</text>
+  <line x1="250" y1="75" x2="360" y2="75" stroke="#7fa6d6" stroke-width="2.6"/>
+  <rect x="258" y="50" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="271" y="66" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">1</text>
+  <rect x="326" y="50" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="339" y="66" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">N</text>
+  <line x1="640" y1="75" x2="750" y2="75" stroke="#7fa6d6" stroke-width="2.6"/>
+  <rect x="648" y="50" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="661" y="66" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">N</text>
+  <rect x="716" y="50" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="729" y="66" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">1</text>
+</svg>
+
+:::
+
+| id_pedido [PK]{.pk} [FK]{.fk} | id_producto [PK]{.pk} [FK]{.fk} | cantidad | precio_unitario |
+|---:|---:|---:|---:|
+| 101 | 1 | 2 | 80000 |
+| 101 | 3 | 1 | 150000 |
+
+: detalle_pedido
+
+::: {.idea .fragment}
+Una relación N:M se convierte en una tabla
+:::
+
+::: {.nota .fragment}
+Y esa tabla puede tener atributos propios. La cantidad y el precio del momento no son del pedido ni
+del producto: son de la línea que los une.
+:::
+
+## El modelo relacional completo {.center}
+
+::: {.etapa}
+Etapa 6
+:::
+
+::: {.diagrama .alto}
+
+<svg viewBox="0 0 1120 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco tablas con sus columnas: cliente, pedido, producto, categoria y detalle_pedido; flechas desde cada clave foranea hacia la clave primaria que referencia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s11" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+    <marker id="f11" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"/></marker>
+  </defs>
+  <g filter="url(#s11)">
+    <rect x="20" y="40" width="220" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="20" y="40" width="220" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="20" y="62" width="220" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="130" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">cliente</text>
+  <text x="40" y="104" font-size="12.5" fill="#1b2a41" font-weight="600">id_cliente</text>
+  <rect x="180" y="92" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="195" y="104" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <text x="40" y="128" font-size="12.5" fill="#4a5b70">nombre</text>
+  <text x="40" y="150" font-size="12.5" fill="#4a5b70">correo</text>
+  <text x="40" y="172" font-size="12.5" fill="#4a5b70">ciudad</text>
+  <g filter="url(#s11)">
+    <rect x="300" y="40" width="220" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="300" y="40" width="220" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="300" y="62" width="220" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="410" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">pedido</text>
+  <text x="320" y="104" font-size="12.5" fill="#1b2a41" font-weight="600">id_pedido</text>
+  <rect x="460" y="92" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="475" y="104" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <text x="320" y="128" font-size="12.5" fill="#4a5b70">fecha</text>
+  <text x="320" y="150" font-size="12.5" fill="#4a5b70">estado</text>
+  <text x="320" y="172" font-size="12.5" fill="#5442b3" font-weight="600">id_cliente</text>
+  <rect x="460" y="160" width="30" height="16" rx="8" fill="#ede9fb"/><text x="475" y="172" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text>
+  <g filter="url(#s11)">
+    <rect x="600" y="40" width="220" height="172" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="600" y="40" width="220" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="600" y="62" width="220" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="710" y="66" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">producto</text>
+  <text x="620" y="104" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text>
+  <rect x="760" y="92" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="775" y="104" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <text x="620" y="128" font-size="12.5" fill="#4a5b70">nombre</text>
+  <text x="620" y="150" font-size="12.5" fill="#4a5b70">precio</text>
+  <text x="620" y="172" font-size="12.5" fill="#4a5b70">stock</text>
+  <text x="620" y="194" font-size="12.5" fill="#5442b3" font-weight="600">id_categoria</text>
+  <rect x="760" y="182" width="30" height="16" rx="8" fill="#ede9fb"/><text x="775" y="194" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text>
+  <g filter="url(#s11)">
+    <rect x="880" y="106" width="220" height="106" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="880" y="106" width="220" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="880" y="128" width="220" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="990" y="132" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">categoria</text>
+  <text x="900" y="170" font-size="12.5" fill="#1b2a41" font-weight="600">id_categoria</text>
+  <rect x="1040" y="158" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="1055" y="170" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <text x="900" y="194" font-size="12.5" fill="#4a5b70">nombre</text>
+  <g filter="url(#s11)">
+    <rect x="450" y="262" width="260" height="150" rx="14" fill="#ffffff" stroke="#d8d0f5"/>
+    <rect x="450" y="262" width="260" height="40" rx="14" fill="#ede9fb"/>
+    <rect x="450" y="284" width="260" height="18" fill="#ede9fb"/>
+  </g>
+  <text x="580" y="288" text-anchor="middle" font-size="14" font-weight="700" fill="#5442b3" font-family="Consolas, monospace">detalle_pedido</text>
+  <text x="470" y="326" font-size="12.5" fill="#1b2a41" font-weight="600">id_pedido</text>
+  <rect x="592" y="314" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="607" y="326" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <rect x="626" y="314" width="30" height="16" rx="8" fill="#ede9fb"/><text x="641" y="326" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text>
+  <text x="470" y="350" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text>
+  <rect x="592" y="338" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="607" y="350" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <rect x="626" y="338" width="30" height="16" rx="8" fill="#ede9fb"/><text x="641" y="350" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text>
+  <text x="470" y="374" font-size="12.5" fill="#4a5b70">cantidad</text>
+  <text x="470" y="398" font-size="12.5" fill="#4a5b70">precio_unitario</text>
+  <line x1="300" y1="168" x2="240" y2="168" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f11)"/>
+  <line x1="820" y1="190" x2="880" y2="190" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f11)"/>
+  <line x1="490" y1="262" x2="490" y2="190" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f11)"/>
+  <line x1="670" y1="262" x2="670" y2="212" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f11)"/>
+</svg>
+
+:::
+
+## Una pausa {.center}
+
+::: {.etapa}
+Etapa 6
+:::
+
+::: {.dos .estrecha}
+::: {}
+::: {.pregunta}
+¿Qué parte de este esquema salió directamente del modelo entidad-relación?
+:::
+
+::: {.respuesta .fragment}
+Prácticamente todo. Cada entidad es una tabla, cada relación 1:N es una clave foránea, y la
+relación N:M es una tabla más. Los dos mundos son el mismo, escrito de dos formas.
+:::
+:::
+::: {}
+::: {.diagrama}
+
+<svg viewBox="0 0 460 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El modelo entidad relacion en vertical: CLIENTE uno a muchos PEDIDO, PEDIDO muchos a muchos PRODUCTO con cantidad y precio unitario, PRODUCTO muchos a uno CATEGORIA" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s18" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#s18)">
+    <rect x="110" y="16" width="240" height="56" rx="14" fill="#e3eefb"/>
+    <rect x="110" y="128" width="240" height="56" rx="14" fill="#e3eefb"/>
+    <rect x="110" y="240" width="240" height="56" rx="14" fill="#e3eefb"/>
+    <rect x="110" y="352" width="240" height="56" rx="14" fill="#e3eefb"/>
+  </g>
+  <g font-size="17" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace" text-anchor="middle">
+    <text x="230" y="50">CLIENTE</text>
+    <text x="230" y="162">PEDIDO</text>
+    <text x="230" y="274">PRODUCTO</text>
+    <text x="230" y="386">CATEGORIA</text>
+  </g>
+  <line x1="230" y1="72" x2="230" y2="128" stroke="#7fa6d6" stroke-width="2.4"/>
+  <rect x="242" y="76" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/><text x="255" y="90" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">1</text>
+  <rect x="242" y="104" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/><text x="255" y="118" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text>
+  <line x1="230" y1="184" x2="230" y2="240" stroke="#7fa6d6" stroke-width="2.4"/>
+  <rect x="242" y="188" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/><text x="255" y="202" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text>
+  <rect x="242" y="216" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/><text x="255" y="230" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">M</text>
+  <line x1="230" y1="212" x2="150" y2="212" stroke="#7fa6d6" stroke-width="1.6" stroke-dasharray="4 4"/>
+  <rect x="10" y="190" width="140" height="44" rx="12" fill="#fdf1dc" stroke="#f3ddb0"/>
+  <text x="80" y="208" text-anchor="middle" font-size="11" fill="#9a6413" font-weight="700">cantidad</text>
+  <text x="80" y="224" text-anchor="middle" font-size="11" fill="#9a6413" font-weight="700">precio_unitario</text>
+  <line x1="230" y1="296" x2="230" y2="352" stroke="#7fa6d6" stroke-width="2.4"/>
+  <rect x="242" y="300" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/><text x="255" y="314" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">N</text>
+  <rect x="242" y="328" width="26" height="20" rx="10" fill="#ffffff" stroke="#c9dcf3"/><text x="255" y="342" text-anchor="middle" font-size="11.5" font-weight="800" fill="#4f86c6">1</text>
+</svg>
+
+:::
+:::
+:::
+
+# Hacer que exista {.seccion background-color="#e1f5ef"}
+
+::: {.rotulo data-numero="2"}
+Segunda parte
+:::
+
+## La primera tabla {.center}
+
+::: {.etapa}
+Etapa 7
+:::
+
+::: {.dos .estrecha .arriba}
+::: {}
 ```sql
-CREATE DATABASE cafeteria;
-```
-
-::: {.pasos}
-1. `CREATE DATABASE` reserva un espacio nuevo y vacío, identificado por su nombre
-2. Hay que indicarle al cliente que trabaje sobre esa base de datos activa
-3. En PostgreSQL (`psql`): `\c cafeteria`. En MySQL: `USE cafeteria;`
-4. `DROP DATABASE cafeteria;` la elimina por completo, sin posibilidad de deshacer
-:::
-
-## La tabla de trabajo, `PedidoPlano` {.center}
-
-```sql
-CREATE TABLE PedidoPlano (
-    pedido    INT,
-    cliente   VARCHAR(80),
-    telefono  VARCHAR(20),
-    producto  VARCHAR(80),
-    valor     DECIMAL(10,2)
+CREATE TABLE cliente (
+    id_cliente  INTEGER,
+    nombre      VARCHAR(100),
+    correo      VARCHAR(150),
+    ciudad      VARCHAR(80)
 );
 ```
-
-## Cargar los datos con `INSERT` {.center}
-
-```sql
-INSERT INTO PedidoPlano (pedido, cliente, telefono, producto, valor) VALUES
-    (1001, 'Ana Ruiz',  '300 111 2233', 'Café',   4500),
-    (1002, 'Ana Ruiz',  '300 111 2233', 'Torta',  23400),
-    (1003, 'Luis Pena', '301 444 5566', 'Café',   4500),
-    (1004, 'Ana Ruiz',  '300 111 2233', 'Jugo',   6800);
-```
-
-::: {.pasos}
-1. `INTO` nombra la tabla destino, seguida de la lista de columnas a llenar
-2. `VALUES` introduce los valores de cada fila, uno por columna, en el mismo orden
-3. El texto va entre comillas simples, los números van sin comillas
+:::
+::: {}
+::: {.anotaciones}
+- `CREATE TABLE` crear una tabla
+- `cliente` el nombre de la tabla
+- `id_cliente INTEGER` una columna que guarda números enteros
+- `nombre VARCHAR(100)` una columna de texto, hasta 100 caracteres
+:::
+:::
 :::
 
-## La primera consulta {.center}
+## La tabla existe, pero está vacía {.center}
 
-```sql
-SELECT * FROM PedidoPlano;
-```
-
-::: {.pasos}
-1. `SELECT` dice qué columnas quieres ver, `*` significa todas
-2. `FROM` dice de qué tabla las sacas
-3. La proyección elige columnas concretas: `SELECT cliente, producto FROM PedidoPlano;`
-4. `AS` renombra una columna en el resultado sin tocar la tabla
+::: {.etapa}
+Etapa 7
 :::
 
-## Filtrar con `WHERE` {.center}
+::: {.vacia}
+| id_cliente | nombre | correo | ciudad |
+|---|---|---|---|
+| . | . | . | . |
+| . | . | . | . |
 
-```sql
-SELECT * FROM PedidoPlano WHERE cliente = 'Ana Ruiz';
-SELECT * FROM PedidoPlano WHERE valor > 5000;
-```
-
-::: {.destacado}
-`=`, `<>`, `<`, `>`, `<=`, `>=`. Sin `WHERE`, ninguna fila se descarta.
+: cliente
 :::
 
-## `AND`, `OR` y `NOT` {.center}
+::: {.idea}
+Estructura sí. Datos, todavía no.
+:::
 
-::: {.diagrama}
+## ¿Qué falta respecto al modelo? {.center}
 
-<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tabla de verdad de AND y OR sobre dos condiciones A y B: AND es verdadero solo cuando A y B son verdaderas a la vez, OR es verdadero cuando al menos una lo es" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">AND exige las dos condiciones, OR exige al menos una</text>
-  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="32" width="330" height="120" rx="8"/><rect x="400" y="32" width="330" height="120" rx="8"/></g>
-  <text x="195" y="52" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">A AND B</text>
-  <g font-size="11" fill="#12324f" text-anchor="middle"><text x="90" y="76">A</text><text x="150" y="76">B</text><text x="240" y="76">Resultado</text></g>
-  <g font-size="11" fill="#5b6876" text-anchor="middle">
-    <text x="90" y="96">verdadero</text><text x="150" y="96">verdadero</text><text x="240" y="96" fill="#0e6f6c" font-weight="700">verdadero</text>
-    <text x="90" y="114">verdadero</text><text x="150" y="114">falso</text><text x="240" y="114">falso</text>
-    <text x="90" y="132">falso</text><text x="150" y="132">verdadero</text><text x="240" y="132">falso</text>
+::: {.etapa}
+Etapa 8
+:::
+
+::: {.dos}
+::: {}
+::: {.pregunta}
+Comparen la tabla creada con el modelo relacional. ¿Qué se quedó por fuera?
+:::
+
+::: {.respuesta .fragment}
+La clave primaria. Sin ella, nada impide dos clientes con el mismo identificador.
+:::
+:::
+::: {.fragment}
+```sql
+CREATE TABLE cliente (
+    id_cliente  INTEGER PRIMARY KEY,
+    nombre      VARCHAR(100),
+    correo      VARCHAR(150),
+    ciudad      VARCHAR(80)
+);
+```
+:::
+:::
+
+## Cada restricción nace de una necesidad {.center}
+
+::: {.etapa}
+Etapa 8
+:::
+
+::: {.dos .estrecha .arriba}
+::: {}
+```sql
+CREATE TABLE cliente (
+    id_cliente  INTEGER PRIMARY KEY,
+    nombre      VARCHAR(100) NOT NULL,
+    correo      VARCHAR(150) UNIQUE,
+    ciudad      VARCHAR(80)
+);
+```
+:::
+::: {}
+::: {.anotaciones .ambar}
+- `PRIMARY KEY` no se repiten identificadores
+- `NOT NULL` un cliente debe tener nombre
+- `UNIQUE` no quiero dos clientes con el mismo correo
+:::
+:::
+:::
+
+## Ahora ustedes: categoria {.center}
+
+::: {.etapa}
+Etapa 9
+:::
+
+::: {.dos}
+::: {}
+::: {.ficha}
+::: {.cabeza}
+categoria
+:::
+- id_categoria [PK]{.pk}
+- nombre
+:::
+:::
+::: {}
+::: {.pregunta}
+Escriban el `CREATE TABLE`.
+:::
+:::
+:::
+
+::: {.fragment}
+```sql
+CREATE TABLE categoria (
+    id_categoria  INTEGER PRIMARY KEY,
+    nombre        VARCHAR(100) NOT NULL
+);
+```
+:::
+
+## Ahora ustedes: producto {.center}
+
+::: {.etapa}
+Etapa 9
+:::
+
+::: {.dos}
+::: {}
+::: {.ficha}
+::: {.cabeza}
+producto
+:::
+- id_producto [PK]{.pk}
+- nombre
+- precio
+- stock
+- id_categoria [FK]{.fk}
+:::
+:::
+::: {}
+::: {.pregunta}
+Escriban el `CREATE TABLE`. Hay una columna que todavía no sabemos declarar del todo.
+:::
+:::
+:::
+
+## Una columna que apunta a otra tabla {.center}
+
+::: {.etapa}
+Etapa 10
+:::
+
+::: {.dos .estrecha}
+::: {}
+```sql
+CREATE TABLE producto (
+    id_producto   INTEGER PRIMARY KEY,
+    nombre        VARCHAR(100) NOT NULL,
+    precio        DECIMAL(10,2),
+    stock         INTEGER,
+    id_categoria  INTEGER
+);
+```
+:::
+::: {}
+::: {.pregunta .fragment}
+¿Sabe SQL que `id_categoria` corresponde a la tabla `categoria`?
+:::
+
+::: {.respuesta .fragment}
+No. Para SQL es un número entero más. Hay que decírselo.
+:::
+:::
+:::
+
+## Declarar la clave foránea {.center}
+
+::: {.etapa}
+Etapa 10
+:::
+
+::: {.dos .arriba}
+::: {}
+```sql
+CREATE TABLE producto (
+    id_producto   INTEGER PRIMARY KEY,
+    nombre        VARCHAR(100) NOT NULL,
+    precio        DECIMAL(10,2),
+    stock         INTEGER,
+    id_categoria  INTEGER,
+
+    FOREIGN KEY (id_categoria)
+        REFERENCES categoria(id_categoria)
+);
+```
+:::
+::: {}
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 520 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La columna id_categoria de producto apunta con una flecha a la clave primaria id_categoria de categoria" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s12" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+    <marker id="f12" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"/></marker>
+  </defs>
+  <g filter="url(#s12)">
+    <rect x="20" y="20" width="210" height="106" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="20" y="20" width="210" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="20" y="42" width="210" height="18" fill="#e3eefb"/>
   </g>
-  <text x="565" y="52" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">A OR B</text>
-  <g font-size="11" fill="#12324f" text-anchor="middle"><text x="460" y="76">A</text><text x="520" y="76">B</text><text x="610" y="76">Resultado</text></g>
-  <g font-size="11" fill="#5b6876" text-anchor="middle">
-    <text x="460" y="96">verdadero</text><text x="520" y="96">falso</text><text x="610" y="96" fill="#0e6f6c" font-weight="700">verdadero</text>
-    <text x="460" y="114">falso</text><text x="520" y="114">verdadero</text><text x="610" y="114" fill="#0e6f6c" font-weight="700">verdadero</text>
-    <text x="460" y="132">falso</text><text x="520" y="132">falso</text><text x="610" y="132">falso</text>
+  <text x="125" y="46" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">categoria</text>
+  <text x="38" y="84" font-size="12.5" fill="#1b2a41" font-weight="600">id_categoria</text>
+  <rect x="175" y="72" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="190" y="84" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <text x="38" y="108" font-size="12.5" fill="#4a5b70">nombre</text>
+  <g filter="url(#s12)">
+    <rect x="290" y="80" width="210" height="150" rx="14" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="290" y="80" width="210" height="40" rx="14" fill="#e3eefb"/>
+    <rect x="290" y="102" width="210" height="18" fill="#e3eefb"/>
+  </g>
+  <text x="395" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">producto</text>
+  <text x="308" y="144" font-size="12.5" fill="#1b2a41" font-weight="600">id_producto</text>
+  <rect x="445" y="132" width="30" height="16" rx="8" fill="#fdf1dc"/><text x="460" y="144" text-anchor="middle" font-size="9.5" font-weight="800" fill="#9a6413">PK</text>
+  <text x="308" y="168" font-size="12.5" fill="#4a5b70">nombre, precio, stock</text>
+  <rect x="298" y="184" width="194" height="32" rx="10" fill="#ede9fb"/>
+  <text x="308" y="205" font-size="12.5" fill="#5442b3" font-weight="700">id_categoria</text>
+  <rect x="445" y="192" width="30" height="16" rx="8" fill="#ffffff"/><text x="460" y="204" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5442b3">FK</text>
+  <path d="M298,200 L262,200 L262,84 L230,84" fill="none" stroke="#7c6ad8" stroke-width="2.2" stroke-linejoin="round" marker-end="url(#f12)"/>
+</svg>
+
+:::
+:::
+:::
+
+::: {.idea}
+FOREIGN KEY es la relación del modelo, escrita en SQL
+:::
+
+# Datos {.seccion background-color="#fdf1dc"}
+
+::: {.rotulo data-numero="3"}
+Tercera parte
+:::
+
+## Tabla no es lo mismo que datos {.center}
+
+::: {.etapa}
+Etapa 11
+:::
+
+::: {.dos .estrecha}
+::: {}
+```sql
+INSERT INTO cliente
+    (id_cliente, nombre, correo, ciudad)
+VALUES
+    (1, 'Ana', 'ana@email.com', 'Medellín');
+```
+
+::: {.pregunta}
+Antes de ejecutarlo: ¿cómo va a quedar la tabla?
+:::
+:::
+::: {.resaltada .fragment}
+| id_cliente [PK]{.pk} | nombre | correo | ciudad |
+|---:|---|---|---|
+| 1 | Ana | ana@email.com | Medellín |
+
+: cliente
+:::
+:::
+
+## Una fila más {.center}
+
+::: {.etapa}
+Etapa 11
+:::
+
+::: {.dos .estrecha}
+::: {}
+::: {.pregunta}
+Inserten a Carlos: `carlos@email.com`, de Bogotá.
+:::
+
+::: {.fragment}
+```sql
+INSERT INTO cliente
+    (id_cliente, nombre, correo, ciudad)
+VALUES
+    (2, 'Carlos', 'carlos@email.com', 'Bogotá');
+```
+:::
+:::
+::: {.fragment}
+| id_cliente [PK]{.pk} | nombre | correo | ciudad |
+|---:|---|---|---|
+| 1 | Ana | ana@email.com | Medellín |
+| 2 | Carlos | carlos@email.com | Bogotá |
+
+: cliente
+:::
+:::
+
+## ¿Diez INSERT para diez clientes? {.center}
+
+::: {.etapa}
+Etapa 12
+:::
+
+::: {.dos .estrecha .arriba}
+::: {}
+```sql
+INSERT INTO cliente (id_cliente, nombre, correo, ciudad)
+VALUES
+    (3, 'Laura', 'laura@email.com', 'Cali'),
+    (4, 'Juan',  'juan@email.com',  'Medellín'),
+    (5, 'Sara',  'sara@email.com',  'Bogotá');
+```
+:::
+::: {}
+| id_cliente | nombre | ciudad |
+|---:|---|---|
+| 1 | Ana | Medellín |
+| 2 | Carlos | Bogotá |
+| 3 | Laura | Cali |
+| 4 | Juan | Medellín |
+| 5 | Sara | Bogotá |
+
+: cliente
+:::
+:::
+
+::: {.nota}
+Una sola sentencia, varias filas.
+:::
+
+## Hagamos que falle {.center}
+
+::: {.etapa}
+Etapa 13
+:::
+
+::: {.dos .estrecha}
+::: {}
+```sql
+INSERT INTO cliente
+    (id_cliente, nombre, correo, ciudad)
+VALUES
+    (1, 'Pedro', 'pedro@email.com', 'Cali');
+```
+:::
+::: {}
+::: {.pregunta}
+Ya existe un cliente con `id_cliente = 1`. ¿Qué va a pasar?
+:::
+
+::: {.error .fragment}
+Clave primaria duplicada. La base de datos rechaza la fila completa.
+:::
+:::
+:::
+
+## Otra vez {.center}
+
+::: {.etapa}
+Etapa 13
+:::
+
+::: {.dos .estrecha}
+::: {}
+```sql
+INSERT INTO producto
+    (id_producto, nombre, precio, stock, id_categoria)
+VALUES
+    (10, 'Mouse', 80000, 20, 999);
+```
+:::
+::: {}
+::: {.pregunta}
+No existe ninguna categoría con `id_categoria = 999`. ¿Qué va a pasar?
+:::
+
+::: {.error .fragment}
+Violación de clave foránea. La fila apunta a una categoría que no existe, y la base de datos no la
+deja entrar.
+:::
+:::
+:::
+
+::: {.idea .fragment}
+La base de datos protege las reglas que diseñamos
+:::
+
+## Con todas las tablas cargadas {.center}
+
+::: {.etapa}
+Etapa 13
+:::
+
+::: {.tres}
+::: {}
+| id_categoria | nombre |
+|---:|---|
+| 1 | Periféricos |
+| 2 | Pantallas |
+| 3 | Fotografía |
+
+: categoria
+:::
+::: {}
+| id_producto | nombre | precio | stock | id_categoria |
+|---:|---|---:|---:|---:|
+| 1 | Mouse | 80000 | 20 | 1 |
+| 2 | Monitor | 900000 | 4 | 2 |
+| 3 | Teclado | 150000 | 15 | 1 |
+| 4 | Cámara | 500000 | 3 | 3 |
+
+: producto
+:::
+::: {}
+| id_pedido | fecha | estado | id_cliente |
+|---:|---|---|---:|
+| 101 | 2026-09-20 | pendiente | 1 |
+| 102 | 2026-09-21 | pagado | 2 |
+| 103 | 2026-09-21 | pagado | 1 |
+
+: pedido
+:::
+:::
+
+
+# Preguntar {.seccion background-color="#e3eefb"}
+
+::: {.rotulo data-numero="4"}
+Cuarta parte
+:::
+
+## Ya tenemos datos. ¿Cómo los vemos? {.center}
+
+::: {.etapa}
+Etapa 14
+:::
+
+::: {.dos .estrecha .arriba}
+::: {}
+```sql
+SELECT *
+FROM cliente;
+```
+
+::: {.anotaciones}
+- `SELECT` qué quiero ver
+- `FROM` de qué tabla
+- `*` todas las columnas
+:::
+:::
+::: {.fragment}
+| id_cliente | nombre | correo | ciudad |
+|---:|---|---|---|
+| 1 | Ana | ana@email.com | Medellín |
+| 2 | Carlos | carlos@email.com | Bogotá |
+| 3 | Laura | laura@email.com | Cali |
+| 4 | Juan | juan@email.com | Medellín |
+| 5 | Sara | sara@email.com | Bogotá |
+:::
+:::
+
+## Solo nombre y ciudad {.center}
+
+::: {.etapa}
+Etapa 15
+:::
+
+::: {.pregunta}
+No quiero todas las columnas. Solo `nombre` y `ciudad`. ¿Qué cambia en la consulta?
+:::
+
+::: {.dos .estrecha .arriba .fragment}
+::: {}
+```sql
+SELECT nombre, ciudad
+FROM cliente;
+```
+:::
+::: {}
+| nombre | ciudad |
+|---|---|
+| Ana | Medellín |
+| Carlos | Bogotá |
+| Laura | Cali |
+| Juan | Medellín |
+| Sara | Bogotá |
+:::
+:::
+
+## Tres retos rápidos {.center}
+
+::: {.etapa}
+Etapa 15
+:::
+
+::: {.tarjetas}
+::: {.azul}
+[1]{.titulo}
+
+Nombre y correo de cada cliente.
+:::
+::: {.azul}
+[2]{.titulo}
+
+Únicamente la ciudad.
+:::
+::: {.azul}
+[3]{.titulo}
+
+Nombre y precio de cada producto.
+:::
+:::
+
+::: {.fragment}
+```sql
+SELECT nombre, correo FROM cliente;
+
+SELECT ciudad FROM cliente;
+
+SELECT nombre, precio FROM producto;
+```
+:::
+
+## Solo los clientes de Medellín {.center}
+
+::: {.etapa}
+Etapa 16
+:::
+
+::: {.pregunta}
+`SELECT nombre, ciudad FROM cliente` sigue mostrando a todos. ¿Qué le falta?
+:::
+
+::: {.respuesta .fragment}
+Una condición.
+:::
+
+::: {.dos .estrecha .arriba .fragment}
+::: {}
+```sql
+SELECT nombre, ciudad
+FROM cliente
+WHERE ciudad = 'Medellín';
+```
+
+::: {.anotaciones}
+- `SELECT` qué
+- `FROM` de dónde
+- `WHERE` bajo qué condición
+:::
+:::
+::: {}
+| nombre | ciudad |
+|---|---|
+| Ana | Medellín |
+| Juan | Medellín |
+:::
+:::
+
+## Retos de WHERE {.center}
+
+::: {.etapa}
+Etapa 17
+:::
+
+::: {.tarjetas}
+::: {.azul}
+[1]{.titulo}
+
+Productos con precio superior a 100.000.
+:::
+::: {.azul}
+[2]{.titulo}
+
+Productos con stock menor a 10.
+:::
+::: {.azul}
+[3]{.titulo}
+
+Clientes que no sean de Medellín.
+:::
+::: {.azul}
+[4]{.titulo}
+
+Productos con precio entre 100.000 y 500.000.
+:::
+::: {.azul}
+[5]{.titulo}
+
+Clientes de Medellín o Bogotá.
+:::
+:::
+
+## Soluciones {.center}
+
+::: {.etapa}
+Etapa 17
+:::
+
+```sql
+SELECT * FROM producto WHERE precio > 100000;
+
+SELECT * FROM producto WHERE stock < 10;
+
+SELECT * FROM cliente  WHERE ciudad <> 'Medellín';
+
+SELECT * FROM producto WHERE precio BETWEEN 100000 AND 500000;
+
+SELECT * FROM cliente  WHERE ciudad IN ('Medellín', 'Bogotá');
+```
+
+::: {.anotaciones}
+- `> < >= <= <>` comparar
+- `AND OR` combinar condiciones
+- `BETWEEN` un rango, extremos incluidos
+- `IN` cualquiera de una lista
+:::
+
+## Predigan antes de ejecutar {.center}
+
+::: {.etapa}
+Etapa 18
+:::
+
+::: {.dos .arriba}
+::: {}
+| nombre | precio | stock |
+|---|---:|---:|
+| Mouse | 80000 | 20 |
+| Monitor | 900000 | 4 |
+| Teclado | 150000 | 15 |
+| Cámara | 500000 | 3 |
+
+: producto
+:::
+::: {}
+```sql
+SELECT *
+FROM producto
+WHERE precio > 100000
+  AND stock > 10;
+```
+
+::: {.pregunta}
+Sin ejecutar: ¿qué productos aparecen?
+:::
+:::
+:::
+
+::: {.respuesta .fragment}
+Solo Teclado. El Mouse falla en el precio; Monitor y Cámara fallan en el stock. Leer SQL importa tanto como
+escribirlo.
+:::
+
+## Del más caro al más barato {.center}
+
+::: {.etapa}
+Etapa 19
+:::
+
+::: {.dos .estrecha .arriba}
+::: {}
+```sql
+SELECT nombre, precio
+FROM producto
+ORDER BY precio DESC;
+```
+
+::: {.anotaciones}
+- `ORDER BY` ordenar por una columna
+- `DESC` de mayor a menor
+- `ASC` de menor a mayor, el valor por defecto
+:::
+:::
+::: {}
+| nombre | precio |
+|---|---:|
+| Monitor | 900000 |
+| Cámara | 500000 |
+| Teclado | 150000 |
+| Mouse | 80000 |
+:::
+:::
+
+::: {.pregunta .fragment}
+¿Y si solo quiero los tres más caros?
+:::
+
+::: {.fragment}
+```sql
+SELECT nombre, precio FROM producto ORDER BY precio DESC LIMIT 3;
+```
+:::
+
+## El Mouse ahora cuesta 95.000 {.center}
+
+::: {.etapa}
+Etapa 20
+:::
+
+::: {.pregunta}
+¿Hay que insertar el producto otra vez?
+:::
+
+::: {.respuesta .fragment}
+No. La fila ya existe; lo que cambia es un valor dentro de ella.
+:::
+
+::: {.dos .estrecha .arriba .fragment}
+::: {}
+```sql
+UPDATE producto
+SET precio = 95000
+WHERE id_producto = 1;
+```
+:::
+::: {}
+::: {.anotaciones}
+- `UPDATE` qué tabla cambia
+- `SET` qué columna, y su valor nuevo
+- `WHERE` a qué filas se aplica
+:::
+:::
+:::
+
+## El mismo UPDATE, sin WHERE {.center}
+
+::: {.etapa}
+Etapa 20
+:::
+
+::: {.dos}
+::: {}
+```sql
+UPDATE producto
+SET precio = 95000;
+```
+:::
+::: {}
+::: {.pregunta}
+¿Qué va a pasar?
+:::
+
+::: {.error .fragment}
+Todos los productos pasan a costar 95.000. La sentencia es válida, el motor la ejecuta sin
+preguntar, y no hay forma de deshacerla con un clic.
+:::
+:::
+:::
+
+## Eliminar {.center}
+
+::: {.etapa}
+Etapa 21
+:::
+
+::: {.dos .arriba}
+::: {}
+```sql
+DELETE FROM cliente
+WHERE id_cliente = 5;
+```
+
+::: {.nota}
+Sara ya no debe estar en el sistema. Se va una fila, la que cumple la condición.
+:::
+:::
+::: {}
+```sql
+DELETE FROM cliente;
+```
+
+::: {.pregunta}
+¿Y esto?
+:::
+
+::: {.error .fragment}
+Vacía la tabla completa. Sin aviso.
+:::
+:::
+:::
+
+# Recorrer las relaciones {.seccion background-color="#ede9fb"}
+
+::: {.rotulo data-numero="5"}
+Quinta parte
+:::
+
+## Volvemos al modelo {.center}
+
+::: {.etapa}
+Etapa 22
+:::
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 900 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CLIENTE y PEDIDO unidos por una linea con cardinalidad uno a muchos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s13" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#s13)">
+    <rect x="60" y="35" width="240" height="70" rx="16" fill="#e3eefb"/>
+    <rect x="600" y="35" width="240" height="70" rx="16" fill="#e3eefb"/>
+  </g>
+  <text x="180" y="77" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CLIENTE</text>
+  <text x="720" y="77" text-anchor="middle" font-size="20" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text>
+  <line x1="300" y1="70" x2="600" y2="70" stroke="#7fa6d6" stroke-width="2.6"/>
+  <rect x="312" y="45" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="327" y="62" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">1</text>
+  <rect x="558" y="45" width="30" height="24" rx="12" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="573" y="62" text-anchor="middle" font-size="14" font-weight="800" fill="#4f86c6">N</text>
+</svg>
+
+:::
+
+::: {.pregunta}
+Quiero el nombre del cliente que hizo cada pedido. ¿Qué tablas necesito, y qué columnas las conectan?
+:::
+
+::: {.respuesta .fragment}
+`cliente` y `pedido`. Las conecta `id_cliente`: clave primaria en una, clave foránea en la otra.
+:::
+
+## Seguir la flecha, fila por fila {.center}
+
+::: {.etapa}
+Etapa 23
+:::
+
+::: {.diagrama}
+
+<svg viewBox="0 0 1000 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres filas de pedido, con id_cliente 1, 2 y 1, conectadas por flechas a las filas de cliente Ana y Carlos; a la derecha, el resultado combinado: pedido 101 Ana, 102 Carlos, 103 Ana" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s14" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+    <marker id="f14" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"/></marker>
+  </defs>
+  <text x="40" y="52" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">pedido</text>
+  <g filter="url(#s14)"><rect x="40" y="62" width="330" height="200" rx="14" fill="#ffffff" stroke="#d6e3f3"/></g>
+  <rect x="40" y="62" width="330" height="40" rx="14" fill="#e3eefb"/>
+  <rect x="40" y="84" width="330" height="18" fill="#e3eefb"/>
+  <g font-size="13" font-weight="700" fill="#1b2a41">
+    <text x="62" y="88">id_pedido</text><text x="160" y="88">fecha</text><text x="270" y="88" fill="#5442b3">id_cliente</text>
+  </g>
+  <line x1="40" y1="102" x2="370" y2="102" stroke="#c9dcf3"/>
+  <line x1="40" y1="155" x2="370" y2="155" stroke="#edf2f8"/>
+  <line x1="40" y1="208" x2="370" y2="208" stroke="#edf2f8"/>
+  <g font-size="14" fill="#1b2a41">
+    <text x="62" y="134">101</text><text x="160" y="134">20/09</text><text x="270" y="134" font-weight="700" fill="#5442b3">1</text>
+    <text x="62" y="187">102</text><text x="160" y="187">21/09</text><text x="270" y="187" font-weight="700" fill="#5442b3">2</text>
+    <text x="62" y="240">103</text><text x="160" y="240">21/09</text><text x="270" y="240" font-weight="700" fill="#5442b3">1</text>
+  </g>
+  <text x="470" y="52" font-size="13" font-weight="700" fill="#4f86c6" font-family="Consolas, monospace">cliente</text>
+  <g filter="url(#s14)"><rect x="470" y="62" width="230" height="147" rx="14" fill="#ffffff" stroke="#d6e3f3"/></g>
+  <rect x="470" y="62" width="230" height="40" rx="14" fill="#e3eefb"/>
+  <rect x="470" y="84" width="230" height="18" fill="#e3eefb"/>
+  <g font-size="13" font-weight="700" fill="#1b2a41">
+    <text x="492" y="88">id_cliente</text><text x="610" y="88">nombre</text>
+  </g>
+  <line x1="470" y1="102" x2="700" y2="102" stroke="#c9dcf3"/>
+  <line x1="470" y1="155" x2="700" y2="155" stroke="#edf2f8"/>
+  <g font-size="14" fill="#1b2a41">
+    <text x="492" y="134" font-weight="700">1</text><text x="610" y="134">Ana</text>
+    <text x="492" y="187" font-weight="700">2</text><text x="610" y="187">Carlos</text>
+  </g>
+  <line x1="370" y1="122" x2="470" y2="122" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f14)"/>
+  <line x1="370" y1="181" x2="470" y2="181" stroke="#7c6ad8" stroke-width="2" marker-end="url(#f14)"/>
+  <path d="M370,234 L410,234 L410,138 L470,138" fill="none" stroke="#7c6ad8" stroke-width="2" stroke-linejoin="round" marker-end="url(#f14)"/>
+  <text x="780" y="52" font-size="13" font-weight="700" fill="#1e7c66" font-family="Consolas, monospace">resultado</text>
+  <g filter="url(#s14)"><rect x="780" y="62" width="200" height="200" rx="14" fill="#ffffff" stroke="#bfe7db"/></g>
+  <rect x="780" y="62" width="200" height="40" rx="14" fill="#e1f5ef"/>
+  <rect x="780" y="84" width="200" height="18" fill="#e1f5ef"/>
+  <g font-size="13" font-weight="700" fill="#1b2a41">
+    <text x="800" y="88">pedido</text><text x="890" y="88">cliente</text>
+  </g>
+  <line x1="780" y1="102" x2="980" y2="102" stroke="#bfe7db"/>
+  <line x1="780" y1="155" x2="980" y2="155" stroke="#edf2f8"/>
+  <line x1="780" y1="208" x2="980" y2="208" stroke="#edf2f8"/>
+  <g font-size="14" fill="#1b2a41">
+    <text x="800" y="134">101</text><text x="890" y="134">Ana</text>
+    <text x="800" y="187">102</text><text x="890" y="187">Carlos</text>
+    <text x="800" y="240">103</text><text x="890" y="240">Ana</text>
+  </g>
+  <text x="500" y="305" text-anchor="middle" font-size="14" fill="#4a5b70">cada fila de pedido se empareja con la fila de cliente que tiene el mismo id_cliente</text>
+</svg>
+
+:::
+
+## El primer JOIN {.center}
+
+::: {.etapa}
+Etapa 23
+:::
+
+::: {.dos .estrecha .arriba}
+::: {}
+```sql
+SELECT pedido.id_pedido,
+       cliente.nombre
+FROM pedido
+JOIN cliente
+  ON pedido.id_cliente = cliente.id_cliente;
+```
+:::
+::: {}
+::: {.anotaciones}
+- `JOIN` combinar con otra tabla
+- `ON` la condición para emparejar filas
+- `pedido.id_cliente` tabla punto columna, para que no haya ambigüedad
+:::
+:::
+:::
+
+::: {.idea}
+JOIN sigue las relaciones que diseñamos en el modelo
+:::
+
+## Ahora ustedes: producto y categoría {.center}
+
+::: {.etapa}
+Etapa 24
+:::
+
+::: {.dos}
+::: {}
+::: {.pregunta}
+Muestren el nombre del producto, su precio y el nombre de su categoría.
+:::
+
+::: {.respuesta .fragment}
+Dos tablas, unidas por `id_categoria`. El mismo patrón del `JOIN` anterior.
+:::
+:::
+::: {.fragment}
+```sql
+SELECT producto.nombre,
+       producto.precio,
+       categoria.nombre
+FROM producto
+JOIN categoria
+  ON producto.id_categoria
+   = categoria.id_categoria;
+```
+:::
+:::
+
+## Alias {.center}
+
+::: {.etapa}
+Etapa 24
+:::
+
+::: {.dos .estrecha .arriba}
+::: {}
+```sql
+SELECT p.nombre,
+       p.precio,
+       c.nombre AS categoria
+FROM producto p
+JOIN categoria c
+  ON p.id_categoria = c.id_categoria;
+```
+:::
+::: {}
+| nombre | precio | categoria |
+|---|---:|---|
+| Mouse | 95000 | Periféricos |
+| Monitor | 900000 | Pantallas |
+| Teclado | 150000 | Periféricos |
+| Cámara | 500000 | Fotografía |
+:::
+:::
+
+::: {.anotaciones}
+- `producto p` un nombre corto para la tabla, válido dentro de la consulta
+- `AS categoria` un nombre para la columna en el resultado
+:::
+
+## ¿Qué productos compró cada cliente? {.center}
+
+::: {.etapa}
+Etapa 25
+:::
+
+::: {.pregunta}
+Antes de escribir SQL: dibujen el camino en el modelo. ¿Por qué tablas hay que pasar?
+:::
+
+::: {.diagrama .corto .fragment}
+
+<svg viewBox="0 0 1000 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Camino de cuatro tablas: cliente, pedido, detalle_pedido y producto, unidas por flechas rotuladas con la columna que las conecta: id_cliente, id_pedido, id_producto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s15" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+    <marker id="f15" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7c6ad8"/></marker>
+  </defs>
+  <g filter="url(#s15)">
+    <rect x="20" y="40" width="180" height="60" rx="14" fill="#e3eefb"/>
+    <rect x="290" y="40" width="180" height="60" rx="14" fill="#e3eefb"/>
+    <rect x="560" y="40" width="200" height="60" rx="14" fill="#ede9fb"/>
+    <rect x="850" y="40" width="130" height="60" rx="14" fill="#e3eefb"/>
+  </g>
+  <g font-size="16" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace" text-anchor="middle">
+    <text x="110" y="76">cliente</text>
+    <text x="380" y="76">pedido</text>
+    <text x="660" y="76" fill="#5442b3">detalle_pedido</text>
+    <text x="915" y="76">producto</text>
+  </g>
+  <line x1="200" y1="70" x2="282" y2="70" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#f15)"/>
+  <line x1="470" y1="70" x2="552" y2="70" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#f15)"/>
+  <line x1="760" y1="70" x2="842" y2="70" stroke="#7c6ad8" stroke-width="2.2" marker-end="url(#f15)"/>
+  <g font-size="12.5" fill="#5442b3" font-weight="700" font-family="Consolas, monospace" text-anchor="middle">
+    <text x="245" y="126">id_cliente</text>
+    <text x="515" y="126">id_pedido</text>
+    <text x="805" y="126">id_producto</text>
   </g>
 </svg>
 
 :::
 
-## `BETWEEN`, `IN`, `LIKE` {.center}
+## Cuatro tablas, tres JOIN {.center}
 
+::: {.etapa}
+Etapa 25
+:::
+
+::: {.dos .estrecha .arriba}
+::: {}
 ```sql
-SELECT * FROM PedidoPlano WHERE valor BETWEEN 4000 AND 10000;
-SELECT * FROM PedidoPlano WHERE producto IN ('Café', 'Torta');
-SELECT * FROM PedidoPlano WHERE cliente LIKE 'Ana%';
+SELECT c.nombre   AS cliente,
+       p.nombre   AS producto,
+       d.cantidad
+FROM cliente c
+JOIN pedido pe
+  ON c.id_cliente = pe.id_cliente
+JOIN detalle_pedido d
+  ON pe.id_pedido = d.id_pedido
+JOIN producto p
+  ON d.id_producto = p.id_producto;
+```
+:::
+::: {}
+| cliente | producto | cantidad |
+|---|---|---:|
+| Ana | Mouse | 2 |
+| Ana | Teclado | 1 |
+| Carlos | Monitor | 1 |
+| Ana | Cámara | 1 |
+| Ana | Mouse | 1 |
+:::
+:::
+
+::: {.nota}
+No es una consulta enorme. Es el camino del diagrama anterior, un `JOIN` por cada flecha.
+:::
+
+# Resumir {.seccion background-color="#e1f5ef"}
+
+::: {.rotulo data-numero="6"}
+Sexta parte
+:::
+
+## Preguntas de una sola cifra {.center}
+
+::: {.etapa}
+Etapa 26
+:::
+
+::: {.tres}
+::: {}
+```sql
+SELECT COUNT(*)
+FROM producto;
 ```
 
-::: {.diagrama}
+::: {.nota}
+¿Cuántos productos hay? **4**
+:::
+:::
+::: {}
+```sql
+SELECT AVG(precio)
+FROM producto;
+```
 
-<svg viewBox="0 0 760 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El comodin porcentaje reemplaza cualquier cantidad de caracteres, y el patron Ana porcentaje coincide con Ana Ruiz; el comodin guion bajo reemplaza exactamente un caracter" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Dos comodines de LIKE, cero o más caracteres contra exactamente uno</text>
-  <rect x="30" y="32" width="330" height="110" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
-  <text x="195" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">% reemplaza cero o más caracteres</text>
-  <text x="195" y="78" font-size="11.5" fill="#12324f" text-anchor="middle">patrón: 'Ana%'</text>
-  <text x="195" y="98" font-size="11.5" fill="#12324f" text-anchor="middle">coincide: 'Ana Ruiz'</text>
-  <text x="195" y="120" font-size="10.5" fill="#5b6876" text-anchor="middle">no coincide: 'Luis Pena'</text>
-  <rect x="400" y="32" width="330" height="110" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
-  <text x="565" y="54" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">_ reemplaza exactamente un carácter</text>
-  <text x="565" y="78" font-size="11.5" fill="#12324f" text-anchor="middle">patrón: '300 111 22__'</text>
-  <text x="565" y="98" font-size="11.5" fill="#12324f" text-anchor="middle">coincide: '300 111 2233'</text>
-  <text x="565" y="120" font-size="10.5" fill="#5b6876" text-anchor="middle">no coincide: '300 111 223'</text>
+::: {.nota}
+¿Cuál es el precio promedio? **411250**
+:::
+:::
+::: {}
+```sql
+SELECT MAX(precio)
+FROM producto;
+```
+
+::: {.nota}
+¿Cuál es el más caro? **900000**
+:::
+:::
+:::
+
+::: {.anotaciones}
+- `COUNT` cuántas filas
+- `SUM` la suma
+- `AVG` el promedio
+- `MIN` `MAX` el menor y el mayor
+:::
+
+## ¿Cuántos clientes hay en cada ciudad? {.center}
+
+::: {.etapa}
+Etapa 27
+:::
+
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 1000 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco clientes repartidos en tres grupos por ciudad: Medellin con Ana y Juan, dos; Bogota con Carlos y Sara, dos; Cali con Laura, uno" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s16" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#s16)">
+    <rect x="60" y="30" width="250" height="180" rx="16" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="375" y="30" width="250" height="180" rx="16" fill="#ffffff" stroke="#d6e3f3"/>
+    <rect x="690" y="30" width="250" height="180" rx="16" fill="#ffffff" stroke="#d6e3f3"/>
+  </g>
+  <g font-size="15" font-weight="700" fill="#4f86c6">
+    <text x="85" y="64">Medellín</text>
+    <text x="400" y="64">Bogotá</text>
+    <text x="715" y="64">Cali</text>
+  </g>
+  <g font-size="15" fill="#1b2a41">
+    <text x="85" y="108">Ana</text><text x="85" y="138">Juan</text>
+    <text x="400" y="108">Carlos</text><text x="400" y="138">Sara</text>
+    <text x="715" y="108">Laura</text>
+  </g>
+  <g>
+    <circle cx="262" cy="160" r="26" fill="#e1f5ef"/><text x="262" y="168" text-anchor="middle" font-size="20" font-weight="800" fill="#1e7c66">2</text>
+    <circle cx="577" cy="160" r="26" fill="#e1f5ef"/><text x="577" y="168" text-anchor="middle" font-size="20" font-weight="800" fill="#1e7c66">2</text>
+    <circle cx="892" cy="160" r="26" fill="#e1f5ef"/><text x="892" y="168" text-anchor="middle" font-size="20" font-weight="800" fill="#1e7c66">1</text>
+  </g>
 </svg>
 
 :::
 
-## `NULL` no es igual a nada {.center}
-
-```sql
-SELECT * FROM PedidoPlano WHERE descuento = NULL;    -- 0 filas, siempre
-SELECT * FROM PedidoPlano WHERE descuento IS NULL;    -- forma correcta
-```
-
-::: {.destacado}
-`NULL` es ausencia de valor, no cero ni cadena vacía. Ni siquiera `NULL = NULL` es verdadero.
+::: {.pregunta}
+Primero se agrupan las filas por ciudad. Después se cuenta dentro de cada grupo. ¿Cómo se escribe eso?
 :::
 
-## `ORDER BY`, `LIMIT`, `FETCH FIRST` {.center}
+## GROUP BY {.center}
 
-```sql
-SELECT * FROM PedidoPlano ORDER BY cliente ASC, valor DESC;
-SELECT * FROM PedidoPlano ORDER BY valor DESC LIMIT 1;
-SELECT * FROM PedidoPlano ORDER BY valor DESC FETCH FIRST 1 ROWS ONLY;
-```
-
-::: {.destacado}
-`LIMIT` no es parte del estándar ISO/IEC 9075, aunque casi todo motor lo implementa igual. `FETCH
-FIRST n ROWS ONLY` sí lo es.
+::: {.etapa}
+Etapa 27
 :::
 
-## Funciones de agregación {.center}
-
+::: {.dos .estrecha .arriba}
+::: {}
 ```sql
-SELECT COUNT(*), SUM(valor), AVG(valor), MIN(valor), MAX(valor)
-FROM PedidoPlano;
+SELECT ciudad,
+       COUNT(*) AS cantidad
+FROM cliente
+GROUP BY ciudad;
 ```
+:::
+::: {}
+| ciudad | cantidad |
+|---|---:|
+| Medellín | 2 |
+| Bogotá | 2 |
+| Cali | 1 |
+:::
+:::
 
-## `UPDATE` corrige tres filas a la vez {.center}
+::: {.idea}
+Cuando la pregunta dice "por cada", hay que agrupar
+:::
 
-```sql
-UPDATE PedidoPlano
-SET telefono = '300 999 8877'
-WHERE cliente = 'Ana Ruiz';
-```
+::: {.nota}
+Ventas por producto. Clientes por ciudad. Pedidos por estado. La palabra que delata al `GROUP BY`.
+:::
 
+## Misión final {.center}
+
+::: {.etapa}
+Etapa 28
+:::
+
+::: {.dos}
+::: {}
+::: {.pregunta}
+Gerencia quiere conocer los tres productos que más dinero han vendido.
+:::
+:::
+::: {}
 ::: {.pasos}
-1. `UPDATE` nombra la tabla que cambia, `PedidoPlano`
-2. `SET` nombra la columna y, después del `=`, el valor nuevo
-3. `WHERE` filtra a qué filas se les aplica el cambio, igual que en `SELECT`
+::: {.incremental}
+1. ¿Qué tablas hacen falta? `producto` y `detalle_pedido`
+2. ¿Cuánto produjo cada línea? `cantidad * precio_unitario`
+3. ¿Qué columna las conecta? `id_producto`
+4. ¿Qué significa "por producto"? `GROUP BY`
+5. ¿Qué significa "los tres que más"? `ORDER BY ... DESC LIMIT 3`
+:::
+:::
+:::
 :::
 
-::: {.diagrama}
+## La consulta completa {.center}
 
-<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes del UPDATE, las tres filas de Ana Ruiz muestran el telefono antiguo; despues del UPDATE con WHERE cliente igual Ana Ruiz, las tres filas quedan actualizadas al telefono nuevo en una sola sentencia, sin tocar la fila de Luis Pena" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un solo UPDATE con WHERE corrige las tres filas de Ana a la vez</text>
-  <text x="195" y="36" font-size="11.5" font-weight="700" fill="#5b6876" text-anchor="middle">Antes</text>
-  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="30" y="44" width="330" height="34"/><rect x="30" y="78" width="330" height="34"/><rect x="30" y="112" width="330" height="34"/><rect x="30" y="146" width="330" height="34"/></g>
-  <g font-size="10.5" fill="#12324f"><text x="45" y="65">1001 Ana Ruiz</text><text x="230" y="65">300 111 2233</text></g>
-  <g font-size="10.5" fill="#12324f"><text x="45" y="99">1002 Ana Ruiz</text><text x="230" y="99">300 111 2233</text></g>
-  <g font-size="10.5" fill="#5b6876"><text x="45" y="133">1003 Luis Pena</text><text x="230" y="133">301 444 5566</text></g>
-  <g font-size="10.5" fill="#12324f"><text x="45" y="167">1004 Ana Ruiz</text><text x="230" y="167">300 111 2233</text></g>
-  <path d="M380,120 L400,120" fill="none" stroke="#8fb3d1" stroke-width="1.8"/>
-  <text x="565" y="36" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Después</text>
-  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="400" y="44" width="330" height="34"/><rect x="400" y="78" width="330" height="34"/><rect x="400" y="112" width="330" height="34"/><rect x="400" y="146" width="330" height="34"/></g>
-  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="65">1001 Ana Ruiz</text><text x="600" y="65">300 999 8877</text></g>
-  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="99">1002 Ana Ruiz</text><text x="600" y="99">300 999 8877</text></g>
-  <g font-size="10.5" fill="#5b6876"><text x="415" y="133">1003 Luis Pena</text><text x="600" y="133">sin cambio</text></g>
-  <g font-size="10.5" fill="#0e6f6c" font-weight="600"><text x="415" y="167">1004 Ana Ruiz</text><text x="600" y="167">300 999 8877</text></g>
+::: {.etapa}
+Etapa 28
+:::
+
+::: {.dos .estrecha .arriba}
+::: {}
+```sql
+SELECT p.nombre,
+       SUM(d.cantidad * d.precio_unitario) AS ventas
+FROM producto p
+JOIN detalle_pedido d
+  ON p.id_producto = d.id_producto
+GROUP BY p.id_producto, p.nombre
+ORDER BY ventas DESC
+LIMIT 3;
+```
+:::
+::: {}
+| nombre | ventas |
+|---|---:|
+| Monitor | 900000 |
+| Cámara | 500000 |
+| Mouse | 240000 |
+:::
+:::
+
+
+## Lo que cambió en una sesión {.center}
+
+::: {.dos .arriba}
+::: {}
+::: {.diagrama .corto}
+
+<svg viewBox="0 0 480 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CLIENTE uno a muchos PEDIDO" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="s17" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#1b2a41" flood-opacity="0.12"/></filter>
+  </defs>
+  <g filter="url(#s17)">
+    <rect x="20" y="30" width="160" height="60" rx="14" fill="#e3eefb"/>
+    <rect x="300" y="30" width="160" height="60" rx="14" fill="#e3eefb"/>
+  </g>
+  <text x="100" y="66" text-anchor="middle" font-size="17" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">CLIENTE</text>
+  <text x="380" y="66" text-anchor="middle" font-size="17" font-weight="700" fill="#1b2a41" font-family="Consolas, monospace">PEDIDO</text>
+  <line x1="180" y1="60" x2="300" y2="60" stroke="#7fa6d6" stroke-width="2.4"/>
+  <rect x="188" y="38" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="201" y="54" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">1</text>
+  <rect x="266" y="38" width="26" height="22" rx="11" fill="#ffffff" stroke="#c9dcf3"/>
+  <text x="279" y="54" text-anchor="middle" font-size="13" font-weight="800" fill="#4f86c6">N</text>
 </svg>
 
 :::
 
-## `DELETE` y lo que se pierde con la fila {.center}
-
+::: {.nota}
+De mirar una línea entre dos entidades...
+:::
+:::
+::: {}
 ```sql
-DELETE FROM PedidoPlano WHERE pedido = 1003;
+SELECT c.nombre, p.id_pedido
+FROM cliente c
+JOIN pedido p
+  ON c.id_cliente = p.id_cliente
+WHERE c.ciudad = 'Medellín'
+ORDER BY p.fecha DESC;
 ```
 
-::: {.destacado}
-Sin una tabla `Cliente` separada, borrar el pedido de Luis Pena borra también su único registro de
-nombre y teléfono en toda la base de datos.
+::: {.nota}
+...a poder explicar por qué existe cada línea de esta consulta.
+:::
+:::
 :::
 
-## Borrar una tabla completa, `DROP TABLE` {.center}
+## La progresión {.center}
 
-```sql
-DROP TABLE PedidoPlano;
-```
-
-::: {.destacado}
-`DELETE` vacía una tabla que sigue existiendo. `DROP TABLE` es DDL, hace desaparecer la tabla misma,
-estructura y datos, sin `ROLLBACK` posible.
+::: {.progresion}
+| Momento | Lo que se aprendió |
+|---|---|
+| Entidad a tabla | Entidad, atributo, fila |
+| Relación 1:N | Clave primaria y clave foránea |
+| Relación N:M | Tabla intermedia |
+| `CREATE TABLE` | Crear la estructura |
+| `INSERT` y restricciones | Guardar y proteger datos |
+| `SELECT`, `WHERE`, `ORDER BY` | Consultar, filtrar, ordenar |
+| `UPDATE`, `DELETE` | Modificar y eliminar, con cuidado |
+| `JOIN` | Recorrer las relaciones |
+| Agregación y `GROUP BY` | Resumir por grupos |
 :::
 
-## El riesgo de olvidar el `WHERE` {.center}
+## Lo que sigue {.center}
 
-```sql
-UPDATE PedidoPlano SET valor = valor * 0.9;   -- actualiza las CUATRO filas
-DELETE FROM PedidoPlano;                       -- borra las CUATRO filas
-```
+::: {.tarjetas}
+::: {.lila}
+[LEFT JOIN]{.titulo}
 
-::: {.destacado}
-Ninguna de las dos sentencias es inválida. El motor las ejecuta sin queja, y esa es la razón para
-revisar dos veces el `WHERE` antes de ejecutar contra datos reales.
+Clientes que todavía no han hecho ningún pedido.
+:::
+::: {.menta}
+[HAVING]{.titulo}
+
+Filtrar después de agrupar: ciudades con más de un cliente.
+:::
+::: {.azul}
+[Subconsultas]{.titulo}
+
+Productos más caros que el promedio.
+:::
+::: {.ambar}
+[Transacciones]{.titulo}
+
+Varios cambios que ocurren todos, o ninguno.
+:::
 :::
 
-## El orden real de ejecución {.center}
-
-::: {.diagrama}
-
-<svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Orden escrito de una consulta: SELECT, FROM, WHERE, ORDER BY; orden real de procesamiento del motor: primero FROM, despues WHERE, despues SELECT, y por ultimo ORDER BY" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <defs><marker id="sql1b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El orden en que escribes la consulta no es el orden en que el motor la resuelve</text>
-  <text x="380" y="40" font-size="11" fill="#5b6876" text-anchor="middle">Orden escrito</text>
-  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="50" width="150" height="40" rx="6"/><rect x="210" y="50" width="150" height="40" rx="6"/><rect x="390" y="50" width="150" height="40" rx="6"/><rect x="570" y="50" width="160" height="40" rx="6"/></g>
-  <g font-size="12" font-weight="700" fill="#12324f" text-anchor="middle"><text x="105" y="75">SELECT</text><text x="285" y="75">FROM</text><text x="465" y="75">WHERE</text><text x="650" y="75">ORDER BY</text></g>
-  <text x="380" y="112" font-size="11" fill="#0e6f6c" text-anchor="middle">Orden real de ejecución</text>
-  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="30" y="122" width="150" height="40" rx="6"/><rect x="210" y="122" width="150" height="40" rx="6"/><rect x="390" y="122" width="150" height="40" rx="6"/><rect x="570" y="122" width="160" height="40" rx="6"/></g>
-  <g font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle"><text x="105" y="147">1. FROM</text><text x="285" y="147">2. WHERE</text><text x="465" y="147">3. SELECT</text><text x="650" y="147">4. ORDER BY</text></g>
-  <path d="M285,90 L285,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1b)"/>
-  <path d="M465,90 L465,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1b)"/>
-  <path d="M650,90 L650,118" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#sql1b)"/>
-</svg>
-
-:::
-
-## Una consulta dentro de otra {.center}
-
-```sql
-SELECT pedido, producto, valor
-FROM PedidoPlano
-WHERE valor > (SELECT AVG(valor) FROM PedidoPlano);
-```
-
-::: {.destacado}
-El motor resuelve primero la subconsulta entre paréntesis, y usa ese número para filtrar la consulta
-externa.
-:::

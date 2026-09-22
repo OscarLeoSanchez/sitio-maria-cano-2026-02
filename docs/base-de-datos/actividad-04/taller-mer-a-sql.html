@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller en equipos: del modelo entidad relación al SQL</title>
+<style>
+  :root {
+    --azul-900: #0f2540;
+    --azul-700: #17456f;
+    --azul-500: #2f7bb8;
+    --teal-500: #0e8f8f;
+    --gris-050: #f6f8fa;
+    --gris-100: #eef2f6;
+    --gris-300: #cfd8e3;
+    --gris-600: #5b6876;
+    --gris-900: #16202b;
+    --code: #9b2c5e;
+    --sans: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
+    --mono: "Cascadia Mono", "Consolas", "SFMono-Regular", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--gris-900);
+    background: var(--gris-050);
+  }
+
+  /* Cabecera */
+  header.portada {
+    background: linear-gradient(135deg, var(--azul-900) 0%, var(--azul-700) 70%, var(--azul-500) 100%);
+    color: #fff;
+    padding: 3.2rem 1rem 2.6rem;
+  }
+  header.portada .interior {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  header.portada .sobre {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.78rem;
+    opacity: 0.85;
+    margin-bottom: 0.8rem;
+  }
+  header.portada h1 {
+    margin: 0 0 0.9rem;
+    font-size: clamp(1.7rem, 4vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  header.portada p.bajada {
+    margin: 0;
+    max-width: 44rem;
+    font-size: 1.08rem;
+    opacity: 0.95;
+  }
+
+  /* Cuerpo */
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2.4rem 1rem 4rem;
+  }
+
+  h2 {
+    color: var(--azul-900);
+    font-size: 1.55rem;
+    letter-spacing: -0.015em;
+    margin: 2.8rem 0 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 3px solid var(--azul-700);
+  }
+  h2:first-child { margin-top: 0; }
+  h3 {
+    color: var(--azul-700);
+    font-size: 1.18rem;
+    margin: 1.6rem 0 0.6rem;
+  }
+  p { margin: 0 0 1rem; }
+  ul, ol { padding-left: 1.4rem; margin: 0 0 1rem; }
+  li { margin-bottom: 0.35rem; }
+  li > ul, li > ol { margin-top: 0.35rem; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    color: var(--code);
+    background: var(--gris-100);
+    padding: 0.05em 0.35em;
+    border-radius: 4px;
+  }
+  pre {
+    background: var(--azul-900);
+    color: #e6eef7;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.86rem;
+    line-height: 1.55;
+    margin: 0 0 1rem;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  .kw { color: #8ec9ff; font-weight: 600; }
+  .cm { color: #93a4b8; font-style: italic; }
+
+  /* Tarjetas de instrucciones */
+  .pasos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1.2rem 0 1.6rem;
+  }
+  .paso {
+    background: #fff;
+    border: 1px solid var(--gris-300);
+    border-top: 4px solid var(--azul-500);
+    border-radius: 8px;
+    padding: 1.1rem 1.2rem 0.6rem;
+  }
+  .paso .num {
+    display: inline-block;
+    width: 2rem; height: 2rem;
+    line-height: 2rem;
+    text-align: center;
+    border-radius: 50%;
+    background: var(--azul-700);
+    color: #fff;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .paso h3 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+  .paso p, .paso ul { font-size: 0.95rem; }
+
+  .aviso {
+    border-left: 5px solid var(--teal-500);
+    background: #e9f6f6;
+    padding: 0.9rem 1.1rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1.2rem 0;
+  }
+  .aviso.importante { border-color: #b26a00; background: #fff5e4; }
+  .aviso p:last-child { margin-bottom: 0; }
+
+  /* Tablero de elección */
+  .tablero {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 0.8rem;
+    margin: 1.2rem 0 0.4rem;
+    padding: 0;
+    list-style: none;
+  }
+  .tablero li { margin: 0; }
+  .tablero a {
+    display: block;
+    height: 100%;
+    background: #fff;
+    border: 1px solid var(--gris-300);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    color: inherit;
+    text-decoration: none;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .tablero a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(15, 37, 64, 0.12);
+    border-color: var(--azul-500);
+  }
+  .tablero .numero {
+    font-size: 0.78rem;
+    color: var(--gris-600);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .tablero .titulo {
+    display: block;
+    font-weight: 600;
+    color: var(--azul-900);
+    margin: 0.15rem 0 0.5rem;
+    line-height: 1.3;
+  }
+
+
+  /* Problemas */
+  article.problema {
+    background: #fff;
+    border: 1px solid var(--gris-300);
+    border-radius: 10px;
+    padding: 1.6rem 1.8rem 1.2rem;
+    margin: 1.4rem 0;
+    scroll-margin-top: 1rem;
+  }
+  article.problema .cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.6rem 1rem;
+    margin-bottom: 0.8rem;
+  }
+  article.problema .cabecera .numero {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--gris-600);
+  }
+  article.problema h3 {
+    margin: 0;
+    font-size: 1.35rem;
+    color: var(--azul-900);
+  }
+  article.problema .dominio {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: var(--gris-600);
+  }
+  article.problema h4 {
+    margin: 1.2rem 0 0.4rem;
+    font-size: 1rem;
+    color: var(--azul-700);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  article.problema .pide {
+    margin-top: 1.2rem;
+    padding: 0.8rem 1rem;
+    background: var(--gris-050);
+    border: 1px dashed var(--gris-300);
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  article.problema .pide p:last-child { margin-bottom: 0; }
+  article.problema table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.93rem;
+    margin: 0.5rem 0 1rem;
+  }
+  article.problema th, article.problema td {
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid var(--gris-300);
+    vertical-align: top;
+  }
+  article.problema th { color: var(--azul-700); font-weight: 600; }
+  .volver {
+    display: inline-block;
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--azul-700);
+    text-decoration: none;
+  }
+  .volver:hover { text-decoration: underline; }
+
+  /* Lista de verificacion */
+  .verificacion {
+    list-style: none;
+    padding: 0;
+  }
+  .verificacion li {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--gris-100);
+  }
+  .verificacion input { margin-top: 0.4rem; width: 1.05rem; height: 1.05rem; flex: none; }
+  .verificacion li:last-child { border-bottom: 0; }
+
+  footer {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 1rem 2.5rem;
+    color: var(--gris-600);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--gris-300);
+    padding-top: 1rem;
+  }
+
+  @media (max-width: 600px) {
+    body { font-size: 16px; }
+    article.problema { padding: 1.2rem 1rem 1rem; }
+    article.problema .dominio { margin-left: 0; }
+  }
+
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    header.portada { background: var(--azul-900) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    article.problema { break-inside: avoid; box-shadow: none; }
+    .tablero a { break-inside: avoid; }
+    .volver { display: none; }
+    pre { white-space: pre-wrap; }
+  }
+</style>
+</head>
+<body>
+
+<header class="portada">
+  <div class="interior">
+    <div class="sobre">Base de datos. Taller en equipos</div>
+    <h1>Del modelo entidad relación al SQL</h1>
+    <p class="bajada">
+      Cada equipo elige un caso, lo modela como diagrama entidad relación, lo convierte en modelo
+      relacional y termina escribiendo el SQL que crea las tablas. El recorrido completo que va del
+      enunciado en prosa a la base de datos que ya existe.
+    </p>
+  </div>
+</header>
+
+<main>
+
+<h2 id="como-se-trabaja">Cómo se trabaja</h2>
+
+<p>
+  El equipo recibe un enunciado de negocio, como el que entregaría un cliente
+  real, y lo lleva hasta el <code>CREATE TABLE</code> sin que nadie le marque el camino.
+</p>
+
+<div class="pasos">
+  <div class="paso">
+    <div class="num">1</div>
+    <h3>Elijan un caso</h3>
+    <p>Del tablero de abajo, un caso por equipo. Dos equipos no deberían tomar el mismo. Lean el enunciado completo antes de decidir.</p>
+  </div>
+  <div class="paso">
+    <div class="num">2</div>
+    <h3>Diagrama entidad relación</h3>
+    <p>Entidades, atributos clasificados, relaciones con cardinalidad y participación. En notación de Chen o de pata de gallo, pero una sola.</p>
+  </div>
+  <div class="paso">
+    <div class="num">3</div>
+    <h3>Modelo relacional</h3>
+    <p>Conviertan el diagrama en tablas: llaves primarias, llaves foráneas, tablas intermedias para las relaciones N:M y decisiones sobre atributos multivaluados y compuestos.</p>
+  </div>
+  <div class="paso">
+    <div class="num">4</div>
+    <h3>SQL</h3>
+    <p>Escriban el guion de <code>CREATE TABLE</code> con tipos, llaves y restricciones, más unos <code>INSERT</code> de prueba y dos o tres <code>SELECT</code> que respondan preguntas del negocio.</p>
+  </div>
+</div>
+
+<h3>Qué entrega cada equipo</h3>
+<ol>
+  <li><strong>El diagrama entidad relación</strong>, dibujado en
+    <a href="https://app.diagrams.net" target="_blank" rel="noopener">app.diagrams.net</a> (draw.io),
+    <a href="https://excalidraw.com" target="_blank" rel="noopener">Excalidraw</a> o a mano en una foto legible.</li>
+  <li><strong>El esquema relacional</strong> escrito con la notación de texto que ya conocen, una línea por tabla, con la llave primaria subrayada o marcada y las llaves foráneas señaladas. Por ejemplo:
+    <pre><code>Cliente (<u>numero_cliente</u>, saldo, limite_credito, descuento)
+DireccionEnvio (<u>numero_cliente</u>, <u>consecutivo</u>, numero, calle, comuna, ciudad)
+    numero_cliente es llave foránea hacia Cliente</code></pre>
+  </li>
+  <li><strong>Un archivo <code>.sql</code></strong> que se pueda ejecutar de arriba abajo sin errores en el motor que usan en clase. Debe crear todas las tablas en el orden correcto, insertar datos de ejemplo y correr las consultas.</li>
+  <li><strong>Una lista corta de supuestos.</strong> Todos los enunciados tienen huecos a propósito. Cuando el equipo decida algo que el texto no dice, lo anota con una línea de justificación.</li>
+</ol>
+
+<div class="aviso importante">
+  <p><strong>Sobre los huecos del enunciado.</strong> Ningún cliente entrega requisitos completos. Parte del ejercicio es detectar lo que falta, decidir con criterio y dejarlo escrito. Un supuesto razonable y justificado vale más que una pregunta sin responder. Lo que no vale es inventar entidades que el negocio no necesita.</p>
+</div>
+
+<h3>Reglas para el SQL</h3>
+<ul>
+  <li>Toda tabla tiene llave primaria declarada. Si es compuesta, se declara con <code>PRIMARY KEY (a, b)</code>.</li>
+  <li>Toda llave foránea se declara con <code>FOREIGN KEY</code> y <code>REFERENCES</code>. No basta con que la columna se llame igual.</li>
+  <li>Las reglas del negocio que caben en una restricción van como restricción: <code>NOT NULL</code>, <code>UNIQUE</code>, <code>CHECK</code>. Si el enunciado dice que un límite no supera cierto valor, eso es un <code>CHECK</code>.</li>
+  <li>Las tablas se crean en un orden que respete las dependencias: primero las que no referencian a nadie.</li>
+  <li>Nombres de tablas y columnas sin tildes, sin eñes ni espacios, en un solo idioma y con un solo estilo (<code>snake_case</code> o <code>PascalCase</code>, no los dos).</li>
+</ul>
+
+<h2 id="casos">Los casos</h2>
+
+
+<ul class="tablero">
+  <li><a href="#p1"><span class="numero">Caso 1</span><span class="titulo">Carreteras</span></a></li>
+  <li><a href="#p2"><span class="numero">Caso 2</span><span class="titulo">Sistema de vuelos</span></a></li>
+  <li><a href="#p3"><span class="numero">Caso 3</span><span class="titulo">Olimpíadas</span></a></li>
+  <li><a href="#p4"><span class="numero">Caso 4</span><span class="titulo">Educando S.A.</span></a></li>
+  <li><a href="#p5"><span class="numero">Caso 5</span><span class="titulo">Torneo de tenis Grand Slam</span></a></li>
+  <li><a href="#p6"><span class="numero">Caso 6</span><span class="titulo">Cartelera de cine</span></a></li>
+</ul>
+
+<!-- ============================ CASO 1 ============================ -->
+<article class="problema" id="p1">
+  <div class="cabecera">
+    <span class="numero">Caso 1</span>
+    <h3>Carreteras</h3>
+    <span class="dominio">Infraestructura vial</span>
+  </div>
+
+  <p>
+    Diseñen el esquema entidad relación de una base de datos que contenga la información sobre
+    todas las carreteras del país, sabiendo que se deben cumplir las siguientes especificaciones:
+  </p>
+  <ul>
+    <li>Las carreteras están divididas en varias categorías: locales, comerciales, regionales, nacionales, autovías, entre otras.</li>
+    <li>Las carreteras se dividen en tramos. Un tramo siempre pertenece a una única carretera y no puede cambiar de carretera.</li>
+    <li>Un tramo puede pasar por varias comunas. Interesa conocer el kilómetro de la carretera y la comuna donde empieza el tramo y donde termina.</li>
+    <li>Para los tramos que suponen principio o final de carretera, interesa saber si la carretera concluye físicamente o si confluye en otra carretera. En este segundo caso, interesa conocer con qué carretera confluye y en qué kilómetro, tramo y comuna.</li>
+  </ul>
+
+  <div class="pide">
+    <p><strong>Pistas para el equipo.</strong> "Un tramo siempre pertenece a una única carretera y no puede cambiar de carretera" es una frase que decide si <code>Tramo</code> es una entidad fuerte o débil. La confluencia es una relación entre carreteras, es decir, una relación de la entidad consigo misma, con atributos propios.</p>
+  </div>
+  <a class="volver" href="#casos">Volver al tablero</a>
+</article>
+
+<!-- ============================ CASO 2 ============================ -->
+<article class="problema" id="p2">
+  <div class="cabecera">
+    <span class="numero">Caso 2</span>
+    <h3>Sistema de vuelos</h3>
+    <span class="dominio">Transporte aéreo</span>
+  </div>
+
+  <p>
+    Obtengan el diagrama entidad relación de un sistema de control de vuelos adaptado a las
+    siguientes reglas de gestión. Indiquen las entidades, las relaciones y demás elementos que se
+    deducen de cada regla:
+  </p>
+  <ol>
+    <li>De cada aeropuerto se conoce su código, nombre, ciudad y país.</li>
+    <li>En cada aeropuerto pueden tomar tierra diversos modelos de aviones. El modelo de un avión determina su capacidad, es decir, el número de plazas.</li>
+    <li>En cada aeropuerto existe una colección de programas de vuelo. En cada programa de vuelo se indica el número de vuelo, la línea aérea y los días de la semana en que existe dicho vuelo.</li>
+    <li>Cada programa de vuelo despega de un aeropuerto y aterriza en otro.</li>
+    <li>Los números de vuelo son únicos para todo el mundo.</li>
+    <li>En cada aeropuerto hay múltiples aterrizajes y despegues. Todos los aeropuertos contemplados están en activo, es decir, tienen algún aterrizaje y algún despegue.</li>
+    <li>Cada vuelo realizado pertenece a un cierto programa de vuelo. De cada vuelo se quiere conocer su fecha, las plazas vacías y el modelo de avión utilizado.</li>
+    <li>Algunos programas de vuelo incorporan escalas técnicas intermedias entre los aeropuertos de salida y de llegada. Se entiende por escala técnica un aterrizaje y despegue consecutivos sin altas o bajas de pasajeros.</li>
+    <li>De cada vuelo se quieren conocer las escalas técnicas ordenadas, asignándole a cada una un número de orden.</li>
+  </ol>
+  <p>
+    Por ejemplo, el programa de vuelo 555 de Iberia, con vuelos los lunes y jueves, despega de
+    Barajas (Madrid, España) y aterriza en Caudell (Sydney, Australia) con las siguientes escalas
+    técnicas: 1. Los Pradiños (Sao Paulo, Brasil), 2. El Emperador (Santiago, Chile) y 3. Saint
+    Kitts (Auckland, Nueva Zelanda).
+  </p>
+
+  <h4>Pregunta adicional</h4>
+  <p>
+    ¿Qué cambios se producirían en el modelo si en las escalas pudiesen bajar o subir pasajeros?
+    Expliquen cómo se podría representar esta nueva situación.
+  </p>
+
+  <div class="pide">
+    <p><strong>Pistas para el equipo.</strong> El aeropuerto participa en varias relaciones distintas con el programa de vuelo: de origen, de destino y de escala. Son relaciones diferentes, no una sola. La regla 6 habla de participación total. Los días de la semana son un atributo multivaluado.</p>
+  </div>
+  <a class="volver" href="#casos">Volver al tablero</a>
+</article>
+
+<!-- ============================ CASO 3 ============================ -->
+<article class="problema" id="p3">
+  <div class="cabecera">
+    <span class="numero">Caso 3</span>
+    <h3>Olimpíadas</h3>
+    <span class="dominio">Eventos deportivos</span>
+  </div>
+
+  <p>
+    Las sedes olímpicas se dividen en complejos deportivos. Los complejos deportivos se subdividen
+    en aquellos en los que se desarrolla un único deporte y los polideportivos. Los complejos
+    polideportivos tienen áreas designadas para cada deporte, con un indicador de localización
+    (por ejemplo: centro, esquina noreste). Un complejo tiene una localización, un jefe de
+    organización individual y un área total ocupada.
+  </p>
+  <p>
+    Los dos tipos de complejos, de deporte único y polideportivo, tendrán diferentes tipos de
+    información. Para cada tipo de sede se conservará el número de complejos junto con su
+    presupuesto aproximado.
+  </p>
+  <p>
+    Cada complejo celebra una serie de eventos (por ejemplo, la pista del estadio puede celebrar
+    muchas carreras distintas). Para cada evento está prevista una fecha, duración, número de
+    participantes y número de comisarios. Se conservará una lista de todos los comisarios junto con
+    la lista de los eventos en los que esté involucrado cada uno, ya sea cumpliendo la tarea de
+    juez o de observador. Tanto para cada evento como para el mantenimiento se necesitará cierto
+    equipamiento (por ejemplo: arcos, pértigas, barras paralelas).
+  </p>
+
+  <div class="pide">
+    <p><strong>Pistas para el equipo.</strong> Aquí aparece una jerarquía: complejo de deporte único y polideportivo son especializaciones de complejo. Decidan cómo pasarla a tablas, con una tabla por subtipo, una tabla única con columnas opcionales o las tres, y justifiquen la elección. El rol del comisario en un evento (juez u observador) es un atributo de la relación.</p>
+  </div>
+  <a class="volver" href="#casos">Volver al tablero</a>
+</article>
+
+<!-- ============================ CASO 4 ============================ -->
+<article class="problema" id="p4">
+  <div class="cabecera">
+    <span class="numero">Caso 4</span>
+    <h3>Educando S.A.</h3>
+    <span class="dominio">Compras, almacén e inventario</span>
+  </div>
+
+  <p>
+    En la empresa Educando S.A. se lleva control de sus bienes y servicios. El interés primario es
+    que los bienes se manejen de forma rápida y con el menor grado de error. Para esto, quien
+    maneja la sección de Bienes y Suministros plantea las siguientes condiciones del negocio para
+    la construcción de una base de datos.
+  </p>
+
+  <h4>Área de compras</h4>
+  <ul>
+    <li>La sección está dividida en tres áreas: compras, almacén e inventario.</li>
+    <li>Recibe las solicitudes de compras de las diferentes áreas de la empresa.</li>
+    <li>Cada solicitud tiene un responsable.</li>
+    <li>Cada solicitud es autorizada por el jefe del área y posteriormente por el director financiero.</li>
+    <li>Quien realiza una solicitud puede ser responsable de uno o varios centros de costos, con la salvedad de que como empleado solo está adscrito a uno.</li>
+    <li>De la solicitud se debe diligenciar la siguiente información: número de la solicitud (consecutivo), fecha, responsable (nombre y cédula), centro de costos y rubro presupuestal del cual se descargará la compra. En cada solicitud se pueden discriminar uno o muchos ítems con la siguiente información: ítem, nombre del bien, cantidad solicitada, unidad de medida del bien, valor unitario y valor total. Cada solicitud debe ser totalizada.</li>
+    <li>Cada bien es identificado por un código universal que es único, y es de carácter devolutivo (suministro) o un bien inmueble.</li>
+    <li>Una vez diligenciada, la solicitud es remitida al área de compras para realizar su correspondiente cotización.</li>
+    <li>Las cotizaciones se realizan con uno o varios proveedores de los bienes solicitados.</li>
+    <li>Una vez la cotización definitiva está lista, se crea una orden contractual que maneja la siguiente información: número de la orden contractual, NIT y nombre del proveedor al cual se le va a realizar la compra, fecha de la orden, monto total de la orden y fecha de entrega. Cada orden puede tener asociados uno o varios ítems de la solicitud o solicitudes que van a ser despachadas. Cada ítem tiene la siguiente información: nombre del bien, cantidad solicitada, cantidad despachada, unidad de medida del bien, valor unitario y valor total.</li>
+    <li>La orden de compra es aprobada por el director financiero para que sea enviada al proveedor elegido.</li>
+  </ul>
+
+  <h4>Área de almacén</h4>
+  <ul>
+    <li>Su función principal es recibir los bienes que llegan de los proveedores y distribuirlos a las áreas que realizaron las solicitudes de compra.</li>
+    <li>Cuando un proveedor llega con mercancía, hace una entrega física de los bienes, que se comparan con la factura que entrega y con la orden de compra correspondiente. Si todo coincide, se registra una entrada de almacén por cada factura relacionada, con la siguiente información: número de entrada, fecha, número de factura, proveedor, total de bienes y valor total (los totales deben coincidir con los de la factura). Adjunto a esta se discriminan los ítems recibidos con la siguiente información: nombre del bien y cantidad entregada.</li>
+    <li>Cuando el almacén decide despachar los bienes a las áreas solicitantes, registra cada una de las entregas en salidas de almacén con la siguiente información: número de salida, empleado responsable del bien a entregar, fecha de salida y fecha de entrega. Por cada entrega se detalla cada uno de los ítems con la siguiente información: nombre del bien y cantidad entregada.</li>
+    <li>Una entrada de almacén puede generar muchas salidas de almacén. Por ejemplo, pueden ingresar 500 pacas de papel higiénico, pero como se deben repartir entre varias áreas, cada una requiere una salida de almacén.</li>
+  </ul>
+
+  <h4>Área de inventarios</h4>
+  <ul>
+    <li>Es la encargada de administrar y controlar la ubicación de los bienes dentro de la empresa. Por esto, antes de que el bien salga del almacén debe ser codificado con un código único que lo haga identificable dentro de la empresa.</li>
+    <li>La ubicación del bien se identifica con la siguiente información: responsable del bien, fecha de entrega y dirección del bien (ubicación).</li>
+  </ul>
+
+  <div class="pide">
+    <p><strong>Pistas para el equipo.</strong> Es el caso con más entidades. Empiecen por el flujo: solicitud, cotización, orden, entrada, salida. Cada documento tiene una cabecera y un detalle de ítems, un patrón que se repite y que conviene resolver una vez y reutilizar. Distingan el bien como catálogo (código universal) del bien como unidad física inventariada (código interno).</p>
+  </div>
+  <a class="volver" href="#casos">Volver al tablero</a>
+</article>
+
+<!-- ============================ CASO 5 ============================ -->
+<article class="problema" id="p5">
+  <div class="cabecera">
+    <span class="numero">Caso 5</span>
+    <h3>Torneo de tenis Grand Slam</h3>
+    <span class="dominio">Deportes y competencias</span>
+  </div>
+
+  <p>
+    El sistema debe memorizar todos los encuentros que se han desarrollado desde que existe el
+    torneo, así como las características de estos que se describen a continuación.
+  </p>
+
+  <h4>Descripción</h4>
+  <p>
+    El Grand Slam se compone de cuatro torneos anuales que se celebran en Gran Bretaña, Estados
+    Unidos, Francia y Australia. En cada país se pueden desarrollar en distintos lugares (por
+    ejemplo, en Estados Unidos puede desarrollarse en Forest Hills o en Flushing Meadows).
+  </p>
+  <p>
+    Cada partido tiene asociado un premio de consolación para el perdedor, que dependerá de la fase
+    en que se encuentre el torneo (por ejemplo, el perdedor de octavos de final puede ganar 5.000
+    dólares). El ganador de la final recibirá el premio correspondiente al torneo.
+  </p>
+  <p>
+    Cada torneo tiene cinco modalidades: individual masculino, individual femenino, dobles
+    masculino, dobles femenino y dobles mixtos.
+  </p>
+  <p>
+    También hay que tener en cuenta la nacionalidad de un jugador, de forma que este puede ser
+    apátrida o tener varias nacionalidades.
+  </p>
+
+  <h4>Preguntas que el sistema debe responder</h4>
+  <ol>
+    <li>Dado un año y un torneo, la composición y el resultado de los partidos.</li>
+    <li>La lista de árbitros que participaron en el torneo.</li>
+    <li>Las ganancias percibidas en premios por un jugador a lo largo del torneo.</li>
+    <li>La lista de entrenadores que han entrenado a un jugador a lo largo del torneo y las fechas en que lo hicieron.</li>
+  </ol>
+
+  <h4>Ejemplos de lo que debe poder registrarse</h4>
+  <ol>
+    <li>Connors ganó a Gerulaitis en Roland Garros en 1979, en cuartos de final de individuales masculinos, por 6-3, 4-6, 7-5, 6-0.</li>
+    <li>El señor Wilkinson arbitró ese partido.</li>
+    <li>Alemania ha ganado dos veces los individuales masculinos de Wimbledon. Borg ha ganado 2.000.000 de dólares a lo largo de su participación en el Grand Slam.</li>
+    <li>El ganador de Roland Garros de 1987 ganó 20.000 dólares.</li>
+    <li>Noah ha jugado cuatro veces en dobles mixtos con Mandlikova.</li>
+  </ol>
+
+  <div class="pide">
+    <p><strong>Pistas para el equipo.</strong> Un partido lo juegan jugadores en individuales y parejas en dobles. Decidan cómo representar al participante de un partido para que las dos cosas quepan en el mismo modelo. El resultado por sets es un detalle del partido. La relación entre entrenador y jugador tiene fechas, así que no es una simple llave foránea. Verifiquen que las cinco frases de ejemplo se puedan insertar en sus tablas.</p>
+  </div>
+  <a class="volver" href="#casos">Volver al tablero</a>
+</article>
+
+<!-- ============================ CASO 6 ============================ -->
+<article class="problema" id="p6">
+  <div class="cabecera">
+    <span class="numero">Caso 6</span>
+    <h3>Cartelera de cine</h3>
+    <span class="dominio">Entretenimiento y sitios web</span>
+  </div>
+
+  <p>
+    Se desea crear un sitio web con información referente a las películas en cartelera en las
+    salas de los cines de una ciudad.
+  </p>
+  <p>
+    De cada película se almacena una ficha con su título de distribución, su título original, su
+    género, el idioma original, si tiene subtítulos en español o no, los países de origen, el año de
+    producción, la URL del sitio web de la película, la duración (en horas y minutos), la
+    calificación (apta para todo público, mayores de 9 años, mayores de 15 años, mayores de 18
+    años), la fecha de estreno en la ciudad, un resumen y un identificador de la película. De cada
+    película interesa conocer la lista de directores y el reparto, es decir, para cada actor que
+    trabaja en ella, el nombre de todos los personajes que interpreta.
+  </p>
+  <p>
+    Además interesa disponer de información sobre los directores y actores que trabajan en cada
+    película. De ambos se conoce su nombre (que los identifica) y su nacionalidad. También se desea
+    conocer la cantidad de películas en las que dirigieron o actuaron. Tengan en cuenta que hay
+    personas que cumplen los dos roles.
+  </p>
+  <p>
+    Los cines pueden tener más de una sala, y cada semana cada uno de los cines envía la cartelera
+    para dicha semana con el detalle de las funciones. Para cada función se conoce el día de la
+    semana y la hora de comienzo, y obviamente la sala y la película que exhibe. De cada sala se
+    sabe el nombre, un número que la identifica dentro del cine y la cantidad de butacas que posee.
+    De cada cine se conoce el nombre que lo identifica, su dirección y el teléfono para consultas.
+  </p>
+  <p>
+    Algunos cines cuentan con promociones. Estas promociones dependen de la función. Por ejemplo:
+    de lunes a jueves antes de las 18:00, 50% de descuento en cierta sala de cierto cine para cierta
+    película; en la función del lunes a las 14:00 para cierta película en cierta sala no se cobra a
+    los escolares con uniforme. De cada promoción se conoce una descripción y el descuento que
+    aplica.
+  </p>
+  <p>
+    Además del resumen de la película que se incluye en la ficha, interesa mostrar la opinión de
+    las personas que la vieron. De cada opinión se conoce el nombre de la persona que la realiza, su
+    edad, la fecha en que registró su opinión, la calificación que le dio a la película (obra
+    maestra, muy buena, buena, regular, mala) y el comentario propiamente dicho. A cada opinión se
+    le asigna un número que la identifica respecto de la película sobre la cual opina.
+  </p>
+
+  <div class="pide">
+    <p><strong>Pistas para el equipo.</strong> La sala se identifica dentro del cine y la opinión se identifica dentro de la película: dos entidades débiles. Una misma persona puede ser director y actor, así que <code>Persona</code> es una sola tabla con dos relaciones distintas hacia <code>Pelicula</code>. La cantidad de películas de una persona es un atributo derivado y no se guarda. La calificación tiene un conjunto cerrado de valores, que en SQL es un <code>CHECK</code>.</p>
+  </div>
+  <a class="volver" href="#casos">Volver al tablero</a>
+</article>
+
+<h2 id="verificacion">Antes de entregar</h2>
+
+<h3>Diagrama entidad relación</h3>
+<ul class="verificacion">
+  <li><input type="checkbox" id="v1"><label for="v1">Toda entidad tiene un identificador señalado, o está marcada como débil con su relación identificadora.</label></li>
+  <li><input type="checkbox" id="v2"><label for="v2">Los atributos multivaluados, compuestos y derivados están marcados como tales, no como atributos simples.</label></li>
+  <li><input type="checkbox" id="v3"><label for="v3">Toda relación tiene nombre, cardinalidad en los dos extremos y participación total o parcial.</label></li>
+  <li><input type="checkbox" id="v4"><label for="v4">Los atributos que pertenecen a la relación y no a una entidad están puestos sobre la relación.</label></li>
+  <li><input type="checkbox" id="v5"><label for="v5">Ninguna frase del enunciado quedó sin representar, y no hay nada en el diagrama que el enunciado no pida.</label></li>
+</ul>
+
+<h3>Modelo relacional</h3>
+<ul class="verificacion">
+  <li><input type="checkbox" id="v6"><label for="v6">Cada relación N:M produjo una tabla intermedia con llave primaria compuesta por las dos llaves foráneas, más sus atributos propios.</label></li>
+  <li><input type="checkbox" id="v7"><label for="v7">Cada relación 1:N puso la llave foránea en el lado N, no al revés.</label></li>
+  <li><input type="checkbox" id="v8"><label for="v8">Cada atributo multivaluado se convirtió en una tabla aparte.</label></li>
+  <li><input type="checkbox" id="v9"><label for="v9">Cada atributo compuesto se descompuso en columnas simples.</label></li>
+  <li><input type="checkbox" id="v10"><label for="v10">Cada entidad débil incluye en su llave primaria la llave de la entidad fuerte de la que depende.</label></li>
+  <li><input type="checkbox" id="v11"><label for="v11">Los atributos derivados no se guardan, o si se guardan queda anotado por qué.</label></li>
+</ul>
+
+<h3>SQL</h3>
+<ul class="verificacion">
+  <li><input type="checkbox" id="v12"><label for="v12">El archivo corre completo de arriba abajo sin un solo error en el motor de la clase.</label></li>
+  <li><input type="checkbox" id="v13"><label for="v13">Todas las llaves primarias y foráneas están declaradas como restricciones, no solo como columnas con nombre parecido.</label></li>
+  <li><input type="checkbox" id="v14"><label for="v14">Las reglas del negocio que caben en <code>CHECK</code>, <code>UNIQUE</code> o <code>NOT NULL</code> están escritas como restricción.</label></li>
+  <li><input type="checkbox" id="v15"><label for="v15">Hay datos de prueba suficientes para que las consultas devuelvan algo, y por lo menos una consulta une tres tablas.</label></li>
+  <li><input type="checkbox" id="v16"><label for="v16">Probaron insertar una fila que viole una llave foránea o un <code>CHECK</code>, y el motor la rechazó.</label></li>
+</ul>
+
+<h2 id="ejemplo-sql">Cómo debe verse el SQL</h2>
+
+<p>
+  Un fragmento mínimo, tomado de un caso distinto a los ocho de arriba, para fijar el estilo
+  esperado. Fíjense en el orden de creación, en las restricciones con nombre y en la tabla
+  intermedia con llave compuesta.
+</p>
+
+<pre><code><span class="cm">-- 1. Tablas que no dependen de nadie</span>
+<span class="kw">CREATE TABLE</span> autor (
+    id_autor      <span class="kw">INTEGER</span>      <span class="kw">PRIMARY KEY</span>,
+    nombre        <span class="kw">VARCHAR</span>(120) <span class="kw">NOT NULL</span>,
+    nacionalidad  <span class="kw">VARCHAR</span>(60)
+);
+
+<span class="kw">CREATE TABLE</span> libro (
+    isbn          <span class="kw">CHAR</span>(13)     <span class="kw">PRIMARY KEY</span>,
+    titulo        <span class="kw">VARCHAR</span>(200) <span class="kw">NOT NULL</span>,
+    anio          <span class="kw">INTEGER</span>,
+    <span class="kw">CONSTRAINT</span> ck_libro_anio <span class="kw">CHECK</span> (anio &gt;= 1450)
+);
+
+<span class="cm">-- 2. Tabla intermedia de la relacion N:M, con atributo propio</span>
+<span class="kw">CREATE TABLE</span> escribe (
+    id_autor      <span class="kw">INTEGER</span>  <span class="kw">NOT NULL</span>,
+    isbn          <span class="kw">CHAR</span>(13) <span class="kw">NOT NULL</span>,
+    orden_firma   <span class="kw">INTEGER</span>  <span class="kw">NOT NULL</span>,
+    <span class="kw">CONSTRAINT</span> pk_escribe <span class="kw">PRIMARY KEY</span> (id_autor, isbn),
+    <span class="kw">CONSTRAINT</span> fk_escribe_autor <span class="kw">FOREIGN KEY</span> (id_autor) <span class="kw">REFERENCES</span> autor (id_autor),
+    <span class="kw">CONSTRAINT</span> fk_escribe_libro <span class="kw">FOREIGN KEY</span> (isbn)     <span class="kw">REFERENCES</span> libro (isbn)
+);
+
+<span class="cm">-- 3. Datos de prueba</span>
+<span class="kw">INSERT INTO</span> autor <span class="kw">VALUES</span> (1, 'Gabriel Garcia Marquez', 'Colombia');
+<span class="kw">INSERT INTO</span> libro <span class="kw">VALUES</span> ('9780060883287', 'Cien anos de soledad', 1967);
+<span class="kw">INSERT INTO</span> escribe <span class="kw">VALUES</span> (1, '9780060883287', 1);
+
+<span class="cm">-- 4. Una consulta que responde una pregunta del negocio</span>
+<span class="kw">SELECT</span> a.nombre, l.titulo, l.anio
+<span class="kw">FROM</span> autor a
+<span class="kw">JOIN</span> escribe e <span class="kw">ON</span> e.id_autor = a.id_autor
+<span class="kw">JOIN</span> libro l   <span class="kw">ON</span> l.isbn = e.isbn
+<span class="kw">ORDER BY</span> l.anio;</code></pre>
+
+<div class="aviso">
+  <p><strong>Sustentación.</strong> Cada equipo presenta su caso en unos minutos: el diagrama, dos decisiones de diseño que les costaron y el SQL corriendo en vivo. Los demás equipos preguntan. La pregunta más frecuente es "¿y por qué no lo hicieron de la otra forma?", así que lleguen con la respuesta preparada.</p>
+</div>
+
+</main>
+
+<footer>
+  Fundación Universitaria María Cano. Facultad de Ingeniería. Ingeniería de Software. Base de datos, 2026-02.
+  Los casos son adaptaciones de ejercicios clásicos de modelado entidad relación usados en cursos de bases de datos.
+</footer>
+
+</body>
+</html>
