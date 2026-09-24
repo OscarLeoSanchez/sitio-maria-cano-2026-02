@@ -1,0 +1,2439 @@
+---
+title: "Estructuras dinámicas: listas, árboles y grafos"
+subtitle: "Estructura de datos (ESD01). Unidad 3"
+author: "Oscar Leonel Sánchez Conde"
+pagetitle: "Estructuras dinámicas: listas, árboles y grafos"
+title-prefix: ""
+format:
+  revealjs:
+    theme: [default, ../../estilos/presentacion.scss]
+    slide-number: true
+    controls: true
+    progress: true
+    history: false
+    width: 1280
+    height: 720
+---
+
+## Recorrido de la unidad {.center}
+
+::: {.tarjetas}
+::: {}
+<span class="titulo">0. Herramientas</span>
+
+Memoria estática y dinámica, referencias y quién libera lo que ya no se usa.
+:::
+::: {.clave}
+<span class="titulo">1. Listas enlazadas</span>
+
+El nodo como pieza base y las tres variantes de lista.
+:::
+::: {}
+<span class="titulo">2. Pilas y colas con listas</span>
+
+Los mismos contratos de la Unidad 2, ahora sobre una lista enlazada por dentro.
+:::
+::: {}
+<span class="titulo">3. Árboles binarios de búsqueda</span>
+
+Una estructura que ordena mientras almacena, con sus tres recorridos.
+:::
+::: {}
+<span class="titulo">4. Árboles AVL y 2-3</span>
+
+Dos formas distintas de mantener la altura de un árbol bajo control.
+:::
+::: {}
+<span class="titulo">5. Grafos</span>
+
+Nodos y relaciones sin jerarquía, representados de dos formas distintas.
+:::
+:::
+
+## Antes de empezar: herramientas para leer esta unidad {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Preámbulo
+:::
+
+Cinco ideas que atraviesan los cinco temas, explicadas una sola vez antes de usarlas. Cada una
+muestra cómo se comporta en la JVM y en CPython cuando la diferencia importa.
+
+## Memoria estática y memoria dinámica {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda un arreglo de cuatro casillas reservado completo desde el arranque; a la derecha tres nodos que aparecen en momentos distintos t1, t2 y t3 mientras el programa corre, unidos por flechas de puntero" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b0a1" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="170" y="26" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">memoria estatica</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="50" y="50" width="60" height="42"/><rect x="110" y="50" width="60" height="42"/><rect x="170" y="50" width="60" height="42"/><rect x="230" y="50" width="60" height="42"/></g>
+  <text x="170" y="115" font-size="11" fill="#5b6876" text-anchor="middle">las cuatro casillas se reservan juntas, antes de guardar el primer dato</text>
+  <text x="580" y="26" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">memoria dinamica</text>
+  <text x="420" y="50" font-size="11" font-weight="600" fill="#5b6876" text-anchor="middle">t1</text>
+  <rect x="390" y="60" width="60" height="42" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="420" y="85" text-anchor="middle" font-size="12" fill="#0e6f6c">nodo 1</text>
+  <text x="560" y="120" font-size="11" font-weight="600" fill="#5b6876" text-anchor="middle">t2</text>
+  <rect x="530" y="130" width="60" height="42" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="560" y="155" text-anchor="middle" font-size="12" fill="#0e6f6c">nodo 2</text>
+  <path d="M450,80 C480,90 500,110 530,150" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0a1)"/>
+  <text x="670" y="60" font-size="11" font-weight="600" fill="#5b6876" text-anchor="middle">t3</text>
+  <rect x="640" y="70" width="60" height="42" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="670" y="95" text-anchor="middle" font-size="12" fill="#0e6f6c">nodo 3</text>
+  <path d="M590,150 C620,140 630,120 640,92" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0a1)"/>
+  <text x="530" y="215" font-size="11" fill="#5b6876" text-anchor="middle">cada nodo pide su propio espacio en el momento en que se crea, no antes</text>
+</svg>
+:::
+
+::: {.destacado}
+La memoria estática de un arreglo se reserva completa desde el arranque. La memoria dinámica de
+una lista enlazada se pide nodo por nodo, en el momento exacto en que cada nodo se crea, mientras
+el programa sigue corriendo.
+:::
+
+## Qué es una referencia {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una variable ref apunta con una flecha a un objeto en memoria; otra variable llamada otraRef no apunta a ningun objeto, su valor es null o None" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b0b1" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="200" y="30" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">una referencia que si apunta</text>
+  <rect x="60" y="70" width="90" height="42" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="105" y="96" text-anchor="middle" font-size="13" font-weight="600" fill="#12324f">ref</text>
+  <path d="M150,91 L234,91" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0b1)"/>
+  <rect x="234" y="70" width="130" height="42" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="299" y="96" text-anchor="middle" font-size="12" font-weight="600" fill="#0e6f6c">objeto en memoria</text>
+  <text x="580" y="30" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">una referencia vacia</text>
+  <rect x="480" y="70" width="110" height="42" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="535" y="96" text-anchor="middle" font-size="13" font-weight="600" fill="#12324f">otraRef</text>
+  <text x="660" y="96" font-size="13" font-weight="600" fill="#5b6876">null</text>
+  <text x="380" y="160" font-size="11" fill="#5b6876" text-anchor="middle">null en Java y None en Python significan lo mismo: la referencia existe, pero no apunta a ningun objeto</text>
+</svg>
+:::
+
+::: {.destacado}
+Una referencia es una variable que guarda la dirección de un objeto, no el objeto mismo. Cuando
+una referencia todavía no apunta a nada, su valor es `null` en Java o `None` en Python.
+:::
+
+## Notación O en esta unidad {.center}
+
+| Notación | Qué significa | Ejemplo de esta unidad |
+|---|---|---|
+| O(1), constante | El trabajo no cambia sin importar cuántos datos haya | Insertar en la cabeza de una lista enlazada |
+| O(n), lineal | El trabajo crece en proporción directa a la cantidad de datos | Recorrer una lista enlazada o visitar todos los vértices de un grafo |
+| O(log n), logarítmica | El trabajo crece mucho más lento que los datos | Buscar en un árbol binario de búsqueda balanceado |
+
+::: {.neutro}
+O(log n) es nueva en esta unidad. Un árbol balanceado descarta la mitad de los nodos restantes en
+cada comparación, así que la altura, y con ella el trabajo, crece con el logaritmo del tamaño.
+:::
+
+## Quién libera la memoria {.center}
+
+::: {.tarjetas}
+::: {.clave}
+<span class="titulo">JVM</span>
+
+El recolector de basura administra la memoria dinámica de forma automática, identifica qué
+objetos ya no tienen ninguna referencia viva apuntándolos y libera ese espacio.
+:::
+::: {}
+<span class="titulo">CPython</span>
+
+Cada objeto lleva un contador de referencias. Cuando ese contador llega a cero, CPython libera el
+objeto de inmediato, sin esperar a un recolector aparte.
+:::
+:::
+
+::: {.destacado}
+Un ciclo de referencias, un grupo de objetos que se apuntan entre sí en círculo, nunca baja a cero
+por conteo simple. Por eso CPython añade un recolector de ciclos aparte, expuesto en el módulo
+`gc`, además del conteo de referencias que consulta `sys.getrefcount`.
+:::
+
+## De lo lineal a lo jerárquico a lo relacional {.center}
+
+::: {.diagrama .alto}
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapa de tres formas de organizar datos: una lista lineal de tres nodos, un arbol con una raiz y dos hijos, y un grafo con cuatro nodos conectados sin jerarquia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b0d1" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="30" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">lineal</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="50" y="60" width="60" height="42"/><rect x="150" y="60" width="60" height="42"/><rect x="250" y="60" width="60" height="42"/></g>
+  <path d="M110,81 L148,81" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0d1)"/>
+  <path d="M210,81 L248,81" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0d1)"/>
+  <text x="130" y="130" font-size="11" fill="#5b6876" text-anchor="middle">un nodo lleva al siguiente</text>
+  <text x="380" y="30" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">jerarquico</text>
+  <rect x="350" y="55" width="60" height="40" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="300" y="130" width="60" height="40" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="400" y="130" width="60" height="40" fill="#eef4fa" stroke="#c7d6e6"/>
+  <path d="M365,95 L335,128" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0d1)"/>
+  <path d="M395,95 L425,128" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0d1)"/>
+  <text x="380" y="195" font-size="11" fill="#5b6876" text-anchor="middle">un nodo tiene padre y puede tener varios hijos</text>
+  <text x="630" y="30" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">relacional</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="580" y="55" width="55" height="38"/><rect x="670" y="55" width="55" height="38"/><rect x="580" y="140" width="55" height="38"/><rect x="670" y="140" width="55" height="38"/></g>
+  <path d="M635,74 L668,74" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0d1)"/>
+  <path d="M607,93 L607,138" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0d1)"/>
+  <path d="M697,93 L697,138" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0d1)"/>
+  <path d="M635,159 L668,159" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0d1)"/>
+  <path d="M635,93 L670,140" stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b0d1)"/>
+  <text x="655" y="208" font-size="11" fill="#5b6876" text-anchor="middle">cualquier nodo se conecta con</text>
+  <text x="655" y="222" font-size="11" fill="#5b6876" text-anchor="middle">cualquier otro, sin jerarquia</text>
+  <text x="380" y="275" font-size="12" font-weight="600" fill="#0e6f6c" text-anchor="middle">la misma pieza, nodo con enlaces, organizada de tres formas distintas</text>
+</svg>
+:::
+
+## Bloque 1. Listas enlazadas {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 1
+:::
+
+De la memoria contigua del arreglo a los nodos dispersos que se unen con un puntero explícito.
+
+## Qué es una lista enlazada {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de memoria: el arreglo ocupa un bloque contiguo de casillas consecutivas; la lista enlazada dispersa sus nodos en direcciones de memoria cualquiera, unidas por flechas de puntero de un nodo al siguiente" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">la misma secuencia, dos formas de guardarla en memoria</text>
+  <text x="180" y="40" font-size="12" fill="#5b6876" text-anchor="middle">arreglo: bloque contiguo</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="52" width="60" height="42"/><rect x="120" y="52" width="60" height="42"/><rect x="180" y="52" width="60" height="42"/><rect x="240" y="52" width="60" height="42"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="90" y="78">a</text><text x="150" y="78">b</text><text x="210" y="78">c</text><text x="270" y="78">d</text></g>
+  <text x="180" y="112" font-size="11" fill="#5b6876" text-anchor="middle">direcciones consecutivas, una casilla tras otra</text>
+  <text x="580" y="40" font-size="12" fill="#5b6876" text-anchor="middle">lista enlazada: nodos dispersos</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="440" y="60" width="56" height="40"/><rect x="620" y="150" width="56" height="40"/><rect x="500" y="180" width="56" height="40"/><rect x="350" y="150" width="56" height="40"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="468" y="84">a</text><text x="648" y="174">b</text><text x="528" y="204">c</text><text x="378" y="174">d</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b1a)"><path d="M496,80 C540,110 600,140 632,150"/><path d="M620,172 C600,182 580,192 556,196"/><path d="M500,198 C460,182 430,170 406,166"/></g>
+  <text x="500" y="230" font-size="11" fill="#5b6876" text-anchor="middle">cada nodo vive donde el gestor de memoria encuentre espacio, solo el puntero une la secuencia</text>
+</svg>
+:::
+
+::: {.destacado}
+Una lista enlazada es una secuencia de nodos donde cada nodo guarda un dato y una referencia al
+nodo siguiente. El arreglo calcula la dirección de cualquier índice con una multiplicación; la
+lista no tiene esa aritmética, así que para llegar a un nodo hay que caminar desde el principio.
+:::
+
+## El nodo: la pieza que se repite {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 420 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de clase de Nodo con dos campos: dato de tipo Object y siguiente de tipo Nodo, sin mas metodos que el constructor" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="210" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">la pieza que se repite: un Nodo</text>
+  <rect x="90" y="32" width="240" height="118" rx="6" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <line x1="90" y1="66" x2="330" y2="66" stroke="#8fc9c5"/>
+  <text x="210" y="54" font-size="15" font-weight="700" fill="#0e6f6c" text-anchor="middle">Nodo</text>
+  <g font-size="12.5" fill="#12324f"><text x="104" y="92">~ dato: Object</text><text x="104" y="116">~ siguiente: Nodo</text></g>
+  <text x="210" y="176" font-size="11" fill="#5b6876" text-anchor="middle">sin mas metodos que el constructor</text>
+</svg>
+:::
+
+::: {.destacado}
+Toda la unidad repite esta pieza, un dato y una o más referencias a otros nodos, y la estructura
+cambia según cuántas referencias tenga cada nodo. El nodo no expone operaciones propias. Insertar,
+eliminar o recorrer vive en la clase que lo envuelve.
+:::
+
+## Código: clase Nodo {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+public class Nodo {
+    Object dato;
+    Nodo siguiente;
+
+    public Nodo(Object dato) {
+        this.dato = dato;
+        this.siguiente = null;
+    }
+}
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+class Nodo:
+    def __init__(self, dato):
+        self.dato = dato
+        self.siguiente = None
+```
+:::
+:::
+
+::: {.neutro}
+En Java, un campo de referencia ya empieza en `null`, así que `this.siguiente = null` solo deja
+explícita la intención. En Python la asignación a `None` es obligatoria, porque un atributo no
+existe hasta que se le asigna un valor.
+:::
+
+## Insertar en la cabeza: la operación barata {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Insertar en la cabeza de una lista simple: antes, cabeza apunta al nodo a, que encadena a b y luego c, y termina en null; despues de insertar z, el nuevo nodo z apunta a lo que antes era la cabeza, y cabeza pasa a apuntar a z" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">insertarInicio(z) sobre una lista de tres nodos</text>
+  <text x="120" y="40" font-size="11.5" fill="#5b6876">antes</text>
+  <text x="60" y="60" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M60,66 L60,86" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b1c)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="88" width="60" height="40"/><rect x="150" y="88" width="60" height="40"/><rect x="270" y="88" width="60" height="40"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="60" y="112">a</text><text x="180" y="112">b</text><text x="300" y="112">c</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b1c)"><path d="M90,108 L146,108"/><path d="M210,108 L266,108"/></g>
+  <path d="M330,108 L364,108" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b1c)"/>
+  <text x="384" y="112" font-size="11.5" fill="#5b6876">null</text>
+  <text x="120" y="160" font-size="11.5" fill="#5b6876">despues de insertarInicio(z)</text>
+  <text x="60" y="180" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M60,186 L60,206" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b1c)"/>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="30" y="208" width="60" height="40"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="150" y="208" width="60" height="40"/><rect x="270" y="208" width="60" height="40"/><rect x="390" y="208" width="60" height="40"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="60" y="232">z</text><text x="180" y="232">a</text><text x="300" y="232">b</text><text x="420" y="232">c</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b1c)"><path d="M90,228 L146,228"/><path d="M210,228 L266,228"/><path d="M330,228 L386,228"/></g>
+  <path d="M450,228 L484,228" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b1c)"/>
+  <text x="504" y="232" font-size="11.5" fill="#5b6876">null</text>
+  <text x="380" y="266" font-size="11.5" fill="#0e6f6c" text-anchor="middle">z.siguiente se conecta primero con la vieja cabeza, solo despues cabeza pasa a apuntar a z</text>
+</svg>
+:::
+
+::: {.destacado}
+Insertar en la cabeza toca únicamente el nodo nuevo y la referencia de la cabeza. Sin importar
+cuántos nodos tenga la lista, el costo es O(1).
+:::
+
+## Código: insertarInicio {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+public void insertarInicio(Object dato) {
+    Nodo nuevo = new Nodo(dato);
+    nuevo.siguiente = cabeza;
+    cabeza = nuevo;
+    tamaño++;
+}
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+def insertar_inicio(self, dato):
+    nuevo = Nodo(dato)
+    nuevo.siguiente = self._cabeza
+    self._cabeza = nuevo
+    self._tamaño += 1
+```
+:::
+:::
+
+::: {.neutro}
+Ninguna de las dos versiones recorre la lista, porque solo hace tres asignaciones y suma un
+contador, haya tres nodos o tres millones detrás. El guion bajo de `_cabeza` marca en Python un
+atributo interno, lo mismo
+que `private` en la clase `ListaEnlazada` de Java.
+:::
+
+::: {.datos}
+::: {}
+<span class="cifra">O(1)</span>
+<span class="rotulo">insertar en la cabeza, sin importar el tamaño</span>
+:::
+::: {}
+<span class="cifra">2</span>
+<span class="rotulo">referencias que cambian: nuevo.siguiente y cabeza</span>
+:::
+:::
+
+## Insertar al final: cuando toca caminar toda la lista {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Insertar al final de una lista simple sin puntero al ultimo nodo: hay que caminar desde la cabeza, nodo por nodo, hasta encontrar el que tiene siguiente en null, y ahi enganchar el nodo nuevo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">insertarFinal(z): primero hay que llegar hasta el ultimo nodo</text>
+  <text x="60" y="46" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M60,52 L60,72" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b1d)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="74" width="60" height="40"/><rect x="150" y="74" width="60" height="40"/><rect x="270" y="74" width="60" height="40"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="60" y="98">a</text><text x="180" y="98">b</text><text x="300" y="98">c</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b1d)"><path d="M90,94 L146,94"/><path d="M210,94 L266,94"/></g>
+  <path d="M330,94 L364,94" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b1d)"/>
+  <text x="384" y="98" font-size="11.5" fill="#5b6876">null</text>
+  <g fill="none" stroke="#0e6f6c" stroke-width="1.4" stroke-dasharray="3 3"><path d="M60,130 C60,150 180,150 180,130"/><path d="M180,150 L300,150"/></g>
+  <text x="180" y="166" font-size="11" fill="#0e6f6c" text-anchor="middle">actual recorre a, b, c hasta hallar siguiente igual a null</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="480" y="74" width="60" height="40"/></g>
+  <text x="510" y="98" font-size="12" fill="#12324f" text-anchor="middle">z</text>
+  <path d="M330,84 L474,88" fill="none" stroke="#cfd8e3" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <text x="510" y="132" font-size="11" fill="#5b6876" text-anchor="middle">c.siguiente = z</text>
+  <text x="380" y="196" font-size="11.5" fill="#5b6876" text-anchor="middle">sin un puntero aparte al ultimo nodo, esta caminata cuesta O(n) cada vez</text>
+</svg>
+:::
+
+::: {.destacado}
+`insertarFinal` recorre toda la lista para encontrar el nodo cuyo `siguiente` es `null`. El costo
+crece con el tamaño de la lista, O(n), justo lo contrario de `insertarInicio`.
+:::
+
+## Complejidad de la lista simple {.center}
+
+| Operación | Costo |
+|---|---|
+| `insertarInicio` / `eliminarInicio` | O(1) |
+| `insertarFinal` / `eliminarFinal` | O(n) |
+| `insertarEn(k)` / `eliminarEn(k)` | O(n) |
+| Acceder a la posición k | O(n) |
+
+::: {.destacado}
+Ninguna posición que no sea la cabeza tiene atajo. A diferencia del arreglo, una lista enlazada no
+puede calcular una dirección de memoria, tiene que caminar hasta llegar.
+:::
+
+## Eliminar en una posición cualquiera {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Eliminar un nodo intermedio: el nodo b se salta reasignando el siguiente de a directamente a c; b queda sin nadie que lo referencie y puede ser recolectado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">eliminar(b): a.siguiente salta directo a c</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="40" y="40" width="60" height="40"/><rect x="280" y="40" width="60" height="40"/><rect x="400" y="40" width="60" height="40"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="160" y="40" width="60" height="40"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="70" y="64">a</text><text x="310" y="64">c</text><text x="430" y="64">d</text></g>
+  <text x="190" y="64" font-size="12" fill="#5b6876" text-anchor="middle">b</text>
+  <path d="M85,80 C120,118 270,118 305,80" fill="none" stroke="#0e6f6c" stroke-width="2" marker-end="url(#b1e)"/>
+  <text x="205" y="130" font-size="11" fill="#0e6f6c" text-anchor="middle">nuevo enlace: a.siguiente = c</text>
+  <path d="M100,50 L156,50" fill="none" stroke="#cfd8e3" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <path d="M220,50 L276,50" fill="none" stroke="#cfd8e3" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <text x="190" y="30" font-size="11" fill="#5b6876" text-anchor="middle">enlaces viejos, ya sobran</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b1e)"><path d="M340,60 L400,60"/></g>
+  <text x="190" y="160" font-size="11.5" fill="#5b6876" text-anchor="middle">b sigue en memoria un instante, pero ya nadie en la lista lo referencia</text>
+  <text x="380" y="200" font-size="11.5" fill="#5b6876" text-anchor="middle">encontrar a a cuesta O(n) desde la cabeza, una vez encontrado el reenlace es O(1)</text>
+</svg>
+:::
+
+::: {.destacado}
+El costo se divide en dos partes. Caminar hasta el nodo anterior a la posición pedida cuesta O(n),
+pero el reenlace en sí mismo es O(1), sin importar cuántos nodos tenga la lista detrás.
+:::
+
+## La lista doblemente enlazada {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lista doblemente enlazada: cada nodo guarda un puntero siguiente hacia adelante y un puntero anterior hacia atras; la cabeza tiene anterior en null y el ultimo nodo tiene siguiente en null" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1f" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker><marker id="b1f2" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#0e6f6c"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">cada nodo apunta hacia adelante y hacia atras</text>
+  <text x="60" y="42" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M60,48 L60,68" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b1f)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="70" width="70" height="46"/><rect x="180" y="70" width="70" height="46"/><rect x="330" y="70" width="70" height="46"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="65" y="98">a</text><text x="215" y="98">b</text><text x="365" y="98">c</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b1f)"><path d="M100,86 L176,86"/><path d="M250,86 L326,86"/></g>
+  <g fill="none" stroke="#0e6f6c" stroke-width="1.6" marker-end="url(#b1f2)"><path d="M176,102 L100,102"/><path d="M326,102 L250,102"/></g>
+  <path d="M400,86 L458,86" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b1f)"/>
+  <text x="466" y="90" font-size="11.5" fill="#5b6876">null</text>
+  <path d="M30,102 L4,102" fill="none" stroke="#0e6f6c" stroke-width="1.6" marker-end="url(#b1f2)"/>
+  <text x="4" y="122" font-size="11.5" fill="#5b6876">null</text>
+  <text x="215" y="140" font-size="11" fill="#0e6f6c" text-anchor="middle">siguiente: arriba, va hacia adelante</text>
+  <text x="215" y="158" font-size="11" fill="#0e6f6c" text-anchor="middle">anterior: abajo, va hacia atras</text>
+  <text x="380" y="200" font-size="11.5" fill="#5b6876" text-anchor="middle">con anterior guardado, la lista se recorre en los dos sentidos sin volver a la cabeza</text>
+</svg>
+:::
+
+::: {.neutro}
+Caso de uso: el historial de navegación de un navegador, o el deshacer y rehacer de un editor.
+Cada estado guarda su anterior y su siguiente; retroceder mueve el puntero a `anterior` y avanzar lo
+mueve a `siguiente`, sin recorrer nada ni perder el resto del historial.
+:::
+
+## La fuga de memoria del enlace roto a medias {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Eliminar un nodo x de una lista doble a medias: los vecinos ya se reconectan, a.siguiente apunta a c y c.anterior apunta a a, pero x conserva sus punteros viejos hacia a y hacia c; un iterador externo que todavia apunta a x mantiene alcanzable la cadena vieja" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1g" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#0e6f6c"/></marker><marker id="b1g2" markerWidth="8" markerHeight="8" refX="6" refY="2.8" orient="auto"><path d="M0,0 L6,2.8 L0,5.6 z" fill="#8fb3d1"/></marker><marker id="b1g3" markerWidth="8" markerHeight="8" refX="6" refY="2.8" orient="auto"><path d="M0,0 L6,2.8 L0,5.6 z" fill="#5b6876"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">eliminar(x) a medias: los punteros viejos de x siguen vivos</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="80" width="60" height="40"/><rect x="540" y="80" width="60" height="40"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-width="2" stroke-dasharray="4 3"><rect x="300" y="80" width="60" height="40"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="90" y="104">a</text><text x="570" y="104">c</text></g>
+  <text x="330" y="104" font-size="12" fill="#5b6876" text-anchor="middle">x</text>
+  <path d="M120,84 C250,40 410,40 540,84" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#b1g2)"/>
+  <text x="330" y="40" font-size="11" fill="#5b6876" text-anchor="middle">nuevo enlace: a.siguiente = c</text>
+  <path d="M540,116 C410,160 250,160 120,116" fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#b1g2)"/>
+  <text x="170" y="176" font-size="11" fill="#5b6876" text-anchor="middle">nuevo enlace: c.anterior = a</text>
+  <path d="M300,100 L120,100" fill="none" stroke="#0e6f6c" stroke-width="1.6" stroke-dasharray="3 3" marker-end="url(#b1g)"/>
+  <path d="M360,100 L540,100" fill="none" stroke="#0e6f6c" stroke-width="1.6" stroke-dasharray="3 3" marker-end="url(#b1g)"/>
+  <text x="330" y="72" font-size="11" fill="#0e6f6c" text-anchor="middle">x.anterior y x.siguiente, sin limpiar</text>
+  <rect x="270" y="196" width="120" height="36" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="330" y="219" font-size="11.5" fill="#12324f" text-anchor="middle">iterador externo</text>
+  <path d="M330,196 L330,120" fill="none" stroke="#5b6876" stroke-width="1.6" stroke-dasharray="3 3" marker-end="url(#b1g3)"/>
+  <text x="560" y="206" font-size="11" fill="#5b6876" text-anchor="middle">mientras el iterador exista, x hace</text>
+  <text x="560" y="222" font-size="11" fill="#5b6876" text-anchor="middle">de puente hacia la cadena vieja</text>
+</svg>
+:::
+
+::: {.destacado}
+El código fuente de OpenJDK para `java.util.LinkedList` limpia el dato y los dos punteros del nodo
+que desconecta en `unlink`, y en `clear()` deja un comentario que explica que cortar esos enlaces
+libera la memoria aunque un iterador todavía alcance los nodos.
+:::
+
+## Lista circular: el final que vuelve al principio {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Lista circular simple: tres nodos a, b y c conectados en un ciclo donde el ultimo apunta de vuelta al primero en vez de a null" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1h" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="250" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">el ultimo nodo apunta de vuelta al primero</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="220" y="34" width="56" height="36"/><rect x="320" y="140" width="56" height="36"/><rect x="120" y="140" width="56" height="36"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="248" y="57">a</text><text x="348" y="163">b</text><text x="148" y="163">c</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b1h)"><path d="M274,58 C300,90 330,110 344,138"/><path d="M320,168 C270,190 220,190 178,168"/><path d="M150,138 C170,100 200,80 220,60"/></g>
+  <text x="250" y="220" font-size="11.5" fill="#0e6f6c" text-anchor="middle">c.siguiente = a, no null</text>
+  <text x="250" y="245" font-size="11" fill="#5b6876" text-anchor="middle">seguir siguiente desde cualquier nodo nunca llega a null, siempre vuelve al punto de partida</text>
+</svg>
+:::
+
+::: {.destacado}
+Una lista circular cambia una sola regla. El último nodo ya no apunta a `null`, apunta de vuelta a la
+cabeza. La secuencia deja de tener un final visible.
+:::
+
+## La trampa del recorrido infinito {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La condicion actual distinto de null nunca se vuelve falsa en una lista circular, porque el ultimo nodo apunta de vuelta al primero en vez de a null, asi que un recorrido escrito para lista lineal entra en un ciclo infinito" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="350" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">while (actual != null) sobre una lista circular</text>
+  <rect x="60" y="36" width="580" height="70" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="350" y="60" font-size="12.5" fill="#12324f" text-anchor="middle">actual = cabeza, a, b, c, a, b, c, a, y sigue</text>
+  <text x="350" y="84" font-size="11.5" fill="#5b6876" text-anchor="middle">la condicion actual distinto de null nunca se cumple: no hay ningun null en el ciclo</text>
+  <text x="350" y="130" font-size="12.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">correccion: comparar contra cabeza tras el primer paso, no contra null</text>
+  <text x="350" y="152" font-size="11.5" fill="#5b6876" text-anchor="middle">hacer el paso, luego repetir mientras actual sea distinto de cabeza</text>
+  <text x="350" y="182" font-size="11" fill="#5b6876" text-anchor="middle">un ciclo mal cortado en produccion no lanza excepcion: consume CPU sin parar hasta que alguien lo note</text>
+</svg>
+:::
+
+::: {.neutro}
+Caso de uso: una lista de reproducción que vuelve a la primera canción cuando termina la última, o un
+planificador que reparte turnos de procesador entre varias tareas por round robin. En los dos casos el
+ciclo es la regla, no una excepción que haya que simular con un módulo sobre un arreglo.
+:::
+
+## Arreglo contra lista enlazada: la comparación completa {.center}
+
+| Operación | Arreglo | Lista enlazada |
+|---|---|---|
+| Acceso por índice | O(1) | O(n) |
+| Insertar / eliminar en la cabeza | O(n) | O(1) |
+| Insertar al final | O(1) amortizado | O(n), o O(1) con `ultimo` |
+| Eliminar al final | O(1) | O(n) en lista simple, O(1) en lista doble |
+| Recorrido completo | O(n) | O(n) |
+
+::: {.destacado}
+Si la operación que más se repite es leer por índice, gana el arreglo. Si es insertar o eliminar en
+la cabeza, o en un nodo del que ya tienes referencia directa, gana la lista enlazada, sobre todo la
+doble.
+:::
+
+## Reto 1 {.center}
+
+El siguiente método en Java compila sin ningún error y no lanza ninguna excepción al ejecutarse, pero
+rompe la lista por completo.
+
+::: {.columns}
+::: {.column width="50%"}
+```java
+public void insertarInicio(Object dato) {
+    Nodo nuevo = new Nodo(dato);
+    cabeza = nuevo;
+    nuevo.siguiente = cabeza;
+    tamaño++;
+}
+```
+:::
+::: {.column width="50%"}
+::: {.diagrama}
+<svg viewBox="0 0 380 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Estado de partida del reto: cabeza apunta al nodo a, que encadena a b y luego a c, y c termina en null" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b1r" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="190" y="18" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">la lista antes de insertarInicio(z)</text>
+  <text x="50" y="46" font-size="11" fill="#0e6f6c" text-anchor="middle">cabeza</text>
+  <path d="M50,52 L50,70" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b1r)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="70" width="60" height="40"/><rect x="130" y="70" width="60" height="40"/><rect x="240" y="70" width="60" height="40"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="50" y="94">a</text><text x="160" y="94">b</text><text x="270" y="94">c</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b1r)"><path d="M80,90 L130,90"/><path d="M190,90 L240,90"/><path d="M300,90 L334,90"/></g>
+  <text x="340" y="94" font-size="11.5" fill="#5b6876">null</text>
+  <text x="190" y="138" font-size="11" fill="#5b6876" text-anchor="middle">tres nodos antes de la llamada</text>
+</svg>
+:::
+:::
+:::
+
+::: {.pasos}
+1. Compara este método con el `insertarInicio` correcto, línea por línea.
+2. Sigue a mano qué vale la variable `cabeza` justo antes de ejecutar `nuevo.siguiente = cabeza`.
+3. ¿Qué les pasa a los nodos que ya estaban en la lista después de llamar a este método, y por qué
+   `nuevo.siguiente = cabeza` no logra lo que parece que debería lograr?
+:::
+
+## Bloque 2. Pilas y colas con listas enlazadas {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 2
+:::
+
+El mismo contrato de siempre, ahora construido sobre nodos encadenados en vez de un arreglo.
+
+## El contrato que no cambia {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El contrato de Pila y Cola no cambia frente a tres implementaciones distintas: arreglo, arreglo circular y lista enlazada; las tres alimentan los mismos ocho metodos publicos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b2a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <rect x="140" y="20" width="480" height="100" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="42" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Contrato: Pila y Cola</text>
+  <text x="380" y="66" font-size="11.5" fill="#12324f" text-anchor="middle">Pila: apilar, desapilar, cima, estaVacia</text>
+  <text x="380" y="88" font-size="11.5" fill="#12324f" text-anchor="middle">Cola: encolar, desencolar, frente, estaVacia</text>
+  <text x="380" y="108" font-size="11" fill="#5b6876" text-anchor="middle">mismos nombres, mismos parametros, mismo tipo de retorno</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="20" y="150" width="220" height="36" rx="6"/><rect x="270" y="150" width="220" height="36" rx="6"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="520" y="150" width="220" height="36" rx="6"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#5b6876"><text x="130" y="173">arreglo (Unidad 2)</text><text x="380" y="173">arreglo circular (Unidad 2)</text></g>
+  <text x="630" y="173" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">lista enlazada (Unidad 3)</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2a)"><path d="M130,150 L200,120"/><path d="M380,150 L380,120"/><path d="M630,150 L560,120"/></g>
+  <text x="380" y="204" font-size="11.5" fill="#0e6f6c" text-anchor="middle">el contrato no cambia; solo cambia que hay detras de cada metodo</text>
+</svg>
+:::
+
+::: {.destacado}
+`Pila` y `Cola` conservan los mismos ocho métodos que ya usaste sobre arreglo. Lo único que cambia
+es qué hay detrás de cada método, y ahora esa respuesta es el mismo `Nodo` encadenado.
+:::
+
+## La pila enlazada: siempre por la cabeza {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes, la cabeza apunta a B que apunta a A; el nodo C llega suelto; despues de apilar C, la cabeza apunta a C, que apunta a B, que apunta a A" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b2b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="150" y="18" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">antes</text>
+  <text x="560" y="18" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">despues de apilar(C)</text>
+  <text x="40" y="42" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M40,46 L40,58" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2b)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="60" width="60" height="36"/><rect x="100" y="60" width="60" height="36"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="50" y="83">B</text><text x="130" y="83">A</text></g>
+  <path d="M80,78 L96,78" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2b)"/>
+  <path d="M160,78 L188,78" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2b)"/>
+  <text x="205" y="82" font-size="11" fill="#5b6876">null</text>
+  <rect x="300" y="30" width="50" height="36" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="325" y="53" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">C</text>
+  <text x="325" y="20" font-size="11" fill="#5b6876" text-anchor="middle">nodo nuevo, aun suelto</text>
+  <path d="M350,66 C400,66 420,60 440,60" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2b)"/>
+  <text x="420" y="42" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M420,46 L420,58" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2b)"/>
+  <rect x="400" y="60" width="60" height="36" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="480" y="60" width="60" height="36"/><rect x="560" y="60" width="60" height="36"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600"><text x="430" y="83" fill="#0e6f6c">C</text><text x="510" y="83" fill="#12324f">B</text><text x="590" y="83" fill="#12324f">A</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2b)"><path d="M460,78 L476,78"/><path d="M540,78 L556,78"/></g>
+  <path d="M620,78 L648,78" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2b)"/>
+  <text x="665" y="82" font-size="11" fill="#5b6876">null</text>
+  <text x="380" y="185" font-size="11.5" fill="#0e6f6c" text-anchor="middle">apilar conecta el nuevo nodo con la cabeza vieja y despues mueve la cabeza</text>
+  <text x="380" y="205" font-size="11" fill="#5b6876" text-anchor="middle">costo O(1): no se recorre nada, sin importar cuantos elementos haya</text>
+</svg>
+:::
+
+::: {.destacado}
+La cima de la pila es la cabeza de la lista. Apilar es exactamente `insertarInicio`, así que la pila
+enlazada nunca necesita el puntero `ultimo` ni recorre un solo nodo.
+:::
+
+## La operación desapilar {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Antes, la cabeza apunta a C que apunta a B que apunta a A; desapilar saca C y la cabeza pasa a apuntar a B" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b2c" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="150" y="18" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">antes</text>
+  <text x="620" y="98" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">despues de desapilar()</text>
+  <text x="40" y="42" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M40,46 L40,58" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2c)"/>
+  <rect x="20" y="60" width="60" height="34" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="100" y="60" width="60" height="34"/><rect x="180" y="60" width="60" height="34"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600"><text x="50" y="82" fill="#0e6f6c">C</text><text x="130" y="82" fill="#12324f">B</text><text x="210" y="82" fill="#12324f">A</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2c)"><path d="M80,77 L96,77"/><path d="M160,77 L176,77"/></g>
+  <path d="M240,77 L268,77" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2c)"/>
+  <text x="285" y="81" font-size="11" fill="#5b6876">null</text>
+  <path d="M50,60 C50,20 380,10 420,37" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2c)"/>
+  <rect x="420" y="20" width="60" height="34" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="450" y="42" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">C</text>
+  <text x="450" y="12" font-size="11" fill="#0e6f6c" text-anchor="middle">desapilar() devuelve C</text>
+  <text x="610" y="116" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M610,120 L610,132" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2c)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="570" y="134" width="60" height="34"/><rect x="650" y="134" width="60" height="34"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="600" y="156">B</text><text x="680" y="156">A</text></g>
+  <path d="M630,151 L646,151" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2c)"/>
+  <text x="380" y="195" font-size="11.5" fill="#0e6f6c" text-anchor="middle">desapilar devuelve la cabeza actual y mueve la cabeza a su siguiente</text>
+</svg>
+:::
+
+::: {.destacado}
+`desapilar` deja `eliminado.siguiente = null` antes de devolver el dato. Es la limpieza que evita
+que el nodo que sale quede como puente hacia el resto de la pila.
+:::
+
+## Pila enlazada en Java y en Python {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+public void apilar(Object elemento) {
+    Nodo nuevo = new Nodo(elemento);
+    nuevo.siguiente = cabeza;
+    cabeza = nuevo;
+}
+public Object desapilar() {
+    if (estaVacia()) throw new
+        IllegalStateException("pila vacia");
+    Nodo eliminado = cabeza;
+    cabeza = cabeza.siguiente;
+    eliminado.siguiente = null;
+    return eliminado.dato;
+}
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+def apilar(self, elemento):
+    nuevo = Nodo(elemento)
+    nuevo.siguiente = self._cabeza
+    self._cabeza = nuevo
+
+def desapilar(self):
+    if self.esta_vacia():
+        raise IndexError("pila vacia")
+    eliminado = self._cabeza
+    self._cabeza = self._cabeza.siguiente
+    eliminado.siguiente = None
+    return eliminado.dato
+```
+:::
+:::
+
+::: {.neutro}
+`apilar` es O(1) real porque nunca copia nada, ya que cada nodo se pide justo cuando se necesita.
+La pila sobre arreglo de la Unidad 2 solo daba O(1) amortizado.
+:::
+
+## La cola enlazada: por qué hace falta otro puntero {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Panel izquierdo: ColaEnlazada guarda cabeza y ultimo; encolar z solo conecta ultimo.siguiente = z y mueve ultimo, costo O(1). Panel derecho: si la cola solo guardara cabeza, encolar exigiria caminar desde cabeza hasta el nodo con siguiente en null para enganchar ahi el nuevo, costo O(n)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b2d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="185" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">con puntero ultimo: encolar es O(1)</text>
+  <text x="575" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">sin puntero ultimo: encolar es O(n)</text>
+  <text x="30" y="46" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M30,50 L30,68" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2d)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="70" width="46" height="36"/><rect x="90" y="70" width="46" height="36"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="170" y="70" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="33" y="92">a</text><text x="113" y="92">b</text><text x="193" y="92">z</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#b2d)"><path d="M56,88 L86,88"/><path d="M136,88 L166,88"/></g>
+  <path d="M216,88 L246,88" fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#b2d)"/>
+  <text x="264" y="92" font-size="11" fill="#5b6876">null</text>
+  <text x="193" y="52" font-size="11" fill="#0e6f6c" text-anchor="middle">ultimo</text>
+  <path d="M193,58 L193,68" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2d)"/>
+  <text x="140" y="130" font-size="11" fill="#0e6f6c" text-anchor="middle">ultimo.siguiente = z; ultimo = z</text>
+  <text x="140" y="150" font-size="11" fill="#5b6876" text-anchor="middle">un solo enlace, sin caminar nada</text>
+  <rect x="400" y="34" width="340" height="200" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="445" y="60" font-size="11" fill="#0e6f6c" text-anchor="middle">cabeza</text>
+  <path d="M445,66 L445,86" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2d)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="422" y="86" width="46" height="36"/><rect x="502" y="86" width="46" height="36"/><rect x="582" y="86" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="445" y="108">a</text><text x="525" y="108">b</text><text x="605" y="108">c</text></g>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#b2d)"><path d="M468,104 L498,104"/><path d="M548,104 L578,104"/></g>
+  <path d="M445,122 C480,152 570,152 605,122" fill="none" stroke="#0e6f6c" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#b2d)"/>
+  <text x="525" y="172" font-size="11" fill="#0e6f6c" text-anchor="middle">caminar a, b, c hasta null</text>
+  <text x="570" y="216" font-size="11" fill="#5b6876" text-anchor="middle">sin puntero ultimo: O(n) cada vez</text>
+</svg>
+:::
+
+::: {.destacado}
+Sin un segundo puntero, cada `encolar` tendría que recorrer toda la cadena para encontrar el
+último nodo. Con `ultimo` guardado aparte, `encolar` deja de necesitar cualquier recorrido.
+:::
+
+## Encolar al final, desencolar del frente {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Panel izquierdo: encolar d conecta el nodo apuntado por ultimo con d y mueve ultimo a d. Panel derecho: desencolar mueve la cabeza de a a b y a sale de la cola" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b2e" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="180" y="18" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">encolar(d): entra por el final</text>
+  <text x="40" y="42" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M40,46 L40,58" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2e)"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="60" width="50" height="34"/><rect x="80" y="60" width="50" height="34"/></g>
+  <g fill="#eef4fa" stroke="#8fc9c5"><rect x="150" y="60" width="50" height="34"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="35" y="82">a</text><text x="105" y="82">b</text><text x="175" y="82">c</text></g>
+  <text x="175" y="42" font-size="11" fill="#0e6f6c" text-anchor="middle">ultimo</text>
+  <path d="M175,46 L175,58" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2e)"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b2e)"><path d="M60,77 L76,77"/><path d="M130,77 L146,77"/><path d="M200,77 L216,77"/></g>
+  <rect x="220" y="60" width="50" height="34" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="245" y="82" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">d</text>
+  <text x="150" y="130" font-size="11" fill="#0e6f6c" text-anchor="middle">ultimo.siguiente = d; ultimo = d</text>
+  <text x="150" y="150" font-size="11" fill="#5b6876" text-anchor="middle">un solo enlace, ultimo se mueve</text>
+  <text x="570" y="18" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">desencolar(): sale por el frente</text>
+  <text x="410" y="42" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M410,46 L410,58" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2e)"/>
+  <rect x="390" y="60" width="50" height="34" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="460" y="60" width="50" height="34"/><rect x="530" y="60" width="50" height="34"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="600"><text x="415" y="82" fill="#0e6f6c">a</text><text x="485" y="82" fill="#12324f">b</text><text x="555" y="82" fill="#12324f">c</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b2e)"><path d="M440,77 L456,77"/><path d="M510,77 L526,77"/></g>
+  <text x="480" y="118" font-size="11" fill="#0e6f6c">cabeza</text>
+  <path d="M480,122 L480,134" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b2e)"/>
+  <rect x="460" y="136" width="50" height="34" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="485" y="158" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">b</text>
+  <text x="600" y="150" font-size="11" fill="#0e6f6c">a sale por el frente</text>
+</svg>
+:::
+
+::: {.destacado}
+`desencolar` sigue trabajando sobre la cabeza, con costo O(1) real. `encolar` trabaja sobre
+`ultimo`, también O(1) real, y cada operación toca su propio extremo sin invadir el del otro.
+:::
+
+## Cola enlazada en Java y en Python {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+public void encolar(Object elemento) {
+    Nodo nuevo = new Nodo(elemento);
+    if (ultimo == null) cabeza = nuevo;
+    else ultimo.siguiente = nuevo;
+    ultimo = nuevo;
+}
+public Object desencolar() {
+    if (estaVacia()) throw new
+        IllegalStateException("cola vacia");
+    Nodo eliminado = cabeza;
+    cabeza = cabeza.siguiente;
+    if (cabeza == null) ultimo = null;
+    eliminado.siguiente = null;
+    return eliminado.dato;
+}
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+def encolar(self, elemento):
+    nuevo = Nodo(elemento)
+    if self._ultimo is None:
+        self._cabeza = nuevo
+    else:
+        self._ultimo.siguiente = nuevo
+    self._ultimo = nuevo
+def desencolar(self):
+    if self.esta_vacia():
+        raise IndexError("cola vacia")
+    eliminado = self._cabeza
+    self._cabeza = self._cabeza.siguiente
+    if self._cabeza is None: self._ultimo = None
+    eliminado.siguiente = None
+    return eliminado.dato
+```
+:::
+:::
+
+## El bug de la cola que se traga sus elementos {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bug de olvidar limpiar ultimo con un encolar que decide con ultimo igual a null: al desencolar el unico elemento a, cabeza pasa a null pero ultimo sigue apuntando al nodo a ya desconectado; el siguiente encolar de b ve ultimo distinto de null, hace ultimo.siguiente = b sobre ese nodo huerfano y nunca asigna cabeza, asi que la cola se reporta vacia aunque b ya entro" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b2f" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">desencolar() sin reiniciar ultimo, sobre una cola de un solo elemento</text>
+  <text x="140" y="40" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">1. tras desencolar() el unico nodo</text>
+  <text x="560" y="40" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">2. tras encolar(b)</text>
+  <text x="30" y="100" font-size="11" fill="#0e6f6c">cabeza = null</text>
+  <text x="200" y="60" font-size="11" fill="#0e6f6c" text-anchor="middle">ultimo</text>
+  <path d="M200,64 L200,76" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2f)"/>
+  <g fill="#f5f7fa" stroke="#cfd8e3" stroke-dasharray="4 3"><rect x="170" y="76" width="60" height="38"/><rect x="420" y="76" width="60" height="38"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#5b6876"><text x="200" y="100">a</text><text x="450" y="100">a</text></g>
+  <path d="M250,95 L330,95" fill="none" stroke="#0e6f6c" stroke-width="2" marker-end="url(#b2f)"/>
+  <text x="290" y="86" font-size="11" fill="#0e6f6c" text-anchor="middle">encolar(b)</text>
+  <text x="420" y="134" font-size="11" fill="#0e6f6c">cabeza = null</text>
+  <rect x="580" y="76" width="60" height="38" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="610" y="100" font-size="11.5" fill="#12324f" text-anchor="middle">b</text>
+  <path d="M480,95 L580,95" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2f)"/>
+  <text x="530" y="88" font-size="11" fill="#5b6876" text-anchor="middle">a.siguiente = b</text>
+  <text x="610" y="60" font-size="11" fill="#0e6f6c" text-anchor="middle">ultimo</text>
+  <path d="M610,64 L610,76" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2f)"/>
+  <text x="380" y="166" font-size="11.5" fill="#0e6f6c" text-anchor="middle">encolar ve ultimo distinto de null y toma la rama ultimo.siguiente = b: cabeza nunca se asigna</text>
+  <text x="380" y="188" font-size="11.5" fill="#5b6876" text-anchor="middle">estaVacia() responde true porque solo mira cabeza, aunque b ya este enlazado al nodo huerfano</text>
+  <text x="380" y="210" font-size="11.5" fill="#5b6876" text-anchor="middle">desencolar() lanza la excepcion de cola vacia en cada llamada, aunque encolar nunca fallo</text>
+</svg>
+:::
+
+::: {.destacado}
+La línea `if (cabeza == null) ultimo = null;` no es una precaución de más. `encolar` decide con
+`ultimo == null`, así que sin esa línea el siguiente `encolar` se cuelga del nodo huérfano y
+`cabeza` se queda en `null`.
+:::
+
+## Tres formas de resolver el mismo contrato {.center}
+
+| Implementación | apilar / encolar | desapilar / desencolar | Localidad de caché |
+|---|:---:|:---:|---|
+| Arreglo redimensionable (Unidad 2) | O(1) amortizado | O(1) | buena, casillas contiguas |
+| Lista enlazada con `ultimo` | O(1) real | O(1) | pobre, nodos dispersos |
+| Lista enlazada sin `ultimo` | O(n) al encolar | O(1) | pobre, nodos dispersos |
+
+::: {.destacado}
+La tercera fila no es una opción real, porque degrada la operación más común de la cola a O(n)
+apenas la cadena crece. El puntero `ultimo` es lo que separa una cola utilizable de una que no lo es.
+:::
+
+::: {.neutro}
+`java.util.LinkedList`, doblemente enlazada, ya implementa `Deque`. El Javadoc de `ArrayDeque`
+advierte que esa clase, respaldada por arreglo, probablemente es más rápida que `LinkedList` usada
+como cola; una razón práctica es la localidad de caché.
+:::
+
+## Caso de estudio: paréntesis balanceados con una pila {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Procesamiento de la cadena parentesis a corchete b corchete c parentesis con una pila: cada simbolo de apertura se apila, cada simbolo de cierre compara contra la cima y desapila si coincide; al terminar la cadena la pila queda vacia, señal de que todo cerro en el orden correcto" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">balanceada con la cadena (a[b]c): la pila a lo largo del recorrido</text>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="700"><text x="60" y="42">(</text><text x="130" y="42">a</text><text x="200" y="42">[</text><text x="270" y="42">b</text><text x="340" y="42">]</text><text x="410" y="42">c</text><text x="480" y="42">)</text></g>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1"><line x1="30" y1="52" x2="510" y2="52"/></g>
+  <text x="60" y="80" font-size="11" fill="#5b6876" text-anchor="middle">apila (</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="42" y="88" width="36" height="30"/></g>
+  <text x="60" y="108" font-size="11.5" fill="#0e6f6c" text-anchor="middle">(</text>
+  <text x="200" y="80" font-size="11" fill="#5b6876" text-anchor="middle">apila [</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="182" y="88" width="36" height="30"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="182" y="120" width="36" height="30"/></g>
+  <text x="200" y="108" font-size="11.5" fill="#12324f" text-anchor="middle">[</text>
+  <text x="200" y="140" font-size="11.5" fill="#0e6f6c" text-anchor="middle">(</text>
+  <text x="340" y="80" font-size="11" fill="#5b6876" text-anchor="middle">] coincide con cima [, desapila</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="322" y="120" width="36" height="30"/></g>
+  <text x="340" y="140" font-size="11.5" fill="#0e6f6c" text-anchor="middle">(</text>
+  <text x="480" y="80" font-size="11" fill="#5b6876" text-anchor="middle">) coincide con cima (, desapila</text>
+  <text x="480" y="120" font-size="11" fill="#5b6876" text-anchor="middle">pila vacia</text>
+  <text x="380" y="180" font-size="11.5" fill="#0e6f6c" text-anchor="middle">al terminar la cadena la pila quedo vacia: balanceada</text>
+  <text x="380" y="200" font-size="11.5" fill="#5b6876" text-anchor="middle">si un cierre no coincide con la cima, o la pila esta vacia al cerrar, la cadena no esta balanceada</text>
+</svg>
+:::
+
+::: {.destacado}
+Cada símbolo de apertura se apila, y cada símbolo de cierre debe coincidir con la cima. Los
+analizadores de los compiladores usan una pila con la misma idea para revisar estructuras anidadas.
+:::
+
+## Código de balanceada {.center}
+
+```python
+def balanceada(cadena):
+    pila = Pila()
+    pares = {')': '(', ']': '[', '}': '{'}
+    for simbolo in cadena:
+        if simbolo in '([{':
+            pila.apilar(simbolo)
+        elif simbolo in pares:
+            if pila.esta_vacia() or pila.desapilar() != pares[simbolo]:
+                return False
+    return pila.esta_vacia()
+```
+
+::: {.neutro}
+El `return pila.esta_vacia()` final es tan importante como el ciclo, porque una cadena como `"(a"`
+nunca produce un cierre incorrecto. Su único problema es un símbolo que se queda sin cerrar.
+:::
+
+## Casos reales: fila de atención y cola de impresión {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fila de atencion modelada con una cola: los clientes 4 y 5 llegan y se encolan al final junto al cliente 3, mientras el mostrador atiende y desencola al cliente 1 desde el frente; el orden de atencion, 1, 2, 3 y despues 4 y 5, respeta exactamente el orden de llegada" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b2h" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">llegan por ultimo, se atienden por cabeza</text>
+  <text x="160" y="42" font-size="11" fill="#0e6f6c">cabeza (mostrador)</text>
+  <path d="M160,48 L160,66" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2h)"/>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="120" y="68" width="60" height="40"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="200" y="68" width="60" height="40"/><rect x="280" y="68" width="60" height="40"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="150" y="92">1</text><text x="230" y="92">2</text><text x="310" y="92">3</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#b2h)"><path d="M180,88 L196,88"/><path d="M260,88 L276,88"/></g>
+  <text x="340" y="52" font-size="11" fill="#0e6f6c">ultimo</text>
+  <path d="M340,58 L340,66" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#b2h)"/>
+  <text x="500" y="60" font-size="11" fill="#5b6876" text-anchor="middle">llegan 4 y 5, se encolan</text>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="450" y="68" width="60" height="40"/><rect x="530" y="68" width="60" height="40"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="480" y="92">4</text><text x="560" y="92">5</text></g>
+  <path d="M340,88 C380,88 410,88 446,88" fill="none" stroke="#cfd8e3" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#b2h)"/>
+  <text x="150" y="150" font-size="11" fill="#0e6f6c" text-anchor="middle">desencolar() atiende a 1 primero</text>
+  <text x="380" y="190" font-size="11.5" fill="#5b6876" text-anchor="middle">orden de atencion: 1, 2, 3, 4, 5, exactamente el orden de llegada</text>
+</svg>
+:::
+
+::: {.destacado}
+Encolar entra por el final y desencolar sale por el frente, el mismo orden que exige una fila de
+atención o una cola de impresión. Una `Pila`, en cambio, es la estructura correcta para deshacer en
+un editor, porque el último cambio hecho tiene que ser el primero en revertirse.
+:::
+
+## Reto 2 {.center}
+
+| Llegada | Archivo | Turno con `Cola` | Turno con `Pila` |
+|---|---|---|---|
+| 1 | `boceto.pdf` | ? | ? |
+| 2 | `contrato.pdf` | ? | ? |
+| 3 | `factura.pdf` | ? | ? |
+
+::: {.pasos}
+1. Los tres trabajos de la tabla entran, en ese orden de llegada, a una estructura que los guarda
+   antes de imprimirlos.
+2. Si la estructura es una `Cola`, el orden de impresión es uno; si por error se usa una `Pila`
+   sin cambiar ninguna otra línea del programa, el orden cambia por completo.
+3. ¿Qué turno de impresión le toca a cada archivo con `Cola`, y cuál con `Pila`?
+:::
+
+## Bloque 3. Árboles binarios de búsqueda {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 3
+:::
+
+Cada nodo gana un segundo camino, izquierdo y derecho, y esa segunda referencia le permite al árbol mantenerse ordenado mientras guarda datos, sin ningún paso aparte de ordenamiento.
+
+## Vocabulario de un árbol {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol de ejemplo con vocabulario basico: la raiz es 50, sus hijos izquierdo y derecho son 30 y 70, las hojas son 20, 40, 60 y 80, hay tres niveles marcados 0, 1 y 2, y la altura del arbol es 2" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Vocabulario basico de un arbol</text>
+  <text x="40" y="64" font-size="11" fill="#5b6876">nivel 0</text>
+  <text x="40" y="144" font-size="11" fill="#5b6876">nivel 1</text>
+  <text x="40" y="224" font-size="11" fill="#5b6876">nivel 2</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b3a)"><path d="M368,78 L242,122"/><path d="M392,78 L518,122"/><path d="M222,158 L152,202"/><path d="M238,158 L308,202"/><path d="M522,158 L452,202"/><path d="M538,158 L608,202"/></g>
+  <rect x="357" y="42" width="46" height="36" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="207" y="122" width="46" height="36"/><rect x="507" y="122" width="46" height="36"/><rect x="117" y="202" width="46" height="36"/><rect x="297" y="202" width="46" height="36"/><rect x="417" y="202" width="46" height="36"/><rect x="597" y="202" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="65">50</text><text x="230" y="145">30</text><text x="530" y="145">70</text><text x="140" y="225">20</text><text x="320" y="225">40</text><text x="440" y="225">60</text><text x="620" y="225">80</text></g>
+  <text x="380" y="32" font-size="11" fill="#0e6f6c" text-anchor="middle" font-weight="700">raiz</text>
+  <text x="180" y="112" font-size="11" fill="#0e6f6c" text-anchor="middle">hijo izquierdo</text>
+  <text x="580" y="112" font-size="11" fill="#0e6f6c" text-anchor="middle">hijo derecho</text>
+  <text x="140" y="252" font-size="11" fill="#0e6f6c" text-anchor="middle" font-weight="700">hoja</text>
+  <line x1="700" y1="60" x2="700" y2="220" stroke="#0e6f6c" stroke-width="1.4"/>
+  <line x1="694" y1="60" x2="706" y2="60" stroke="#0e6f6c" stroke-width="1.4"/>
+  <line x1="694" y1="220" x2="706" y2="220" stroke="#0e6f6c" stroke-width="1.4"/>
+  <text x="720" y="144" font-size="11" fill="#0e6f6c" font-weight="700" text-anchor="middle" transform="rotate(90 720 144)">altura = 2</text>
+</svg>
+:::
+
+::: {.destacado}
+La raíz es el único nodo sin padre. Un nodo sin hijos es una hoja. El nivel de un nodo es su distancia a la raíz, y la altura del árbol es la distancia, en enlaces, entre la raíz y la hoja más lejana.
+:::
+
+## Qué hace binario de búsqueda a un árbol {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol binario de busqueda de ejemplo con raiz 50, hijo izquierdo 30 con hijos 20 y 40, e hijo derecho 70 con hijos 60 y 80; una region sombreada a la izquierda marca que todo valor del subarbol izquierdo de 50 es menor que 50, y una region sombreada a la derecha marca que todo valor del subarbol derecho es mayor que 50; la misma regla se repite en cada nodo, por ejemplo 20 esta a la izquierda de 30 porque 20 es menor que 30" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">El arbol de ejemplo y su invariante de orden</text>
+  <rect x="95" y="96" width="270" height="156" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="400" y="96" width="270" height="156" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="230" y="112" font-size="11" fill="#5b6876" text-anchor="middle">subarbol izquierdo: todo valor menor que 50</text>
+  <text x="535" y="112" font-size="11" fill="#5b6876" text-anchor="middle">subarbol derecho: todo valor mayor que 50</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b3c)"><path d="M368,78 L242,122"/><path d="M392,78 L518,122"/><path d="M222,158 L152,202"/><path d="M238,158 L308,202"/><path d="M522,158 L452,202"/><path d="M538,158 L608,202"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="357" y="42" width="46" height="36"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="207" y="122" width="46" height="36"/><rect x="507" y="122" width="46" height="36"/><rect x="117" y="202" width="46" height="36"/><rect x="297" y="202" width="46" height="36"/><rect x="417" y="202" width="46" height="36"/><rect x="597" y="202" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="65">50</text><text x="230" y="145">30</text><text x="530" y="145">70</text><text x="140" y="225">20</text><text x="320" y="225">40</text><text x="440" y="225">60</text><text x="620" y="225">80</text></g>
+  <text x="380" y="30" font-size="11" fill="#0e6f6c" text-anchor="middle">raiz</text>
+  <text x="380" y="268" font-size="11" fill="#0e6f6c" text-anchor="middle">la regla se repite en cada nodo: 20 esta a la izquierda de 30 porque es menor, 40 a la derecha porque es mayor</text>
+</svg>
+:::
+
+::: {.destacado}
+En un árbol binario de búsqueda, todo valor del subárbol izquierdo de cada nodo es menor que ese
+nodo, y todo valor de su subárbol derecho es mayor. La regla se cumple en cada nodo, no solo en la
+raíz, así que basta una comparación por nivel para saber a qué lado bajar. En este árbol no se
+permiten valores repetidos, e insertar un dato que ya existe no cambia nada.
+:::
+
+## El nodo con dos caminos {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un nodo del arbol tiene un dato y dos referencias, izquierdo y derecho, cada una apunta a un subarbol completo o queda vacia; el dibujo muestra el nodo en el centro con una flecha hacia el subarbol izquierdo y otra hacia el subarbol derecho" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Un nodo, dos referencias, dos caminos posibles</text>
+  <rect x="335" y="40" width="90" height="40" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="65" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">dato</text>
+  <path d="M345,80 L230,150" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b3b)"/>
+  <path d="M415,80 L530,150" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b3b)"/>
+  <text x="255" y="120" font-size="11" fill="#0e6f6c" font-weight="700" text-anchor="middle">izquierdo</text>
+  <text x="505" y="120" font-size="11" fill="#0e6f6c" font-weight="700" text-anchor="middle">derecho</text>
+  <polygon points="150,150 290,150 220,205" fill="#eef4fa" stroke="#c7d6e6"/>
+  <polygon points="460,150 600,150 530,205" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="220" y="180" font-size="11" fill="#12324f" text-anchor="middle">subarbol</text>
+  <text x="220" y="194" font-size="11" fill="#12324f" text-anchor="middle">izquierdo</text>
+  <text x="530" y="180" font-size="11" fill="#12324f" text-anchor="middle">subarbol</text>
+  <text x="530" y="194" font-size="11" fill="#12324f" text-anchor="middle">derecho</text>
+</svg>
+:::
+
+::: {.destacado}
+El nodo de las listas guardaba un dato y una sola referencia, `siguiente`. El nodo del árbol, `NodoArbol`, guarda un dato y dos referencias, `izquierdo` y `derecho`, cada una vacía o apuntando a un subárbol completo.
+:::
+
+## NodoArbol en Java y en Python {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+public class NodoArbol {
+    int dato;
+    NodoArbol izquierdo;
+    NodoArbol derecho;
+
+    public NodoArbol(int dato) {
+        this.dato = dato;
+        this.izquierdo = null;
+        this.derecho = null;
+    }
+}
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+class NodoArbol:
+    def __init__(self, dato):
+        self.dato = dato
+        self.izquierdo = None
+        self.derecho = None
+```
+:::
+:::
+
+::: {.neutro}
+El dato es `int` en vez de un tipo genérico, porque insertar y buscar necesitan comparar con `<` y
+`>`, y en Java eso exige `Comparable`. Python compara sin declarar nada aparte.
+:::
+
+## Insertar: bajar hasta el hueco correcto {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Insertar 45 en el arbol de ejemplo: 45 es menor que 50, baja a la izquierda hacia 30; 45 es mayor que 30, baja a la derecha hacia 40; 45 es mayor que 40, baja a la derecha de 40, que esta vacia, y ahi se cuelga el nuevo nodo 45" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">insertar(45): tres comparaciones hasta el hueco vacio</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b3d)"><path d="M368,78 L242,122"/><path d="M392,78 L518,122"/><path d="M222,158 L152,202"/><path d="M238,158 L308,202"/><path d="M522,158 L452,202"/><path d="M538,158 L608,202"/><path d="M328,238 L392,282"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="357" y="42" width="46" height="36"/><rect x="207" y="122" width="46" height="36"/><rect x="297" y="202" width="46" height="36"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="507" y="122" width="46" height="36"/><rect x="117" y="202" width="46" height="36"/><rect x="417" y="202" width="46" height="36"/><rect x="597" y="202" width="46" height="36"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6" stroke-dasharray="4 3"><rect x="377" y="282" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="65">50</text><text x="230" y="145">30</text><text x="530" y="145">70</text><text x="140" y="225">20</text><text x="320" y="225">40</text><text x="440" y="225">60</text><text x="620" y="225">80</text></g>
+  <text x="400" y="305" font-size="13" fill="#0e6f6c" text-anchor="middle" font-weight="700">45</text>
+  <rect x="460" y="40" width="270" height="120" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="475" y="58" font-size="11" fill="#12324f" font-weight="700">insertar(45):</text>
+  <text x="475" y="78" font-size="11" fill="#0e6f6c">1. 45 menor que 50: baja a la izquierda</text>
+  <text x="475" y="98" font-size="11" fill="#0e6f6c">2. 45 mayor que 30: baja a la derecha</text>
+  <text x="475" y="118" font-size="11" fill="#0e6f6c">3. 45 mayor que 40: baja a la derecha,</text>
+  <text x="475" y="134" font-size="11" fill="#0e6f6c">hueco vacio, ahi se cuelga el nodo nuevo</text>
+</svg>
+:::
+
+::: {.destacado}
+El caso base es un subárbol vacío, y ahí cuelga el nodo nuevo. El caso recursivo compara el dato y
+desciende por la referencia que corresponda, hasta llegar a una referencia vacía.
+:::
+
+## Código de insertar {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+public void insertar(int dato) {
+    raiz = insertar(raiz, dato);
+}
+
+private NodoArbol insertar(
+        NodoArbol nodo, int dato) {
+    if (nodo == null) {
+        return new NodoArbol(dato);
+    }
+    if (dato < nodo.dato) {
+        nodo.izquierdo =
+            insertar(nodo.izquierdo, dato);
+    } else if (dato > nodo.dato) {
+        nodo.derecho =
+            insertar(nodo.derecho, dato);
+    }
+    return nodo;
+}
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+def insertar(self, dato):
+    self.raiz = self._insertar(
+        self.raiz, dato)
+
+def _insertar(self, nodo, dato):
+    if nodo is None:
+        return NodoArbol(dato)
+    if dato < nodo.dato:
+        nodo.izquierdo = self._insertar(
+            nodo.izquierdo, dato)
+    elif dato > nodo.dato:
+        nodo.derecho = self._insertar(
+            nodo.derecho, dato)
+    return nodo
+```
+:::
+:::
+
+## Buscar: el mismo camino que insertar {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Buscar 60 en el arbol de ejemplo: 60 es mayor que 50, va a la derecha hacia 70; 60 es menor que 70, va a la izquierda hacia 60; 60 es igual a 60, encontrado, dos comparaciones antes de llegar" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">buscar(60): mismo camino que insertar, hasta encontrar el dato</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b3e)"><path d="M368,78 L242,122"/><path d="M392,78 L518,122"/><path d="M222,158 L152,202"/><path d="M238,158 L308,202"/><path d="M522,158 L452,202"/><path d="M538,158 L608,202"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="207" y="122" width="46" height="36"/><rect x="117" y="202" width="46" height="36"/><rect x="297" y="202" width="46" height="36"/><rect x="597" y="202" width="46" height="36"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="357" y="42" width="46" height="36"/><rect x="507" y="122" width="46" height="36"/><rect x="417" y="202" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="65">50</text><text x="230" y="145">30</text><text x="530" y="145">70</text><text x="140" y="225">20</text><text x="320" y="225">40</text><text x="440" y="225">60</text><text x="620" y="225">80</text></g>
+  <text x="380" y="256" font-size="11" fill="#0e6f6c" text-anchor="middle">60 mayor que 50, a la derecha; 60 menor que 70, a la izquierda; 60 igual a 60, encontrado</text>
+</svg>
+:::
+
+::: {.destacado}
+`buscar` baja exactamente por el mismo camino que seguiría `insertar` para ese valor. La única
+diferencia está en lo que pasa al llegar a una referencia vacía, porque insertar cuelga ahí un nodo
+y buscar concluye que el valor no está.
+:::
+
+## Caso de uso: el índice de un diccionario {.center}
+
+::: {.neutro}
+Un autocompletar o el índice de una aplicación de diccionario necesitan responder rápido si una palabra está y qué hay cerca de ella. Un ABB resuelve las dos cosas con el mismo recorrido de comparaciones.
+:::
+
+::: {.destacado}
+Con un millón de palabras en un árbol balanceado, la altura ronda veinte, porque log2 de un millón
+es 19.9. Encontrar una palabra o descartarla toma unas veinte comparaciones. Si el árbol degenera
+a una cadena, la misma consulta puede recorrer el millón completo sin que su código cambie.
+:::
+
+::: {.datos}
+::: {}
+<span class="cifra">20</span>
+<span class="rotulo">comparaciones en un millón de nodos con altura logarítmica</span>
+:::
+::: {}
+<span class="cifra">1000000</span>
+<span class="rotulo">comparaciones en el peor caso si ese millón degenera a una cadena</span>
+:::
+:::
+
+## Los tres recorridos del mismo árbol {.center}
+
+::: {.diagrama .alto}
+<svg viewBox="0 0 760 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres recorridos del mismo arbol de ejemplo, con el orden de visita marcado dentro de cada nodo y el valor de cada nodo arriba: inorden visita 20, 30, 40, 50, 60, 70, 80 en ese orden, exactamente ordenado; preorden visita 50, 30, 20, 40, 70, 60, 80, primero la raiz; postorden visita 20, 40, 30, 60, 80, 70, 50, la raiz al final" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3f" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Inorden: izquierda, nodo, derecha. Da los datos en orden: 20, 30, 40, 50, 60, 70, 80</text>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1.4" marker-end="url(#b3f)"><path d="M368,78 L242,102"/><path d="M392,78 L518,102"/><path d="M222,118 L152,142"/><path d="M238,118 L308,142"/><path d="M522,118 L452,142"/><path d="M538,118 L608,142"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="357" y="62" width="46" height="32"/><rect x="207" y="102" width="46" height="32"/><rect x="507" y="102" width="46" height="32"/><rect x="117" y="142" width="46" height="32"/><rect x="297" y="142" width="46" height="32"/><rect x="417" y="142" width="46" height="32"/><rect x="597" y="142" width="46" height="32"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="380" y="56">50</text><text x="230" y="96">30</text><text x="530" y="96">70</text><text x="140" y="136">20</text><text x="320" y="136">40</text><text x="440" y="136">60</text><text x="620" y="136">80</text></g>
+  <g text-anchor="middle" font-size="13" fill="#0e6f6c" font-weight="700"><text x="380" y="83">4</text><text x="230" y="123">2</text><text x="530" y="123">6</text><text x="140" y="163">1</text><text x="320" y="163">3</text><text x="440" y="163">5</text><text x="620" y="163">7</text></g>
+  <text x="380" y="196" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Preorden: nodo, izquierda, derecha. Visita la raiz primero: 50, 30, 20, 40, 70, 60, 80</text>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1.4" marker-end="url(#b3f)"><path d="M368,258 L242,282"/><path d="M392,258 L518,282"/><path d="M222,298 L152,322"/><path d="M238,298 L308,322"/><path d="M522,298 L452,322"/><path d="M538,298 L608,322"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="357" y="242" width="46" height="32"/><rect x="207" y="282" width="46" height="32"/><rect x="507" y="282" width="46" height="32"/><rect x="117" y="322" width="46" height="32"/><rect x="297" y="322" width="46" height="32"/><rect x="417" y="322" width="46" height="32"/><rect x="597" y="322" width="46" height="32"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="380" y="236">50</text><text x="230" y="276">30</text><text x="530" y="276">70</text><text x="140" y="316">20</text><text x="320" y="316">40</text><text x="440" y="316">60</text><text x="620" y="316">80</text></g>
+  <g text-anchor="middle" font-size="13" fill="#0e6f6c" font-weight="700"><text x="380" y="263">1</text><text x="230" y="303">2</text><text x="530" y="303">5</text><text x="140" y="343">3</text><text x="320" y="343">4</text><text x="440" y="343">6</text><text x="620" y="343">7</text></g>
+  <text x="380" y="376" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Postorden: izquierda, derecha, nodo. Visita la raiz al final: 20, 40, 30, 60, 80, 70, 50</text>
+  <g fill="none" stroke="#cfd8e3" stroke-width="1.4" marker-end="url(#b3f)"><path d="M368,438 L242,462"/><path d="M392,438 L518,462"/><path d="M222,478 L152,502"/><path d="M238,478 L308,502"/><path d="M522,478 L452,502"/><path d="M538,478 L608,502"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="357" y="422" width="46" height="32"/><rect x="207" y="462" width="46" height="32"/><rect x="507" y="462" width="46" height="32"/><rect x="117" y="502" width="46" height="32"/><rect x="297" y="502" width="46" height="32"/><rect x="417" y="502" width="46" height="32"/><rect x="597" y="502" width="46" height="32"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="380" y="416">50</text><text x="230" y="456">30</text><text x="530" y="456">70</text><text x="140" y="496">20</text><text x="320" y="496">40</text><text x="440" y="496">60</text><text x="620" y="496">80</text></g>
+  <g text-anchor="middle" font-size="13" fill="#0e6f6c" font-weight="700"><text x="380" y="443">7</text><text x="230" y="483">3</text><text x="530" y="483">6</text><text x="140" y="523">1</text><text x="320" y="523">2</text><text x="440" y="523">4</text><text x="620" y="523">5</text></g>
+</svg>
+:::
+
+## Inorden: ordenar gratis {.center}
+
+::: {.destacado}
+El invariante del ABB garantiza que el subárbol izquierdo tiene todo lo menor y el derecho todo lo mayor. Inorden visita izquierda, nodo, derecha, así que el resultado siempre sale ordenado de menor a mayor, sin ningún paso adicional de ordenamiento.
+:::
+
+```python
+def inorden(self):
+    resultado = []
+    self._inorden(self.raiz, resultado)
+    return resultado
+
+def _inorden(self, nodo, resultado):
+    if nodo is None:
+        return
+    self._inorden(nodo.izquierdo, resultado)
+    resultado.append(nodo.dato)
+    self._inorden(nodo.derecho, resultado)
+```
+
+## Recorrido por niveles con una cola {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Recorrido por niveles del arbol de ejemplo con una cola: el orden de visita es 50, 30, 70, 20, 40, 60, 80; abajo, tres instantaneas de la cola muestran su contenido despues de procesar la raiz, despues de procesar 30, y despues de procesar 70, ilustrando como cada nodo procesado encola a sus dos hijos antes de que el siguiente de la cola sea procesado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3g" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">porNiveles(): 50, 30, 70, 20, 40, 60, 80, con una Cola por debajo</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b3g)"><path d="M368,78 L242,122"/><path d="M392,78 L518,122"/><path d="M222,158 L152,202"/><path d="M238,158 L308,202"/><path d="M522,158 L452,202"/><path d="M538,158 L608,202"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="357" y="42" width="46" height="36"/><rect x="207" y="122" width="46" height="36"/><rect x="507" y="122" width="46" height="36"/><rect x="117" y="202" width="46" height="36"/><rect x="297" y="202" width="46" height="36"/><rect x="417" y="202" width="46" height="36"/><rect x="597" y="202" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="65">50</text><text x="230" y="145">30</text><text x="530" y="145">70</text><text x="140" y="225">20</text><text x="320" y="225">40</text><text x="440" y="225">60</text><text x="620" y="225">80</text></g>
+  <text x="60" y="270" font-size="11" fill="#0e6f6c">tras procesar 50:</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="180" y="256" width="42" height="28"/><rect x="226" y="256" width="42" height="28"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="201" y="275">30</text><text x="247" y="275">70</text></g>
+  <text x="180" y="248" font-size="11" fill="#5b6876">frente</text>
+  <text x="60" y="312" font-size="11" fill="#0e6f6c">tras procesar 30:</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="180" y="298" width="42" height="28"/><rect x="226" y="298" width="42" height="28"/><rect x="272" y="298" width="42" height="28"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="201" y="317">70</text><text x="247" y="317">20</text><text x="293" y="317">40</text></g>
+  <text x="180" y="290" font-size="11" fill="#5b6876">frente</text>
+  <text x="60" y="354" font-size="11" fill="#0e6f6c">tras procesar 70:</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="180" y="340" width="42" height="28"/><rect x="226" y="340" width="42" height="28"/><rect x="272" y="340" width="42" height="28"/><rect x="318" y="340" width="42" height="28"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="201" y="359">20</text><text x="247" y="359">40</text><text x="293" y="359">60</text><text x="339" y="359">80</text></g>
+  <text x="180" y="332" font-size="11" fill="#5b6876">frente</text>
+</svg>
+:::
+
+::: {.destacado}
+Cada nodo que sale del frente de la cola encola a sus hijos al final, primero el izquierdo y
+después el derecho. Así, un nivel completo sale antes de que empiece el siguiente.
+:::
+
+## Código del recorrido por niveles {.center}
+
+```python
+def por_niveles(self):
+    resultado = []
+    if self.raiz is None:
+        return resultado
+    cola = Cola()
+    cola.encolar(self.raiz)
+    while not cola.esta_vacia():
+        actual = cola.desencolar()
+        resultado.append(actual.dato)
+        if actual.izquierdo is not None:
+            cola.encolar(actual.izquierdo)
+        if actual.derecho is not None:
+            cola.encolar(actual.derecho)
+    return resultado
+```
+
+::: {.neutro}
+La `Cola` es la misma lista enlazada con `cabeza` y `ultimo` de las colas enlazadas, ahora
+guardando referencias a nodos del árbol en vez de datos sueltos. Cada nodo entra y sale una sola
+vez, así que el recorrido completo cuesta O(n).
+:::
+
+## Eliminar: los casos simples {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos casos simples de eliminacion. Caso 1, eliminar una hoja: 30 tiene como hijos a 20 a la izquierda y a 40 a la derecha, se elimina 20, marcado con borde punteado, y despues 30 queda solo con su hijo derecho 40. Caso 2, eliminar un nodo con un solo hijo: 10 apunta a 15, que a su vez apunta a su unico hijo 18; se elimina 15, marcado con borde punteado, y 18 sube a ocupar directamente el lugar de 15, asi que 10 pasa a apuntar a 18" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3h" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="185" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Caso 1: eliminar una hoja (20)</text>
+  <text x="575" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Caso 2: eliminar un nodo con un hijo (15)</text>
+  <text x="116" y="40" font-size="11" fill="#5b6876" text-anchor="middle">antes</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="95" y="50" width="42" height="30"/><rect x="140" y="110" width="42" height="30"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-dasharray="4 3"><rect x="50" y="110" width="42" height="30"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3h)"><path d="M106,80 L78,110"/><path d="M126,80 L154,110"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="116" y="70">30</text><text x="71" y="130">20</text><text x="161" y="130">40</text></g>
+  <path d="M195,95 L245,95" fill="none" stroke="#0e6f6c" stroke-width="1.4" marker-end="url(#b3h)"/>
+  <text x="220" y="87" font-size="11" fill="#0e6f6c" text-anchor="middle">elimina 20</text>
+  <text x="296" y="40" font-size="11" fill="#5b6876" text-anchor="middle">despues</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="275" y="50" width="42" height="30"/><rect x="320" y="110" width="42" height="30"/></g>
+  <path d="M306,80 L334,110" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3h)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="296" y="70">30</text><text x="341" y="130">40</text></g>
+  <text x="185" y="190" font-size="11" fill="#0e6f6c" text-anchor="middle">30 pierde su referencia hacia 20, nada mas cambia</text>
+  <text x="470" y="40" font-size="11" fill="#5b6876">antes</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="450" y="42" width="40" height="28"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-dasharray="4 3"><rect x="450" y="80" width="40" height="28"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="450" y="118" width="40" height="28"/></g>
+  <path d="M470,70 L470,80" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3h)"/>
+  <path d="M470,108 L470,118" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3h)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="470" y="61">10</text><text x="470" y="99">15</text><text x="470" y="137">18</text></g>
+  <path d="M500,94 L610,94" fill="none" stroke="#0e6f6c" stroke-width="1.4" marker-end="url(#b3h)"/>
+  <text x="555" y="86" font-size="11" fill="#0e6f6c" text-anchor="middle">elimina 15</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="640" y="42" width="40" height="28"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="640" y="118" width="40" height="28"/></g>
+  <path d="M660,70 L660,118" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3h)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="660" y="61">10</text><text x="660" y="137">18</text></g>
+  <text x="575" y="190" font-size="11" fill="#0e6f6c" text-anchor="middle">18 sube directo al lugar de 15, el invariante de orden sigue valido</text>
+</svg>
+:::
+
+::: {.destacado}
+Sin hijos, basta con quitar la referencia del padre. Con un solo hijo, ese hijo sube directo al lugar del nodo eliminado. Ninguno de los dos casos exige tocar el resto del árbol.
+:::
+
+## Eliminar un nodo con dos hijos {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 222" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Eliminar 30 del arbol de ejemplo, que tiene dos hijos, 20 y 40. Paso 1, se identifica el sucesor inorden, el minimo del subarbol derecho de 30, que es 40 porque no tiene hijo izquierdo. Paso 2, el dato de 30 se reemplaza por 40. Paso 3, el nodo original 40, ahora una hoja, se elimina de su posicion; el resultado final tiene la raiz de ese subarbol con dato 40, hijo izquierdo 20 y sin hijo derecho" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3i" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">1. eliminar(30): buscar sucesor</text>
+  <text x="380" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">2. copiar dato del sucesor</text>
+  <text x="630" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">3. eliminar el sucesor original</text>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-dasharray="4 3"><rect x="80" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="100" width="42" height="30"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="140" y="100" width="42" height="30"/></g>
+  <path d="M96,70 L57,100" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3i)"/>
+  <path d="M106,70 L161,100" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3i)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="101" y="60">30</text><text x="41" y="120">20</text><text x="161" y="120">40</text></g>
+  <text x="161" y="152" font-size="11" fill="#0e6f6c" text-anchor="middle">sucesor: minimo</text>
+  <text x="161" y="166" font-size="11" fill="#0e6f6c" text-anchor="middle">del subarbol derecho</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="330" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="270" y="100" width="42" height="30"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-dasharray="4 3"><rect x="390" y="100" width="42" height="30"/></g>
+  <path d="M346,70 L307,100" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3i)"/>
+  <path d="M356,70 L411,100" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3i)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="351" y="60">40</text><text x="291" y="120">20</text><text x="411" y="120">40</text></g>
+  <text x="351" y="152" font-size="11" fill="#0e6f6c" text-anchor="middle">30 cambia su dato por 40</text>
+  <text x="411" y="166" font-size="11" fill="#5b6876" text-anchor="middle">el original queda duplicado</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="600" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="540" y="100" width="42" height="30"/></g>
+  <path d="M616,70 L577,100" fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3i)"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="621" y="60">40</text><text x="561" y="120">20</text></g>
+  <text x="621" y="152" font-size="11" fill="#0e6f6c" text-anchor="middle">40 original era hoja: se quita solo</text>
+  <text x="380" y="192" font-size="11.5" fill="#0e6f6c" text-anchor="middle">resultado: el nodo que antes tenia dato 30 ahora tiene dato 40, con 20 a la izquierda y sin hijo derecho</text>
+  <text x="380" y="212" font-size="11" fill="#5b6876" text-anchor="middle">el sucesor nunca tiene hijo izquierdo, asi que al eliminarlo cae en el caso de hoja o de un solo hijo</text>
+</svg>
+:::
+
+::: {.destacado}
+Con dos hijos, ninguno puede subir sin romper el orden. El dato se reemplaza por el de su sucesor
+inorden, el mínimo del subárbol derecho, y después se elimina ese sucesor de su posición original.
+Es la misma solución de la implementación de referencia de Weiss.
+:::
+
+## El árbol degenerado frente al balanceado {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de forma: insertar 10, 20, 30, 40 y 50 ya ordenados produce una cadena degenerada donde cada nodo solo tiene hijo derecho, altura 4 con 5 nodos; insertar los mismos cinco valores en un orden distinto, por ejemplo 30, 10, 40, 20, 50, produce un arbol mucho mas bajo, altura 2 con los mismos 5 nodos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3j" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="150" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">insertar 10,20,30,40,50 ya ordenados</text>
+  <text x="560" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">insertar los mismos 5 en otro orden</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="34" width="40" height="28"/><rect x="60" y="72" width="40" height="28"/><rect x="100" y="110" width="40" height="28"/><rect x="140" y="148" width="40" height="28"/><rect x="180" y="186" width="40" height="28"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3j)"><path d="M56,62 L64,72"/><path d="M96,100 L104,110"/><path d="M136,138 L144,148"/><path d="M176,176 L184,186"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="40" y="52">10</text><text x="80" y="90">20</text><text x="120" y="128">30</text><text x="160" y="166">40</text><text x="200" y="204">50</text></g>
+  <text x="120" y="226" font-size="11" fill="#0e6f6c" text-anchor="middle">altura 4 con 5 nodos</text>
+  <text x="140" y="240" font-size="11" fill="#0e6f6c" text-anchor="middle">salvo el ultimo, cada nodo con un solo hijo</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="490" y="34" width="42" height="30"/><rect x="440" y="90" width="42" height="30"/><rect x="540" y="90" width="42" height="30"/><rect x="470" y="146" width="42" height="30"/><rect x="570" y="146" width="42" height="30"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b3j)"><path d="M498,64 L466,90"/><path d="M524,64 L556,90"/><path d="M474,120 L486,146"/><path d="M572,120 L586,146"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="511" y="53">30</text><text x="461" y="109">10</text><text x="561" y="109">40</text><text x="491" y="165">20</text><text x="591" y="165">50</text></g>
+  <text x="500" y="236" font-size="11" fill="#0e6f6c" text-anchor="middle">altura 2 con los mismos 5 nodos: mismo contenido, forma completamente distinta</text>
+</svg>
+:::
+
+::: {.datos}
+::: {}
+<span class="cifra">7999</span>
+<span class="rotulo">altura con 8000 valores ya ordenados, n menos 1</span>
+:::
+::: {}
+<span class="cifra">35</span>
+<span class="rotulo">altura con los mismos 8000 en orden aleatorio</span>
+:::
+::: {}
+<span class="cifra">167x</span>
+<span class="rotulo">más lento buscar en el árbol degenerado</span>
+:::
+:::
+
+::: {.fuente}
+Fuente: medición del script publicado en la guía del tema. El `log2(8000)` de referencia es 13.0; la
+altura aleatoria y el tiempo cambian con cada ejecución y con el equipo.
+:::
+
+## Reto 3 {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.diagrama}
+<svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol de partida del reto: raiz 50, hijo izquierdo 30 con hojas 20 y 40, hijo derecho 70 con hojas 60 y 80" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b3r" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="200" y="22" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">arbol de partida, altura 2</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b3r)"><path d="M190,70 L110,100"/><path d="M210,70 L290,100"/><path d="M95,130 L55,160"/><path d="M105,130 L145,160"/><path d="M295,130 L255,160"/><path d="M305,130 L345,160"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="180" y="40" width="40" height="30"/><rect x="80" y="100" width="40" height="30"/><rect x="280" y="100" width="40" height="30"/><rect x="30" y="160" width="40" height="30"/><rect x="130" y="160" width="40" height="30"/><rect x="230" y="160" width="40" height="30"/><rect x="330" y="160" width="40" height="30"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="200" y="60">50</text><text x="100" y="120">30</text><text x="300" y="120">70</text><text x="50" y="180">20</text><text x="150" y="180">40</text><text x="250" y="180">60</text><text x="350" y="180">80</text></g>
+</svg>
+:::
+:::
+::: {.column width="50%"}
+::: {.pasos}
+1. El árbol de la figura tiene raíz 50, hijos 30 y 70, y hojas 20, 40, 60 y 80.
+2. Se inserta 55 y después 90, en ese orden, sobre ese mismo árbol.
+3. ¿De qué nodo y de qué lado cuelga cada uno, y qué altura queda el árbol después de las dos
+   inserciones?
+:::
+:::
+:::
+
+## Bloque 4. Árboles AVL y árboles 2-3 {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 4
+:::
+
+Un árbol que se corrige solo con rotaciones, y otro que nunca llega a desbalancearse.
+
+## Qué es un árbol AVL {.center}
+
+::: {.neutro}
+El árbol binario de búsqueda simple no controla su forma. Con datos ya ordenados cae a una cadena de
+altura n menos 1, y su búsqueda vuelve a costar O(n).
+:::
+
+::: {.destacado}
+Un árbol AVL es un árbol binario de búsqueda en el que, para cada nodo, la altura de su subárbol
+derecho y la de su subárbol izquierdo nunca difieren en más de uno. Lleva el nombre de Georgy
+Adelson-Velsky y Evgenii Landis.
+:::
+
+::: {.neutro}
+Esa diferencia se llama factor de balanceo y se calcula como la altura del subárbol derecho menos
+la del izquierdo. Un valor fuera de {-1, 0, 1} dispara una rotación.
+:::
+
+## El factor de balanceo en cada nodo {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El arbol de siete nodos con raiz 50, hijos 30 y 70, y hojas 20, 40, 60 y 80, anotado con el factor de balanceo y la altura de cada nodo: todos los factores son 0, dentro del rango permitido de -1 a 1" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b4b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El factor de balanceo de cada nodo, ya dentro de {-1, 0, 1}</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b4b)"><path d="M368,78 L242,122"/><path d="M392,78 L518,122"/><path d="M222,158 L152,202"/><path d="M238,158 L308,202"/><path d="M522,158 L452,202"/><path d="M538,158 L608,202"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="357" y="42" width="46" height="36"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="207" y="122" width="46" height="36"/><rect x="507" y="122" width="46" height="36"/><rect x="117" y="202" width="46" height="36"/><rect x="297" y="202" width="46" height="36"/><rect x="417" y="202" width="46" height="36"/><rect x="597" y="202" width="46" height="36"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="65">50</text><text x="230" y="145">30</text><text x="530" y="145">70</text><text x="140" y="225">20</text><text x="320" y="225">40</text><text x="440" y="225">60</text><text x="620" y="225">80</text></g>
+  <g text-anchor="middle" font-size="11" fill="#0e6f6c" font-weight="700"><text x="380" y="92">f=0, h=2</text><text x="230" y="172">f=0, h=1</text><text x="530" y="172">f=0, h=1</text><text x="140" y="252">f=0, h=0</text><text x="320" y="252">f=0, h=0</text><text x="440" y="252">f=0, h=0</text><text x="620" y="252">f=0, h=0</text></g>
+</svg>
+:::
+
+::: {.destacado}
+La altura de un subárbol vacío se define como -1 y la de una hoja como 0. Con esa convención, el
+factor de cualquier hoja siempre es 0, y el cálculo se hace nodo por nodo, no solo en la raíz.
+:::
+
+## La clase NodoAVL {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+class NodoAVL {
+    int dato;
+    NodoAVL izquierdo;
+    NodoAVL derecho;
+    int altura;
+    NodoAVL(int dato) { this.dato = dato; }
+}
+
+int factor(NodoAVL n) {
+    return altura(n.derecho)
+         - altura(n.izquierdo);
+}
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+class NodoAVL:
+    def __init__(self, dato):
+        self.dato = dato
+        self.izquierdo = None
+        self.derecho = None
+        self.altura = 0
+
+def _factor(self, nodo):
+    return (self._altura(nodo.derecho)
+        - self._altura(nodo.izquierdo))
+```
+:::
+:::
+
+::: {.neutro}
+`NodoAVL` agrega un solo campo frente al `NodoArbol` del árbol binario simple, `altura`. Con la
+altura de los dos hijos a la mano, el factor de balanceo es una resta.
+:::
+
+## Caso izquierda-izquierda (LL) {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rotacion caso izquierda-izquierda: antes, cadena con 30 en la raiz, 20 como hijo izquierdo y 10 como nieto izquierdo, factor de 30 es -2, invariante roto; despues de rotar a la derecha en 30, la nueva raiz del subarbol es 20, con 10 a la izquierda y 30 a la derecha, factor 0 en los tres nodos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b4c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Caso izquierda-izquierda (LL): antes</text>
+  <text x="590" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">despues de rotarDerecha(30)</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b4c)"><path d="M130,70 L95,95"/><path d="M95,125 L60,150"/><path d="M590,70 L550,95"/><path d="M590,70 L630,95"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="109" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="74" y="95" width="42" height="30"/><rect x="39" y="150" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="130" y="59">30</text><text x="95" y="114">20</text><text x="60" y="169">10</text></g>
+  <text x="130" y="200" font-size="11" fill="#0e6f6c" text-anchor="middle">factor(30) = -2, viola el invariante</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="569" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="529" y="95" width="42" height="30"/><rect x="609" y="95" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="590" y="59">20</text><text x="550" y="114">10</text><text x="630" y="114">30</text></g>
+  <text x="590" y="200" font-size="11" fill="#0e6f6c" text-anchor="middle">factor 0 en los tres, invariante restaurado</text>
+</svg>
+:::
+
+```java
+NodoAVL rotarDerecha(NodoAVL nodo) {
+    NodoAVL nueva = nodo.izquierdo;
+    nodo.izquierdo = nueva.derecho;
+    nueva.derecho = nodo;
+    actualizarAltura(nodo);
+    actualizarAltura(nueva);
+    return nueva;
+}
+```
+
+## Caso derecha-derecha (RR) {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rotacion caso derecha-derecha: antes, cadena con 10 en la raiz, 20 como hijo derecho y 30 como nieto derecho, factor de 10 es 2, invariante roto; despues de rotar a la izquierda en 10, la nueva raiz del subarbol es 20, con 10 a la izquierda y 30 a la derecha, factor 0 en los tres nodos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b4d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="130" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Caso derecha-derecha (RR): antes</text>
+  <text x="590" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">despues de rotarIzquierda(10)</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b4d)"><path d="M60,70 L95,95"/><path d="M95,125 L130,150"/><path d="M590,70 L550,95"/><path d="M590,70 L630,95"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="39" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="74" y="95" width="42" height="30"/><rect x="109" y="150" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="60" y="59">10</text><text x="95" y="114">20</text><text x="130" y="169">30</text></g>
+  <text x="130" y="200" font-size="11" fill="#0e6f6c" text-anchor="middle">factor(10) = 2, viola el invariante</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="569" y="40" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="529" y="95" width="42" height="30"/><rect x="609" y="95" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="590" y="59">20</text><text x="550" y="114">10</text><text x="630" y="114">30</text></g>
+  <text x="590" y="200" font-size="11" fill="#0e6f6c" text-anchor="middle">factor 0 en los tres, invariante restaurado</text>
+</svg>
+:::
+
+```java
+NodoAVL rotarIzquierda(NodoAVL nodo) {
+    NodoAVL nueva = nodo.derecho;
+    nodo.derecho = nueva.izquierdo;
+    nueva.izquierdo = nodo;
+    actualizarAltura(nodo);
+    actualizarAltura(nueva);
+    return nueva;
+}
+```
+
+## Caso izquierda-derecha (LR) {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rotacion caso izquierda-derecha en tres pasos: antes, 30 en la raiz con hijo izquierdo 10 y el hijo derecho de 10 es 20, un zigzag, factor de 30 es -2; paso intermedio, tras rotarIzquierda(10), 20 pasa a ser el hijo izquierdo de 30 y 10 el hijo izquierdo de 20, ya en linea recta; paso final, tras rotarDerecha(30), 20 queda como raiz del subarbol con 10 a la izquierda y 30 a la derecha, factor 0" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b4e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="110" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">1. antes: zigzag, factor(30) = -2</text>
+  <text x="380" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">2. rotarIzquierda(10): ya es LL</text>
+  <text x="630" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">3. rotarDerecha(30): balanceado</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b4e)"><path d="M110,80 L75,105"/><path d="M75,135 L110,160"/><path d="M380,80 L345,105"/><path d="M345,135 L320,160"/><path d="M630,80 L595,105"/><path d="M630,80 L665,105"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="89" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="54" y="105" width="42" height="30"/><rect x="89" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="110" y="69">30</text><text x="75" y="124">10</text><text x="110" y="179">20</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="359" y="50" width="42" height="30"/><rect x="324" y="105" width="42" height="30"/><rect x="299" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="380" y="69">30</text><text x="345" y="124">20</text><text x="320" y="179">10</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="609" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="574" y="105" width="42" height="30"/><rect x="644" y="105" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="630" y="69">20</text><text x="595" y="124">10</text><text x="665" y="124">30</text></g>
+</svg>
+:::
+
+::: {.destacado}
+El exceso viene en zigzag, el hijo derecho del hijo izquierdo. Una sola rotación a la derecha no
+lo arregla. Primero una rotación a la izquierda sobre el hijo izquierdo endereza el zigzag, y
+después la rotación a la derecha sobre el nodo original termina el balanceo.
+:::
+
+## Caso derecha-izquierda (RL) {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rotacion caso derecha-izquierda en tres pasos: antes, 10 en la raiz con hijo derecho 30 y el hijo izquierdo de 30 es 20, un zigzag, factor de 10 es 2; paso intermedio, tras rotarDerecha(30), 20 pasa a ser el hijo derecho de 10 y 30 el hijo derecho de 20, ya en linea recta; paso final, tras rotarIzquierda(10), 20 queda como raiz del subarbol con 10 a la izquierda y 30 a la derecha, factor 0" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b4f" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="110" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">1. antes: zigzag, factor(10) = 2</text>
+  <text x="380" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">2. rotarDerecha(30): ya es RR</text>
+  <text x="630" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">3. rotarIzquierda(10): balanceado</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b4f)"><path d="M110,80 L145,105"/><path d="M145,135 L110,160"/><path d="M380,80 L415,105"/><path d="M415,135 L450,160"/><path d="M630,80 L595,105"/><path d="M630,80 L665,105"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="89" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="124" y="105" width="42" height="30"/><rect x="89" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="110" y="69">10</text><text x="145" y="124">30</text><text x="110" y="179">20</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="359" y="50" width="42" height="30"/><rect x="394" y="105" width="42" height="30"/><rect x="429" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="380" y="69">10</text><text x="415" y="124">20</text><text x="450" y="179">30</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="609" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="574" y="105" width="42" height="30"/><rect x="644" y="105" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="630" y="69">20</text><text x="595" y="124">10</text><text x="665" y="124">30</text></g>
+</svg>
+:::
+
+::: {.destacado}
+Es el caso simétrico del anterior, porque el exceso viene del hijo izquierdo del hijo derecho. La
+corrección es la misma idea reflejada, con primero una rotación a la derecha sobre el hijo derecho
+y después una rotación a la izquierda sobre el nodo original.
+:::
+
+## Cuando se aplica la rotación equivocada {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion entre aplicar la rotacion equivocada y la correcta sobre el mismo caso izquierda-derecha: antes, 30 con hijo izquierdo 10 y el hijo derecho de 10 es 20, factor -2; si se aplica por error una sola rotarDerecha(30), tratandolo como LL, el resultado es 10 como nueva raiz con 30 a la derecha y 20 como hijo izquierdo de 30, factor de 10 termina en 2, el invariante sigue roto; la rotacion doble correcta si deja 20 como raiz, con 10 y 30 como hijos, factor 0" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b4g" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="110" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">antes: zigzag, factor(30) = -2</text>
+  <text x="380" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">rotarDerecha(30) sola: incorrecta</text>
+  <text x="630" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">rotacion doble: correcta</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b4g)"><path d="M110,80 L75,105"/><path d="M75,135 L110,160"/><path d="M380,80 L415,105"/><path d="M415,135 L380,160"/><path d="M630,80 L595,105"/><path d="M630,80 L665,105"/></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="89" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="54" y="105" width="42" height="30"/><rect x="89" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="110" y="69">30</text><text x="75" y="124">10</text><text x="110" y="179">20</text></g>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="359" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="394" y="105" width="42" height="30"/><rect x="359" y="160" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="380" y="69">10</text><text x="415" y="124">30</text><text x="380" y="179">20</text></g>
+  <text x="380" y="205" font-size="11" fill="#0e6f6c" text-anchor="middle">factor(10) = 2, sigue violando el invariante</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="609" y="50" width="42" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="574" y="105" width="42" height="30"/><rect x="644" y="105" width="42" height="30"/></g>
+  <g text-anchor="middle" font-size="12.5" fill="#12324f" font-weight="600"><text x="630" y="69">20</text><text x="595" y="124">10</text><text x="665" y="124">30</text></g>
+  <text x="630" y="205" font-size="11" fill="#0e6f6c" text-anchor="middle">factor 0 en los tres, invariante restaurado</text>
+</svg>
+:::
+
+::: {.destacado}
+Aplicar `rotarDerecha(30)` sola donde el caso era zigzag deja a 10 como raíz, con 30 colgando a la
+derecha y 20 como hijo izquierdo de 30. El factor de 10 termina en 2, todavía fuera de {-1, 0, 1}. Una rotación
+simple solo endereza una línea recta, así que un zigzag primero necesita convertirse en línea recta.
+:::
+
+## Insertar con rebalanceo {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+NodoAVL insertar(NodoAVL n, int d) {
+    if (n == null) return new NodoAVL(d);
+    if (d < n.dato)
+        n.izquierdo = insertar(n.izquierdo, d);
+    else if (d > n.dato)
+        n.derecho = insertar(n.derecho, d);
+    return balancear(n);
+}
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+def _insertar(self, n, d):
+    if n is None:
+        return NodoAVL(d)
+    if d < n.dato:
+        n.izquierdo = self._insertar(n.izquierdo, d)
+    elif d > n.dato:
+        n.derecho = self._insertar(n.derecho, d)
+    return self._balancear(n)
+```
+:::
+:::
+
+::: {.destacado}
+La recursión es idéntica a la del árbol binario simple, salvo `return balancear(n)` en la vuelta de
+cada nivel. `balancear` actualiza la altura y, si el factor sale de {-1, 0, 1}, mira el factor del
+hijo más alto. Con el mismo signo basta una rotación simple, LL o RR; con signo contrario hace
+falta la doble, LR o RL.
+:::
+
+## La altura queda garantizada en O(log n) {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de siluetas: a la izquierda un triangulo compacto representa un arbol AVL con altura proporcional a log2(n), a la derecha una cadena angosta de seis casillas representa un arbol binario degenerado con altura igual a n menos uno" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="16" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Misma cantidad de nodos, formas opuestas</text>
+  <path d="M160,40 L80,180 L240,180 Z" fill="#e4f2f1" stroke="#8fc9c5" stroke-width="1.6"/>
+  <text x="160" y="205" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">AVL: altura a lo sumo 1.44 log2(n)</text>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.4"><rect x="540" y="40" width="40" height="24"/><rect x="555" y="68" width="40" height="24"/><rect x="570" y="96" width="40" height="24"/><rect x="585" y="124" width="40" height="24"/><rect x="600" y="152" width="40" height="24"/><rect x="615" y="180" width="40" height="24"/></g>
+  <text x="600" y="222" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">ABB degenerado: altura = n - 1</text>
+  <text x="380" y="248" font-size="11" fill="#5b6876" text-anchor="middle">medido con n = 8000 ordenados: el AVL queda con altura 12 y el ABB degenerado con 7999</text>
+</svg>
+:::
+
+::: {.datos}
+::: {}
+<span class="cifra">12</span>
+<span class="rotulo">altura del AVL con 8000 valores ordenados</span>
+:::
+::: {}
+<span class="cifra">7999</span>
+<span class="rotulo">altura del ABB simple con los mismos datos</span>
+:::
+::: {}
+<span class="cifra">13.0</span>
+<span class="rotulo">log2(8000) de referencia</span>
+:::
+:::
+
+::: {.fuente}
+Cota: Weiss. *Estructuras de datos en Java.* Capítulo de árboles, sección de árboles AVL. Cifras 12
+y 7999: medición del script de la guía del tema.
+:::
+
+## Árboles 2-3: nodo de 2 y nodo de 3 {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anatomia de un nodo de 2, con un valor 20 y dos hijos posibles, uno con valores menores que 20 y otro con valores mayores, junto a un nodo de 3, con dos valores 20 y 40 y tres hijos posibles, uno con valores menores que 20, otro con valores entre 20 y 40, y otro con valores mayores que 40" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b4i" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="150" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Nodo de 2: un valor, hasta dos hijos</text>
+  <text x="570" y="20" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Nodo de 3: dos valores, hasta tres hijos</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b4i)"><path d="M135,78 L90,140"/><path d="M165,78 L210,140"/><path d="M535,78 L460,140"/><path d="M570,78 L570,140"/><path d="M605,78 L640,140"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="115" y="42" width="70" height="36"/></g>
+  <text x="150" y="65" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">20</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="140" width="60" height="30"/><rect x="180" y="140" width="60" height="30"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="90" y="159">menor</text><text x="210" y="159">mayor</text></g>
+  <text x="90" y="184" font-size="11" fill="#5b6876" text-anchor="middle">que 20</text>
+  <text x="210" y="184" font-size="11" fill="#5b6876" text-anchor="middle">que 20</text>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="510" y="42" width="120" height="36"/></g>
+  <g stroke="#8fc9c5"><line x1="570" y1="42" x2="570" y2="78"/></g>
+  <text x="540" y="65" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">20</text>
+  <text x="600" y="65" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">40</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="430" y="140" width="60" height="30"/><rect x="540" y="140" width="60" height="30"/><rect x="610" y="140" width="60" height="30"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="460" y="159">menor</text><text x="570" y="159">entre 20</text><text x="640" y="159">mayor</text></g>
+  <text x="460" y="184" font-size="11" fill="#5b6876" text-anchor="middle">que 20</text>
+  <text x="570" y="184" font-size="11" fill="#5b6876" text-anchor="middle">y 40</text>
+  <text x="640" y="184" font-size="11" fill="#5b6876" text-anchor="middle">que 40</text>
+</svg>
+:::
+
+::: {.destacado}
+Un nodo de 2 guarda un valor y tiene hasta dos hijos, igual que un nodo del árbol binario simple.
+Un nodo de 3 guarda dos valores ordenados y tiene hasta tres hijos, uno por cada rango que separan
+esas dos claves.
+:::
+
+## Insertar: división y propagación hacia arriba {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Division de un nodo desbordado en tres pasos: paso 1, una hoja con dos claves, 10 y 20; paso 2, se inserta 30 y la hoja queda con tres claves, 10, 20 y 30, desbordada; paso 3, se divide, 20 sube al padre, y 10 y 30 quedan como dos hojas nuevas, cada una con una sola clave" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b4j" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="110" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">1. hoja con dos claves</text>
+  <text x="380" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">2. insertar 30: desborda a tres</text>
+  <text x="630" y="16" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">3. se divide, 20 sube</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="60" y="80" width="100" height="34"/></g>
+  <text x="110" y="102" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">10 | 20</text>
+  <g fill="#f5f7fa" stroke="#0e6f6c" stroke-width="1.6"><rect x="310" y="80" width="140" height="34"/></g>
+  <text x="380" y="102" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">10 | 20 | 30</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b4j)"><path d="M630,80 L595,110"/><path d="M630,80 L665,110"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="605" y="50" width="50" height="30"/></g>
+  <text x="630" y="70" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">20</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="570" y="110" width="50" height="30"/><rect x="640" y="110" width="50" height="30"/></g>
+  <text x="595" y="130" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">10</text>
+  <text x="665" y="130" font-size="13" font-weight="600" fill="#12324f" text-anchor="middle">30</text>
+  <text x="630" y="160" font-size="11" fill="#0e6f6c" text-anchor="middle">puede repetirse hacia arriba</text>
+</svg>
+:::
+
+::: {.destacado}
+Si la hoja de destino ya tenía dos claves, la clave del medio sube al padre y las otras dos quedan
+como dos nodos nuevos. Si el padre también se desborda, el mismo proceso se repite un nivel más
+arriba, hasta la raíz si hace falta.
+:::
+
+## El árbol 2-3 sobre el caso que degeneró al ABB {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol 2-3 resultante de insertar 10, 20, 30, 40, 50, 60 y 70 en ese orden ascendente, el mismo orden ascendente que degeneraba un arbol binario simple a una cadena: raiz 40, hijos 20 y 60, y cuatro hojas, 10, 30, 50 y 70, todas exactamente a la misma profundidad" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b4k" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">2-3 tras insertar 10..70 ascendente: altura 2, cuatro hojas a la misma profundidad</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b4k)"><path d="M380,60 L250,100"/><path d="M380,60 L510,100"/><path d="M250,130 L180,170"/><path d="M250,130 L320,170"/><path d="M510,130 L440,170"/><path d="M510,130 L580,170"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="355" y="30" width="50" height="30"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="225" y="100" width="50" height="30"/><rect x="485" y="100" width="50" height="30"/><rect x="155" y="170" width="50" height="30"/><rect x="295" y="170" width="50" height="30"/><rect x="415" y="170" width="50" height="30"/><rect x="555" y="170" width="50" height="30"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="380" y="49">40</text><text x="250" y="119">20</text><text x="510" y="119">60</text><text x="180" y="189">10</text><text x="320" y="189">30</text><text x="440" y="189">50</text><text x="580" y="189">70</text></g>
+</svg>
+:::
+
+::: {.destacado}
+Insertar 10, 20, 30, 40, 50, 60 y 70 ya ordenados, el mismo orden ascendente que degenera un árbol
+binario simple a una cadena, deja aquí un árbol de altura 2 con sus cuatro hojas exactamente a la
+misma profundidad.
+:::
+
+## AVL y 2-3, comparados {.center}
+
+| | AVL | Árbol 2-3 |
+|---|---|---|
+| Estructura del nodo | Un valor, dos hijos | Uno o dos valores, hasta tres hijos |
+| Cuándo corrige | Después de insertar, con una rotación | Nunca se desbalancea, lo evita al dividir |
+| Campo extra por nodo | `altura` | Ninguno |
+| Uso en la práctica | Ninguna clase de `java.util` | Emparentado con el rojo-negro de `TreeMap` y con el B-tree |
+
+::: {.neutro}
+El rojo-negro clásico de `TreeMap` equivale a un árbol 2-3-4; Sedgewick y Wayne muestran que la
+variante inclinada a la izquierda corresponde uno a uno con un árbol 2-3.
+:::
+
+::: {.fuente}
+Fuente: Sedgewick, R. y Wayne, K. *Algorithms*, cuarta edición, sección 3.3, árboles de búsqueda
+balanceados.
+:::
+
+## Reto 4 {.center}
+
+| Estructura | Datos insertados | Altura final |
+|---|---|---|
+| Árbol binario de búsqueda simple | 1, 2, 3, ..., 1000, en orden | 999 |
+| Árbol AVL | 1, 2, 3, ..., 1000, en orden | ? |
+| Árbol 2-3 | 1, 2, 3, ..., 1000, en orden | ? |
+
+::: {.pasos}
+1. Los tres árboles empiezan vacíos y reciben los mismos mil valores, en el mismo orden ascendente.
+2. El árbol binario de búsqueda simple termina en una cadena de altura 999.
+3. ¿Qué altura final tienen el AVL y el 2-3, y por qué el orden de llegada deja de ser el factor
+   que decide la forma?
+:::
+
+## Bloque 5. Grafos {.seccion background-color="#12324f"}
+
+::: {.rotulo}
+Bloque 5
+:::
+
+La estructura más general del curso, sin raíz ni jerarquía, con cualquier nodo conectado con cualquier otro.
+
+## Qué es un grafo {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Grafo de ejemplo con vertices 1 a 6: se marcan un vertice, una arista, el grado del vertice 4, un camino de 1 a 6 y el ciclo 1-2-4-3-1" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b5a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <g fill="none" stroke="#0e6f6c" stroke-width="1.8"><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="55" x2="225" y2="120"/><line x1="75" y1="120" x2="150" y2="185"/><line x1="225" y1="120" x2="150" y2="185"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8"><line x1="150" y1="185" x2="150" y2="250"/><line x1="150" y1="250" x2="150" y2="315"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/><circle cx="150" cy="315" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text></g>
+  <text x="330" y="60" font-size="11.5" fill="#12324f" font-weight="700">vertice: cada circulo, un dato</text>
+  <path d="M270,55 L168,55" stroke="#8fb3d1" stroke-width="1.6" fill="none" marker-end="url(#b5a)"/>
+  <text x="330" y="95" font-size="11.5" fill="#12324f" font-weight="700">arista: la linea entre 1 y 2</text>
+  <path d="M270,105 L112,88" stroke="#8fb3d1" stroke-width="1.6" fill="none" marker-end="url(#b5a)"/>
+  <text x="330" y="150" font-size="11.5" fill="#0e6f6c" font-weight="700">grado(4) = 3: tres aristas tocan a 4</text>
+  <path d="M330,157 L168,182" stroke="#0e6f6c" stroke-width="1.6" fill="none" marker-end="url(#b5a)"/>
+  <text x="330" y="220" font-size="11" fill="#5b6876">camino de 1 a 6: 1-2-4-5-6</text>
+  <text x="330" y="260" font-size="11" fill="#0e6f6c">ciclo: 1-2-4-3-1, marcado en verde</text>
+</svg>
+:::
+
+::: {.destacado}
+Un grafo es un par G = (V, E), donde V es un conjunto de vértices y E es un conjunto de aristas,
+cada una conectando dos vértices de V. No hay raíz ni jerarquía de padre a hijo.
+:::
+
+## Dirigido y ponderado: dos preguntas que cambian el modelo {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos distinciones basicas: dirigido contra no dirigido, con flecha de un solo sentido contra linea sin flecha; ponderado contra no ponderado, con un numero de peso junto a la arista contra ninguno" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b5b" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <rect x="10" y="10" width="360" height="140" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="390" y="10" width="360" height="140" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="190" y="28" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">dirigido contra no dirigido</text>
+  <text x="570" y="28" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">ponderado contra no ponderado</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="100" y1="65" x2="75" y2="115"/><line x1="100" y1="65" x2="125" y2="115"/><line x1="75" y1="115" x2="125" y2="115"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" marker-end="url(#b5b)"><line x1="275.5" y1="73.9" x2="259.5" y2="106.1"/><line x1="265" y1="115" x2="295" y2="115"/><line x1="300.5" y1="106.1" x2="284.5" y2="73.9"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="100" cy="65" r="10"/><circle cx="75" cy="115" r="10"/><circle cx="125" cy="115" r="10"/><circle cx="280" cy="65" r="10"/><circle cx="255" cy="115" r="10"/><circle cx="305" cy="115" r="10"/></g>
+  <text x="100" y="138" font-size="11" fill="#0e6f6c" text-anchor="middle">no dirigido</text>
+  <text x="280" y="138" font-size="11" fill="#0e6f6c" text-anchor="middle">dirigido</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="470" y1="65" x2="445" y2="115"/><line x1="470" y1="65" x2="495" y2="115"/><line x1="445" y1="115" x2="495" y2="115"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4"><line x1="650" y1="65" x2="625" y2="115"/><line x1="650" y1="65" x2="675" y2="115"/><line x1="625" y1="115" x2="675" y2="115"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="470" cy="65" r="10"/><circle cx="445" cy="115" r="10"/><circle cx="495" cy="115" r="10"/><circle cx="650" cy="65" r="10"/><circle cx="625" cy="115" r="10"/><circle cx="675" cy="115" r="10"/></g>
+  <g font-size="11" fill="#0e6f6c" font-weight="700"><text x="645" y="88">4</text><text x="622" y="118">2</text><text x="668" y="118">3</text></g>
+  <text x="470" y="138" font-size="11" fill="#0e6f6c" text-anchor="middle">sin peso</text>
+  <text x="650" y="138" font-size="11" fill="#0e6f6c" text-anchor="middle">con peso</text>
+</svg>
+:::
+
+::: {.neutro}
+Una calle de un solo sentido es un grafo dirigido; una amistad recíproca es no dirigida. Un mapa de
+rutas suele ser dirigido y ponderado, con distancia o tiempo como peso, y las dependencias entre
+tareas forman un grafo dirigido en el que ninguna tarea termina dependiendo de sí misma.
+:::
+
+## Representar un grafo en memoria {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las dos representaciones del grafo de ejemplo, vertices 1 a 6. A la izquierda, la matriz de adyacencia, una tabla de 6 por 6 con un 1 en cada casilla donde existe arista entre esa fila y esa columna. A la derecha, la lista de adyacencia, cada vertice seguido solo de sus vecinos reales" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="150" y="22" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">matriz de adyacencia</text>
+  <text x="590" y="22" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">lista de adyacencia</text>
+  <g fill="none" stroke="#c7d6e6" stroke-width="1"><line x1="60" y1="60" x2="240" y2="60"/><line x1="60" y1="90" x2="240" y2="90"/><line x1="60" y1="120" x2="240" y2="120"/><line x1="60" y1="150" x2="240" y2="150"/><line x1="60" y1="180" x2="240" y2="180"/><line x1="60" y1="210" x2="240" y2="210"/><line x1="60" y1="240" x2="240" y2="240"/><line x1="60" y1="60" x2="60" y2="240"/><line x1="90" y1="60" x2="90" y2="240"/><line x1="120" y1="60" x2="120" y2="240"/><line x1="150" y1="60" x2="150" y2="240"/><line x1="180" y1="60" x2="180" y2="240"/><line x1="210" y1="60" x2="210" y2="240"/><line x1="240" y1="60" x2="240" y2="240"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876" font-weight="700"><text x="75" y="52">1</text><text x="105" y="52">2</text><text x="135" y="52">3</text><text x="165" y="52">4</text><text x="195" y="52">5</text><text x="225" y="52">6</text><text x="45" y="79">1</text><text x="45" y="109">2</text><text x="45" y="139">3</text><text x="45" y="169">4</text><text x="45" y="199">5</text><text x="45" y="229">6</text></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f" font-weight="600"><text x="105" y="79">1</text><text x="135" y="79">1</text><text x="75" y="109">1</text><text x="165" y="109">1</text><text x="75" y="139">1</text><text x="165" y="139">1</text><text x="105" y="169">1</text><text x="135" y="169">1</text><text x="195" y="169">1</text><text x="165" y="199">1</text><text x="225" y="199">1</text><text x="195" y="229">1</text></g>
+  <g font-size="11" fill="#12324f" font-weight="600"><text x="440" y="60">1 -&gt;</text><text x="440" y="95">2 -&gt;</text><text x="440" y="130">3 -&gt;</text><text x="440" y="165">4 -&gt;</text><text x="440" y="200">5 -&gt;</text><text x="440" y="235">6 -&gt;</text></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="476" y="43" width="26" height="24"/><rect x="510" y="43" width="26" height="24"/><rect x="476" y="78" width="26" height="24"/><rect x="510" y="78" width="26" height="24"/><rect x="476" y="113" width="26" height="24"/><rect x="510" y="113" width="26" height="24"/><rect x="476" y="148" width="26" height="24"/><rect x="510" y="148" width="26" height="24"/><rect x="544" y="148" width="26" height="24"/><rect x="476" y="183" width="26" height="24"/><rect x="510" y="183" width="26" height="24"/><rect x="476" y="218" width="26" height="24"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f" font-weight="600"><text x="489" y="60">2</text><text x="523" y="60">3</text><text x="489" y="95">1</text><text x="523" y="95">4</text><text x="489" y="130">1</text><text x="523" y="130">4</text><text x="489" y="165">2</text><text x="523" y="165">3</text><text x="557" y="165">5</text><text x="489" y="200">4</text><text x="523" y="200">6</text><text x="489" y="235">5</text></g>
+</svg>
+:::
+
+::: {.destacado}
+La matriz de adyacencia guarda una casilla por cada par de vértices, exista o no la arista. La lista
+de adyacencia guarda, para cada vértice, solo sus vecinos reales.
+:::
+
+## Complejidad de las dos representaciones {.center}
+
+| Operación | Matriz de adyacencia | Lista de adyacencia |
+|---|---|---|
+| Espacio total | `O(V^2)`, siempre | `O(V + E)` |
+| Verificar arista `(u, v)` | `O(1)` | `O(grado(u))` |
+| Recorrer vecinos de `u` | `O(V)` | `O(grado(u))` |
+| Recorrer todas las aristas | `O(V^2)` | `O(V + E)` |
+
+::: {.destacado}
+Con cien mil vértices y trescientas mil aristas, un grado promedio de seis, la matriz pide V al
+cuadrado, diez mil millones de casillas. La lista pide 2E, seiscientas mil entradas, una por
+cada extremo de cada arista.
+:::
+
+## Cuándo conviene cada representación {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de densidad: a la izquierda, un grafo disperso de cien mil vertices y trescientas mil aristas, donde la matriz pide diez mil millones de casillas y la lista solo seiscientas mil entradas; a la derecha, un grafo denso de doce vertices donde la matriz solo pide ciento cuarenta y cuatro casillas y da verificacion de arista en tiempo constante" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <rect x="20" y="20" width="340" height="200" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="400" y="20" width="340" height="200" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="190" y="42" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">grafo disperso: V=100000, E=300000</text>
+  <text x="570" y="42" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">grafo denso: V=12</text>
+  <text x="570" y="60" font-size="11" fill="#5b6876" text-anchor="middle">mas de la mitad de los pares conectados</text>
+  <text x="190" y="90" font-size="15" font-weight="700" fill="#12324f" text-anchor="middle">10 000 000 000 casillas</text>
+  <text x="190" y="108" font-size="11" fill="#5b6876" text-anchor="middle">matriz de adyacencia, V al cuadrado</text>
+  <text x="190" y="150" font-size="15" font-weight="700" fill="#0e6f6c" text-anchor="middle">600 000 entradas</text>
+  <text x="190" y="168" font-size="11" fill="#5b6876" text-anchor="middle">lista de adyacencia, dos entradas por arista</text>
+  <text x="190" y="200" font-size="11" fill="#0e6f6c" text-anchor="middle">gana la lista: mas de 16 mil veces menos casillas</text>
+  <text x="570" y="90" font-size="15" font-weight="700" fill="#0e6f6c" text-anchor="middle">144 casillas</text>
+  <text x="570" y="108" font-size="11" fill="#5b6876" text-anchor="middle">matriz de adyacencia, V al cuadrado</text>
+  <text x="570" y="150" font-size="15" font-weight="700" fill="#12324f" text-anchor="middle">verificar arista: O(1)</text>
+  <text x="570" y="168" font-size="11" fill="#5b6876" text-anchor="middle">sin recorrer ninguna lista</text>
+  <text x="570" y="200" font-size="11" fill="#0e6f6c" text-anchor="middle">gana la matriz: 144 casillas, costo despreciable</text>
+</svg>
+:::
+
+::: {.neutro}
+La red de vuelos entre los aeropuertos de un país es dispersa, porque casi ningún par tiene vuelo
+directo, y le conviene la lista de adyacencia. En un grafo de doce vértices con más de la mitad de
+los pares conectados, la matriz no pesa y verifica una arista en O(1).
+:::
+
+## Construir GrafoLista {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Java</span>
+
+```java
+public void agregarArista(int origen, int destino) {
+    agregarVertice(origen);
+    agregarVertice(destino);
+    listaAdyacencia.get(origen).add(destino);
+    listaAdyacencia.get(destino).add(origen);
+}
+
+public List<Integer> vecinos(int v) {
+    return listaAdyacencia
+        .getOrDefault(v, List.of());
+}
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Python</span>
+
+```python
+def agregar_arista(self, origen, destino):
+    self.agregar_vertice(origen)
+    self.agregar_vertice(destino)
+    self.lista_adyacencia[origen].append(destino)
+    self.lista_adyacencia[destino].append(origen)
+
+def vecinos(self, v):
+    return self.lista_adyacencia.get(v, [])
+```
+:::
+:::
+
+::: {.neutro}
+Cada arista se guarda dos veces, una por cada extremo, porque el grafo es no dirigido y el mismo
+enlace sirve para ir de origen a destino y de destino a origen.
+:::
+
+## DFS: bajar hasta el fondo antes de retroceder {.center}
+
+::: {.diagrama .medio}
+<svg viewBox="0 0 620 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DFS desde el vertice 1: el orden de visita es 1, 2, 4, 3, 5, 6, marcado en verde junto a cada vertice; a la derecha, los seis pasos de la pila explicita, terminando con el 3 duplicado que se descarta al salir por segunda vez ya visitado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="150" y="22" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">orden: 1, 2, 4, 3, 5, 6</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="55" x2="225" y2="120"/><line x1="75" y1="120" x2="150" y2="185"/><line x1="225" y1="120" x2="150" y2="185"/><line x1="150" y1="185" x2="150" y2="250"/><line x1="150" y1="250" x2="150" y2="315"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/><circle cx="150" cy="315" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text></g>
+  <g text-anchor="middle" font-size="12" fill="#0e6f6c" font-weight="700"><text x="170" y="38">1</text><text x="52" y="103">2</text><text x="248" y="140">4</text><text x="124" y="204">3</text><text x="170" y="235">5</text><text x="170" y="300">6</text></g>
+  <text x="440" y="55" font-size="11" fill="#12324f" font-weight="700" text-anchor="middle">pila explicita, paso a paso:</text>
+  <g font-size="11" fill="#5b6876"><text x="360" y="78">1. visita 1, pila = [3, 2]</text><text x="360" y="98">2. visita 2, pila = [3, 4]</text><text x="360" y="118">3. visita 4, pila = [3, 5, 3]</text><text x="360" y="138">4. visita 3, pila = [3, 5]</text><text x="360" y="158">5. visita 5, pila = [3, 6]</text><text x="360" y="178">6. visita 6, pila = [3]</text></g>
+  <text x="360" y="205" font-size="11" fill="#0e6f6c">el 3 que queda en la pila ya esta visitado:</text>
+  <text x="360" y="222" font-size="11" fill="#0e6f6c">se descarta sin procesarlo de nuevo</text>
+</svg>
+:::
+
+::: {.destacado}
+La búsqueda en profundidad avanza por un vecino sin visitar hasta que no queda ninguno, y solo
+entonces retrocede. El conjunto de visitados evita que un ciclo la deje dando vueltas, y por eso el
+3 que entró dos veces a la pila se descarta la segunda vez que sale.
+:::
+
+## DFS: versión recursiva y versión iterativa {.center}
+
+::: {.columns}
+::: {.column width="50%"}
+<span class="titulo">Recursiva</span>
+
+```python
+def dfs(self, inicio):
+    visitados = set()
+    resultado = []
+    self._dfs(inicio, visitados, resultado)
+    return resultado
+
+def _dfs(self, actual, visitados, resultado):
+    visitados.add(actual)
+    resultado.append(actual)
+    for vecino in self.vecinos(actual):
+        if vecino not in visitados:
+            self._dfs(vecino, visitados, resultado)
+```
+:::
+::: {.column width="50%"}
+<span class="titulo">Iterativa, con pila</span>
+
+```python
+def dfs_iterativo(self, inicio):
+    resultado = []
+    visitados = set()
+    pila = [inicio]
+    while pila:
+        actual = pila.pop()
+        if actual in visitados: continue
+        visitados.add(actual)
+        resultado.append(actual)
+        for v in reversed(self.vecinos(actual)):
+            if v not in visitados: pila.append(v)
+    return resultado
+```
+:::
+:::
+
+## BFS: nivel por nivel, con la Cola del curso {.center}
+
+::: {.diagrama .medio}
+<svg viewBox="0 0 620 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BFS desde el vertice 1: el orden de visita es 1, 2, 3, 4, 5, 6, agrupado por nivel de distancia al vertice 1; a la derecha, los seis pasos de la cola, que nunca repite un vertice porque se marca visitado al encolar" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="150" y="22" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">orden: 1, 2, 3, 4, 5, 6</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="55" x2="225" y2="120"/><line x1="75" y1="120" x2="150" y2="185"/><line x1="225" y1="120" x2="150" y2="185"/><line x1="150" y1="185" x2="150" y2="250"/><line x1="150" y1="250" x2="150" y2="315"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/><circle cx="150" cy="315" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text></g>
+  <g text-anchor="middle" font-size="11" fill="#0e6f6c" font-weight="700"><text x="150" y="38">nivel 0</text><text x="52" y="108">nivel 1</text><text x="248" y="108">nivel 1</text><text x="108" y="204">nivel 2</text><text x="170" y="238">nivel 3</text><text x="170" y="303">nivel 4</text></g>
+  <text x="440" y="55" font-size="11" fill="#12324f" font-weight="700" text-anchor="middle">cola, paso a paso:</text>
+  <g font-size="11" fill="#5b6876"><text x="360" y="78">1. visita 1, cola = [2, 3]</text><text x="360" y="98">2. visita 2, cola = [3, 4]</text><text x="360" y="118">3. visita 3, cola = [4]</text><text x="360" y="138">4. visita 4, cola = [5]</text><text x="360" y="158">5. visita 5, cola = [6]</text><text x="360" y="178">6. visita 6, cola = []</text></g>
+  <text x="360" y="205" font-size="11" fill="#0e6f6c">ningun vertice se repite: se marca visitado</text>
+  <text x="360" y="222" font-size="11" fill="#0e6f6c">al encolar, no al desencolar</text>
+</svg>
+:::
+
+::: {.destacado}
+BFS visita todo lo que está a un salto antes de avanzar al siguiente nivel, y ese orden por
+distancia lo garantiza la Cola, que atiende primero lo que entró primero. Marcar visitado al
+entrar a la Cola evita encolar dos veces el mismo vértice.
+:::
+
+## BFS con la Cola {.center}
+
+```python
+def bfs(self, inicio):
+    resultado = []
+    visitados = {inicio}
+    cola = Cola()
+    cola.encolar(inicio)
+    while not cola.esta_vacia():
+        actual = cola.desencolar()
+        resultado.append(actual)
+        for vecino in self.vecinos(actual):
+            if vecino not in visitados:
+                visitados.add(vecino)
+                cola.encolar(vecino)
+    return resultado
+```
+
+::: {.neutro}
+Mismo esqueleto que DFS iterativo. La diferencia central es una Cola en vez de una pila, y además
+BFS marca al encolar y no necesita `reversed`.
+:::
+
+## Caso de uso: componentes conexas en una red {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El grafo completo con sus dos componentes conexas resaltadas: la primera, en verde, agrupa los vertices 1 a 6; la segunda, en un tono neutro, agrupa los vertices 7 y 8, sin ninguna arista entre las dos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="22" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">dos componentes: {1,2,3,4,5,6} y {7,8}</text>
+  <rect x="20" y="35" width="260" height="300" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="460" y="140" width="260" height="80" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="34" y="56" font-size="11" fill="#0e6f6c">componente 1</text>
+  <text x="590" y="157" font-size="11" fill="#5b6876" text-anchor="middle">componente 2</text>
+  <g fill="none" stroke="#0e6f6c" stroke-width="1.8"><line x1="150" y1="55" x2="75" y2="120"/><line x1="150" y1="55" x2="225" y2="120"/><line x1="75" y1="120" x2="150" y2="185"/><line x1="225" y1="120" x2="150" y2="185"/><line x1="150" y1="185" x2="150" y2="250"/><line x1="150" y1="250" x2="150" y2="315"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8"><line x1="560" y1="180" x2="680" y2="180"/></g>
+  <g fill="#f5f7fa" stroke="#8fc9c5"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/><circle cx="150" cy="315" r="18"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="560" cy="180" r="18"/><circle cx="680" cy="180" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text><text x="560" y="185">7</text><text x="680" y="185">8</text></g>
+</svg>
+:::
+
+::: {.neutro}
+Saber si dos usuarios de una red social están unidos por alguna cadena de contactos, o si dos
+computadores de una red pueden enviarse un paquete, es preguntar si están en la misma componente
+conexa.
+:::
+
+## Encontrar todas las componentes {.center}
+
+```python
+def componentes_conexas(self):
+    componentes = []
+    visitados = set()
+    for v in self.vertices():
+        if v not in visitados:
+            componentes.append(self._bfs_desde(v, visitados))
+    return componentes
+```
+
+::: {.neutro}
+`_bfs_desde` es `bfs` compartiendo el conjunto de visitados.
+:::
+
+::: {.datos}
+::: {}
+<span class="cifra">O(V + E)</span>
+<span class="rotulo">costo total, un solo recorrido compartido</span>
+:::
+::: {}
+<span class="cifra">2</span>
+<span class="rotulo">componentes en el grafo de ejemplo</span>
+:::
+:::
+
+## Cuando el grafo es muy profundo {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una cadena de cinco mil vertices, mostrados como 0, 1, 2, 3, 4, puntos suspensivos, 4999. Debajo, una pila de llamadas creciendo hacia arriba hasta una linea punteada marcada limite de mil llamadas activas, con la etiqueta RecursionError" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="22" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">cadena de 5000 vertices y su pila de llamadas</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="55" y1="70" x2="105" y2="70"/><line x1="105" y1="70" x2="155" y2="70"/><line x1="155" y1="70" x2="205" y2="70"/><line x1="205" y1="70" x2="255" y2="70"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="55" cy="70" r="16"/><circle cx="105" cy="70" r="16"/><circle cx="155" cy="70" r="16"/><circle cx="205" cy="70" r="16"/><circle cx="255" cy="70" r="16"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f" font-weight="600"><text x="55" y="75">0</text><text x="105" y="75">1</text><text x="155" y="75">2</text><text x="205" y="75">3</text><text x="255" y="75">4</text></g>
+  <text x="300" y="75" font-size="17" fill="#5b6876">...</text>
+  <text x="390" y="75" font-size="11" fill="#5b6876">5000 vertices en total</text>
+  <rect x="60" y="120" width="140" height="16" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="60" y="104" width="140" height="16" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="60" y="88" width="140" height="16" fill="#eef4fa" stroke="#c7d6e6"/>
+  <g font-size="11" fill="#12324f"><text x="66" y="100">_dfs(2)</text><text x="66" y="116">_dfs(1)</text><text x="66" y="132">_dfs(0)</text></g>
+  <text x="230" y="100" font-size="11" fill="#5b6876">cada _dfs(i) apila un marco nuevo</text>
+  <text x="230" y="116" font-size="11" fill="#5b6876">antes de llamar a _dfs(i+1)</text>
+  <line x1="60" y1="45" x2="200" y2="45" stroke="#12324f" stroke-width="1.6" stroke-dasharray="5 4"/>
+  <text x="130" y="38" font-size="11" fill="#12324f" text-anchor="middle" font-weight="700">limite ~1000 llamadas: RecursionError</text>
+  <text x="380" y="175" font-size="11" fill="#12324f" font-weight="700" text-anchor="middle">verificado con la cadena real de 5000 vertices:</text>
+  <text x="380" y="195" font-size="11" fill="#0e6f6c" text-anchor="middle">dfs recursivo revienta antes de terminar</text>
+  <text x="380" y="213" font-size="11" fill="#0e6f6c" text-anchor="middle">dfs_iterativo recorre los 5000 vertices sin problema</text>
+</svg>
+:::
+
+::: {.destacado}
+Con una cadena de 5000 vértices, el límite por defecto de Python es de mil llamadas activas, así
+que la versión recursiva de DFS revienta con `RecursionError`. La iterativa, con pila explícita,
+recorre los 5000 sin problema.
+:::
+
+## Grafo ponderado: el terreno para la Unidad 4 {.center}
+
+::: {.diagrama .corto}
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El grafo ponderado con dos caminos resaltados entre el vertice 1 y el vertice 5: el camino 1-2-4-5 suma doce, el camino 1-3-4-5 suma seis, ambos cruzan tres aristas" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="22" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">mismo numero de saltos, costo distinto</text>
+  <g fill="none" stroke="#c7d6e6" stroke-width="1.6"><line x1="150" y1="250" x2="150" y2="315"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2.4"><line x1="150" y1="55" x2="75" y2="120"/><line x1="75" y1="120" x2="150" y2="185"/><line x1="150" y1="185" x2="150" y2="250"/></g>
+  <g fill="none" stroke="#0e6f6c" stroke-width="2.4"><line x1="150" y1="55" x2="225" y2="120"/><line x1="225" y1="120" x2="150" y2="185"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="150" cy="55" r="18"/><circle cx="75" cy="120" r="18"/><circle cx="225" cy="120" r="18"/><circle cx="150" cy="185" r="18"/><circle cx="150" cy="250" r="18"/><circle cx="150" cy="315" r="18"/></g>
+  <g text-anchor="middle" font-size="13" fill="#12324f" font-weight="600"><text x="150" y="60">1</text><text x="75" y="125">2</text><text x="225" y="125">3</text><text x="150" y="190">4</text><text x="150" y="255">5</text><text x="150" y="320">6</text></g>
+  <g font-size="11" fill="#5b6876" font-weight="700" text-anchor="middle"><text x="105" y="83">4</text><text x="200" y="83">2</text><text x="105" y="148">5</text><text x="200" y="148">1</text><text x="165" y="215">3</text><text x="165" y="280">6</text></g>
+  <text x="440" y="55" font-size="11" fill="#0e6f6c" font-weight="700">camino 1-2-4-5: 4 + 5 + 3 = 12</text>
+  <text x="440" y="80" font-size="11" fill="#0e6f6c" font-weight="700">camino 1-3-4-5: 2 + 1 + 3 = 6</text>
+  <text x="440" y="110" font-size="11" fill="#12324f">las dos rutas cruzan tres aristas, el costo</text>
+  <text x="440" y="127" font-size="11" fill="#12324f">total decide cual conviene, no el conteo</text>
+</svg>
+:::
+
+::: {.destacado}
+Dijkstra, Prim y Kruskal, los tres pendientes de la Unidad 4, se agregan sobre la clase
+`GrafoPonderado` de la guía, que es `GrafoLista` con cada vecino guardado como un par
+(destino, peso).
+:::
+
+## El mapa de aplicaciones reales {.center}
+
+::: {.diagrama}
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres aplicaciones reales de grafos: red social con grados de separacion medidos por BFS, mapa de rutas con calles de un solo sentido y distancia como peso, y dependencias entre tareas de software como grafo dirigido y aciclico" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b5j" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <rect x="10" y="10" width="235" height="270" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="262" y="10" width="235" height="270" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="514" y="10" width="235" height="270" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="127" y="30" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">red social</text>
+  <text x="379" y="30" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">mapa de rutas</text>
+  <text x="631" y="30" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">dependencias</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6"><line x1="127" y1="60" x2="80" y2="105"/><line x1="127" y1="60" x2="175" y2="105"/><line x1="80" y1="105" x2="60" y2="160"/><line x1="80" y1="105" x2="110" y2="160"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="127" cy="60" r="13"/><circle cx="80" cy="105" r="13"/><circle cx="175" cy="105" r="13"/><circle cx="60" cy="160" r="13"/><circle cx="110" cy="160" r="13"/></g>
+  <text x="127" y="185" font-size="11" fill="#0e6f6c" text-anchor="middle">contactos a distancia 1 y 2</text>
+  <text x="127" y="202" font-size="11" fill="#5b6876" text-anchor="middle">amigos en comun sin recorrer</text>
+  <text x="127" y="219" font-size="11" fill="#5b6876" text-anchor="middle">a todos, solo nivel por nivel</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b5j)"><line x1="339.7" y1="78.6" x2="365.3" y2="101.4"/><line x1="365.3" y1="118.6" x2="339.7" y2="141.4"/><line x1="330" y1="83" x2="330" y2="137"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><circle cx="330" cy="70" r="13"/><circle cx="375" cy="110" r="13"/><circle cx="330" cy="150" r="13"/></g>
+  <g font-size="11" fill="#0e6f6c" font-weight="700"><text x="358" y="86">7</text><text x="358" y="135">4</text><text x="322" y="114" text-anchor="end">15</text></g>
+  <text x="379" y="185" font-size="11" fill="#0e6f6c" text-anchor="middle">dirigido y ponderado</text>
+  <text x="379" y="202" font-size="11" fill="#5b6876" text-anchor="middle">calle de un sentido, peso en</text>
+  <text x="379" y="219" font-size="11" fill="#5b6876" text-anchor="middle">minutos o kilometros</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#b5j)"><line x1="582" y1="75" x2="582" y2="105"/><line x1="582" y1="125" x2="582" y2="150"/><line x1="637" y1="75" x2="637" y2="150"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="557" y="55" width="50" height="20" rx="4"/><rect x="557" y="105" width="50" height="20" rx="4"/><rect x="557" y="150" width="50" height="20" rx="4"/><rect x="612" y="55" width="50" height="20" rx="4"/><rect x="612" y="150" width="50" height="20" rx="4"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f" font-weight="600"><text x="582" y="69">A</text><text x="582" y="119">B</text><text x="582" y="164">C</text><text x="637" y="69">D</text><text x="637" y="164">E</text></g>
+  <text x="631" y="185" font-size="11" fill="#0e6f6c" text-anchor="middle">dirigido y aciclico</text>
+  <text x="631" y="202" font-size="11" fill="#5b6876" text-anchor="middle">B depende de A, nunca</text>
+  <text x="631" y="219" font-size="11" fill="#5b6876" text-anchor="middle">al reves: sin ciclos</text>
+</svg>
+:::
+
+::: {.neutro}
+Red social con grados de separación vía BFS, mapa de rutas con Dijkstra en la Unidad 4, y
+dependencias entre módulos de software revisadas con DFS para detectar ciclos antes de que rompan
+el sistema.
+:::
+
+## Reto 5 {.center}
+
+::: {.columns}
+::: {.column width="40%"}
+| Vértice | Vecinos, en este orden |
+|---|---|
+| A | B, C |
+| B | A, D |
+| C | A, D, E |
+| D | B, C, F |
+| E | C, F |
+| F | D, E |
+:::
+::: {.column width="60%"}
+::: {.pasos}
+1. La tabla es la lista de adyacencia de un grafo no dirigido de seis vértices, con los vecinos
+   guardados en ese orden, igual que en `GrafoLista`.
+2. Sobre ese grafo se ejecutan `dfs_iterativo("A")` y `bfs("A")`, tal como están escritos para
+   `GrafoLista`.
+3. ¿En qué orden visita cada recorrido los seis vértices, y en qué posición de cada orden aparece C?
+:::
+:::
+:::
+
+## El pago real: estructuras ya construidas {.center}
+
+| Necesidad | java.util | Python, biblioteca estándar |
+|---|---|---|
+| Lista enlazada | `LinkedList` | `collections.deque` |
+| Pila y cola | `ArrayDeque` | `collections.deque` |
+| Árbol binario de búsqueda balanceado | `TreeMap` o `TreeSet` | ninguna clase equivalente |
+| Tabla por clave | `HashMap` | `dict` |
+
+::: {.destacado}
+Según su Javadoc, `TreeMap` está implementado como un árbol rojo-negro y `TreeSet` se apoya en un
+`TreeMap`, así que ambos se mantienen balanceados. La FAQ de diseño de Python explica que en CPython
+los diccionarios son tablas hash redimensionables, y la biblioteca estándar no incluye ningún árbol
+binario de búsqueda. `collections.deque` cubre pila y cola con O(1) en ambos extremos, igual que
+`ArrayDeque` en Java.
+:::
+
+## Cómo elegir la estructura {.center}
+
+::: {.diagrama .alto}
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de decision con cuatro preguntas en cadena: acceso por posicion lleva a arreglo, insertar o quitar en los extremos lleva a lista enlazada, buscar por clave con orden lleva a arbol, y relaciones muchos a muchos lleva a grafo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="b6a1" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#8fb3d1"/></marker></defs>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="40" y="20" width="260" height="44"/><rect x="40" y="92" width="260" height="44"/><rect x="40" y="164" width="260" height="44"/><rect x="40" y="236" width="260" height="44"/></g>
+  <g text-anchor="middle" font-size="11.5" font-weight="600" fill="#12324f"><text x="170" y="38">necesitas acceso</text><text x="170" y="52">directo por posicion?</text><text x="170" y="110">insertas o quitas</text><text x="170" y="124">en los extremos?</text><text x="170" y="182">buscas por clave,</text><text x="170" y="196">con orden?</text><text x="170" y="254">relacionas muchos</text><text x="170" y="268">elementos entre si?</text></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="460" y="20" width="260" height="44"/><rect x="460" y="92" width="260" height="44"/><rect x="460" y="164" width="260" height="44"/><rect x="460" y="236" width="260" height="44"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#0e6f6c"><text x="590" y="46">arreglo</text><text x="590" y="118">lista enlazada: pila o cola</text><text x="590" y="190">arbol: ABB, AVL o 2-3</text><text x="590" y="262">grafo</text></g>
+  <g stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b6a1)"><path d="M300,42 L458,42"/><path d="M300,114 L458,114"/><path d="M300,186 L458,186"/><path d="M300,258 L458,258"/></g>
+  <g stroke="#8fb3d1" stroke-width="2.5" fill="none" marker-end="url(#b6a1)"><path d="M170,64 L170,90"/><path d="M170,136 L170,162"/><path d="M170,208 L170,234"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="379" y="34">si</text><text x="379" y="106">si</text><text x="379" y="178">si</text><text x="379" y="250">si</text><text x="190" y="80">no</text><text x="190" y="152">no</text><text x="190" y="224">no</text></g>
+</svg>
+:::
+
+## Complejidades de esta unidad, en una tabla {.center}
+
+| Estructura | Acceso por posición | Búsqueda | Inserción | Eliminación |
+|---|---|---|---|---|
+| Arreglo | O(1) | O(n) | O(n) en posición arbitraria | O(n) en posición arbitraria |
+| Lista enlazada | O(n) | O(n) | O(1) en la cabeza | O(1) con referencia al nodo, en lista doble |
+| ABB, promedio | no aplica | O(log n) | O(log n) | O(log n) |
+| ABB, peor caso | no aplica | O(n) | O(n) | O(n) |
+| AVL | no aplica | O(log n) | O(log n) | O(log n) |
+| Árbol 2-3 | no aplica | O(log n) | O(log n) | O(log n) |
+
+::: {.neutro}
+El promedio del ABB supone datos en orden aleatorio, con una altura esperada logarítmica aunque no
+balanceada. Con datos ya ordenados cae al peor caso, justo lo que las rotaciones del AVL y las
+divisiones del 2-3 evitan. En los grafos
+con lista de adyacencia, DFS y BFS cuestan O(V + E).
+:::
+
+## Lo que conecta toda la unidad {.center}
+
+::: {.recuento}
+- Una estructura dinámica pide memoria nodo por nodo, mientras el programa corre, no de una sola vez
+- El nodo repite la misma pieza en toda la unidad: un dato y una o más referencias a otros nodos
+- Insertar en la cabeza de una lista enlazada es O(1); insertar al final sin un puntero aparte es O(n)
+- Reasignar los punteros de un nodo en el orden equivocado puede romper la cadena completa
+- Pila y cola sobre lista enlazada cumplen el mismo contrato que sobre arreglo, con otro costo real
+- Un árbol binario de búsqueda ordena mientras almacena: cada nodo cumple el invariante con toda su descendencia
+- El recorrido inorden de un árbol binario de búsqueda entrega los datos ordenados de menor a mayor
+- Insertar datos ya ordenados en un árbol binario de búsqueda lo degrada a una cadena de altura n menos 1
+- El factor de balanceo de un nodo AVL y la división de un nodo 2-3 son dos formas distintas de evitar esa degradación
+- Un grafo deja atrás la jerarquía: cualquier nodo se conecta con cualquier otro, sin padre ni hijo
+- DFS con pila y BFS con cola recorren el mismo grafo con garantías distintas
+:::
+
+## Estructuras dinámicas: el resumen en una idea {.center}
+
+::: {.tarjetas}
+::: {}
+<span class="titulo">Listas</span>
+
+Una referencia al siguiente nodo: insertar en la cabeza en O(1), sin ningún desplazamiento.
+:::
+::: {.clave}
+<span class="titulo">Árboles</span>
+
+Dos referencias y un invariante de orden: búsqueda en O(log n) mientras la altura siga controlada.
+:::
+::: {}
+<span class="titulo">Grafos</span>
+
+Referencias sin jerarquía: DFS y BFS recorren cualquier red en O(V + E).
+:::
+:::
+
+::: {.destacado}
+Una estructura dinámica cambia la posición fija de la memoria por una referencia explícita entre
+nodos, y ese cambio es exactamente lo que le permite crecer, ordenarse o enlazarse de formas que
+un arreglo nunca podría.
+:::
+
+## Lo que sigue {.center}
+
+::: {.tarjetas}
+::: {}
+<span class="titulo">Dijkstra</span>
+
+El camino más barato desde un vértice hacia todos los demás, con pesos no negativos.
+:::
+::: {}
+<span class="titulo">Prim</span>
+
+Árbol de expansión mínima que crece desde un vértice, arista más barata por arista más barata.
+:::
+::: {}
+<span class="titulo">Kruskal</span>
+
+Árbol de expansión mínima que ordena todas las aristas por peso y evita cerrar ciclos.
+:::
+:::
+
+::: {.destacado}
+La Unidad 4 retoma la misma clase `GrafoPonderado` y le agrega estos tres algoritmos, con el mismo
+vocabulario de nodo, enlace y recorrido, ahora sobre un grafo donde cada arista tiene un costo.
+:::
