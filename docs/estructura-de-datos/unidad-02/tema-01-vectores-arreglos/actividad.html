@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Oscar Leonel Sánchez Conde">
+
+<title>Análisis experimental del rendimiento de un arreglo y selección de estructura – Clases María Cano 2026-02</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../estilos/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-8713356167177fd77be9341a95314561.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-95bfa606010d176c52cfb6b551730f65.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No se han encontrado resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-search-results"></div>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta guía</h2>
+   
+  <ul>
+  <li><a href="#propósito" id="toc-propósito" class="nav-link active" data-scroll-target="#propósito"><span class="header-section-number">1</span> Propósito</a></li>
+  <li><a href="#reglas" id="toc-reglas" class="nav-link" data-scroll-target="#reglas"><span class="header-section-number">2</span> Reglas</a></li>
+  <li><a href="#el-problema" id="toc-el-problema" class="nav-link" data-scroll-target="#el-problema"><span class="header-section-number">3</span> El problema</a></li>
+  <li><a href="#fase-1.-predicción" id="toc-fase-1.-predicción" class="nav-link" data-scroll-target="#fase-1.-predicción"><span class="header-section-number">4</span> Fase 1. Predicción</a>
+  <ul class="collapse">
+  <li><a href="#cuenta-de-memoria" id="toc-cuenta-de-memoria" class="nav-link" data-scroll-target="#cuenta-de-memoria">Cuenta de memoria</a></li>
+  <li><a href="#acceso-fuera-de-rango" id="toc-acceso-fuera-de-rango" class="nav-link" data-scroll-target="#acceso-fuera-de-rango">Acceso fuera de rango</a></li>
+  </ul></li>
+  <li><a href="#fase-2.-medición" id="toc-fase-2.-medición" class="nav-link" data-scroll-target="#fase-2.-medición"><span class="header-section-number">5</span> Fase 2. Medición</a>
+  <ul class="collapse">
+  <li><a href="#programa-base-en-python" id="toc-programa-base-en-python" class="nav-link" data-scroll-target="#programa-base-en-python">Programa base en Python</a></li>
+  <li><a href="#programa-base-en-java" id="toc-programa-base-en-java" class="nav-link" data-scroll-target="#programa-base-en-java">Programa base en Java</a></li>
+  <li><a href="#tabla-de-resultados" id="toc-tabla-de-resultados" class="nav-link" data-scroll-target="#tabla-de-resultados">Tabla de resultados</a></li>
+  </ul></li>
+  <li><a href="#fase-3.-contraste-entre-teoría-y-experimento" id="toc-fase-3.-contraste-entre-teoría-y-experimento" class="nav-link" data-scroll-target="#fase-3.-contraste-entre-teoría-y-experimento"><span class="header-section-number">6</span> Fase 3. Contraste entre teoría y experimento</a></li>
+  <li><a href="#fase-4.-decisión-de-ingeniería" id="toc-fase-4.-decisión-de-ingeniería" class="nav-link" data-scroll-target="#fase-4.-decisión-de-ingeniería"><span class="header-section-number">7</span> Fase 4. Decisión de ingeniería</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Análisis experimental del rendimiento de un arreglo y selección de estructura</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Autor/a</div>
+    <div class="quarto-title-meta-contents">
+             <p>Oscar Leonel Sánchez Conde </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Fecha de publicación</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">24 de septiembre de 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="ficha">
+<table class="caption-top table">
+<tbody>
+<tr class="odd">
+<td>Unidad</td>
+<td>Unidad 2. Estructuras fijas</td>
+</tr>
+<tr class="even">
+<td>Tema</td>
+<td>Tema 1. Vectores o arreglos</td>
+</tr>
+<tr class="odd">
+<td>Modalidad</td>
+<td>Trabajo en parejas, 2 horas</td>
+</tr>
+<tr class="even">
+<td>Lenguaje</td>
+<td>Java o Python, a elección de la pareja</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="destacado">
+<p>Una aplicación debe administrar hasta un millón de registros numéricos. Su tarea es determinar, con evidencia experimental propia, qué operaciones son adecuadas sobre un arreglo y cuáles generan problemas de rendimiento, y recomendar con argumentos técnicos qué estructura conviene en dos escenarios de uso distintos.</p>
+</div>
+<section id="propósito" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="propósito"><span class="header-section-number">1</span> Propósito</h2>
+<p>Contrastar la teoría del Tema 1 con mediciones reales. Usted va a predecir el costo de cada operación sobre un arreglo, medirlo en su propio equipo, explicar las diferencias entre lo que esperaba y lo que obtuvo, y tomar una decisión de diseño sustentada en sus propios datos.</p>
+<p>La actividad no evalúa cuánto código escribe. Evalúa la calidad del análisis: que cada número tenga su origen, que cada complejidad venga acompañada de lo que ocurre en memoria, y que cada decisión esté justificada con las mediciones.</p>
+</section>
+<section id="reglas" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="reglas"><span class="header-section-number">2</span> Reglas</h2>
+<ul>
+<li>Trabajo en parejas. Los dos integrantes deben poder explicar cualquier parte del reporte.</li>
+<li>No está permitido usar asistentes de inteligencia artificial en ninguna forma durante la actividad.</li>
+<li>Fuentes permitidas para investigar: la guía del Tema 1, la documentación oficial de Python, el Javadoc de Java y la especificación del lenguaje Java (JLS). Todo dato tomado de una fuente se cita en el reporte con el nombre de la fuente.</li>
+<li>El reporte se escribe a mano en una hoja, con los nombres de los dos integrantes, en el orden de las fases y sobre la marcha. No se pasa en limpio al final.</li>
+<li>Cada número del reporte lleva la operación de la que salió. Cada complejidad O(…) lleva la explicación de qué se mueve por dentro.</li>
+</ul>
+</section>
+<section id="el-problema" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="el-problema"><span class="header-section-number">3</span> El problema</h2>
+<p>La aplicación realiza con frecuencia estas ocho operaciones sobre el conjunto de registros:</p>
+<ol type="1">
+<li>Acceso por posición.</li>
+<li>Actualización de una posición.</li>
+<li>Búsqueda de un valor.</li>
+<li>Recorrido completo.</li>
+<li>Inserción al final.</li>
+<li>Inserción al inicio.</li>
+<li>Inserción en una posición intermedia.</li>
+<li>Eliminación al inicio.</li>
+</ol>
+<p>La estructura de partida es un arreglo: <code>int[]</code> o <code>ArrayList</code> en Java, <code>list</code> en Python.</p>
+</section>
+<section id="fase-1.-predicción" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="fase-1.-predicción"><span class="header-section-number">4</span> Fase 1. Predicción</h2>
+<p>Antes de medir, construya en su hoja la siguiente tabla y complétela para las ocho operaciones.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Operación</th>
+<th>Complejidad esperada</th>
+<th>Qué ocurre por dentro</th>
+<th>Si con 10 000 tarda t, con 100 000 tarda</th>
+<th>Y con 1 000 000 tarda</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Acceso por posición</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Actualización</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Búsqueda de un valor</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Recorrido completo</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Inserción al final</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Inserción al inicio</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Inserción intermedia</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Eliminación al inicio</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>La columna “qué ocurre por dentro” es la que importa. Escribir O(n) no basta: debe decir qué se calcula, qué se desplaza o qué se copia en memoria para que la operación cueste lo que cuesta.</p>
+<section id="cuenta-de-memoria" class="level3">
+<h3 class="anchored" data-anchor-id="cuenta-de-memoria">Cuenta de memoria</h3>
+<p>Calcule cuántos bytes ocupan las casillas de un millón de registros en cada uno de estos tres casos. Busque el tamaño de cada tipo en la especificación de Java (sección 4.2) o en la documentación de Python, y cite la fuente.</p>
+<ul>
+<li>Un arreglo <code>int[]</code> de Java.</li>
+<li>Una lista de Python con un millón de enteros.</li>
+<li>Un arreglo <code>String[]</code> de Java, si los registros llegaran como texto.</li>
+</ul>
+<p>Explique por qué en el tercer caso el resultado de la multiplicación no dice cuánto pesa el total.</p>
+</section>
+<section id="acceso-fuera-de-rango" class="level3">
+<h3 class="anchored" data-anchor-id="acceso-fuera-de-rango">Acceso fuera de rango</h3>
+<p>Escriba qué espera que ocurra exactamente al ejecutar <code>datos[n]</code> sobre un arreglo de n elementos en su lenguaje, con el nombre de la excepción que espera ver.</p>
+</section>
+</section>
+<section id="fase-2.-medición" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="fase-2.-medición"><span class="header-section-number">5</span> Fase 2. Medición</h2>
+<p>La actividad incluye un programa base que mide el tiempo de una operación sobre conjuntos de 1 000, 10 000, 100 000 y 1 000 000 de elementos. Trae una sola operación implementada. Complételo con las siete restantes y ejecútelo.</p>
+<p>Cómo medir correctamente cada operación es parte del trabajo. Tenga en cuenta, por ejemplo, que una inserción al inicio repetida un millón de veces puede tardar minutos, así que conviene repetirla un número fijo de veces por tamaño, y que la búsqueda debe ser de un valor que no está en el conjunto, para que recorra todo.</p>
+<section id="programa-base-en-python" class="level3">
+<h3 class="anchored" data-anchor-id="programa-base-en-python">Programa base en Python</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>TAMANOS <span class="op">=</span> [<span class="dv">1_000</span>, <span class="dv">10_000</span>, <span class="dv">100_000</span>, <span class="dv">1_000_000</span>]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>REPETICIONES <span class="op">=</span> <span class="dv">100</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> medir(nombre, preparar, operacion):</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Mide una operacion sobre cada tamano y muestra el tiempo promedio por repeticion."""</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> n <span class="kw">in</span> TAMANOS:</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        datos <span class="op">=</span> preparar(n)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        inicio <span class="op">=</span> time.perf_counter()</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(REPETICIONES):</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>            operacion(datos, n)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        fin <span class="op">=</span> time.perf_counter()</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        promedio <span class="op">=</span> (fin <span class="op">-</span> inicio) <span class="op">/</span> REPETICIONES</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>nombre<span class="sc">:24}</span><span class="ss"> n=</span><span class="sc">{</span>n<span class="sc">:&gt;9}</span><span class="ss">  </span><span class="sc">{</span>promedio<span class="sc">:.9f}</span><span class="ss"> s"</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>()</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lista_de(n):</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">list</span>(<span class="bu">range</span>(n))</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Operacion de ejemplo: acceso por posicion</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>medir(<span class="st">"acceso por posicion"</span>, lista_de, <span class="kw">lambda</span> datos, n: datos[n <span class="op">-</span> <span class="dv">1</span>])</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Complete aqui las siete operaciones restantes.</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="programa-base-en-java" class="level3">
+<h3 class="anchored" data-anchor-id="programa-base-en-java">Programa base en Java</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">java</span><span class="op">.</span><span class="im">util</span><span class="op">.</span><span class="im">ArrayList</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">java</span><span class="op">.</span><span class="im">util</span><span class="op">.</span><span class="im">List</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">java</span><span class="op">.</span><span class="im">util</span><span class="op">.</span><span class="im">function</span><span class="op">.</span><span class="im">BiConsumer</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="im">java</span><span class="op">.</span><span class="im">util</span><span class="op">.</span><span class="im">function</span><span class="op">.</span><span class="im">IntFunction</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="kw">class</span> Benchmark <span class="op">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">static</span> <span class="dt">final</span> <span class="dt">int</span><span class="op">[]</span> TAMANOS <span class="op">=</span> <span class="op">{</span><span class="dv">1_000</span><span class="op">,</span> <span class="dv">10_000</span><span class="op">,</span> <span class="dv">100_000</span><span class="op">,</span> <span class="dv">1_000_000</span><span class="op">};</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">static</span> <span class="dt">final</span> <span class="dt">int</span> REPETICIONES <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">static</span> <span class="dt">void</span> <span class="fu">medir</span><span class="op">(</span><span class="bu">String</span> nombre<span class="op">,</span> IntFunction<span class="op">&lt;</span><span class="bu">List</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">&gt;&gt;</span> preparar<span class="op">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                      BiConsumer<span class="op">&lt;</span><span class="bu">List</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">&gt;,</span> <span class="bu">Integer</span><span class="op">&gt;</span> operacion<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> n <span class="op">:</span> TAMANOS<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            <span class="bu">List</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">&gt;</span> datos <span class="op">=</span> preparar<span class="op">.</span><span class="fu">apply</span><span class="op">(</span>n<span class="op">);</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            <span class="dt">long</span> inicio <span class="op">=</span> <span class="bu">System</span><span class="op">.</span><span class="fu">nanoTime</span><span class="op">();</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> r <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> r <span class="op">&lt;</span> REPETICIONES<span class="op">;</span> r<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>                operacion<span class="op">.</span><span class="fu">accept</span><span class="op">(</span>datos<span class="op">,</span> n<span class="op">);</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>            <span class="dt">long</span> fin <span class="op">=</span> <span class="bu">System</span><span class="op">.</span><span class="fu">nanoTime</span><span class="op">();</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            <span class="dt">double</span> promedio <span class="op">=</span> <span class="op">(</span>fin <span class="op">-</span> inicio<span class="op">)</span> <span class="op">/</span> <span class="fl">1e9</span> <span class="op">/</span> REPETICIONES<span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>            <span class="bu">System</span><span class="op">.</span><span class="fu">out</span><span class="op">.</span><span class="fu">printf</span><span class="op">(</span><span class="st">"</span><span class="sc">%-24s</span><span class="st"> n=</span><span class="sc">%9d</span><span class="st">  </span><span class="sc">%.9f</span><span class="st"> s</span><span class="sc">%n</span><span class="st">"</span><span class="op">,</span> nombre<span class="op">,</span> n<span class="op">,</span> promedio<span class="op">);</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        <span class="bu">System</span><span class="op">.</span><span class="fu">out</span><span class="op">.</span><span class="fu">println</span><span class="op">();</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="dt">static</span> <span class="bu">List</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">&gt;</span> <span class="fu">listaDe</span><span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>        <span class="bu">List</span><span class="op">&lt;</span><span class="bu">Integer</span><span class="op">&gt;</span> lista <span class="op">=</span> <span class="kw">new</span> <span class="bu">ArrayList</span><span class="op">&lt;&gt;(</span>n<span class="op">);</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> n<span class="op">;</span> i<span class="op">++)</span> lista<span class="op">.</span><span class="fu">add</span><span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> lista<span class="op">;</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">public</span> <span class="dt">static</span> <span class="dt">void</span> <span class="fu">main</span><span class="op">(</span><span class="bu">String</span><span class="op">[]</span> args<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Operacion de ejemplo: acceso por posicion</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>        <span class="fu">medir</span><span class="op">(</span><span class="st">"acceso por posicion"</span><span class="op">,</span> Benchmark<span class="op">::</span>listaDe<span class="op">,</span> <span class="op">(</span>datos<span class="op">,</span> n<span class="op">)</span> <span class="op">-&gt;</span> datos<span class="op">.</span><span class="fu">get</span><span class="op">(</span>n <span class="op">-</span> <span class="dv">1</span><span class="op">));</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Complete aqui las siete operaciones restantes.</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="tabla-de-resultados" class="level3">
+<h3 class="anchored" data-anchor-id="tabla-de-resultados">Tabla de resultados</h3>
+<p>Registre en su hoja los tiempos que obtuvo su propio equipo.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>n</th>
+<th>Acceso</th>
+<th>Actualización</th>
+<th>Búsqueda</th>
+<th>Recorrido</th>
+<th>Inserción final</th>
+<th>Inserción inicio</th>
+<th>Inserción intermedia</th>
+<th>Eliminación inicio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1 000</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>10 000</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>100 000</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>1 000 000</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Como última medición, ejecute el acceso <code>datos[n]</code> sobre un arreglo de n elementos y copie en la hoja el mensaje exacto que produce su lenguaje.</p>
+</section>
+</section>
+<section id="fase-3.-contraste-entre-teoría-y-experimento" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="fase-3.-contraste-entre-teoría-y-experimento"><span class="header-section-number">6</span> Fase 3. Contraste entre teoría y experimento</h2>
+<p>Con la tabla completa, calcule los cocientes de crecimiento: para cada operación, cuántas veces creció el tiempo cuando n pasó de 1 000 a 10 000, de 10 000 a 100 000 y de 100 000 a 1 000 000. Con esos cocientes responda en la hoja:</p>
+<ol type="1">
+<li>Qué operaciones se comportaron como O(1) y cuáles como O(n). Explique cómo lo determina a partir de los cocientes y no de los tiempos absolutos. Un cociente cercano a 1 y un cociente cercano a 10 cuentan historias distintas; un cociente de 8 o de 12 sigue siendo crecimiento lineal.</li>
+<li>En qué operaciones falló su predicción de la Fase 1 y cuál es la explicación.</li>
+<li>Por qué la inserción al final se comportó como O(1) casi siempre, si el arreglo tiene que crecer para recibir más elementos. Para responder, investigue la diferencia entre tamaño y capacidad y qué ocurre cuando la capacidad se agota. En Python puede mostrarlo con <code>sys.getsizeof</code> mientras una lista crece elemento por elemento; en Java, busque en el Javadoc de <code>ArrayList</code> qué promete sobre el costo de agregar. Con eso explique, con sus propias palabras, qué significa que una operación sea O(1) amortizado.</li>
+<li>Qué demuestra el mensaje del acceso fuera de rango y qué ocurriría en un lenguaje que no verifica los límites del arreglo. Encuentre en la guía del Tema 1 el nombre de esa categoría de error.</li>
+</ol>
+</section>
+<section id="fase-4.-decisión-de-ingeniería" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="fase-4.-decisión-de-ingeniería"><span class="header-section-number">7</span> Fase 4. Decisión de ingeniería</h2>
+<p>Para cada escenario, escriba una recomendación justificada con los números de su propia tabla.</p>
+<div class="destacado">
+<p><strong>Escenario 1.</strong> El sistema ejecuta 70 % de consultas por posición, 20 % de recorridos completos y 10 % de inserciones al final. ¿Es un arreglo una estructura razonable para este sistema?</p>
+</div>
+<div class="destacado">
+<p><strong>Escenario 2.</strong> El sistema pasa a ejecutar 50 % de inserciones y eliminaciones al inicio. ¿Seguirían utilizando la misma estructura? Si no, describa qué propiedad necesitarían de la estructura que la reemplace, aunque todavía no la conozcan. Puede buscar en la documentación oficial de Python qué recomienda usar en lugar de una lista para retirar elementos del inicio, y citar el párrafo.</p>
+</div>
+<div class="pie-doc">
+<p>Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.</p>
+<p><strong>Transparencia.</strong> La redacción de esta actividad contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.</p>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/oscarleosanchez\.github\.io\/sitio-maria-cano-2026-02\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Oscar Leonel Sánchez Conde</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

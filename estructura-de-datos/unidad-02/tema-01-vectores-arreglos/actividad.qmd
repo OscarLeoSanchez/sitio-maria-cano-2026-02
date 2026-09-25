@@ -1,0 +1,242 @@
+---
+title: "Análisis experimental del rendimiento de un arreglo y selección de estructura"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|          |                                                      |
+|----------|------------------------------------------------------|
+| Unidad   | Unidad 2. Estructuras fijas                          |
+| Tema     | Tema 1. Vectores o arreglos                          |
+| Modalidad | Trabajo en parejas, 2 horas                         |
+| Lenguaje | Java o Python, a elección de la pareja               |
+:::
+
+::: {.destacado}
+Una aplicación debe administrar hasta un millón de registros numéricos. Su tarea es determinar,
+con evidencia experimental propia, qué operaciones son adecuadas sobre un arreglo y cuáles
+generan problemas de rendimiento, y recomendar con argumentos técnicos qué estructura conviene
+en dos escenarios de uso distintos.
+:::
+
+## Propósito
+
+Contrastar la teoría del Tema 1 con mediciones reales. Usted va a predecir el costo de cada
+operación sobre un arreglo, medirlo en su propio equipo, explicar las diferencias entre lo que
+esperaba y lo que obtuvo, y tomar una decisión de diseño sustentada en sus propios datos.
+
+La actividad no evalúa cuánto código escribe. Evalúa la calidad del análisis: que cada número
+tenga su origen, que cada complejidad venga acompañada de lo que ocurre en memoria, y que cada
+decisión esté justificada con las mediciones.
+
+## Reglas
+
+- Trabajo en parejas. Los dos integrantes deben poder explicar cualquier parte del reporte.
+- No está permitido usar asistentes de inteligencia artificial en ninguna forma durante la
+  actividad.
+- Fuentes permitidas para investigar: la guía del Tema 1, la documentación oficial de Python, el
+  Javadoc de Java y la especificación del lenguaje Java (JLS). Todo dato tomado de una fuente se
+  cita en el reporte con el nombre de la fuente.
+- El reporte se escribe a mano en una hoja, con los nombres de los dos integrantes, en el orden
+  de las fases y sobre la marcha. No se pasa en limpio al final.
+- Cada número del reporte lleva la operación de la que salió. Cada complejidad O(...) lleva la
+  explicación de qué se mueve por dentro.
+
+## El problema
+
+La aplicación realiza con frecuencia estas ocho operaciones sobre el conjunto de registros:
+
+1. Acceso por posición.
+2. Actualización de una posición.
+3. Búsqueda de un valor.
+4. Recorrido completo.
+5. Inserción al final.
+6. Inserción al inicio.
+7. Inserción en una posición intermedia.
+8. Eliminación al inicio.
+
+La estructura de partida es un arreglo: `int[]` o `ArrayList` en Java, `list` en Python.
+
+## Fase 1. Predicción
+
+Antes de medir, construya en su hoja la siguiente tabla y complétela para las ocho operaciones.
+
+| Operación | Complejidad esperada | Qué ocurre por dentro | Si con 10 000 tarda t, con 100 000 tarda | Y con 1 000 000 tarda |
+|---|---|---|---|---|
+| Acceso por posición | | | | |
+| Actualización | | | | |
+| Búsqueda de un valor | | | | |
+| Recorrido completo | | | | |
+| Inserción al final | | | | |
+| Inserción al inicio | | | | |
+| Inserción intermedia | | | | |
+| Eliminación al inicio | | | | |
+
+La columna "qué ocurre por dentro" es la que importa. Escribir O(n) no basta: debe decir qué se
+calcula, qué se desplaza o qué se copia en memoria para que la operación cueste lo que cuesta.
+
+### Cuenta de memoria
+
+Calcule cuántos bytes ocupan las casillas de un millón de registros en cada uno de estos tres
+casos. Busque el tamaño de cada tipo en la especificación de Java (sección 4.2) o en la
+documentación de Python, y cite la fuente.
+
+- Un arreglo `int[]` de Java.
+- Una lista de Python con un millón de enteros.
+- Un arreglo `String[]` de Java, si los registros llegaran como texto.
+
+Explique por qué en el tercer caso el resultado de la multiplicación no dice cuánto pesa el
+total.
+
+### Acceso fuera de rango
+
+Escriba qué espera que ocurra exactamente al ejecutar `datos[n]` sobre un arreglo de n elementos
+en su lenguaje, con el nombre de la excepción que espera ver.
+
+## Fase 2. Medición
+
+La actividad incluye un programa base que mide el tiempo de una operación sobre conjuntos de
+1 000, 10 000, 100 000 y 1 000 000 de elementos. Trae una sola operación implementada. Complételo
+con las siete restantes y ejecútelo.
+
+Cómo medir correctamente cada operación es parte del trabajo. Tenga en cuenta, por ejemplo, que
+una inserción al inicio repetida un millón de veces puede tardar minutos, así que conviene
+repetirla un número fijo de veces por tamaño, y que la búsqueda debe ser de un valor que no está
+en el conjunto, para que recorra todo.
+
+### Programa base en Python
+
+```python
+import time
+
+TAMANOS = [1_000, 10_000, 100_000, 1_000_000]
+REPETICIONES = 100
+
+
+def medir(nombre, preparar, operacion):
+    """Mide una operacion sobre cada tamano y muestra el tiempo promedio por repeticion."""
+    for n in TAMANOS:
+        datos = preparar(n)
+        inicio = time.perf_counter()
+        for _ in range(REPETICIONES):
+            operacion(datos, n)
+        fin = time.perf_counter()
+        promedio = (fin - inicio) / REPETICIONES
+        print(f"{nombre:24} n={n:>9}  {promedio:.9f} s")
+    print()
+
+
+def lista_de(n):
+    return list(range(n))
+
+
+# Operacion de ejemplo: acceso por posicion
+medir("acceso por posicion", lista_de, lambda datos, n: datos[n - 1])
+
+# Complete aqui las siete operaciones restantes.
+```
+
+### Programa base en Java
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.IntFunction;
+
+public class Benchmark {
+
+    static final int[] TAMANOS = {1_000, 10_000, 100_000, 1_000_000};
+    static final int REPETICIONES = 100;
+
+    static void medir(String nombre, IntFunction<List<Integer>> preparar,
+                      BiConsumer<List<Integer>, Integer> operacion) {
+        for (int n : TAMANOS) {
+            List<Integer> datos = preparar.apply(n);
+            long inicio = System.nanoTime();
+            for (int r = 0; r < REPETICIONES; r++) {
+                operacion.accept(datos, n);
+            }
+            long fin = System.nanoTime();
+            double promedio = (fin - inicio) / 1e9 / REPETICIONES;
+            System.out.printf("%-24s n=%9d  %.9f s%n", nombre, n, promedio);
+        }
+        System.out.println();
+    }
+
+    static List<Integer> listaDe(int n) {
+        List<Integer> lista = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) lista.add(i);
+        return lista;
+    }
+
+    public static void main(String[] args) {
+        // Operacion de ejemplo: acceso por posicion
+        medir("acceso por posicion", Benchmark::listaDe, (datos, n) -> datos.get(n - 1));
+
+        // Complete aqui las siete operaciones restantes.
+    }
+}
+```
+
+### Tabla de resultados
+
+Registre en su hoja los tiempos que obtuvo su propio equipo.
+
+| n | Acceso | Actualización | Búsqueda | Recorrido | Inserción final | Inserción inicio | Inserción intermedia | Eliminación inicio |
+|---|---|---|---|---|---|---|---|---|
+| 1 000 | | | | | | | | |
+| 10 000 | | | | | | | | |
+| 100 000 | | | | | | | | |
+| 1 000 000 | | | | | | | | |
+
+Como última medición, ejecute el acceso `datos[n]` sobre un arreglo de n elementos y copie en la
+hoja el mensaje exacto que produce su lenguaje.
+
+## Fase 3. Contraste entre teoría y experimento
+
+Con la tabla completa, calcule los cocientes de crecimiento: para cada operación, cuántas veces
+creció el tiempo cuando n pasó de 1 000 a 10 000, de 10 000 a 100 000 y de 100 000 a 1 000 000.
+Con esos cocientes responda en la hoja:
+
+1. Qué operaciones se comportaron como O(1) y cuáles como O(n). Explique cómo lo determina a
+   partir de los cocientes y no de los tiempos absolutos. Un cociente cercano a 1 y un cociente
+   cercano a 10 cuentan historias distintas; un cociente de 8 o de 12 sigue siendo crecimiento
+   lineal.
+2. En qué operaciones falló su predicción de la Fase 1 y cuál es la explicación.
+3. Por qué la inserción al final se comportó como O(1) casi siempre, si el arreglo tiene que
+   crecer para recibir más elementos. Para responder, investigue la diferencia entre tamaño y
+   capacidad y qué ocurre cuando la capacidad se agota. En Python puede mostrarlo con
+   `sys.getsizeof` mientras una lista crece elemento por elemento; en Java, busque en el Javadoc
+   de `ArrayList` qué promete sobre el costo de agregar. Con eso explique, con sus propias
+   palabras, qué significa que una operación sea O(1) amortizado.
+4. Qué demuestra el mensaje del acceso fuera de rango y qué ocurriría en un lenguaje que no
+   verifica los límites del arreglo. Encuentre en la guía del Tema 1 el nombre de esa categoría
+   de error.
+
+## Fase 4. Decisión de ingeniería
+
+Para cada escenario, escriba una recomendación justificada con los números de su propia tabla.
+
+::: {.destacado}
+**Escenario 1.** El sistema ejecuta 70 % de consultas por posición, 20 % de recorridos completos
+y 10 % de inserciones al final. ¿Es un arreglo una estructura razonable para este sistema?
+:::
+
+::: {.destacado}
+**Escenario 2.** El sistema pasa a ejecutar 50 % de inserciones y eliminaciones al inicio.
+¿Seguirían utilizando la misma estructura? Si no, describa qué propiedad necesitarían de la
+estructura que la reemplace, aunque todavía no la conozcan. Puede buscar en la documentación
+oficial de Python qué recomienda usar en lugar de una lista para retirar elementos del inicio,
+y citar el párrafo.
+:::
+
+::: {.pie-doc}
+Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta actividad contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::
