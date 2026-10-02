@@ -1,0 +1,1362 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Matrices | ESD01</title>
+<style>
+:root{--bg:#f4f7fc;--ink:#1b2a41;--mut:#52627a;--acc:#2563eb;--amb:#b45309;--line:#d5deec;--card:#ffffff;--ok:#15803d;--bad:#be123c;--vio:#6d28d9;--teal:#0f766e;--sh:0 1px 2px rgba(27,42,65,.08),0 8px 22px rgba(27,42,65,.10)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Inter,system-ui,-apple-system,sans-serif;overflow:hidden}
+button,input,textarea,select{font-family:inherit}
+#app{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;height:100vh;height:100dvh;background:radial-gradient(ellipse at 50% 0%,#ffffff 0%,#f4f7fc 55%,#e9eff9 100%)}
+#top{display:flex;align-items:center;gap:14px;padding:8px 16px;border-bottom:1px solid var(--line);background:#fff;box-shadow:0 2px 8px rgba(27,42,65,.06);z-index:2}
+#brand{font-weight:700;font-size:clamp(13px,1.1vw,17px);color:var(--amb);letter-spacing:.04em;white-space:nowrap}
+#tabs{min-width:0;display:flex;gap:6px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+#tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;background:#fff;color:var(--mut);border:1px solid #c5d2e6;border-radius:999px;padding:6px 14px;font:600 clamp(12px,1.05vw,16px) inherit;font-family:inherit;cursor:pointer}
+.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tab:hover:not(.on){border-color:var(--acc);color:var(--ink)}
+#main{min-height:0;position:relative}
+.slide{display:none;height:100%;padding:clamp(10px,1.5vw,24px) clamp(12px,2.2vw,40px);overflow:auto}
+.slide.on{display:flex;flex-direction:column;gap:clamp(8px,1.1vw,16px)}
+.kick{color:var(--amb);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:clamp(11px,1vw,16px)}
+.st{margin:0;font-size:clamp(22px,2.8vw,46px);line-height:1.1;color:#12233d}
+.sb{flex:1;min-height:0;display:grid;grid-template-rows:minmax(0,1fr)}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;min-height:0}
+.cols{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:clamp(10px,1.4vw,22px);min-height:0}
+.cols.one{grid-template-columns:minmax(0,1fr)}
+.cols.one .pane{display:grid;grid-template-columns:auto 1fr;grid-template-rows:minmax(0,1fr) auto auto;gap:8px 14px;align-items:center}
+.cols.one .vis,.cols.one .cap{grid-column:1/-1}
+.cols.one .cap{min-height:0}
+.cols.one .vis{align-self:stretch}
+.rd{display:flex;flex-direction:column;justify-content:center}
+.cols.eq{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.pane,.side{display:flex;flex-direction:column;gap:10px;min-height:0}
+.card{background:#fff;border:1px solid #d7e0ee;border-radius:16px;box-shadow:var(--sh)}
+.vis{flex:1;min-height:0;padding:8px;display:flex}
+.vis svg{width:100%;height:100%;display:block}
+.cap{background:#fff;border:1px solid var(--line);border-left:5px solid var(--acc);border-radius:10px;padding:8px 14px;font-size:clamp(14px,1.45vw,24px);line-height:1.4;min-height:calc(2.8em + 18px);box-shadow:0 2px 8px rgba(27,42,65,.08)}
+.cap:empty{display:none}
+.cap code,.res code,.rd code,td code,li code,p code{font-family:Consolas,"Cascadia Mono",monospace;color:#9a3412;background:#fdf0e1;border-radius:6px;padding:0 .3em}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.opts:empty{display:none}
+.btn{background:#fff;color:var(--ink);border:1px solid #b8c7de;border-radius:10px;padding:8px 14px;font:600 clamp(13px,1.15vw,19px) inherit;font-family:inherit;cursor:pointer;box-shadow:0 2px 0 #c5d2e6,0 4px 8px rgba(27,42,65,.08)}
+.btn:hover{border-color:var(--acc)}
+.btn:active{transform:translateY(2px);box-shadow:0 0 0 #c5d2e6}
+.btn.p{background:var(--acc);color:#fff;border-color:#1d4ed8;box-shadow:0 2px 0 #1e40af,0 4px 8px rgba(37,99,235,.25)}
+.btn:disabled{opacity:.45;cursor:default}
+.spd{display:flex;align-items:center;gap:6px;color:var(--mut);font-size:clamp(12px,1.05vw,17px)}
+.spd input{width:96px;accent-color:var(--acc)}
+.cnt{font:600 clamp(13px,1.1vw,18px) Consolas,monospace;color:var(--mut);margin-left:auto}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid #b8c7de;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(27,42,65,.08);background:#fff}
+.seg button{background:#fff;color:var(--mut);border:0;padding:8px 12px;font:600 clamp(13px,1.1vw,18px) inherit;font-family:inherit;cursor:pointer}
+.seg button.on{background:var(--acc);color:#fff}
+.fld{display:inline-flex;align-items:center;gap:6px;color:var(--mut);font-size:clamp(13px,1.15vw,19px)}
+.fld input[type=number]{width:4.6em;background:#fff;color:var(--ink);border:1px solid #b8c7de;border-radius:8px;padding:6px 8px;font:inherit}
+.cbox{display:flex;flex-direction:column;min-height:0;border-radius:14px;overflow:hidden;background:#f8fafd;border:1px solid #d7e0ee;box-shadow:var(--sh)}
+.side .cbox{flex:2}
+.side .out,.side .res{flex:1}
+.ltabs{display:flex;gap:4px;padding:6px 8px;background:#eaf0fa;border-bottom:1px solid #d7e0ee;color:var(--mut);font-weight:700;font-size:clamp(12px,1vw,16px)}
+.ltabs button{background:#fff;color:var(--mut);border:1px solid #c5d2e6;border-radius:8px;padding:3px 12px;font:700 clamp(12px,1vw,16px) inherit;font-family:inherit;cursor:pointer}
+.ltabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.ltabs span{padding:3px 4px}
+.code{margin:0;padding:8px 0;overflow:auto;flex:1;min-height:0;font:clamp(13px,1.25vw,22px)/1.6 Consolas,"Cascadia Mono",ui-monospace,monospace;color:#1b2a41}
+.ln{display:block;white-space:pre;padding:0 14px 0 0}
+.ln i{display:inline-block;width:2.4em;text-align:right;color:#6b7a90;font-style:normal;margin-right:1em;user-select:none}
+.ln.on{background:#fff0c2;box-shadow:inset 4px 0 0 #d97706}
+.code b{font-weight:400}
+.code .kw{color:#7c3aed;font-weight:600}.code .ty{color:#0369a1}.code .sg{color:#15803d}.code .nm{color:#b45309}.code .cm{color:#64748b;font-style:italic}.code .fn{color:#1d4ed8}
+.code,.slide,.side,textarea{scrollbar-color:#9db4d8 #eef3fa}
+.out{background:#f1f5fb;border:1px solid #d7e0ee;border-radius:12px;padding:8px 14px;font:clamp(14px,1.5vw,26px)/1.5 Consolas,monospace;color:#14532d;min-height:3.2em;box-shadow:0 2px 6px rgba(27,42,65,.06) inset}
+.out .h{color:var(--mut);font-size:.8em;display:block}
+/* svg */
+svg text{fill:#1b2a41;font-family:"Segoe UI",system-ui,sans-serif}
+svg .m{fill:#52627a}svg .a{fill:#b45309}svg .g{fill:#15803d}svg .r{fill:#be123c}svg .v{fill:#6d28d9}svg .t{fill:#0f766e}svg .s{fill:#1d4ed8}
+svg .b{font-weight:700}svg .mono{font-family:Consolas,"Cascadia Mono",monospace}
+svg .f13{font-size:13px}svg .f15{font-size:15px}svg .f17{font-size:17px}svg .f19{font-size:19px}svg .f22{font-size:22px}svg .f26{font-size:26px}svg .f32{font-size:32px}
+.c{filter:drop-shadow(0 2px 2px rgba(30,60,120,.20))}
+.c rect{fill:#e8f0fe;stroke:#7aa2e8;stroke-width:1.5;transition:fill .3s,stroke .3s}
+.c text{font-weight:700;text-anchor:middle;fill:#1b2a41}
+.c.act rect{fill:#fcd34d;stroke:#d97706;stroke-width:2}.c.act text{fill:#3b2300}
+.c.vis rect{fill:#b9ece1;stroke:#0f9488}.c.vis text{fill:#0b3d38}
+.c.hit rect{fill:#bbf7d0;stroke:#16a34a;stroke-width:2}.c.hit text{fill:#14532d}
+.c.bad rect{fill:#fecdd3;stroke:#e11d48}.c.bad text{fill:#7f1d1d}
+.c.new rect{fill:#ddd6fe;stroke:#7c3aed;stroke-width:2}.c.new text{fill:#3b1d8f}
+.c.rowh rect{fill:#bfdbfe;stroke:#3b82f6}.c.rowh text{fill:#1e3a8a}
+.c.dim rect{fill:#f1f4f9;stroke:#cbd5e1}.c.dim text{fill:#64748b}
+.c.ghost{filter:none}.c.ghost rect{fill:none;stroke:#94a3b8;stroke-dasharray:6 5}.c.ghost text{fill:#64748b}
+.c.ghost.bad rect{fill:#fecdd3;stroke:#e11d48;stroke-dasharray:none}
+.c.rowsel rect{stroke:#d97706;stroke-width:3.5}
+.c.ptr{cursor:pointer}.c.ptr:hover rect{stroke:#d97706}
+.pop{animation:pop .45s ease-out both;transform-box:fill-box;transform-origin:center}
+@keyframes pop{0%{transform:scale(.55);opacity:0}100%{transform:none;opacity:1}}
+.ar{fill:none!important;stroke:#2563eb;stroke-width:2.6;stroke-dasharray:1;animation:grow .5s ease-out both}
+.ar.a{stroke:#d97706}.ar.r{stroke:#e11d48}.ar.g{stroke:#16a34a}.ar.q{animation:none}
+@keyframes grow{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.rm .pop,.rm .ar{animation:none}.rm *{transition:none!important}
+.pn{fill:#f8fafd;stroke:#b8c7de;stroke-width:1.5;transition:opacity .3s}
+.dimp{opacity:.35}
+/* tablas y tarjetas */
+.tbl{border-collapse:separate;border-spacing:0;width:100%;font-size:clamp(13px,1.3vw,22px)}
+.tbl th{background:#e3ecfb;text-align:left;padding:.55em .8em;color:#12233d;position:sticky;top:0}
+.tbl td{padding:.5em .8em;border-top:1px solid #dbe4f2;background:#fff;vertical-align:top}
+.tbl tr:hover td{background:#f1f6ff}
+.tbl td:first-child{font-weight:700;color:#9a3412}
+.tbl code{font-size:.92em}
+.tbl tr.hl td{background:#fff3c4}
+.elev{border-radius:16px;overflow:hidden;box-shadow:var(--sh);border:1px solid #d7e0ee;background:#fff}
+.kv{width:100%;border-collapse:collapse;font-size:clamp(14px,1.45vw,24px)}
+.kv td{padding:.45em .6em;border-bottom:1px solid #e1e8f3;vertical-align:top}
+.kv td:first-child{color:#9a3412;font-weight:700;white-space:nowrap}
+.rd-main{font:700 clamp(26px,3.6vw,60px) Consolas,monospace;color:#b45309;padding:.2em .4em;text-align:center}
+.pad{padding:clamp(10px,1.3vw,22px)}
+.big{font-size:clamp(16px,1.65vw,28px);line-height:1.45}
+.big li{margin:.35em 0}
+.sq{list-style:none;padding:0;margin:0}
+.sq li{position:relative;padding-left:1.3em;margin:.4em 0}
+.sq li::before{content:"";position:absolute;left:0;top:.55em;width:.6em;height:.6em;border-radius:2px;background:var(--acc)}
+.res{border-radius:12px;padding:10px 14px;font-size:clamp(14px,1.4vw,23px);line-height:1.4;border:1px solid var(--line);background:#fff;box-shadow:0 2px 8px rgba(27,42,65,.06)}
+.res.ok{border-color:#86efac;background:#ecfdf3}.res.er{border-color:#fda4af;background:#fff1f3}
+/* portada */
+.cover{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(14px,2.4vw,40px);min-height:0}
+.cl{display:flex;flex-direction:column;gap:clamp(8px,1.4vw,18px);justify-content:center;min-height:0}
+.cover h1{margin:0;font-size:clamp(46px,8vw,128px);line-height:.95;letter-spacing:-.02em;color:#1e3a8a}
+.lead{font-size:clamp(16px,1.9vw,32px);line-height:1.35;color:#2c3e5a;margin:0}
+.hero{width:100%;flex:1;min-height:0}
+.hero rect{fill:#e8f0fe;stroke:#7aa2e8;animation:wave 3.4s ease-in-out infinite}
+@keyframes wave{0%,100%{fill:#e8f0fe}40%{fill:#93c5fd}60%{fill:#fcd34d}}
+.rm .hero rect{animation:none}
+.who{color:var(--mut);font-size:clamp(12px,1.2vw,19px);line-height:1.5}
+.cr{display:flex;flex-direction:column;gap:10px;min-height:0}
+.cr h3{margin:0;font-size:clamp(16px,1.6vw,26px);color:var(--amb)}
+.map{display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1vw,14px);flex:1;min-height:0}
+.mc{display:flex;flex-direction:column;justify-content:center;gap:4px;text-align:left;color:var(--ink);cursor:pointer;padding:clamp(8px,1vw,16px);font-family:inherit}
+.mc:hover{border-color:#d97706}
+.mc b{font-size:clamp(15px,1.7vw,28px)}
+.mc span{color:var(--mut);font-size:clamp(12px,1.15vw,19px);line-height:1.3}
+.mc em{font-style:normal;color:var(--acc);font:700 clamp(12px,1.1vw,17px) Consolas,monospace}
+.g2{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:clamp(8px,1.2vw,16px);min-height:0}
+.ex{display:flex;flex-direction:column;min-height:0;padding:clamp(8px,1vw,14px);gap:6px}
+.ex h4{margin:0;font-size:clamp(15px,1.6vw,26px);color:var(--amb)}
+.ex svg{flex:1;min-height:0;width:100%}
+.ex p{margin:0;color:#2c3e5a;font-size:clamp(12px,1.25vw,20px);line-height:1.35}
+/* barras */
+.bars{display:flex;align-items:flex-end;gap:clamp(6px,1.2vw,18px);height:100%;padding:12px 8px 0}
+.bw{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.bv{position:absolute;left:0;right:0;text-align:center;bottom:calc(var(--h)*1% + 6px);transition:bottom .7s cubic-bezier(.2,.8,.2,1),opacity .4s;font:700 clamp(12px,1.3vw,22px) Consolas,monospace;color:#92400e}
+.bt{width:100%;flex:1;display:flex;align-items:flex-end;min-height:0;position:relative}
+.bar{width:100%;height:calc(var(--h,0)*1%);min-height:3px;border-radius:8px 8px 2px 2px;background:linear-gradient(90deg,rgba(255,255,255,.45),rgba(255,255,255,0) 30%,rgba(0,0,0,.14)),var(--c,#2563eb);box-shadow:0 8px 14px rgba(27,42,65,.25),inset 0 3px 0 rgba(255,255,255,.55);transition:height .7s cubic-bezier(.2,.8,.2,1)}
+.rm .bar{transition:none}
+.bn{font-size:clamp(10px,1vw,16px);color:var(--mut);text-align:center;margin-top:6px;line-height:1.2;min-height:2.4em}
+.bw.off{--h:0!important}.bw.off .bv{opacity:0}
+/* actividad */
+.q{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line);box-shadow:0 2px 8px rgba(27,42,65,.06)}
+.q b{display:block;font-size:clamp(14px,1.4vw,23px);margin-bottom:6px}
+.q label{display:block;padding:5px 8px;margin:3px 0;border-radius:8px;cursor:pointer;font-size:clamp(13px,1.25vw,20px);line-height:1.35;border:1px solid transparent}
+.q label:hover{background:#eef4ff}
+.q input{accent-color:var(--acc);margin-right:8px;transform:scale(1.25)}
+.fb{display:none;margin-top:6px;font-size:clamp(12px,1.15vw,19px);padding:6px 10px;border-radius:8px}
+.fb.ok{display:block;background:#dcfce7;color:#166534}.fb.no{display:block;background:#ffedd5;color:#9a3412}
+textarea{width:100%;min-height:5.2em;resize:vertical;background:#fff;color:var(--ink);border:1px solid #b8c7de;border-radius:10px;padding:10px 12px;font:clamp(14px,1.3vw,21px)/1.4 "Segoe UI",system-ui,sans-serif}
+details{background:#fff;border:1px solid #c5d2e6;border-radius:12px;margin:8px 0;box-shadow:0 4px 12px rgba(27,42,65,.08)}
+summary{cursor:pointer;padding:14px 16px;font-weight:700;font-size:clamp(16px,1.8vw,30px);color:#9a3412;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"";display:inline-block;width:0;height:0;border-left:.55em solid #b45309;border-top:.35em solid transparent;border-bottom:.35em solid transparent;margin-right:.6em;transition:transform .2s}
+details[open] summary::before{transform:rotate(90deg)}
+details .dd{padding:2px 18px 14px;font-size:clamp(15px,1.6vw,26px);line-height:1.45;color:#2c3e5a}
+.dd p{margin:.4em 0}.dd ul{margin:.3em 0;padding-left:1.2em}
+.strat{display:flex;flex-direction:column;gap:6px;padding:12px;cursor:pointer;border:2px solid #c5d2e6}
+.strat.sel{border-color:#d97706;box-shadow:0 0 0 3px rgba(217,119,6,.22),var(--sh)}
+.strat>span:first-child{font-size:clamp(16px,1.7vw,28px);font-weight:700;color:#9a3412}
+.strat>span:last-child{font-size:clamp(15px,1.5vw,25px);line-height:1.4}
+.strat .chip{align-self:flex-start}
+.strat pre{margin:0;font:clamp(13px,1.4vw,23px)/1.5 Consolas,monospace;color:#1b2a41;white-space:pre-wrap;background:#f1f5fb;border-radius:8px;padding:8px}
+.chip{display:inline-block;font:700 clamp(12px,1.1vw,18px) Consolas,monospace;background:#e8f0fe;border:1px solid #a9c1ee;border-radius:999px;padding:2px 12px;color:#1d4ed8}
+.strat label{font-size:clamp(13px,1.2vw,19px);cursor:pointer;color:var(--ink)}
+.strat input{accent-color:var(--acc);transform:scale(1.25);margin-right:6px}
+.gone{display:none!important}
+.g2[data-n="1"]{grid-template-columns:1fr;grid-template-rows:1fr}
+.g2[data-n="2"]{grid-template-rows:1fr}
+.g2[data-n="3"]>.ex:nth-child(3){grid-column:1/-1}
+.g3[data-n="1"]{grid-template-columns:minmax(0,640px);justify-content:center}
+.g3[data-n="2"]{grid-template-columns:1fr 1fr}
+.cols.eq[data-n="1"]{grid-template-columns:minmax(0,1fr)}
+/* aparicion progresiva */
+.rv{transition:opacity .55s ease,transform .55s ease,visibility 0s}
+.rvh{opacity:0;transform:translateY(16px);visibility:hidden;pointer-events:none;transition:opacity .25s ease,transform .25s ease,visibility 0s .25s}
+.rm .rv,.rm .rvh{transition:none;transform:none}
+.slide.on .kick,.slide.on .st{animation:tin .5s ease both}
+@keyframes tin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.rm .slide.on .kick,.rm .slide.on .st{animation:none}
+/* navegacion */
+#nav{display:flex;align-items:center;gap:12px;padding:8px 16px;border-top:1px solid var(--line);background:#fff;box-shadow:0 -2px 8px rgba(27,42,65,.06)}
+#prog{flex:1;min-width:0;display:flex;gap:2px}
+#prog button{flex:1;min-width:1px;height:14px;border:0;padding:0;border-radius:4px;background:#d5deec;cursor:pointer}
+#prog button.seen{background:#8fb4ee}
+#prog button.cur{background:#f59e0b;outline:2px solid rgba(245,158,11,.35)}
+#cnt{font:600 14px Consolas,monospace;color:var(--mut);min-width:5em;text-align:center}
+#rvi{display:flex;gap:4px;align-items:center;min-width:0}
+#rvi i{width:8px;height:8px;border-radius:50%;background:#c5d2e6;transition:background .3s}
+#rvi i.on{background:var(--acc)}
+@media (max-aspect-ratio:1/1),(max-width:820px){
+ #brand{display:none}#top{padding:6px 10px}.tab{padding:4px 10px;font-size:12px}
+ .slide{padding:10px 12px}.slide.on{overflow:auto}
+ .sb{display:block}
+ .cols,.cols.eq,.cover,.g2,.g3{display:flex;flex-direction:column;gap:12px}
+ .cols>*,.cover>*,.g2>*,.g3>*{flex:none}
+ .cols.one .pane{display:flex;flex-direction:column}
+ .vis{min-height:58vw}
+ .cbox{max-height:44vh}.code{font-size:13px}
+ .cap{font-size:15px}
+ .hero{height:160px;max-height:none;flex:none}
+ .map{grid-template-columns:1fr 1fr}
+ .ex svg{min-height:46vw}
+ .bars{height:52vw}
+ #nav{padding:6px 10px;gap:8px}#cnt{min-width:0;font-size:12px}#nav .btn{padding:6px 10px}#rvi{display:none}
+}
+@media (max-height:520px) and (min-aspect-ratio:1/1){#top{padding:4px 12px}#nav{padding:4px 12px}}
+@media print{#app{display:block}.slide{display:block!important;page-break-after:always}.rvh{visibility:visible;opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<marker id="ah" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="12" refY="5" orient="auto"><path d="M0,0 L12,5 L0,10 z" fill="#2563eb"/></marker>
+<marker id="ahA" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="12" refY="5" orient="auto"><path d="M0,0 L12,5 L0,10 z" fill="#d97706"/></marker>
+<marker id="ahR" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="12" refY="5" orient="auto"><path d="M0,0 L12,5 L0,10 z" fill="#e11d48"/></marker>
+<marker id="ahG" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="12" refY="5" orient="auto"><path d="M0,0 L12,5 L0,10 z" fill="#16a34a"/></marker>
+</defs></svg>
+<div id="app">
+ <header id="top"><div id="brand">ESD01 | Matrices</div><nav id="tabs" aria-label="Secciones"></nav></header>
+ <main id="main"></main>
+ <footer id="nav">
+  <button class="btn" id="prev" aria-label="Anterior">Anterior</button>
+  <div id="prog" role="tablist" aria-label="Progreso"></div>
+  <div id="rvi" aria-label="Elementos mostrados"></div>
+  <div id="cnt"></div>
+  <button class="btn p" id="next" aria-label="Siguiente">Siguiente</button>
+ </footer>
+</div>
+<script>
+(function(){
+'use strict';
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(RM)document.documentElement.classList.add('rm');
+const $=(s,r)=>(r||document).querySelector(s),$$=(s,r)=>[...(r||document).querySelectorAll(s)];
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const SL=[],PLAYERS=[];
+function S(sec,title,html,init){SL.push({sec,title,html,init});}
+
+/* ---------- resaltado de sintaxis ligero ---------- */
+const KWJ=new Set(['public','static','return','new','for','while','if','else','class','final','null','true','false','import']);
+const KWP=new Set(['def','return','for','in','if','else','elif','while','import','from','as','None','True','False','and','or','not']);
+const TY={java:new Set(['int','double','boolean','char','long','String','void','Arrays','System','Math']),py:new Set(['print','len','range','enumerate','zip','list','sum','np'])};
+function hlLine(t,lang){
+ const re=lang==='java'?/(\/\/.*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|\b(\d+(?:\.\d+)?)\b|\b([A-Za-z_]\w*)\b/g
+  :/(#.*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|\b(\d+(?:\.\d+)?)\b|\b([A-Za-z_]\w*)\b/g;
+ let o='',last=0,m;
+ while((m=re.exec(t))){o+=esc(t.slice(last,m.index));last=re.lastIndex;
+  if(m[1])o+='<b class="cm">'+esc(m[1])+'</b>';
+  else if(m[2])o+='<b class="sg">'+esc(m[2])+'</b>';
+  else if(m[3])o+='<b class="nm">'+m[3]+'</b>';
+  else{const w=m[4],nx=t[last];
+   if((lang==='java'?KWJ:KWP).has(w))o+='<b class="kw">'+w+'</b>';
+   else if(TY[lang].has(w))o+='<b class="ty">'+w+'</b>';
+   else if(nx==='(')o+='<b class="fn">'+w+'</b>';
+   else o+=w;}}
+ return o+esc(t.slice(last));
+}
+
+/* ---------- caja de codigo con lineas marcadas ---------- */
+const BOXES=[];let LANG='java';
+function codeBox(el,codes){
+ const b={el,codes,marks:{}};BOXES.push(b);
+ b.render=()=>{
+  const langs=Object.keys(b.codes);
+  const lg=langs.includes(LANG)?LANG:langs[0];b.lg=lg;
+  const nm=l=>l==='java'?'Java':'Python';
+  const tabs='<div class="ltabs">'+(langs.length>1?langs.map(l=>`<button type="button" class="${l===lg?'on':''}" data-lg="${l}">${nm(l)}</button>`).join(''):`<span>${nm(lg)}</span>`)+'</div>';
+  el.className='cbox';
+  el.innerHTML=tabs+'<pre class="code">'+b.codes[lg].split('\n').map((t,i)=>`<span class="ln" data-l="${i+1}"><i>${i+1}</i>${hlLine(t,lg)||' '}</span>`).join('')+'</pre>';
+  b.mark(b.marks);
+ };
+ b.mark=m=>{b.marks=m||{};const arr=b.marks[b.lg]||[];
+  let first=null;$$('.ln',el).forEach(x=>{const on=arr.includes(+x.dataset.l);x.classList.toggle('on',on);if(on&&!first)first=x;});
+  if(first){const pre=$('.code',el);if(pre){const t=first.offsetTop,h=first.offsetHeight;if(t<pre.scrollTop||t+h>pre.scrollTop+pre.clientHeight)pre.scrollTop=Math.max(0,t-pre.clientHeight/3);}}};
+ b.set=c=>{b.codes=c;b.render();};
+ el.addEventListener('click',e=>{const t=e.target.closest('[data-lg]');if(t){LANG=t.dataset.lg;BOXES.forEach(x=>x.render());}});
+ b.render();return b;
+}
+
+/* ---------- reproductor ---------- */
+const DELAYS=[2600,1700,1100,700,420];
+function player(root,cfg){
+ const p={i:0,n:cfg.n,t:null,sp:3,playing:false};PLAYERS.push(p);
+ const ctl=$('.ctl',root),cap=$('.cap',root);
+ ctl.innerHTML='<button type="button" class="btn" data-a="step">Paso</button><button type="button" class="btn p" data-a="play">Reproducir</button><button type="button" class="btn" data-a="rst">Reiniciar</button><label class="spd">Velocidad<input type="range" min="1" max="5" value="3" aria-label="Velocidad"></label><span class="cnt"></span>';
+ const bS=$('[data-a=step]',ctl),bP=$('[data-a=play]',ctl),bR=$('[data-a=rst]',ctl),cnt=$('.cnt',ctl);
+ const upd=()=>{bS.disabled=p.i>=p.n;bP.textContent=p.playing?'Pausa':'Reproducir';cnt.textContent=p.i+' / '+p.n;};
+ p.set=i=>{p.i=Math.max(0,Math.min(p.n,i));const r=cfg.draw(p.i);if(cap&&typeof r==='string')cap.innerHTML=r;upd();};
+ p.stop=()=>{clearTimeout(p.t);p.playing=false;upd();};
+ const tick=()=>{if(!p.playing)return;if(p.i>=p.n){p.stop();return;}p.set(p.i+1);p.t=setTimeout(tick,DELAYS[p.sp-1]);};
+ p.play=()=>{if(p.playing){p.stop();return;}if(p.i>=p.n)p.set(0);p.playing=true;upd();p.t=setTimeout(tick,RM?900:350);};
+ p.reset=()=>{p.stop();p.set(0);};
+ p.setN=n=>{p.stop();p.n=n;p.set(0);};
+ bS.onclick=()=>{p.stop();p.set(p.i+1);};
+ bP.onclick=p.play;bR.onclick=p.reset;
+ $('input',ctl).oninput=e=>{p.sp=+e.target.value;};
+ p.set(0);return p;
+}
+const stopAll=()=>PLAYERS.forEach(p=>p.stop());
+
+function seg(el,items,get,set){
+ el.innerHTML='<div class="seg">'+items.map(([v,l])=>`<button type="button" class="${String(get())===String(v)?'on':''}" data-v="${v}">${l}</button>`).join('')+'</div>';
+ $$('button',el).forEach(b=>b.onclick=()=>{set(b.dataset.v);seg(el,items,get,set);});
+}
+const pane=o=>`<div class="pane"><div class="vis card"></div><div class="cap" aria-live="polite"></div>${o?'<div class="opts"></div>':''}<div class="ctl"></div></div>`;
+
+/* ---------- ayudas SVG ---------- */
+const svg=(w,h,inner,label)=>`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(label||'')}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+const T=(x,y,t,cls,anchor)=>`<text x="${x}" y="${y}" class="${cls||'f19'}" text-anchor="${anchor||'middle'}">${esc(t)}</text>`;
+const cell=(x,y,w,h,txt,cls,fs,extra)=>`<g class="c ${cls||''}" ${extra||''}><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7"/><text x="${x+w/2}" y="${y+h/2}" dy=".35em" font-size="${fs||22}">${esc(txt)}</text></g>`;
+function mx(x,y,M,cw,ch,cls,fs,tx){let s='';M.forEach((r,i)=>r.forEach((v,j)=>{s+=cell(x+j*cw,y+i*ch,cw-5,ch-5,tx?tx(v,i,j):v,cls?cls(i,j):'',fs,`data-i="${i}" data-j="${j}"`);}));return s;}
+const arrow=(pts,cls,mk,extra)=>`<path class="ar ${cls||''}" d="M${pts.map(p=>p.join(',')).join(' L')}" marker-end="url(#${mk||'ah'})" pathLength="1" ${extra||''}/>`;
+const colLab=(x,y,n,cw,pre)=>{let s='';for(let j=0;j<n;j++)s+=T(x+j*cw+(cw-5)/2,y,(pre||'')+j,'f17 m');return s;};
+const rowLab=(x,y,n,ch,pre)=>{let s='';for(let i=0;i<n;i++)s+=T(x,y+i*ch+(ch-5)/2,(pre||'')+i,'f17 m','end').replace('<text ','<text dy=".35em" ');return s;};
+const hexs=n=>'0x'+n.toString(16).toUpperCase();
+const M34=[[1,2,3,4],[5,6,7,8],[9,10,11,12]];
+const range=n=>[...Array(n).keys()];
+
+/* ---------- vista de montículo: referencias a filas ---------- */
+function heapSVG(o){
+ const n=o.rows.length,H=60+n*110+(o.extra||0);
+ let s=T(125,38,o.title,'f19 b a')+T(330,38,o.rowTitle,'f19 b s','start');
+ o.rows.forEach((r,i)=>{
+  const y=70+i*110,created=!!r.vals;
+  s+=`<g class="c ${created?'':'dim'}"><rect x="40" y="${y}" width="170" height="56" rx="7"/><text x="125" y="${y+28}" dy=".35em" font-size="22">${esc(o.name+'['+i+']'+(created?'':' = '+o.nul))}</text></g>`;
+  if(created){
+   s+=arrow([[210,y+28],[330,y+28]],(o.newRow===i?'':'q')+' ','ah');
+   s+=`<g class="${o.newRow===i?'pop':''}">`+(r.tag?T(330,y-8,r.tag,'f15 m','start'):'');
+   r.vals.forEach((v,j)=>{s+=cell(330+j*86,y,81,56,v,o.cls?o.cls(i,j):'',22);if(i===0||o.idx)s+=T(330+j*86+40,y+76,j,'f15 m');});
+   s+='</g>';
+  }
+ });
+ return {w:760,h:H,s};
+}
+
+/* ================= 1. PORTADA ================= */
+S('Inicio','Matrices',`
+<div class="cover">
+ <div class="cl">
+  <div class="kick">Estructura de datos | Unidad 2 | Tema 2</div>
+  <h1>Matrices</h1>
+  <p class="lead">Datos en dos dimensiones, acceso en O(1) y recorridos en Java y Python.</p>
+  <svg class="hero" viewBox="0 0 420 210" aria-hidden="true">${(()=>{let s='';for(let i=0;i<5;i++)for(let j=0;j<10;j++)s+=`<rect x="${j*42}" y="${i*42}" width="38" height="38" rx="6" style="animation-delay:${((i+j)*.22).toFixed(2)}s"/>`;return s;})()}</svg>
+ </div>
+ <div class="cr"><h3>Mapa del tema</h3><div class="map" id="map"></div></div>
+</div>`,root=>{
+ const items=[['Concepto','Qué es una matriz y qué problema resuelve. Índices fila y columna.','10 min'],
+ ['Memoria','Cuadrícula lógica y memoria lineal. Orden por filas y fórmula de dirección.','10 min'],
+ ['Java','Arreglo de arreglos: crear, recorrer, errores típicos.','20 min'],
+ ['Python','Lista de listas, filas compartidas, zip y NumPy.','15 min'],
+ ['Operaciones','Recorridos, suma, escalar, transpuesta, diagonales, búsqueda, producto.','30 min'],
+ ['Complejidad','Tabla, gráfica de barras y demo del tamaño n.','10 min'],
+ ['Actividad','Comprender un problema y proponer soluciones.','20 min'],
+ ['Cierre','Lo que te llevas y el puente al Tema 3.','5 min']];
+ $('#map',root).innerHTML=items.map((m,k)=>`<button type="button" class="card mc" data-sec="${m[0]}"><em>${String(k+1).padStart(2,'0')} | ${m[2]}</em><b>${m[0]}</b><span>${m[1]}</span></button>`).join('');
+ $$('.mc',root).forEach(b=>b.onclick=()=>go(SL.findIndex(s=>s.sec===b.dataset.sec),'first'));
+});
+
+/* ================= 2. QUE ES ================= */
+S('Concepto','Una matriz ubica cada dato con dos coordenadas',(()=>{
+ const sheet=[['','Ene','Feb','Mar'],['P1',12,15,9],['P2',7,14,11],['P3',20,6,18]];
+ const A=svg(524,200,mx(2,2,sheet,130,48,(i,j)=>(i===0||j===0)?'dim':(i===2&&j===2?'act':''),24),'Hoja de cálculo de 3 productos por 3 meses');
+ const px=[[0,40,80,120,160,200,240,255],[20,60,100,140,180,220,250,230],[40,80,120,160,200,240,200,160],[60,100,140,180,220,255,170,110],[80,120,160,200,240,210,150,90]];
+ let P='';px.forEach((r,i)=>r.forEach((v,j)=>{const t=v>110?'#0b1220':'#ffffff';P+=`<g class="c" ><rect x="${2+j*65}" y="${2+i*40}" width="61" height="36" rx="5" style="fill:rgb(${v},${v},${v});stroke:${i===2&&j===5?'#d97706':'#7aa2e8'};stroke-width:${i===2&&j===5?4:1.5}"/><text x="${2+j*65+30.5}" y="${2+i*40+18}" dy=".35em" font-size="19" style="fill:${t}">${v}</text></g>`;}));
+ const B=svg(524,204,P,'Imagen en escala de grises de 5 filas por 8 columnas');
+ const tt=[['X','O','X'],['','X','O'],['O','','X']];
+ const C=svg(524,216,T(150,24,'0','f19 m','end')+T(150,90,'1','f19 m','end')+T(150,156,'2','f19 m','end')+mx(170,2,tt,66,66,(i,j)=>(i===1&&j===1)?'act':(tt[i][j]===''?'dim':(tt[i][j]==='X'?'':'vis')),32)+T(170+30,212,'0','f19 m')+T(170+96,212,'1','f19 m')+T(170+162,212,'2','f19 m')+`<text x="470" y="96" class="f26 a b" text-anchor="middle">T[1][1]</text><text x="470" y="126" class="f19 m" text-anchor="middle">fila 1, columna 1</text>`,'Tablero de tres en raya de 3 por 3');
+ const nodes={A:[70,50],B:[200,50],C:[70,150],D:[200,150]},ed=[['A','B'],['A','C'],['B','C'],['B','D'],['C','D']],r=24;
+ let G='';ed.forEach(([a,b])=>{const [x1,y1]=nodes[a],[x2,y2]=nodes[b],d=Math.hypot(x2-x1,y2-y1),ux=(x2-x1)/d,uy=(y2-y1)/d;G+=`<line x1="${x1+ux*r}" y1="${y1+uy*r}" x2="${x2-ux*r}" y2="${y2-uy*r}" stroke="#2563eb" stroke-width="3"/>`;});
+ Object.entries(nodes).forEach(([k,[x,y]])=>{G+=`<circle cx="${x}" cy="${y}" r="${r}" fill="#e8f0fe" stroke="#2563eb" stroke-width="2.5"/><text x="${x}" y="${y}" dy=".35em" class="f19 b" text-anchor="middle">${k}</text>`;});
+ const ks=Object.keys(nodes),adj=ks.map(a=>ks.map(b=>ed.some(e=>(e[0]===a&&e[1]===b)||(e[0]===b&&e[1]===a))?1:0));
+ G+=mx(340,50,adj,38,38,(i,j)=>adj[i][j]?'vis':'dim',19);
+ ks.forEach((k,q)=>{G+=T(340+q*38+16,40,k,'f17 m');G+=T(328,50+q*38+16,k,'f17 m','end').replace('<text ','<text dy=".35em" ');});
+ const D=svg(524,204,G,'Grafo de 4 nodos y su matriz de adyacencia de 4 por 4');
+ return `<div class="g2" data-rvg="1">
+ <div class="card ex"><h4>Hoja de cálculo y tablas</h4>${A}<p>Fila: producto. Columna: mes. Celda: unidades vendidas.</p></div>
+ <div class="card ex"><h4>Imagen digital</h4>${B}<p>Fila y columna: posición del píxel. Celda: brillo de 0 a 255.</p></div>
+ <div class="card ex"><h4>Tablero de juego</h4>${C}<p>Fila y columna: casilla. Celda: vacía, X u O.</p></div>
+ <div class="card ex"><h4>Grafo como matriz de adyacencia</h4>${D}<p>Fila y columna: nodos. Celda: 1 si existe la arista, 0 si no.</p></div>
+ </div>`;})());
+
+/* ================= 3. INDICES ================= */
+S('Concepto','M[i][j]: fila i, columna j',`<div class="cols">${pane()}<div class="side"><div class="card pad rd" style="flex:1"></div></div></div>`,root=>{
+ let sel=[1,2];const V=$('.vis',root),rd=$('.rd',root),cap=$('.cap',root);
+ const paint=()=>{
+  const [si,sj]=sel;
+  V.innerHTML=svg(640,400,T(390,36,'j (columna)','f19 b s')+T(66,200,'i','f26 b s')+T(66,226,'(fila)','f15 m')+colLab(150,66,4,120,'j=')+rowLab(130,94,3,96,'i=')+mx(150,80,M34,120,96,(i,j)=>(i===si&&j===sj)?'act':(i===si?'rowh':(j===sj?'rowh':'')),30)+T(390,380,'Los dos índices arrancan en 0','f17 m'),'Matriz de 3 filas por 4 columnas con la celda seleccionada resaltada');
+  rd.innerHTML=`<div class="rd-main">M[${si}][${sj}] = ${M34[si][sj]}</div><table class="kv">
+  <tr><td>i = ${si}</td><td>fila ${si}: la posición ${si+1} contando desde arriba</td></tr>
+  <tr><td>j = ${sj}</td><td>columna ${sj}: la posición ${sj+1} contando desde la izquierda</td></tr>
+  <tr><td>Rango válido</td><td>i de 0 a 2, j de 0 a 3</td></tr>
+  <tr><td>Tamaño</td><td>3 filas x 4 columnas = 12 celdas</td></tr>
+  <tr><td>Acceso</td><td>O(1): la posición se calcula, no se busca</td></tr></table>`;
+  return `Celda seleccionada: <code>M[${si}][${sj}]</code>. Primero se elige la fila y dentro de ella la columna.`;
+ };
+ const p=player(root,{n:12,draw:k=>{if(k>0)sel=[Math.floor((k-1)/4),(k-1)%4];return paint();}});
+ V.addEventListener('click',e=>{const g=e.target.closest('.c[data-i]');if(!g)return;p.stop();sel=[+g.dataset.i,+g.dataset.j];cap.innerHTML=paint();});
+ V.addEventListener('mouseover',e=>{const g=e.target.closest('.c[data-i]');if(g)g.style.cursor='pointer';});
+});
+
+/* ================= 4. MEMORIA LINEAL ================= */
+S('Memoria','De la cuadrícula a la memoria lineal',`<div class="cols one">${pane(1)}</div>`,root=>{
+ const F=3,C=4,BASE=0x1000,SZ=4;let mode='f';
+ const order=[];for(let i=0;i<F;i++)for(let j=0;j<C;j++)order.push([i,j]);
+ const pos=(i,j)=>mode==='f'?i*C+j:j*F+i;
+ const inv=p=>mode==='f'?[Math.floor(p/C),p%C]:[p%F,Math.floor(p/F)];
+ const V=$('.vis',root);
+ const draw=k=>{
+  const cur=k>0?order[k-1]:null,seen=new Set(order.slice(0,Math.max(0,k-1)).map(a=>a.join()));
+  const cp=cur?pos(...cur):-1,pp=k>1?pos(...order[k-2]):-1;
+  let s=T(70+C*38,30,'Cuadrícula lógica 3 x 4','f19 b s')+colLab(120,60,C,76,'j=')+rowLab(108,76,F,64,'i=')
+   +mx(120,70,M34,76,64,(i,j)=>cur&&cur[0]===i&&cur[1]===j?'act':(seen.has(i+','+j)?'vis':''),24);
+  s+=`<rect class="pn" x="560" y="40" width="720" height="236" rx="14"/>`;
+  const f1=mode==='f'?'base + (i * columnas + j) * tamaño':'base + (j * filas + i) * tamaño';
+  s+=T(590,70,'dirección = '+f1,'f22 b a','start');
+  if(cur){const [i,j]=cur,inner=mode==='f'?`${i} * ${C} + ${j}`:`${j} * ${F} + ${i}`;
+   s+=T(590,108,`= ${hexs(BASE)} + (${inner}) * ${SZ}`,'f26 mono','start')+T(590,142,`= ${hexs(BASE)} + ${cp} * ${SZ} = ${hexs(BASE+cp*SZ)}`,'f26 mono g','start')
+    +T(590,176,`posición en el bloque: ${cp}`,'f22','start');
+   if(pp>=0)s+=T(590,206,`salto desde la celda anterior: ${cp-pp>0?'+':''}${cp-pp} posiciones`,'f22 '+(Math.abs(cp-pp)===1?'g':'r'),'start');
+  }else s+=T(590,110,`base = ${hexs(BASE)}, tamaño = ${SZ} bytes (int)`,'f22 mono','start')+T(590,142,`filas = ${F}, columnas = ${C}`,'f22 mono','start');
+  s+=T(590,238,mode==='f'?'j + 1 avanza 1 elemento (+4 bytes). i + 1 avanza 4 elementos.':'i + 1 avanza 1 elemento (+4 bytes). j + 1 avanza 3 elementos.','f19 m','start');
+  s+=T(650,326,'Memoria lineal: 12 posiciones consecutivas, '+(mode==='f'?'orden por filas (row-major)':'orden por columnas (column-major)'),'f19 b s');
+  for(let p=0;p<12;p++){const [i,j]=inv(p),x=20+p*105;
+   const cls=p===cp?'act':(cur&&order.slice(0,k-1).some(a=>pos(...a)===p)?'vis':'');
+   s+=cell(x,340,100,70,M34[i][j],cls,24);s+=T(x+50,424,`(${i},${j})`,'f17 m');s+=T(x+50,446,hexs(BASE+p*SZ),'f15 m mono');}
+  const gs=mode==='f'?C:F,gn=12/gs;
+  for(let g=0;g<gn;g++){const x1=20+g*gs*105,x2=x1+gs*105-5;s+=`<path d="M${x1},462 L${x1},470 L${x2},470 L${x2},462" fill="none" stroke="#2563eb" stroke-width="2"/>`+T((x1+x2)/2,494,(mode==='f'?'fila ':'columna ')+g,'f19 s');}
+  V.innerHTML=svg(1300,510,s,'Cuadrícula de 3 por 4 y su disposición en memoria lineal');
+  if(!cur)return mode==='f'?'Una matriz de 3 x 4 con enteros de 4 bytes ocupa 12 posiciones seguidas. Orden por filas: la fila 0 completa, luego la fila 1, luego la fila 2.':'Orden por columnas: la columna 0 completa, luego la columna 1, y así hasta la 3. Fortran usa este orden.';
+  return `<code>M[${cur[0]}][${cur[1]}] = ${M34[cur[0]][cur[1]]}</code> cae en la posición ${cp}, dirección ${hexs(BASE+cp*SZ)}.`;
+ };
+ const p=player(root,{n:12,draw});
+ seg($('.opts',root),[['f','Por filas (C, NumPy)'],['c','Por columnas (Fortran)']],()=>mode,v=>{mode=v;p.reset();});
+});
+
+/* ================= 5. JAVA vs PYTHON vs NUMPY ================= */
+S('Memoria','Java, Python y NumPy guardan la misma cuadrícula de formas distintas',`<div class="cols one">${pane()}</div>`,root=>{
+ const V=$('.vis',root);
+ const refBox=(x,y,t)=>`<g class="c"><rect x="${x}" y="${y}" width="100" height="44" rx="6"/><text x="${x+50}" y="${y+22}" dy=".35em" font-size="17">${t}</text></g>`;
+ const draw=k=>{
+  const cls=n=>k===0||k===n?'':'dimp';
+  let s='';
+  // Java
+  s+=`<g class="${cls(1)}" style="transition:opacity .3s"><rect class="pn" x="10" y="10" width="380" height="450" rx="14"/>`+T(200,46,'Java: int[][]','f22 b a')
+   +T(90,86,'m (referencias)','f15 m')+T(330,86,'filas en el heap','f15 m');
+  const jy=[110,230,350],jx=[215,240,224],ja=['0x7A10','0x9C48','0x7B90'];
+  jy.forEach((y,i)=>{s+=refBox(30,y,`m[${i}]`)+arrow([[130,y+22],[jx[i],y+22]],'q')+T(jx[i],y-8,ja[i],'f13 m mono','start');
+   for(let j=0;j<4;j++)s+=cell(jx[i]+j*34,y,31,44,'0','',15);});
+  s+=T(200,430,'filas separadas, sin orden entre ellas','f15 s')+'</g>';
+  // Python
+  s+=`<g class="${cls(2)}" style="transition:opacity .3s"><rect class="pn" x="410" y="10" width="380" height="450" rx="14"/>`+T(600,46,'Python: list de list','f22 b a')
+   +T(490,86,'m (lista externa)','f15 m')+T(700,86,'listas de fila','f15 m');
+  const py=[110,230,350];
+  py.forEach((y,i)=>{s+=refBox(430,y,`m[${i}]`)+arrow([[530,y+22],[615,y+22]],'q');
+   for(let j=0;j<4;j++)s+=cell(615+j*40,y,37,44,'ref','',13);});
+  for(let j=0;j<4;j++){const x=615+j*40+18;s+=arrow([[x,154],[x,184]],'q');s+=cell(615+j*40,184,37,30,j+1,'vis',15);}
+  s+=T(600,430,'cada celda apunta a un objeto int','f15 s')+'</g>';
+  // NumPy
+  s+=`<g class="${cls(3)}" style="transition:opacity .3s"><rect class="pn" x="810" y="10" width="380" height="450" rx="14"/>`+T(1000,46,'NumPy: ndarray','f22 b a');
+  s+=`<g class="c"><rect x="850" y="80" width="300" height="104" rx="8"/></g>`+T(1000,110,'shape (3, 4)','f19 mono')+T(1000,138,'dtype int32','f19 mono')+T(1000,166,'strides (16, 4)','f19 mono');
+  s+=arrow([[1000,184],[1000,244]],'q');
+  for(let i=0;i<3;i++)for(let j=0;j<4;j++)s+=cell(900+j*50,244+i*50,50,50,i*4+j+1,'vis',17);
+  s+=T(1000,430,'un bloque contiguo de 48 bytes','f15 s')+'</g>';
+  V.innerHTML=svg(1200,470,s,'Tres modelos de memoria para una matriz de 3 por 4');
+  return [
+   'La misma matriz de 3 x 4 se representa de tres maneras. La sintaxis <code>m[i][j]</code> es parecida, la memoria no.',
+   'Java: <code>m</code> es un arreglo de 3 referencias. Cada referencia apunta a un arreglo de fila independiente. Las filas pueden estar en direcciones sin relación y tener longitudes distintas.',
+   'Python: lista de referencias a listas, y cada lista guarda referencias a objetos <code>int</code>. Hay una indirección más que en Java.',
+   'NumPy: un solo bloque contiguo en orden por filas. Con <code>shape</code> y <code>strides</code> calcula la dirección: base + (i * columnas + j) * tamaño.'][k];
+ };
+ player(root,{n:3,draw});
+});
+
+/* ================= 6. JAVA: CREAR ================= */
+S('Java','Java: declarar y crear una matriz',`<div class="cols">${pane(1)}<div class="side"><div class="cbox" id="cb"></div><div class="out" id="o6"></div></div></div>`,root=>{
+ let mode='a';
+ const CODES={
+  a:`int[][] m = new int[3][4];
+System.out.println(m[0][0]);  // 0 por defecto`,
+  b:`int[][] m = {
+    {1, 2, 3, 4},
+    {5, 6, 7, 8},
+    {9, 10, 11, 12}
+};`,
+  c:`int[][] t = new int[3][];
+t[0] = new int[1];
+t[1] = new int[2];
+t[2] = new int[3];`};
+ const cb=codeBox($('#cb',root),{java:CODES.a});
+ const V=$('.vis',root);
+ const OUT={a:'m.length = 3, m[0].length = 4. Doce celdas en 0.',b:'m.length = 3, m[0].length = 4. Celdas con los valores del literal.',c:'t.length = 3. t[0].length = 1, t[1].length = 2, t[2].length = 3.'};
+ const draw=k=>{
+  const rows=[];let newRow=-1,marks=[];
+  if(mode==='c'){
+   for(let i=0;i<3;i++){const made=k>=i+2;rows.push({vals:made?Array(i+1).fill(0):null});if(k===i+2){newRow=i;marks=[i+2];}}
+   if(k===1)marks=[1];
+  }else{
+   const src=mode==='a'?M34.map(r=>r.map(()=>0)):M34;
+   for(let i=0;i<3;i++){const made=k>=i+2;rows.push({vals:made?src[i]:null});if(k===i+2)newRow=i;}
+   if(k===1)marks=mode==='a'?[1]:[1,6];
+   if(k>=2)marks=mode==='a'?[1]:[i0(k)];
+  }
+  function i0(kk){return kk;}
+  if(k===0)marks=[];
+  const nm=mode==='c'?'t':'m',h=heapSVG({title:nm+' (int[][])',rowTitle:'filas (int[])',name:nm,nul:'null',rows,newRow,idx:mode==='c'});
+  V.innerHTML=svg(h.w,h.h,k===0?T(380,h.h/2,'La variable aún no apunta a ningún objeto','f19 m'):h.s,'Estructura en memoria de la matriz '+nm);
+  cb.mark({java:marks});
+  $('#o6',root).innerHTML='<span class="h">Estado</span>'+(k>=4?OUT[mode]:(k===0?'Sin crear.':'Creando '+(k===1?'el arreglo externo.':'la fila '+(k-2)+'.')));
+  if(k===0)return mode==='c'?'<code>new int[3][]</code> crea solo el arreglo externo; cada fila nace en <code>null</code>.':'<code>new int[3][4]</code> crea el arreglo externo y las 3 filas de una vez.';
+  if(k===1)return mode==='c'?'Arreglo externo con 3 referencias, todas <code>null</code>. Ninguna fila existe todavía.':'Se reserva el arreglo externo: 3 referencias.';
+  return mode==='c'?`Se asigna <code>t[${k-2}] = new int[${k-1}]</code>: una fila de largo ${k-1}.`:`Se crea la fila ${k-2}: un arreglo independiente de 4 enteros${mode==='a'?' en 0':''}.`;
+ };
+ const p=player(root,{n:4,draw});
+ seg($('.opts',root),[['a','new int[3][4]'],['b','Literal'],['c','Irregular new int[3][]']],()=>mode,v=>{mode=v;cb.set({java:CODES[v]});p.reset();});
+});
+
+/* ================= 7. JAVA: RECORRER ================= */
+S('Java','Java: recorrer con for anidado y for-each',`<div class="cols">${pane(1)}<div class="side"><div class="cbox" id="cb"></div><div class="out" id="o7"></div></div></div>`,root=>{
+ let mode='a';
+ const CODES={a:`int[][] m = {{1, 2, 3, 4},
+             {5, 6, 7, 8},
+             {9, 10, 11, 12}};
+for (int i = 0; i < m.length; i++) {
+    for (int j = 0; j < m[i].length; j++) {
+        System.out.print(m[i][j] + " ");
+    }
+    System.out.println();
+}`,b:`int[][] m = {{1, 2, 3, 4},
+             {5, 6, 7, 8},
+             {9, 10, 11, 12}};
+for (int[] fila : m) {
+    for (int v : fila) {
+        System.out.print(v + " ");
+    }
+    System.out.println();
+}`};
+ const cb=codeBox($('#cb',root),{java:CODES.a}),V=$('.vis',root);
+ const draw=k=>{
+  const cur=k>0?[Math.floor((k-1)/4),(k-1)%4]:null;
+  let s=T(330,30,'j (columna)','f17 m')+colLab(150,62,4,100,'')+rowLab(130,92,3,84,'')+T(70,160,'i (fila)','f17 m')
+   +mx(150,80,M34,100,84,(i,j)=>cur&&cur[0]===i&&cur[1]===j?'act':(cur&&(i*4+j)<k-1?'vis':''),28);
+  s+=`<rect class="pn" x="40" y="352" width="620" height="124" rx="12"/>`;
+  s+=T(60,382,cur?(mode==='a'?`i = ${cur[0]}, j = ${cur[1]}, m[i][j] = ${M34[cur[0]][cur[1]]}`:`fila = m[${cur[0]}], v = ${M34[cur[0]][cur[1]]}`):(mode==='a'?'i y j sin iniciar':'fila y v sin iniciar'),'f22 mono a','start');
+  const lines=[];for(let i=0;i<3;i++){let t='';for(let j=0;j<4;j++)if(i*4+j<k)t+=M34[i][j]+' ';lines.push(t);}
+  lines.forEach((t,i)=>{s+=T(60,414+i*28,t,'f19 mono g','start');});
+  V.innerHTML=svg(680,490,s,'Recorrido de una matriz de 3 por 4 celda por celda');
+  cb.mark({java:cur?[6]:[1,2,3]});
+  $('#o7',root).innerHTML='<span class="h">Salida</span>'+lines.map(t=>esc(t)).join('<br>');
+  if(!cur)return mode==='a'?'<code>m.length</code> da las filas (3) y <code>m[i].length</code> las columnas de la fila i (4).':'El for-each entrega cada fila completa y luego cada valor. No expone índices.';
+  return mode==='a'?`Fila ${cur[0]}, columna ${cur[1]}: imprime <code>m[${cur[0]}][${cur[1]}] = ${M34[cur[0]][cur[1]]}</code>.`:`Fila <code>m[${cur[0]}]</code>, valor <code>${M34[cur[0]][cur[1]]}</code>. Sirve para leer; para escribir celdas hacen falta los índices.`;
+ };
+ const p=player(root,{n:12,draw});
+ seg($('.opts',root),[['a','for anidado con índices'],['b','for-each']],()=>mode,v=>{mode=v;cb.set({java:CODES[v]});p.reset();});
+});
+
+/* ================= 8. JAVA: ACCESO, length, deepToString ================= */
+S('Java','Java: acceso, length, valores por defecto y deepToString',`<div class="cols">${pane()}<div class="side"><div class="cbox" id="cb"></div><div class="card pad"><table class="kv"><tr><td>int, long</td><td><code>0</code></td><td>double</td><td><code>0.0</code></td></tr><tr><td>boolean</td><td><code>false</code></td><td>char</td><td><code>'\\u0000'</code></td></tr><tr><td>String</td><td colspan="3"><code>null</code> (igual que cualquier objeto)</td></tr></table></div></div></div>`,root=>{
+ const code=`int[][] m = new int[3][4];
+m[1][2] = 7;
+System.out.println(m.length);
+System.out.println(m[0].length);
+System.out.println(m[1][2]);
+System.out.println(Arrays.deepToString(m));`;
+ const cb=codeBox($('#cb',root),{java:code}),V=$('.vis',root);
+ const outs=['3','4','7','[[0, 0, 0, 0], [0, 0, 7, 0], [0, 0, 0, 0]]'];
+ const draw=k=>{
+  const M=M34.map((r,i)=>r.map((v,j)=>(k>=2&&i===1&&j===2)?7:0));
+  const cls=(i,j)=>(k===2||k===5)&&i===1&&j===2?'act':(k===6?'vis':(k===1?'new':''));
+  let s=colLab(200,84,4,100,'')+rowLab(180,112,3,84,'')+mx(200,100,M,100,84,cls,28);
+  if(k===3){s+=`<path d="M170,100 L160,100 L160,347 L170,347" fill="none" stroke="#d97706" stroke-width="3"/>`+T(78,205,'m.length','f19 a')+T(78,232,'= 3','f19 a');}
+  if(k===4){s+=`<path d="M200,70 L200,60 L596,60 L596,70" fill="none" stroke="#d97706" stroke-width="3"/>`+T(398,46,'m[0].length = 4','f19 a');}
+  s+=`<rect class="pn" x="40" y="372" width="620" height="140" rx="12"/>`+T(56,398,'Salida','f15 m','start');
+  const shown=outs.slice(0,Math.max(0,k-2));
+  shown.forEach((o,i)=>{s+=T(56,430+i*28,o,'f19 mono g','start');});
+  V.innerHTML=svg(700,525,s,'Matriz de 3 por 4 y salida de las instrucciones');
+  cb.mark({java:k===0?[]:[k<=1?1:k]});
+  return ['Arreglo de arreglos con valores por defecto.',
+   '<code>new int[3][4]</code> crea 3 filas de 4 enteros, todos en 0.',
+   '<code>m[1][2] = 7</code> escribe en la fila 1, columna 2.',
+   '<code>m.length</code> es el número de filas.',
+   '<code>m[0].length</code> es el número de columnas de la fila 0.',
+   '<code>m[1][2]</code> lee la celda escrita: 7.',
+   '<code>Arrays.deepToString(m)</code> imprime la matriz completa. <code>Arrays.toString(m)</code> solo mostraría referencias.'][k];
+ };
+ player(root,{n:6,draw});
+});
+
+/* ================= 9. JAVA: INDICE FUERA DE RANGO ================= */
+S('Java','Java: error típico, índice fuera de rango',`<div class="cols">${pane(1)}<div class="side"><div class="cbox" id="cb"></div><div class="res" id="r9"></div><div class="card pad"><div class="fld">Fila i <input type="number" id="ii" min="-1" max="3" value="2"> Columna j <input type="number" id="jj" min="-1" max="4" value="3"></div></div></div></div>`,root=>{
+ const cb=codeBox($('#cb',root),{java:`int[][] m = new int[3][4];
+int x = m[i][j];`});
+ const V=$('.vis',root);let I=2,J=3;
+ const paint=()=>{
+  const okI=I>=0&&I<3,okJ=J>=0&&J<4,ok=okI&&okJ;
+  let s='';
+  for(let i=-1;i<=3;i++)for(let j=-1;j<=4;j++){
+   const inside=i>=0&&i<3&&j>=0&&j<4,sel=i===I&&j===J;
+   const cls=inside?(sel?'act':''):('ghost'+(sel?' bad':''));
+   s+=cell(130+(j+1)*100,60+(i+1)*76,94,70,inside?M34[i][j]*0:'',cls,24,`data-i="${i}" data-j="${j}"`);
+  }
+  s+=T(80,60+(I+1)*76+35,'i='+I,'f19 a','middle').replace('<text ','<text dy=".35em" ')+T(130+(J+1)*100+47,46,'j='+J,'f19 a');
+  s+=T(380,468,'Celdas punteadas: posiciones que no existen','f17 m');
+  V.innerHTML=svg(780,490,s,'Matriz de 3 por 4 rodeada de posiciones inexistentes');
+  const r=$('#r9',root);
+  if(ok){r.className='res ok';r.innerHTML=`<code>m[${I}][${J}]</code> es válido. Lee la celda de la fila ${I}, columna ${J}.`;}
+  else{const bad=okI?J:I,len=okI?4:3;r.className='res er';r.innerHTML=`<code>m[${I}][${J}]</code> lanza<br><code>ArrayIndexOutOfBoundsException: Index ${bad} out of bounds for length ${len}</code>`;}
+  cb.mark({java:[2]});
+  return `Índices válidos: <code>0 ... m.length - 1</code> para filas y <code>0 ... m[i].length - 1</code> para columnas.`;
+ };
+ const p=player(root,{n:5,draw:k=>{const L=[[0,0],[2,3],[3,0],[0,4],[-1,0],[2,3]];[I,J]=L[k];$('#ii',root).value=I;$('#jj',root).value=J;return paint();}});
+ $('#ii',root).oninput=e=>{p.stop();I=parseInt(e.target.value||0,10);$('.cap',root).innerHTML=paint();};
+ $('#jj',root).oninput=e=>{p.stop();J=parseInt(e.target.value||0,10);$('.cap',root).innerHTML=paint();};
+ V.addEventListener('click',e=>{const g=e.target.closest('.c[data-i]');if(!g)return;p.stop();I=+g.dataset.i;J=+g.dataset.j;$('#ii',root).value=I;$('#jj',root).value=J;$('.cap',root).innerHTML=paint();});
+});
+
+/* ================= 10. JAVA: CONFUNDIR FILAS Y COLUMNAS ================= */
+S('Java','Java: confundir filas con columnas',`<div class="cols">${pane(1)}<div class="side"><div class="cbox" id="cb"></div><div class="res" id="r10"></div></div></div>`,root=>{
+ let mode='x';
+ const CODES={x:`int[][] m = new int[3][4];
+for (int i = 0; i < m[0].length; i++) {
+    m[i][0] = i;
+}`,y:`int[][] m = new int[3][4];
+for (int i = 0; i < m.length; i++) {
+    m[i][0] = i;
+}`};
+ const cb=codeBox($('#cb',root),{java:CODES.x}),V=$('.vis',root);
+ const draw=k=>{
+  const lim=mode==='x'?4:3,fail=mode==='x'&&k>=4;
+  const M=[[0,0,0,0],[0,0,0,0],[0,0,0,0]];for(let q=0;q<Math.min(k,3);q++)M[q][0]=q;
+  let s=colLab(150,60,4,100,'j=')+rowLab(130,92,4,84,'i=')+mx(150,76,M,100,84,(i,j)=>(j===0&&i===k-1&&k<=3)?'act':(j===0&&i<k-1?'vis':''),28);
+  s+=cell(150,76+3*84,95,79,'',fail?'bad':'ghost',24,'')+T(197,76+3*84+40,fail?'m[3]':'','f19 b','middle');
+  s+=T(350,76+4*84+22,'m.length = 3 filas, m[0].length = 4 columnas','f17 m');
+  V.innerHTML=svg(700,76+4*84+40,s,'Matriz de 3 por 4 con una fila fantasma');
+  cb.mark({java:k===0?[2]:[3]});
+  const r=$('#r10',root);
+  if(fail){r.className='res er';r.innerHTML='<code>ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3</code>';}
+  else{r.className='res ok';r.innerHTML=mode==='x'?'El bucle usa las columnas (4) como límite de filas (3).':'El límite de filas es <code>m.length</code> (3). Sin error.';}
+  if(k===0)return mode==='x'?'El límite <code>m[0].length</code> vale 4, pero <code>m</code> tiene solo 3 filas.':'Las filas se limitan con <code>m.length</code>; las columnas con <code>m[0].length</code>.';
+  return fail?'Vuelta <code>i = 3</code>: la fila 3 no existe y Java lanza la excepción.':`Vuelta <code>i = ${k-1}</code>: escribe <code>m[${k-1}][0] = ${k-1}</code>.`;
+ };
+ const p=player(root,{n:4,draw});
+ const refresh=()=>{p.setN(mode==='x'?4:3);};
+ seg($('.opts',root),[['x','Con error'],['y','Corregido']],()=>mode,v=>{mode=v;cb.set({java:CODES[v]});refresh();});
+});
+
+/* ================= 11. PYTHON: LISTA DE LISTAS ================= */
+S('Python','Python: lista de listas y comprensión',`<div class="cols">${pane()}<div class="side"><div class="cbox" id="cb"></div><div class="out" id="o11"></div></div></div>`,root=>{
+ const cb=codeBox($('#cb',root),{py:`filas, columnas = 3, 4
+m = [[0] * columnas for _ in range(filas)]
+m[1][2] = 7
+print(len(m), len(m[0]))
+for fila in m:
+    print(fila)`});
+ const V=$('.vis',root);
+ const draw=k=>{
+  const made=Math.max(0,Math.min(3,k-1));
+  const rows=[];for(let i=0;i<made;i++)rows.push({vals:[0,0,k>=5&&i===1?7:0,0],tag:'lista #'+'ABC'[i]});
+  const h=heapSVG({title:'m (list)',rowTitle:'listas de fila',name:'m',nul:'',rows,newRow:(k>=2&&k<=4)?k-2:-1,cls:(i,j)=>(k===5&&i===1&&j===2)?'act':((k>=7&&i===k-7)?'rowh':'')});
+  V.innerHTML=svg(760,400,k<2?T(380,200,k===0?'Aún no hay listas':'filas = 3, columnas = 4','f22 m'):h.s,'Lista de listas en memoria');
+  cb.mark({py:k===0?[]:(k===1?[1]:(k<=4?[2]:(k===5?[3]:(k===6?[4]:[5,6]))))});
+  let o='';if(k>=6)o+='3 4<br>';for(let q=0;q<Math.max(0,k-6);q++)o+=esc(JSON.stringify([0,0,q===1?7:0,0]).replace(/,/g,', '))+'<br>';
+  $('#o11',root).innerHTML='<span class="h">Salida</span>'+o;
+  return ['Una matriz en Python es una lista cuyos elementos son listas.',
+   'Se fijan las dimensiones: 3 filas, 4 columnas.',
+   'Primera vuelta de la comprensión: <code>[0] * columnas</code> crea la lista #A.',
+   'Segunda vuelta: crea una lista nueva, la #B. Cada vuelta evalúa la expresión otra vez.',
+   'Tercera vuelta: lista #C. Tres objetos distintos.',
+   '<code>m[1][2] = 7</code> modifica solo la lista #B.',
+   '<code>len(m)</code> es 3 filas y <code>len(m[0])</code> es 4 columnas.',
+   'El for recorre las filas: imprime la lista #A.','Imprime la lista #B, con el 7.','Imprime la lista #C.'][k];
+ };
+ player(root,{n:9,draw});
+});
+
+/* ================= 12. PYTHON: FILAS COMPARTIDAS ================= */
+S('Python','Python: el error [[0] * c] * f comparte las filas',`<div class="cols">${pane()}<div class="side"><div class="cbox" id="cb"></div></div></div>`,root=>{
+ const cb=codeBox($('#cb',root),{py:`mal = [[0] * 4] * 3
+bien = [[0] * 4 for _ in range(3)]
+print(mal[0] is mal[1], bien[0] is bien[1])
+mal[0][0] = 5
+bien[0][0] = 5
+print(mal)
+print(bien)`});
+ const V=$('.vis',root);
+ const obj=(x,y,v0,hl,idt)=>{let s=idt.startsWith('un')?T(x+84,y-10,idt,'f15 m mono','end'):T(x,y-10,idt,'f15 m mono','start');for(let j=0;j<4;j++)s+=cell(x+j*46,y,42,50,j===0?v0:0,(j===0&&hl)?'act':'',20);return s;};
+ const draw=k=>{
+  const v=k>=2?5:0;
+  let s=T(250,36,'mal = [[0] * 4] * 3','f22 b r')+T(750,36,'bien = [[0] * 4 for _ in range(3)]','f22 b g');
+  const y=[110,230,350];
+  y.forEach((yy,i)=>{s+=`<g class="c"><rect x="20" y="${yy}" width="100" height="50" rx="6"/><text x="70" y="${yy+25}" dy=".35em" font-size="19">mal[${i}]</text></g>`
+   +`<g class="c"><rect x="520" y="${yy}" width="100" height="50" rx="6"/><text x="570" y="${yy+25}" dy=".35em" font-size="19">bien[${i}]</text></g>`;});
+  s+=arrow([[120,135],[342,135],[342,230]],'r q','ahR','')+arrow([[120,255],[250,255]],'r q','ahR')+arrow([[120,375],[342,375],[342,280]],'r q','ahR');
+  s+=obj(250,230,v,k>=2,'un solo objeto, id 7F3A');
+  y.forEach((yy,i)=>{s+=arrow([[620,yy+25],[760,yy+25]],'g q','ahG')+obj(760,yy,i===0?v:0,k>=2&&i===0,'id '+['91B0','4C2E','D5F7'][i]);});
+  if(k>=1){s+=T(250,452,'mal[0] is mal[1]: True','f19 mono r')+T(750,452,'bien[0] is bien[1]: False','f19 mono g');}
+  if(k>=3){const a=[[v,0,0,0],[v,0,0,0],[v,0,0,0]],b=[[v,0,0,0],[0,0,0,0],[0,0,0,0]];
+   s+=T(250,490,JSON.stringify(a).replace(/,/g,', '),'f17 mono r')+T(750,490,JSON.stringify(b).replace(/,/g,', '),'f17 mono g');}
+  V.innerHTML=svg(1000,515,s,'Comparación entre filas compartidas y filas independientes');
+  cb.mark({py:[[1,2],[3],[4,5],[6,7]][k]});
+  return ['Dos construcciones que imprimen igual al inicio. En <code>mal</code>, las tres posiciones apuntan al mismo objeto lista.',
+   '<code>is</code> compara identidad: <code>mal[0] is mal[1]</code> es <code>True</code>, hay una sola lista referenciada tres veces.',
+   '<code>mal[0][0] = 5</code> cambia el único objeto, así que las tres filas muestran 5. En <code>bien</code> solo cambia la fila 0.',
+   'Resultado: <code>mal</code> tiene la columna 0 en 5 en todas las filas. Para filas independientes se usa la comprensión.'][k];
+ };
+ player(root,{n:3,draw});
+});
+
+/* ================= 13. PYTHON: ZIP ================= */
+S('Python','Python: transpuesta con zip(*m)',`<div class="cols">${pane()}<div class="side"><div class="cbox" id="cb"></div><div class="out" id="o13"></div></div></div>`,root=>{
+ const cb=codeBox($('#cb',root),{py:`m = [[1, 2, 3, 4],
+     [5, 6, 7, 8],
+     [9, 10, 11, 12]]
+t = list(zip(*m))
+print(t)
+t2 = [list(c) for c in zip(*m)]`});
+ const V=$('.vis',root);
+ const draw=k=>{
+  const col=k-1;
+  let s=T(165,36,'m (3 x 4)','f19 b s')+T(580,36,'t (4 x 3)','f19 b s')+mx(30,60,M34,70,66,(i,j)=>k>0&&j===col?'act':(k>0&&j<col?'vis':''),24);
+  const Tm=range(4).map(j=>range(3).map(i=>M34[i][j]));
+  s+=mx(470,60,Tm,70,66,(i,j)=>k>0&&i===col?'new':(k>0&&i<col?'vis':''),24,(v,i)=>i<=col&&k>0?v:'');
+  s+=arrow([[305,196],[470,196]],'q')+T(388,176,'zip(*m)','f19 b a');
+  s+=T(388,350,k>0&&k<=4?`la tupla ${k-1}: (${M34.map(r=>r[col]).join(', ')})`:'zip(*m) equivale a zip(m[0], m[1], m[2])','f19 mono','middle');
+  V.innerHTML=svg(700,380,s,'Transpuesta de una matriz con zip');
+  cb.mark({py:k===0?[1,2,3]:(k<4?[4]:[4,5])});
+  $('#o13',root).innerHTML='<span class="h">Salida de print(t)</span>'+(k>=4?esc('[(1, 5, 9), (2, 6, 10), (3, 7, 11), (4, 8, 12)]'):'');
+  return k===0?'El operador <code>*</code> desempaqueta las filas como argumentos separados de <code>zip</code>.':`<code>zip</code> toma el elemento ${col} de cada fila: la columna ${col} de <code>m</code> pasa a ser la fila ${col} de <code>t</code>.`;
+ };
+ player(root,{n:4,draw});
+});
+
+/* ================= 14. PYTHON: NUMPY ================= */
+S('Python','Python: un vistazo a NumPy',`<div class="cols">${pane()}<div class="side"><div class="cbox" id="cb"></div></div></div>`,root=>{
+ const cb=codeBox($('#cb',root),{py:`import numpy as np
+m = np.arange(1, 13, dtype=np.int32)
+m = m.reshape(3, 4)
+print(m.shape)
+print(m.strides)
+print(m[1, 2])
+print(m.T)
+print(m @ m.T)
+print(m.sum(axis=0))
+z = np.zeros((2, 3), dtype=int)`});
+ const V=$('.vis',root);
+ const Tm=range(4).map(j=>range(3).map(i=>M34[i][j]));
+ const P=range(3).map(i=>range(3).map(j=>range(4).reduce((a,k)=>a+M34[i][k]*M34[j][k],0)));
+ const col=range(4).map(j=>M34.reduce((a,r)=>a+r[j],0));
+ const R=[null,{t:'(3, 4)'},{t:'(16, 4)'},{t:'7'},{m:Tm},{m:P},{m:[col]},{m:[[0,0,0],[0,0,0]]}];
+ const names=['','m.shape','m.strides','m[1, 2]','m.T','m @ m.T','m.sum(axis=0)','np.zeros((2, 3), dtype=int)'];
+ const draw=k=>{
+  let s=T(200,36,'m','f22 b s')+mx(20,56,M34,88,72,(i,j)=>(k===3&&i===1&&j===2)?'act':'',24);
+  s+=`<rect class="pn" x="420" y="40" width="460" height="${k>=4?350:150}" rx="14"/>`;
+  if(k===0)s+=T(650,110,'m = np.arange(1, 13, dtype=np.int32)','f17 mono m')+T(650,140,'m = m.reshape(3, 4)','f17 mono m');
+  else{const r=R[k];s+=T(440,76,names[k],'f19 mono a','start');
+   if(r.t)s+=T(650,150,r.t,'f32 b mono g');
+   else{const cw=r.m[0].length>3?92:100,w=r.m[0].length*cw,x0=650-w/2;s+=mx(x0,100,r.m,cw,68,()=>'vis',22);}}
+  s+=T(450,436,'ndarray guarda un bloque contiguo en orden por filas (C_CONTIGUOUS = True)','f17 s','middle');
+  V.innerHTML=svg(900,460,s,'Operaciones de NumPy sobre una matriz de 3 por 4');
+  cb.mark({py:k===0?[1,2,3]:[k+3]});
+  return ['NumPy crea la matriz como un bloque contiguo de enteros de 4 bytes.',
+   '<code>shape</code> es la forma: 3 filas y 4 columnas.',
+   '<code>strides</code> da los bytes por paso: 16 para bajar una fila (4 elementos de 4 bytes) y 4 para avanzar una columna.',
+   '<code>m[1, 2]</code> indexa con una sola coordenada doble.',
+   '<code>m.T</code> es la transpuesta: una vista del mismo bloque con los strides invertidos.',
+   '<code>m @ m.T</code> es el producto de matrices: 3 x 4 por 4 x 3 da 3 x 3.',
+   '<code>sum(axis=0)</code> suma por columnas, sin bucles escritos.',
+   '<code>np.zeros</code> crea la matriz ya llena de ceros.'][k];
+ };
+ player(root,{n:7,draw});
+});
+
+/* ================= 15. COMPARACION ================= */
+S('Python','Java y Python lado a lado',`<div class="elev"><table class="tbl" style="height:100%"><thead><tr><th style="width:15%"></th><th style="width:28%">Java</th><th style="width:30%">Python (listas)</th><th style="width:27%">NumPy</th></tr></thead><tbody>
+<tr><td>Tipo</td><td>arreglo de arreglos <code>int[][]</code></td><td><code>list</code> de <code>list</code></td><td><code>ndarray</code> de 2 dimensiones</td></tr>
+<tr><td>Crear</td><td><code>new int[3][4]</code></td><td><code>[[0] * 4 for _ in range(3)]</code></td><td><code>np.zeros((3, 4), dtype=int)</code></td></tr>
+<tr><td>Acceder</td><td><code>m[i][j]</code></td><td><code>m[i][j]</code></td><td><code>m[i, j]</code></td></tr>
+<tr><td>Tamaño</td><td><code>m.length</code>, <code>m[0].length</code></td><td><code>len(m)</code>, <code>len(m[0])</code></td><td><code>m.shape</code></td></tr>
+<tr><td>Memoria</td><td>filas separadas en el heap</td><td>referencias a listas de referencias</td><td>un bloque contiguo</td></tr>
+<tr><td>Contenido</td><td>un solo tipo, fijado al declarar</td><td>cualquier objeto, se puede mezclar</td><td>un solo dtype</td></tr>
+<tr><td>Filas irregulares</td><td>sí: <code>new int[3][]</code></td><td>sí: listas de largo distinto</td><td>no, es rectangular</td></tr>
+<tr><td>Fuera de rango</td><td><code>ArrayIndexOutOfBoundsException</code></td><td><code>IndexError</code></td><td><code>IndexError</code></td></tr>
+<tr><td>Trampa típica</td><td>fila en <code>null</code> tras <code>new int[3][]</code></td><td><code>[[0] * c] * f</code> comparte filas</td><td><code>m.T</code> es vista, no copia</td></tr>
+</tbody></table></div>`);
+
+/* ================= OPERACIONES ================= */
+function OP(title,codes,cfg){
+ S('Operaciones',title,`<div class="cols">${pane(cfg.seg)}<div class="side"><div class="cbox" id="cb"></div></div></div>`,root=>{
+  const cb=codeBox($('#cb',root),codes),V=$('.vis',root),st={mode:cfg.mode0};
+  const draw=k=>{const r=cfg.draw(k,st);V.innerHTML=svg(r.w,r.h,r.s,title);cb.mark({java:r.j||[],py:r.p||[]});return r.cap;};
+  const p=player(root,{n:cfg.n(st),draw});
+  if(cfg.seg)seg($('.opts',root),cfg.seg,()=>st.mode,v=>{st.mode=v;p.setN(cfg.n(st));});
+ });
+}
+const A33=[[1,2,3],[4,5,6],[7,8,9]],B33=[[1,0,2],[0,1,0],[3,0,1]];
+
+/* 16. recorrido por filas vs columnas y cache */
+OP('Recorrer por filas o por columnas',{
+ java:`int f = m.length, c = m[0].length, suma = 0;
+// por filas
+for (int i = 0; i < f; i++)
+    for (int j = 0; j < c; j++)
+        suma += m[i][j];
+// por columnas
+for (int j = 0; j < c; j++)
+    for (int i = 0; i < f; i++)
+        suma += m[i][j];`,
+ py:`f, c, suma = len(m), len(m[0]), 0
+# por filas
+for i in range(f):
+    for j in range(c):
+        suma += m[i][j]
+# por columnas
+for j in range(c):
+    for i in range(f):
+        suma += m[i][j]`},{
+ n:()=>12,
+ draw(k){
+  const byRow=q=>[Math.floor(q/4),q%4],byCol=q=>[q%3,Math.floor(q/3)];
+  let s='';const info=[];
+  [['Por filas',20,byRow],['Por columnas',510,byCol]].forEach(([name,x0,ord])=>{
+   const seen={};let last=-1,loads=0,curPos=-1,hit=true;
+   for(let q=0;q<k;q++){const [i,j]=ord(q),pos=i*4+j,ln=Math.floor(pos/4);if(ln!==last){loads++;hit=false;last=ln;}else hit=true;seen[i+','+j]=q+1;curPos=pos;}
+   const cur=k>0?ord(k-1):null;
+   s+=T(x0+235,32,name,'f22 b a');
+   s+=mx(x0+95,50,M34,72,58,(i,j)=>cur&&cur[0]===i&&cur[1]===j?'act':(seen[i+','+j]?'vis':'dim'),22,(v,i,j)=>seen[i+','+j]||v);
+   s+=T(x0+235,262,'memoria (orden por filas)','f15 m');
+   for(let p=0;p<12;p++){const i=Math.floor(p/4),j=p%4,sn=seen[i+','+j];
+    s+=cell(x0+8+p*38,274,34,44,sn||'',p===curPos?'act':(sn?'vis':''),16);}
+   for(let g=0;g<3;g++){const x1=x0+8+g*152,x2=x1+147;s+=`<path d="M${x1},326 L${x1},334 L${x2},334 L${x2},326" fill="none" stroke="${k>0&&last===g?'#d97706':'#2563eb'}" stroke-width="2.4"/>`+T((x1+x2)/2,358,'línea '+g,'f15 s');}
+   s+=T(x0+235,410,'líneas cargadas en caché: '+loads,'f22 b '+(name==='Por filas'?'g':'r'));
+   if(k>0)s+=T(x0+235,444,hit?'acierto: la línea ya estaba':'fallo: carga una línea nueva','f17 '+(hit?'g':'r'));
+   info.push(loads);
+  });
+  s+=T(500,490,'Modelo: una línea de caché guarda 4 elementos seguidos y la caché retiene solo la última línea','f15 m');
+  return {w:1000,h:510,s,j:k?[5,9]:[],p:k?[5,9]:[],cap:k===0?'La misma suma recorre las 12 celdas con dos órdenes. La matriz se guarda por filas: 3 líneas de 4 elementos.':(k===12?`Por filas: ${info[0]} cargas. Por columnas: ${info[1]} cargas. El resultado de la suma es igual; el costo de acceso a memoria no.`:`Paso ${k}: por filas cae en la posición ${byRow(k-1)[0]*4+byRow(k-1)[1]}, por columnas en la ${byCol(k-1)[0]*4+byCol(k-1)[1]}.`)};
+ }});
+
+/* 17. suma */
+OP('Suma de matrices',{
+ java:`int[][] suma(int[][] a, int[][] b) {
+    int[][] c = new int[a.length][a[0].length];
+    for (int i = 0; i < a.length; i++) {
+        for (int j = 0; j < a[0].length; j++) {
+            c[i][j] = a[i][j] + b[i][j];
+        }
+    }
+    return c;
+}`,
+ py:`def sumar(a, b):
+    f, c = len(a), len(a[0])
+    r = [[0] * c for _ in range(f)]
+    for i in range(f):
+        for j in range(c):
+            r[i][j] = a[i][j] + b[i][j]
+    return r`},{
+ n:()=>9,
+ draw(k){
+  const cur=k>0?[Math.floor((k-1)/3),(k-1)%3]:null,done=(i,j)=>i*3+j<k;
+  const C=A33.map((r,i)=>r.map((v,j)=>done(i,j)?v+B33[i][j]:0));
+  const hl=(i,j)=>cur&&cur[0]===i&&cur[1]===j?'act':(done(i,j)?'vis':'');
+  let s=T(165,60,'A','f26 b s')+T(495,60,'B','f26 b s')+T(825,60,'C = A + B','f26 b s')+T(330,170,'+','f32 b')+T(660,170,'=','f32 b');
+  s+=mx(30,80,A33,90,80,hl,28)+mx(360,80,B33,90,80,hl,28)+mx(690,80,C,90,80,(i,j)=>cur&&cur[0]===i&&cur[1]===j?'new':(done(i,j)?'vis':''),28);
+  s+=T(500,380,cur?`C[${cur[0]}][${cur[1]}] = A[${cur[0]}][${cur[1]}] + B[${cur[0]}][${cur[1]}] = ${A33[cur[0]][cur[1]]} + ${B33[cur[0]][cur[1]]} = ${C[cur[0]][cur[1]]}`:'C[i][j] = A[i][j] + B[i][j]','f26 mono a');
+  s+=T(500,425,'Mismas dimensiones. Una suma por celda: 9 sumas, O(n*m).','f19 m');
+  return {w:1000,h:450,s,j:k?[5]:[2],p:k?[6]:[3],cap:k===0?'Se crea la matriz resultado C con las mismas dimensiones que A y B.':`Celda (${cur[0]}, ${cur[1]}): se suman los valores de las posiciones iguales.`};
+ }});
+
+/* 18. escalar */
+OP('Multiplicación por un escalar',{
+ java:`int[][] escalar(int[][] a, int k) {
+    int[][] c = new int[a.length][a[0].length];
+    for (int i = 0; i < a.length; i++) {
+        for (int j = 0; j < a[0].length; j++) {
+            c[i][j] = k * a[i][j];
+        }
+    }
+    return c;
+}`,
+ py:`def escalar(a, k):
+    f, c = len(a), len(a[0])
+    r = [[0] * c for _ in range(f)]
+    for i in range(f):
+        for j in range(c):
+            r[i][j] = k * a[i][j]
+    return r`},{
+ mode0:'2',seg:[['2','k = 2'],['3','k = 3'],['-1','k = -1']],
+ n:()=>9,
+ draw(k,st){
+  const K=+st.mode,cur=k>0?[Math.floor((k-1)/3),(k-1)%3]:null,done=(i,j)=>i*3+j<k;
+  const C=A33.map((r,i)=>r.map((v,j)=>done(i,j)?K*v:0));
+  let s=T(180,60,'A','f26 b s')+T(820,60,'C = k * A','f26 b s')+`<g class="c act"><rect x="390" y="105" width="170" height="90" rx="12"/><text x="475" y="150" dy=".35em" font-size="32">k = ${K}</text></g>`;
+  s+=arrow([[295,150],[390,150]],'a','ahA')+arrow([[560,150],[690,150]],'a','ahA');
+  s+=mx(30,80,A33,90,80,(i,j)=>cur&&cur[0]===i&&cur[1]===j?'act':(done(i,j)?'vis':''),28)+mx(690,80,C,90,80,(i,j)=>cur&&cur[0]===i&&cur[1]===j?'new':(done(i,j)?'vis':''),28);
+  s+=T(500,380,cur?`C[${cur[0]}][${cur[1]}] = k * A[${cur[0]}][${cur[1]}] = ${K} * ${A33[cur[0]][cur[1]]} = ${C[cur[0]][cur[1]]}`:'C[i][j] = k * A[i][j]','f26 mono a');
+  s+=T(500,425,'Un producto por celda: 9 productos, O(n*m).','f19 m');
+  return {w:1000,h:450,s,j:k?[5]:[2],p:k?[6]:[3],cap:k===0?'El escalar <code>k</code> multiplica cada celda; las dimensiones no cambian.':`Celda (${cur[0]}, ${cur[1]}): ${A33[cur[0]][cur[1]]} por ${K} da ${C[cur[0]][cur[1]]}.`};
+ }});
+
+/* 19. transpuesta */
+OP('Transpuesta',{
+ java:`int[][] transponer(int[][] m) {
+    int[][] t = new int[m[0].length][m.length];
+    for (int i = 0; i < m.length; i++) {
+        for (int j = 0; j < m[i].length; j++) {
+            t[j][i] = m[i][j];
+        }
+    }
+    return t;
+}`,
+ py:`def transponer(m):
+    f, c = len(m), len(m[0])
+    t = [[0] * f for _ in range(c)]
+    for i in range(f):
+        for j in range(c):
+            t[j][i] = m[i][j]
+    return t
+# en una línea: t = [list(r) for r in zip(*m)]`},{
+ n:()=>12,
+ draw(k){
+  const cur=k>0?[Math.floor((k-1)/4),(k-1)%4]:null,done=(i,j)=>i*4+j<k;
+  const Tm=range(4).map(j=>range(3).map(i=>done(i,j)?M34[i][j]:0));
+  let s=T(190,50,'m (3 x 4)','f22 b s')+T(660,50,'t (4 x 3)','f22 b s');
+  s+=mx(30,70,M34,90,76,(i,j)=>cur&&cur[0]===i&&cur[1]===j?'act':(done(i,j)?'vis':''),26);
+  s+=mx(540,70,Tm,90,76,(i,j)=>cur&&cur[0]===j&&cur[1]===i?'new':(done(j,i)?'vis':''),26);
+  s+=arrow([[390,146],[540,146]],'q')+T(465,126,'t[j][i] = m[i][j]','f17 a');
+  s+=T(400,420,cur?`t[${cur[1]}][${cur[0]}] = m[${cur[0]}][${cur[1]}] = ${M34[cur[0]][cur[1]]}`:'Las filas de m pasan a ser las columnas de t','f26 mono a');
+  return {w:820,h:450,s,j:k?[5]:[2],p:k?[6]:[3],cap:k===0?'La transpuesta de una matriz de 3 x 4 tiene 4 filas y 3 columnas.':`La celda (${cur[0]}, ${cur[1]}) de <code>m</code> va a la celda (${cur[1]}, ${cur[0]}) de <code>t</code>. Los índices se intercambian.`};
+ }});
+
+/* 20. diagonales */
+OP('Diagonal principal y secundaria',{
+ java:`int n = m.length;
+int principal = 0, secundaria = 0;
+for (int i = 0; i < n; i++) {
+    principal += m[i][i];
+    secundaria += m[i][n - 1 - i];
+}`,
+ py:`n = len(m)
+principal = secundaria = 0
+for i in range(n):
+    principal += m[i][i]
+    secundaria += m[i][n - 1 - i]`},{
+ n:()=>4,
+ draw(k){
+  const D=[[2,7,1,9],[3,5,8,4],[6,1,9,2],[4,8,3,7]];
+  const cls=(i,j)=>{const a=j===i,b=j===3-i;if(k>0&&i===k-1&&a)return 'act';if(k>0&&i===k-1&&b)return 'new';if(i<k-1&&a)return 'vis';if(i<k-1&&b)return 'rowh';return(a||b)?'':'dim';};
+  const P=range(k).map(i=>D[i][i]),Sx=range(k).map(i=>D[i][3-i]);
+  let s=T(230,40,'m (4 x 4)','f22 b s')+colLab(40,70,4,100,'j=')+rowLab(30,95,4,90,'i=')+mx(40,80,D,100,90,cls,30);
+  s+=T(500,100,'Principal: i = j','f22 b a','start')+T(500,136,P.length?P.join(' + ')+(k===4?' = '+P.reduce((a,b)=>a+b,0):''):'0','f26 mono','start');
+  s+=T(500,216,'Secundaria: i + j = n - 1','f22 b v','start')+T(500,252,Sx.length?Sx.join(' + ')+(k===4?' = '+Sx.reduce((a,b)=>a+b,0):''):'0','f26 mono','start');
+  s+=T(500,330,'Una sola vuelta de n pasos','f19 m','start')+T(500,360,'visita 2n celdas, no n * n: O(n)','f19 m','start');
+  return {w:940,h:460,s,j:k?[4,5]:[1,2],p:k?[4,5]:[1,2],cap:k===0?'Matriz cuadrada de 4 x 4. Las dos diagonales se suman en un solo bucle.':`i = ${k-1}: principal <code>m[${k-1}][${k-1}] = ${D[k-1][k-1]}</code>, secundaria <code>m[${k-1}][${3-(k-1)}] = ${D[k-1][3-(k-1)]}</code>.`};
+ }});
+
+/* 21. busqueda */
+OP('Búsqueda de un valor',{
+ java:`int[] buscar(int[][] m, int x) {
+    for (int i = 0; i < m.length; i++) {
+        for (int j = 0; j < m[i].length; j++) {
+            if (m[i][j] == x) {
+                return new int[]{i, j};
+            }
+        }
+    }
+    return null;
+}`,
+ py:`def buscar(m, x):
+    for i, fila in enumerate(m):
+        for j, v in enumerate(fila):
+            if v == x:
+                return (i, j)
+    return None`},{
+ mode0:'9',seg:[['9','x = 9'],['6','x = 6'],['20','x = 20 (no existe)']],
+ n:st=>{const f=BUS.flat().indexOf(+st.mode);return f<0?13:f+1;},
+ draw(k,st){
+  const X=+st.mode,f=BUS.flat().indexOf(X),found=f>=0,last=found?f+1:12;
+  const cur=k>0&&k<=12?[Math.floor((k-1)/4),(k-1)%4]:null;
+  const isHit=found&&k===f+1;
+  const cls=(i,j)=>{const q=i*4+j;if(cur&&cur[0]===i&&cur[1]===j)return isHit?'hit':'act';if(k>12)return 'bad';return q<k-1?'vis':'';};
+  let s=T(320,40,'m (3 x 4)','f22 b s')+colLab(100,70,4,110,'j=')+rowLab(88,95,3,90,'i=')+mx(100,80,BUS,110,90,cls,28);
+  s+=`<rect class="pn" x="600" y="70" width="320" height="270" rx="14"/>`+T(760,112,'buscar x = '+X,'f26 b a')+T(760,160,'comparaciones: '+Math.min(k,12),'f22 mono');
+  s+=T(760,214,k===0?'sin empezar':(isHit?`encontrado en (${cur[0]}, ${cur[1]})`:(k>12?'no existe':'sigue buscando')),'f22 b '+(isHit?'g':(k>12?'r':'s')));
+  if(isHit)s+=T(760,262,`se omiten ${12-k} celdas`,'f19 m');
+  s+=T(450,400,'Peor caso: recorre las 12 celdas, O(n*m). Mejor caso: la primera celda, O(1).','f19 m');
+  return {w:960,h:430,s,j:k===0?[1]:(isHit?[5]:(k>12?[9]:[4])),p:k===0?[1]:(isHit?[5]:(k>12?[6]:[4])),cap:k===0?'Se busca el valor en orden por filas y se corta en cuanto aparece.':(k>12?'Ninguna de las 12 celdas coincide: el método devuelve <code>null</code> (<code>None</code> en Python).':(isHit?`<code>m[${cur[0]}][${cur[1]}] == ${X}</code>: coincide y el método termina.`:`Compara <code>m[${cur[0]}][${cur[1]}] = ${BUS[cur[0]][cur[1]]}</code> con ${X}: no coincide.`))};
+ }});
+const BUS=[[8,3,5,12],[7,1,9,4],[6,11,2,10]];
+
+/* 22. suma por filas y columnas */
+OP('Suma por filas y por columnas',{
+ java:`int[] porFila = new int[m.length];
+int[] porColumna = new int[m[0].length];
+for (int i = 0; i < m.length; i++) {
+    for (int j = 0; j < m[i].length; j++) {
+        porFila[i] += m[i][j];
+        porColumna[j] += m[i][j];
+    }
+}`,
+ py:`por_fila = [0] * len(m)
+por_columna = [0] * len(m[0])
+for i, fila in enumerate(m):
+    for j, v in enumerate(fila):
+        por_fila[i] += v
+        por_columna[j] += v`},{
+ n:()=>12,
+ draw(k){
+  const cur=k>0?[Math.floor((k-1)/4),(k-1)%4]:null;
+  const rs=[0,0,0],cs=[0,0,0,0];for(let q=0;q<k;q++){const i=Math.floor(q/4),j=q%4;rs[i]+=M34[i][j];cs[j]+=M34[i][j];}
+  let s=T(235,36,'m','f22 b s')+T(560,36,'porFila','f19 b s')+T(235,360,'porColumna','f19 b s');
+  s+=mx(40,50,M34,100,80,(i,j)=>cur&&cur[0]===i&&cur[1]===j?'act':(cur&&(cur[0]===i||cur[1]===j)&&i*4+j<k?'rowh':(i*4+j<k?'vis':'')),28);
+  s+=mx(480,50,rs.map(v=>[v]),160,80,(i)=>cur&&cur[0]===i?'new':'',28)+mx(40,380,[cs],100,80,(i,j)=>cur&&cur[1]===j?'new':'',28);
+  s+=T(560,380,cur?`porFila[${cur[0]}] = ${rs[cur[0]]}`:'','f22 mono a')+T(560,420,cur?`porColumna[${cur[1]}] = ${cs[cur[1]]}`:'','f22 mono a');
+  s+=T(560,470,'Una sola pasada: O(n*m)','f19 m');
+  return {w:820,h:490,s,j:k?[5,6]:[1,2],p:k?[5,6]:[1,2],cap:k===0?'Los dos arreglos de sumas arrancan en 0 y se llenan en la misma pasada.':`Celda (${cur[0]}, ${cur[1]}) = ${M34[cur[0]][cur[1]]}: se suma a <code>porFila[${cur[0]}]</code> y a <code>porColumna[${cur[1]}]</code>.`};
+ }});
+
+/* 23. producto */
+OP('Producto de matrices',{
+ java:`int[][] producto(int[][] a, int[][] b) {
+    int n = a.length, m = b.length, p = b[0].length;
+    int[][] c = new int[n][p];
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < p; j++) {
+            for (int k = 0; k < m; k++) {
+                c[i][j] += a[i][k] * b[k][j];
+            }
+        }
+    }
+    return c;
+}`,
+ py:`def producto(a, b):
+    n, m, p = len(a), len(b), len(b[0])
+    c = [[0] * p for _ in range(n)]
+    for i in range(n):
+        for j in range(p):
+            for k in range(m):
+                c[i][j] += a[i][k] * b[k][j]
+    return c`},{
+ n:()=>12,
+ draw(k){
+  const A=[[1,2,3],[4,5,6]],B=[[7,8],[9,10],[11,12]];
+  const q=k-1,ci=k>0?Math.floor(q/6):-1,cj=k>0?Math.floor((q%6)/3):-1,ck=k>0?q%3:-1;
+  const full=(i,j)=>A[i].reduce((a,v,t)=>a+v*B[t][j],0);
+  const part=(i,j,upTo)=>A[i].slice(0,upTo+1).reduce((a,v,t)=>a+v*B[t][j],0);
+  const Cv=[[0,0],[0,0]];for(let i=0;i<2;i++)for(let j=0;j<2;j++){const idx=(i*2+j)*3;if(k>idx+3)Cv[i][j]=full(i,j);else if(k>idx)Cv[i][j]=part(i,j,k-idx-1);}
+  let s=T(150,36,'A (2 x 3)','f22 b s')+T(430,36,'B (3 x 2)','f22 b s')+T(655,36,'C (2 x 2)','f22 b s')+T(305,150,'x','f32 b')+T(542,150,'=','f32 b');
+  s+=mx(30,60,A,80,70,(i,j)=>k>0&&i===ci?(j===ck?'act':'rowh'):'',26);
+  s+=mx(350,60,B,80,70,(i,j)=>k>0&&j===cj?(i===ck?'act':'rowh'):'',26);
+  s+=mx(570,60,Cv,90,70,(i,j)=>(k>0&&i===ci&&j===cj)?'new':((i*2+j)*3+3<k?'vis':''),26);
+  if(k>0){const terms=range(ck+1).map(t=>`${A[ci][t]}*${B[t][cj]}`).join(' + ');s+=T(400,340,`C[${ci}][${cj}] = ${terms}${ck===2?' = '+full(ci,cj):''}`,'f26 mono a');}
+  else s+=T(400,340,'C[i][j] = suma de A[i][k] * B[k][j]','f26 mono a');
+  s+=T(400,390,'Fila i de A por columna j de B: n * m * p productos, O(n*m*p).','f19 m');
+  return {w:800,h:420,s,j:k?[7]:[3],p:k?[7]:[3],cap:k===0?'A tiene tantas columnas (3) como B filas (3). C tendrá 2 filas y 2 columnas.':`<code>i = ${ci}, j = ${cj}, k = ${ck}</code>: <code>A[${ci}][${ck}] * B[${ck}][${cj}] = ${A[ci][ck]} * ${B[ck][cj]} = ${A[ci][ck]*B[ck][cj]}</code> se acumula en <code>C[${ci}][${cj}]</code>.`};
+ }});
+
+/* ================= 24. COMPLEJIDAD: TABLA Y BARRAS ================= */
+S('Complejidad','Complejidad de cada operación',`<div class="cols eq">
+<div class="elev"><table class="tbl" id="ct" style="height:100%"><thead><tr><th>Operación</th><th>Tiempo</th><th>Motivo</th></tr></thead><tbody>
+<tr data-k="0"><td>Acceso M[i][j]</td><td><code>O(1)</code></td><td>fórmula, sin recorrer</td></tr>
+<tr data-k="2"><td>Recorrer</td><td><code>O(n*m)</code></td><td>visita cada celda una vez</td></tr>
+<tr data-k="3"><td>Suma y escalar</td><td><code>O(n*m)</code></td><td>una operación por celda</td></tr>
+<tr data-k="4"><td>Transpuesta</td><td><code>O(n*m)</code></td><td>copia cada celda a su sitio</td></tr>
+<tr data-k="1"><td>Diagonales</td><td><code>O(n)</code></td><td>solo n celdas de la cuadrada</td></tr>
+<tr data-k="5"><td>Búsqueda</td><td><code>O(n*m)</code></td><td>peor caso; mejor caso O(1)</td></tr>
+<tr data-k="6"><td>Producto</td><td><code>O(n*m*p)</code></td><td>n^3 si es cuadrada</td></tr>
+<tr data-k="-1"><td>Espacio</td><td><code>O(n*m)</code></td><td>una celda por dato</td></tr>
+</tbody></table></div>
+<div class="pane"><div class="card pad" style="flex:1;min-height:0"><div class="bars" id="bars"></div></div><div class="cap"></div><div class="ctl"></div></div></div>`,root=>{
+ const B=[['Acceso','O(1)',1,'#22c55e'],['Diagonales','O(n)',10,'#14b8a6'],['Recorrer','O(n*m)',100,'#f59e0b'],['Suma','O(n*m)',100,'#f59e0b'],['Transpuesta','O(n*m)',100,'#f59e0b'],['Búsqueda','O(n*m)',100,'#f59e0b'],['Producto','O(n*m*p)',1000,'#f43f5e']];
+ $('#bars',root).innerHTML=B.map(b=>`<div class="bw off" style="--h:${Math.max(.1,b[2]/10)};--c:${b[3]}"><div class="bt"><div class="bv">${b[2]}</div><div class="bar"></div></div><div class="bn">${b[0]}<br>${b[1]}</div></div>`).join('');
+ const ws=$$('.bw',root),rows=$$('#ct tr[data-k]',root);
+ const draw=k=>{
+  ws.forEach((w,i)=>w.classList.toggle('off',i>=k));
+  rows.forEach(r=>r.classList.toggle('hl',k>0&&+r.dataset.k===k-1));
+  return k===0?'Operaciones contadas con n = m = p = 10. La altura de cada barra es proporcional al número de operaciones.':`<code>${B[k-1][0]}</code>: ${B[k-1][1]}, unas ${B[k-1][2]} operaciones con n = 10.`;
+ };
+ player(root,{n:7,draw});
+});
+
+/* ================= 25. DEMO DEL TAMAÑO n ================= */
+S('Complejidad','Mueve n y cuenta las operaciones',`<div class="cols">${pane()}<div class="side"><div class="card pad"><label class="fld" style="width:100%;font-size:clamp(16px,1.8vw,30px)">n = <b id="nv" style="color:var(--amb);min-width:2.6em">10</b><input type="range" id="ns" min="1" max="100" value="10" style="flex:1;accent-color:#b45309;height:2em" aria-label="Tamaño n"></label><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="bx2">Duplicar n</button><button type="button" class="btn" id="b10">n = 10</button><button type="button" class="btn" id="b100">n = 100</button></div></div>
+<div class="card pad" id="nums" style="flex:1"></div></div></div>`,root=>{
+ const fmt=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+ const dur=ns=>ns<1e3?fmt(ns)+' ns':(ns<1e6?fmt(ns/1e3)+' microsegundos':(ns<1e9?fmt(ns/1e6)+' milisegundos':fmt(ns/1e9)+' segundos'));
+ let N=10;const V=$('.vis',root);
+ const X=n=>70+(n-1)/99*600,Y=v=>400-v/1e6*360;
+ const paint=()=>{
+  $('#nv',root).textContent=N;$('#ns',root).value=N;
+  const pts=f=>range(100).map(i=>`${X(i+1).toFixed(1)},${Y(f(i+1)).toFixed(1)}`).join(' ');
+  let s='';
+  [0,250000,500000,750000,1000000].forEach(v=>{s+=`<line x1="70" y1="${Y(v)}" x2="680" y2="${Y(v)}" stroke="#d5deec"/>`+T(62,Y(v),fmt(v),'f13 m','end').replace('<text ','<text dy=".35em" ');});
+  [1,25,50,75,100].forEach(v=>{s+=T(X(v),424,v,'f13 m');});
+  s+=T(375,452,'n','f17 b m')+T(40,22,'operaciones','f15 m','start');
+  s+=`<polyline points="${pts(n=>n*n*n)}" fill="none" stroke="#e11d48" stroke-width="3.5"/><polyline points="${pts(n=>n*n)}" fill="none" stroke="#d97706" stroke-width="3.5"/><polyline points="${pts(n=>n)}" fill="none" stroke="#0d9488" stroke-width="3.5"/><line x1="70" y1="${Y(1)}" x2="680" y2="${Y(1)}" stroke="#16a34a" stroke-width="3.5"/>`;
+  s+=`<line x1="${X(N)}" y1="40" x2="${X(N)}" y2="400" stroke="#475569" stroke-width="1.5" stroke-dasharray="6 5"/>`;
+  [[N*N*N,'#e11d48'],[N*N,'#d97706'],[N,'#0d9488'],[1,'#16a34a']].forEach(([v,c])=>{s+=`<circle cx="${X(N)}" cy="${Y(v)}" r="7" fill="${c}" stroke="#ffffff" stroke-width="2"/>`;});
+  s+=T(300,80,'n^3 producto','f17 b r','start')+T(300,106,'n^2 recorrer','f17 b a','start')+T(300,132,'n lineal','f17 b t','start')+T(300,158,'1 acceso','f17 b g','start');
+  V.innerHTML=svg(720,470,s,'Curvas de n, n al cuadrado y n al cubo');
+  $('#nums',root).innerHTML=`<table class="kv">
+  <tr><td>Acceso</td><td>1 operación</td></tr>
+  <tr><td>Recorrer</td><td><b style="color:#d97706">${fmt(N*N)}</b> operaciones (n * n)</td></tr>
+  <tr><td>Producto</td><td><b style="color:#be123c">${fmt(N*N*N)}</b> operaciones (n * n * n)</td></tr>
+  <tr><td>Tiempo</td><td>con 1 ns por operación, el producto tarda ${dur(N*N*N)}</td></tr>
+  <tr><td>Si n se duplica</td><td>recorrer pasa de ${fmt(N*N)} a ${fmt(4*N*N)} (x4); producto de ${fmt(N*N*N)} a ${fmt(8*N*N*N)} (x8)</td></tr></table>`;
+  return `Con n = ${N}, el producto cuesta ${fmt(N*N*N/ (N*N))} veces más que recorrer la matriz.`;
+ };
+ const p=player(root,{n:20,draw:k=>{N=k===0?10:k*5;return paint();}});
+ const set=v=>{p.stop();N=Math.max(1,Math.min(100,v));$('.cap',root).innerHTML=paint();};
+ $('#ns',root).oninput=e=>set(+e.target.value);
+ $('#bx2',root).onclick=()=>set(N*2);$('#b10',root).onclick=()=>set(10);$('#b100',root).onclick=()=>set(100);
+});
+
+/* ================= ACTIVIDAD: ESTADO COMPARTIDO ================= */
+const SEATS=[[1,1,0,0,0,0,1,1],[0,1,1,0,1,0,0,1],[1,0,0,0,1,1,0,0],[0,0,1,1,1,0,0,1],[1,1,1,0,0,0,1,0],[0,0,0,1,0,1,1,1]];
+const FR=6,CO=8,ROWN='ABCDEF';let K=3;
+const groups=k=>{const g=[];for(let i=0;i<FR;i++)for(let j=0;j+k<=CO;j++){let ok=true;for(let q=0;q<k;q++)if(SEATS[i][j+q]){ok=false;break;}if(ok)g.push([i,j]);}return g;};
+const bestOf=k=>{const g=groups(k);if(!g.length)return null;const mid=(CO-1)/2;g.sort((a,b)=>(Math.abs(a[1]+(k-1)/2-mid)-Math.abs(b[1]+(k-1)/2-mid))||(a[0]-b[0]));return g[0];};
+const freeRow=i=>SEATS[i].filter(v=>!v).length;
+const longest=r=>{let b=0,c=0;r.forEach(v=>{c=v?0:c+1;b=Math.max(b,c);});return b;};
+const costs=k=>{const cand=range(FR).filter(i=>freeRow(i)>=k).length;return {A:FR*(CO-k+1)*k,B:FR*CO,C:FR+cand*CO,cand};};
+function seatSVG(o){
+ o=o||{};const mark=new Set();if(o.groups)groups(K).forEach(([i,j])=>{for(let q=0;q<K;q++)mark.add(i+','+(j+q));});
+ const best=o.best?bestOf(K):null,bset=new Set();if(best)for(let q=0;q<K;q++)bset.add(best[0]+','+(best[1]+q));
+ let s=`<path d="M120,26 Q320,2 520,26" fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/>`+T(320,52,'pantalla','f15 m');
+  s+=mx(110,86,SEATS,64,58,(i,j)=>{const sel=(o.row===i||o.col===j)?' sel':'';if(bset.has(i+','+j))return 'act';if(mark.has(i+','+j))return 'hit';return(SEATS[i][j]?'bad':'vis')+(o.row===i||o.col===j?' rowsel':'');},22,v=>v);
+ range(FR).forEach(i=>{s+=`<g data-row="${i}" style="cursor:pointer"><rect x="40" y="${86+i*58}" width="54" height="53" rx="6" fill="${o.row===i?'#fcd34d':'#ffffff'}" stroke="#7aa2e8"/><text x="67" y="${86+i*58+26.5}" dy=".35em" class="f19 b" text-anchor="middle" style="fill:${o.row===i?'#3b2300':'#1b2a41'}">${ROWN[i]}</text></g>`;});
+ range(CO).forEach(j=>{s+=`<g data-col="${j}" style="cursor:pointer"><rect x="${110+j*64}" y="${86+FR*58+4}" width="59" height="34" rx="6" fill="${o.col===j?'#fcd34d':'#ffffff'}" stroke="#7aa2e8"/><text x="${110+j*64+29.5}" y="${86+FR*58+21}" dy=".35em" class="f17 b" text-anchor="middle" style="fill:${o.col===j?'#3b2300':'#1b2a41'}">${j+1}</text></g>`;});
+ s+=T(320,86+FR*58+68,'0 libre, 1 ocupado','f15 m');
+ return svg(640,86+FR*58+80,s,'Matriz de asientos de una sala de cine de 6 filas por 8 columnas');
+}
+const STAT='Una sala de cine tiene 6 filas (A a F) con 8 asientos cada una. Una matriz guarda 0 si el asiento está libre y 1 si está ocupado. Un grupo de k personas quiere sentarse junto, en la misma fila y lo más cerca posible del centro.';
+
+/* 26. COMPRENDE */
+S('Actividad','Actividad: comprende el problema',`<div class="cols">
+<div class="pane"><div class="vis card"></div><div class="cap"></div></div>
+<div class="side" style="overflow:auto"><div class="res" style="border-left:4px solid var(--amb)">${STAT}</div><div id="qs"></div></div></div>`,root=>{
+ const Q=[['¿Qué representa cada fila de la matriz?',['Una fila de butacas de la sala','Un espectador','Una hora de función'],0,'Cada fila es una fila física de la sala: A a F.'],
+  ['¿Qué representa cada columna?',['La posición del asiento dentro de su fila','El precio del boleto','El número de la sala'],0,'La columna indica el asiento 1 a 8 dentro de la fila.'],
+  ['¿Qué guarda cada celda?',['El estado del asiento: 0 libre, 1 ocupado','El nombre de quien lo ocupa','El número de la fila'],0,'La celda guarda un solo dato del asiento: su estado.'],
+  ['¿Qué entra y qué se pide?',['Entra la matriz y k. Se pide la fila y la columna inicial de k asientos libres seguidos','Entra solo k. Se pide contar los asientos','Entra la matriz. Se pide ocupar todos los asientos'],0,'Los datos de entrada son la matriz y k; la salida es una posición (fila, columna inicial) o la ausencia de solución.']];
+ $('#qs',root).innerHTML=Q.map((q,n)=>`<div class="q"><b>${n+1}. ${q[0]}</b>${q[1].map((o,i)=>`<label><input type="radio" name="q${n}" value="${i}"> ${o}</label>`).join('')}<div class="fb" id="fb${n}"></div></div>`).join('');
+ Q.forEach((q,n)=>$$(`input[name=q${n}]`,root).forEach(r=>r.onchange=()=>{const f=$('#fb'+n,root),ok=+r.value===q[2];f.className='fb '+(ok?'ok':'no');f.textContent=ok?'Coincide con el enunciado. '+q[3]:'Revisa el enunciado: '+q[3];}));
+ const V=$('.vis',root);
+ const paint=()=>{V.innerHTML=seatSVG();};
+ V.addEventListener('click',e=>{const g=e.target.closest('.c[data-i]');if(!g)return;const i=+g.dataset.i,j=+g.dataset.j;$('.cap',root).innerHTML=`Fila ${ROWN[i]}, asiento ${j+1}: celda <code>M[${i}][${j}]</code> = ${SEATS[i][j]} (${SEATS[i][j]?'ocupado':'libre'}).`;});
+ root._show=paint;paint();$('.cap',root).innerHTML='Cada celda <code>M[i][j]</code> es un asiento: 0 libre, 1 ocupado.';
+});
+
+/* 27. ANALIZA */
+S('Actividad','Actividad: analiza la matriz',`<div class="cols">
+<div class="pane"><div class="vis card"></div><div class="cap"></div><div class="opts"></div></div>
+<div class="side" style="overflow:auto"><div class="res" id="rd27"></div><div class="card pad"><b style="color:var(--amb)">¿Qué operación hace falta para hallar k asientos libres seguidos en una fila?</b><textarea id="ta27" placeholder="Escribe tu análisis" style="margin-top:8px"></textarea></div>
+<div class="card pad big"><ul class="sq"><li>¿Se recorre por filas o por columnas? ¿Por qué?</li><li>¿Cuándo se puede dejar de revisar una fila?</li><li>¿Qué pasa si la fila tiene una racha de solo k-1 libres?</li></ul></div></div></div>`,root=>{
+ let row=null,col=null,showG=false;const V=$('.vis',root),rd=$('#rd27',root),cap=$('.cap',root);
+ const paint=()=>{
+  V.innerHTML=seatSVG({row,col,groups:showG,best:false});
+  if(row!==null)rd.innerHTML=`Fila ${ROWN[row]}: ${freeRow(row)} libres de ${CO}. Racha libre más larga: ${longest(SEATS[row])}. ${longest(SEATS[row])>=K?`Sirve para k = ${K}.`:`No sirve para k = ${K}.`}`;
+  else if(col!==null)rd.innerHTML=`Columna ${col+1}: ${range(FR).filter(i=>!SEATS[i][col]).length} libres de ${FR}. Una columna mezcla filas distintas, no sirve para sentar un grupo junto.`;
+  else rd.innerHTML=`Grupos válidos de k = ${K}: ${groups(K).length}. Selecciona una fila o una columna para contarlos, o cambia un asiento.`;
+  if(showG)rd.innerHTML+=` Grupos marcados: ${groups(K).length}.`;
+ };
+ V.addEventListener('click',e=>{
+  const g=e.target.closest('.c[data-i]'),r=e.target.closest('[data-row]'),c=e.target.closest('[data-col]');
+  if(g){const i=+g.dataset.i,j=+g.dataset.j;SEATS[i][j]^=1;cap.innerHTML=`Fila ${ROWN[i]}, asiento ${j+1}: ahora ${SEATS[i][j]?'ocupado':'libre'}.`;}
+  else if(r){row=row===+r.dataset.row?null:+r.dataset.row;col=null;}
+  else if(c){col=col===+c.dataset.col?null:+c.dataset.col;row=null;}
+  paint();
+ });
+ const o=$('.opts',root);
+ const ctr=()=>{o.innerHTML=`<div class="seg">${[2,3,4].map(k=>`<button type="button" class="${K===k?'on':''}" data-k="${k}">k = ${k}</button>`).join('')}<button type="button" class="${showG?'on':''}" data-g="1">Marcar grupos</button></div>`;
+  $$('button',o).forEach(b=>b.onclick=()=>{if(b.dataset.k)K=+b.dataset.k;else showG=!showG;ctr();paint();});};
+ ctr();
+ const ta=$('#ta27',root);try{ta.value=localStorage.getItem('esd01m_ta27')||'';}catch(e){}
+ ta.oninput=()=>{try{localStorage.setItem('esd01m_ta27',ta.value);}catch(e){}};
+ root._show=()=>{ctr();paint();};
+ cap.innerHTML='Cada asiento cambia entre libre y ocupado. Una letra resalta una fila y un número resalta una columna.';paint();
+});
+
+/* 28. PROPONE */
+S('Actividad','Actividad: propone estrategias de solución',`<div class="cols one" style="grid-template-rows:minmax(0,1fr) auto"><div class="g3" id="st28" data-rvg="1"></div><div class="card pad" style="margin-top:10px"><b style="color:var(--amb)">Justifica tu elección</b><textarea id="ta28" placeholder="Qué estrategia eliges y por qué" style="margin-top:6px;min-height:3.6em"></textarea></div></div>`,root=>{
+ const D=[['A. Revisar todos los grupos','para cada fila f:\n  para cada columna inicial c:\n    revisar los k asientos de f[c..c+k-1]\n    si todos libres: candidato','O(f * c * k)','A'],
+  ['B. Una pasada con racha','para cada fila f:\n  racha = 0\n  para cada columna c:\n    si libre: racha + 1, si no: racha = 0\n    si racha == k: candidato','O(f * c)','B'],
+  ['C. Contador por fila','mantener libres[f] al reservar o liberar\npara cada fila f:\n  si libres[f] < k: descartar\n  si no: aplicar la pasada B a f','O(f + c * filas candidatas)','C']];
+ let pick=null;const box=$('#st28',root);
+ box.innerHTML=D.map(()=>'<label class="card strat"></label>').join('');
+ const paint=()=>{const c=costs(K);[...box.children].forEach((lb,i)=>{const d=D[i];lb.classList.toggle('sel',pick===i);lb.innerHTML=`<span><input type="radio" name="est" value="${i}" ${pick===i?'checked':''}> ${d[0]}</span><pre>${esc(d[1])}</pre><span class="chip">${d[2]}</span><span>En esta sala con k = ${K}: <b style="color:var(--amb)">${c[d[3]]}</b> revisiones${i===2?` (${c.cand} filas candidatas)`:''}</span>`;
+   $('input',lb).onchange=e=>{pick=+e.target.value;paint();};});};
+ root._show=paint;paint();
+ const ta=$('#ta28',root);try{ta.value=localStorage.getItem('esd01m_ta28')||'';}catch(e){}
+ ta.oninput=()=>{try{localStorage.setItem('esd01m_ta28',ta.value);}catch(e){}};
+});
+
+/* 29. CONTRASTA */
+S('Actividad','Actividad: contrasta con el razonamiento esperado',`<div style="overflow:auto;min-height:0" id="d29"></div>`,root=>{
+ const paint=()=>{
+  const b=bestOf(K),c=costs(K);
+  $('#d29',root).innerHTML=`
+<details><summary>Qué representa la matriz y qué se pide</summary><div class="dd"><p>La matriz tiene 6 filas y 8 columnas. La celda (i, j) guarda el estado del asiento j de la fila i. La entrada es la matriz y k; la salida es la fila y la columna inicial del grupo, o la ausencia de solución.</p></div></details>
+<details><summary>Qué operación hace falta</summary><div class="dd"><p>Un recorrido por filas con un contador de racha. Los k asientos deben estar en la misma fila, así que recorrer por columnas no aporta. Una fila se puede abandonar al terminarla o cuando ya no quedan suficientes columnas por revisar.</p></div></details>
+<details><summary>Comparación de las tres estrategias</summary><div class="dd"><ul><li>A revisa cada grupo de k asientos de nuevo: O(f * c * k), ${c.A} revisiones aquí.</li><li>B recorre cada celda una sola vez: O(f * c), ${c.B} revisiones.</li><li>C descarta filas sin mirar sus celdas con un contador por fila: ${c.C} revisiones aquí. Cuesta O(f) de memoria extra y actualizar el contador en cada reserva.</li></ul><p>B suele ser la opción equilibrada. C conviene cuando se consulta muchas veces y las reservas son pocas.</p></div></details>
+<details><summary>Cuál es la mejor posición para k = ${K} en esta sala</summary><div class="dd"><p>${b?`Fila ${ROWN[b[0]]}, asientos ${b[1]+1} a ${b[1]+K}: es el grupo cuyo centro queda más cerca de la columna central. Si hay empate, gana la fila más cercana a la pantalla. Elegir entre los grupos válidos cuesta O(grupos).`:'No existe un grupo de '+K+' asientos libres seguidos. El método debe indicar que no hay solución.'}</p></div></details>
+<details><summary>Casos límite que hay que prever</summary><div class="dd"><ul><li>k mayor que el número de columnas: no hay solución.</li><li>Fila completamente ocupada: la racha vuelve a 0 en cada asiento.</li><li>Dos filas con el mismo mejor grupo: se necesita una regla de desempate.</li></ul></div></details>`;
+ };
+ root._show=paint;paint();
+});
+
+/* 30. RETOS */
+S('Actividad','Retos de predicción',`<div class="cols eq" data-rvg="1" style="align-items:start;overflow:auto">
+<div class="card pad"><b style="color:var(--amb);font-size:clamp(16px,1.7vw,28px)">Reto 1. Python</b><div class="cbox" id="c1" style="margin:8px 0;max-height:20vh"></div><div class="q" style="border:0;padding:0"><b>¿Qué imprime?</b><label><input type="checkbox"> <code>0</code></label><label><input type="checkbox"> <code>1</code></label><label><input type="checkbox"> <code>IndexError</code></label></div>
+<details><summary>Ver respuesta</summary><div class="dd"><p>Imprime <code>1</code>. Las seis filas son la misma lista repetida por referencia, así que escribir en <code>sala[0][0]</code> cambia la columna 0 de todas. La matriz correcta se construye con <code>[[0] * 8 for _ in range(6)]</code>.</p></div></details></div>
+<div class="card pad"><b style="color:var(--amb);font-size:clamp(16px,1.7vw,28px)">Reto 2. Java</b><div class="cbox" id="c2" style="margin:8px 0;max-height:20vh"></div><div class="q" style="border:0;padding:0"><b>¿Qué ocurre al ejecutar?</b><label><input type="checkbox"> Corre sin error</label><label><input type="checkbox"> <code>ArrayIndexOutOfBoundsException</code></label><label><input type="checkbox"> <code>NullPointerException</code></label></div>
+<details><summary>Ver respuesta</summary><div class="dd"><p>Lanza <code>ArrayIndexOutOfBoundsException: Index 6 out of bounds for length 6</code>. Las filas válidas van de 0 a 5; la fila F es el índice 5. La corrección es <code>sala[5][0] = 1</code>.</p></div></details></div></div>`,root=>{
+ codeBox($('#c1',root),{py:`sala = [[0] * 8] * 6
+sala[0][0] = 1
+print(sala[3][0])`});
+ codeBox($('#c2',root),{java:`int[][] sala = new int[6][8];
+sala[6][0] = 1;`});
+});
+
+/* ================= 31. CIERRE ================= */
+S('Cierre','Lo que te llevas y el puente al Tema 3',`<div class="cols eq"><div class="card pad big" style="overflow:auto"><ul class="sq">
+<li>Una matriz ubica cada dato con <code>(fila, columna)</code> y se accede en O(1).</li>
+<li>Orden por filas: dirección = base + (i * columnas + j) * tamaño.</li>
+<li>Java: arreglo de arreglos, con filas que pueden ser irregulares. <code>new int[3][]</code> deja filas en <code>null</code>.</li>
+<li>Python: lista de listas. <code>[[0] * c] * f</code> comparte filas; la comprensión no.</li>
+<li>Recorrer, sumar, transponer y buscar cuestan O(n*m); el producto cuesta O(n*m*p).</li>
+<li>Recorre en el mismo orden en que se guarda la matriz.</li></ul></div>
+<div class="pane"><div class="vis card"></div><div class="cbox" id="cb" style="flex:none;max-height:30vh"></div><div class="cap"></div><div class="ctl"></div></div></div>`,root=>{
+ const cb=codeBox($('#cb',root),{java:`int[] datos = new int[6];
+int tope = -1;
+void apilar(int x) { datos[++tope] = x; }
+int desapilar() { return datos[tope--]; }`});
+ const V=$('.vis',root);
+ const ops=[['push',7],['push',3],['push',9],['pop'],['push',5],['pop']];
+ const draw=k=>{
+  const a=Array(6).fill(null);let tope=-1;let last='';
+  for(let q=0;q<k;q++){const o=ops[q];if(o[0]==='push'){a[++tope]=o[1];last=`apilar(${o[1]})`;}else{last=`desapilar() devuelve ${a[tope]}`;a[tope--]=null;}}
+  let s=T(380,36,'Tema 3: pila con un vector','f26 b a');
+  a.forEach((v,i)=>{s+=cell(30+i*118,64,110,100,v===null?'':v,i===tope?'act':(v===null?'dim':'vis'),34)+T(30+i*118+55,196,i,'f19 m');});
+  if(tope>=0){const x=30+tope*118+55;s+=arrow([[x,262],[x,169]],'a','ahA')+T(x,292,'tope = '+tope,'f26 b a');}
+  else s+=T(380,262,'tope = -1: pila vacía','f26 b a');
+  V.innerHTML=svg(760,310,s,'Pila implementada con un arreglo');
+  cb.mark({java:k===0?[1,2]:(ops[k-1][0]==='push'?[3]:[4])});
+  return k===0?'Un vector y un índice <code>tope</code> bastan para una pila. Apilar y desapilar cuestan O(1).':`<code>${last}</code>. El tope queda en ${tope}.`;
+ };
+ player(root,{n:6,draw});
+});
+
+/* ================= ARRANQUE Y NAVEGACION ================= */
+const main=$('#main'),prog=$('#prog');let cur=-1;
+SL.forEach((s,i)=>{
+ const el=document.createElement('section');el.className='slide';el.id='s'+(i+1);el.setAttribute('aria-label',s.title);
+ el.innerHTML=(i===0?'':`<div class="kick">${s.sec}</div><h2 class="st">${s.title}</h2>`)+`<div class="sb">${s.html}</div>`;
+ main.append(el);s.el=el;
+});
+SL.forEach(s=>{try{if(s.init)s.init(s.el);}catch(e){console.error('Error en '+s.title,e);}});
+const secs=[...new Set(SL.map(s=>s.sec))];
+$('#tabs').innerHTML=secs.map(n=>`<button type="button" class="tab" data-sec="${n}">${n}</button>`).join('');
+$$('.tab').forEach(b=>b.onclick=()=>go(SL.findIndex(s=>s.sec===b.dataset.sec),'first'));
+prog.innerHTML=SL.map((s,i)=>`<button type="button" aria-label="Diapositiva ${i+1}: ${esc(s.title)}" title="${i+1}. ${esc(s.title)}"></button>`).join('');
+$$('button',prog).forEach((b,i)=>b.onclick=()=>go(i));
+const RVC={
+ 0:[['.cl>.kick','.cl>h1','.cl>.lead','.cl>.hero','.cr>h3'],{each:'#map>.mc'}],
+ 1:[{each:'.g2>.ex',gone:1}],
+ 2:[['.pane','.rd']],3:['.pane'],4:['.pane'],
+ 14:[{each:'.tbl tbody tr',n:5}],
+ 23:[['.cols>.elev','.cols>.pane']],
+ 24:[['.pane','.side>*:first-child'],'.side>*:nth-child(2)'],
+ 25:[['.pane','.side>.res'],{each:'#qs>.q'}],
+ 26:[['.pane','.side>.res'],'.side>.card:nth-of-type(1)','.side>.card:nth-of-type(2)'],
+ 27:[{each:'#st28>label',gone:1},'.cols>.card'],
+ 28:[{each:'#d29>details'}],
+ 29:[{each:'.cols>.card',gone:1}],
+ 30:[{each:'.sq>li'},'.pane']
+};
+let RV={steps:[],shown:0,timer:null};
+function collect(i){
+ const el=SL[i].el,cfg=RVC[i]||[['.pane','.side>.cbox'],{each:'.side>*:not(.cbox)'}],out=[];
+ cfg.forEach(sp=>{
+  if(typeof sp==='string'){const e=$$(sp,el);if(e.length)out.push(e);}
+  else if(Array.isArray(sp)){const e=sp.flatMap(q=>$$(q,el));if(e.length)out.push(e);}
+  else{const e=$$(sp.each,el),n=sp.n||1;for(let k=0;k<e.length;k+=n){const g=e.slice(k,k+n);g.gone=!!sp.gone;out.push(g);}}
+ });
+ return out.length?out:[[$('.sb',el)]];
+}
+function applyRV(){
+ RV.steps.forEach((els,k)=>els.forEach(e=>{
+  const hide=k>=RV.shown;
+  if(els.gone){const was=e.classList.contains('gone');
+   if(hide){e.classList.add('rvh','gone');}
+   else if(was){e.classList.remove('gone');e.classList.add('rv','rvh');void e.offsetWidth;e.classList.remove('rvh');}
+   else e.classList.remove('rvh');
+   e.classList.add('rv');
+  }else{e.classList.add('rv');e.classList.toggle('rvh',hide);}
+ }));
+ $$('[data-rvg]',SL[cur].el).forEach(p=>{p.dataset.n=[...p.children].filter(c=>!c.classList.contains('gone')).length;});
+ $('#rvi').innerHTML=RV.steps.map((_,k)=>`<i class="${k<RV.shown?'on':''}"></i>`).join('');
+ const last=cur===SL.length-1;
+ $('#prev').disabled=cur===0&&RV.shown<=1;
+ $('#next').disabled=last&&RV.shown>=RV.steps.length;
+}
+function go(n,mode){
+ mode=mode||'all';
+ n=Math.max(0,Math.min(SL.length-1,n));
+ stopAll();clearTimeout(RV.timer);RV.timer=null;cur=n;
+ SL.forEach((s,i)=>s.el.classList.toggle('on',i===n));
+ $$('button',prog).forEach((b,i)=>{b.classList.toggle('cur',i===n);b.classList.toggle('seen',i<n);});
+ $$('.tab').forEach(b=>b.classList.toggle('on',b.dataset.sec===SL[n].sec));
+ $('#cnt').textContent=(n+1)+' / '+SL.length;
+ SL[n].el.scrollTop=0;
+ if(SL[n].el._show)SL[n].el._show();
+ RV.steps=collect(n);
+ if(mode==='first'){
+  RV.shown=0;applyRV();
+  if(RM){RV.shown=1;applyRV();}
+  else RV.timer=setTimeout(()=>{RV.timer=null;RV.shown=1;applyRV();},300);
+ }else{RV.shown=RV.steps.length;applyRV();}
+ try{history.replaceState(null,'','#'+(n+1));}catch(e){}
+ const t=$('.tab.on'),tb=$('#tabs');if(t)tb.scrollLeft=t.offsetLeft-(tb.clientWidth-t.offsetWidth)/2;
+}
+function next(){
+ if(RV.timer){clearTimeout(RV.timer);RV.timer=null;RV.shown=1;applyRV();return;}
+ if(RV.shown<RV.steps.length){RV.shown++;applyRV();}
+ else if(cur<SL.length-1)go(cur+1,'first');
+}
+function prev(){
+ if(RV.timer){clearTimeout(RV.timer);RV.timer=null;}
+ stopAll();
+ if(RV.shown>1){RV.shown--;applyRV();}
+ else if(cur>0)go(cur-1,'all');
+}
+window.__go=go;
+$('#prev').onclick=prev;$('#next').onclick=next;
+addEventListener('keydown',e=>{
+ if(e.target.closest&&e.target.closest('input,textarea,select'))return;
+ if(e.key==='ArrowRight'||e.key==='PageDown'){next();e.preventDefault();}
+ else if(e.key===' '&&!e.target.closest('button,summary,a')){next();e.preventDefault();}
+ else if(e.key==='ArrowLeft'||e.key==='PageUp'){prev();e.preventDefault();}
+ else if(e.key==='Home')go(0,'first');else if(e.key==='End')go(SL.length-1);
+});
+let tx=null,ty=null;
+main.addEventListener('touchstart',e=>{if(e.target.closest('input,textarea,select,pre,summary,details'))return tx=null;tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+main.addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;tx=null;if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.8)(dx<0?next():prev());},{passive:true});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAll();});
+const h=parseInt((location.hash||'').slice(1),10);
+go(h>=1&&h<=SL.length?h-1:0,h>=1?'all':'first');
+main.addEventListener('click',e=>{if(e.target.closest('button,a,input,textarea,select,summary,label,details,svg,pre,table,.cbox,.strat,.mc,.q,.card,.pane,.side'))return;next();});
+})();
+</script>
+</body>
+</html>
