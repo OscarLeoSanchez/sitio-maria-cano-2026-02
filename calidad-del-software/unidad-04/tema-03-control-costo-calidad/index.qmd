@@ -1,0 +1,1260 @@
+---
+title: "Tema 3. Control de la calidad y costo de la calidad"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                  |
+|--------|------------------------------------------------------------------|
+| Unidad | Unidad 4. Validación y verificación                              |
+| Tema   | Tema 3. Control de la calidad y costo de la calidad              |
+:::
+
+[Presentación interactiva de la unidad](../presentacion-interactiva.html){.btn-curso}
+
+Tema anterior: [Tema 2. Validación y verificación de requisitos](../tema-02-validacion-verificacion-requisitos/index.qmd).
+Tema siguiente: [Tema 4. Nomenclatura y certificación](../tema-04-nomenclatura-certificacion/index.qmd).
+
+## Objetivo y resultado de aprendizaje
+
+Los Temas 1 y 2 de esta unidad respondieron qué se verifica y qué se valida en cada fase. Este tema responde tres
+preguntas que vienen después: cuándo se detiene el trabajo para decidir si algo pasa, cómo se vigila con datos que
+el proceso se mantiene estable, y cuánto dinero cuesta hacer todo eso frente a no hacerlo.
+
+Al terminar puedes:
+
+- Redactar un criterio de aceptación verificable y ubicarlo en una puerta de calidad dentro de un flujo de integración y entrega continuas (CI/CD).
+- Construir e interpretar un gráfico de control de conteo de defectos, y distinguir variación común de causa especial.
+- Ordenar defectos con un diagrama de Pareto y buscar la causa raíz con los cinco porqués y el diagrama de Ishikawa.
+- Clasificar los gastos de un proyecto en prevención, evaluación, fallas internas y fallas externas, y calcular el costo total de la calidad de varios escenarios.
+- Contrastar la idea de Juran (un nivel óptimo de inversión) con la de Crosby (cero defectos) y leer con criterio la frase "la calidad es gratis".
+- Analizar el caso Healthcare.gov 2013 con los informes de la GAO y nombrar qué puerta y qué criterio faltaron.
+
+Prerrequisitos: el Tema 1 de esta unidad (verificar y validar, IEEE 1012, modelo en V) y el Tema 3 de la Unidad 1
+(costo de la mala calidad y curva del defecto). Aquí no se repiten: se remite a ellos.
+
+## Ruta de estudio
+
+Son unas 6 horas de trabajo independiente, repartibles en tres sesiones. La presentación interactiva de la unidad
+sigue las mismas partes, así que sirve de repaso o de primera mirada.
+
+::: {.calendario}
+| Parte | Qué haces | Tiempo |
+|---|---|---|
+| 1. Puntos de control y criterios de aceptación | Lees qué es una puerta, escribes criterios y ejecutas una puerta automática. Reto 1 | 70 min |
+| 2. Control estadístico básico | Construyes un gráfico c, un Pareto y un Ishikawa con datos de la clínica. Retos 2 y 3 | 90 min |
+| 3. El costo de la calidad | Aprendes las cuatro categorías y calculas tres niveles de inversión. Retos 4 y 5 | 80 min |
+| 4. Lectura crítica de "la calidad es gratis" | Contrastas a Crosby, a Juran y la evidencia en software. Reto 6 | 35 min |
+| 5. Caso Healthcare.gov 2013 | Analizas dos informes de la GAO y resuelves el Reto 7 | 40 min |
+| Cierre | Errores frecuentes, autoevaluación y glosario | 45 min |
+:::
+
+## El hilo conductor: la Clínica Aurora y su versión 3.0
+
+La app de turnos de la clínica es un producto ficticio que atraviesa todo el curso. En este tema el equipo prepara
+la versión 3.0, que agrega recordatorios de turno por mensaje de texto y por correo. Una hora de trabajo del
+equipo se valora en 60.000 pesos y una cita perdida en 80.000 pesos de ingreso, los mismos valores del Tema 3 de
+la Unidad 1. Ninguna cifra de la clínica es real: se inventaron para practicar el cálculo y cada vez que aparece
+una, el texto la marca como ilustrativa.
+
+## Parte 1. Puntos de control y criterios de aceptación
+
+### Qué es un punto de control
+
+Un *punto de control*, o puerta (*gate*), es un momento fijado de antemano en el que un entregable se detiene, se
+compara contra un criterio escrito y alguien decide si avanza o vuelve. Tres rasgos lo distinguen de una revisión
+informal: el momento está planeado, el criterio está escrito antes de mirar el resultado y la decisión tiene dos
+salidas posibles.
+
+El Tema 1 mostró qué evidencia pide cada fase según IEEE 1012 y cómo se reparten las pruebas en el modelo en V.
+Los puntos de control son los lugares donde esa evidencia se exige. Un punto de control puede pedir evidencia de
+verificación, de validación o de las dos.
+
+Hay dos tipos según quién decide. En una puerta automática decide una herramienta que compara una medición contra
+un umbral. En una puerta humana decide una persona o un comité con la evidencia delante, como una revisión de
+preparación antes de lanzar. Las dos conviven: lo medible se automatiza y lo que exige juicio se deja a una
+persona con un criterio escrito.
+
+### El criterio de aceptación: la vara que decide
+
+Un *criterio de aceptación* es una condición concreta y verificable con la que se decide si el entregable pasa. Sin
+él, la puerta se convierte en una reunión donde alguien opina si el trabajo se ve terminado. Un buen criterio
+lleva cuatro piezas: qué se mide, el valor límite, las condiciones en que aplica y cómo se comprueba.
+
+Ejemplo para la clínica, con las cuatro piezas rotuladas:
+
+| Pieza | Contenido |
+|---|---|
+| Qué se mide | Turnos asignados correctamente en la prueba de carga |
+| Valor límite | Al menos 99,5 % de las solicitudes terminan con un turno único, y ninguna con el turno 21 de una especialidad |
+| Condiciones | 500 solicitudes simultáneas contra el ambiente de pruebas con datos sintéticos |
+| Cómo se comprueba | Reporte de la prueba de carga adjunto a la solicitud de despliegue |
+
+El umbral de 99,5 % es ilustrativo. En un proyecto real sale de un requisito, de un acuerdo de nivel de servicio
+o de lo que el negocio tolera, y se anota de dónde sale.
+
+### Definición de terminado y criterios de aceptación
+
+En los equipos ágiles hay dos documentos que se confunden. Los criterios de aceptación pertenecen a cada
+elemento del trabajo y dicen cuándo ese elemento cumple lo pedido. La definición de terminado (*Definition of
+Done*) pertenece al equipo y fija la barra de calidad común a todo elemento.
+
+La Guía Scrum 2020, de Schwaber y Sutherland, define la definición de terminado como una descripción formal del
+estado del incremento cuando cumple las medidas de calidad requeridas para el producto. Agrega que un elemento
+que no la cumple no puede liberarse ni presentarse en la revisión del sprint, y vuelve a la lista del producto.
+Esa regla es una puerta: el criterio está escrito y la salida es binaria.
+
+### Puertas de calidad en CI/CD
+
+En un flujo de integración y entrega continuas, cada cambio atraviesa etapas automáticas. Una *puerta de calidad*
+es una condición medible que, si no se cumple, detiene el cambio. El diagrama muestra cuatro puertas para la app
+de turnos. Las tres primeras se ubican antes de que el cambio avance y la cuarta vigila después del despliegue.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 268" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Camino de un cambio desde el pull request hasta producción con tres puertas previas, revisión, calidad y despliegue, y una puerta posterior de vigilancia" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t3a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro puertas en el camino de un cambio de la app de turnos</text>
+  <rect x="16" y="46" width="108" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="70" y="69" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Cambio</text><text x="70" y="86" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">pull request</text>
+  <rect x="226" y="46" width="108" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="280" y="69" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Integración</text><text x="280" y="86" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">continua</text>
+  <rect x="436" y="46" width="108" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="490" y="69" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Candidato</text><text x="490" y="86" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">a versión</text>
+  <rect x="636" y="46" width="108" height="54" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="690" y="78" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Producción</text>
+  <polygon points="175,58 192,73 175,88 158,73" fill="#fff3d6" stroke="#e6c46f"/>
+  <text x="175" y="77" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">P1</text>
+  <polygon points="385,58 402,73 385,88 368,73" fill="#fff3d6" stroke="#e6c46f"/>
+  <text x="385" y="77" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">P2</text>
+  <polygon points="590,58 607,73 590,88 573,73" fill="#fff3d6" stroke="#e6c46f"/>
+  <text x="590" y="77" font-size="11" font-weight="700" fill="#12324f" text-anchor="middle">P3</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#u4t3a)"><path d="M124,73 L154,73"/><path d="M194,73 L224,73"/><path d="M334,73 L364,73"/><path d="M404,73 L434,73"/><path d="M544,73 L569,73"/><path d="M609,73 L634,73"/></g>
+  <rect x="75" y="116" width="200" height="82" rx="9" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="175" y="136" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">P1. Antes de unir el cambio</text>
+  <text x="175" y="158" font-size="11" fill="#5b6876" text-anchor="middle">Revisión de otra persona</text>
+  <text x="175" y="174" font-size="11" fill="#5b6876" text-anchor="middle">Pruebas unitarias en verde</text>
+  <text x="175" y="190" font-size="11" fill="#5b6876" text-anchor="middle">Análisis estático sin hallazgos</text>
+  <rect x="285" y="116" width="200" height="82" rx="9" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="385" y="136" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">P2. Puerta de calidad</text>
+  <text x="385" y="158" font-size="11" fill="#5b6876" text-anchor="middle">Cobertura del código nuevo</text>
+  <text x="385" y="174" font-size="11" fill="#5b6876" text-anchor="middle">Duplicación y vulnerabilidades</text>
+  <text x="385" y="190" font-size="11" fill="#5b6876" text-anchor="middle">Pruebas de integración en verde</text>
+  <rect x="490" y="116" width="200" height="82" rx="9" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="590" y="136" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">P3. Antes de desplegar</text>
+  <text x="590" y="158" font-size="11" fill="#5b6876" text-anchor="middle">Prueba de aceptación firmada</text>
+  <text x="590" y="174" font-size="11" fill="#5b6876" text-anchor="middle">Prueba de carga bajo el umbral</text>
+  <text x="590" y="190" font-size="11" fill="#5b6876" text-anchor="middle">Plan de reversa listo</text>
+  <rect x="636" y="220" width="108" height="34" rx="9" fill="#e4f2f1" stroke="#8fc9c5"/><text x="690" y="242" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">P4. Vigilancia</text>
+  <path d="M690,100 L690,114 M690,198 L690,218" fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="5 4"/>
+  <text x="40" y="226" font-size="11" fill="#5b6876">P4: tras desplegar se mide la tasa de fallos y se revierte si pasa el umbral.</text>
+  <text x="40" y="244" font-size="11" fill="#5b6876">Una puerta que no se cumple devuelve el cambio a quien lo hizo.</text>
+</svg>
+
+:::
+
+La puerta P2 es la que suele llamarse puerta de calidad en herramientas de análisis de código. La documentación
+de SonarQube la describe como un conjunto de condiciones que responde si el proyecto está listo para
+liberarse, y su estado puede reportarse al pipeline para hacerlo fallar. La puerta predeterminada, llamada
+"Sonar way", evalúa solo el código nuevo con cuatro condiciones, según la documentación consultada en octubre de 2026:
+
+- Ningún problema nuevo introducido.
+- El 100 % de los puntos críticos de seguridad nuevos revisados.
+- Cobertura del código nuevo mayor o igual a 80 %.
+- Duplicación del código nuevo menor o igual a 3 %.
+
+Que la puerta mire el código nuevo y no el total importa. En un sistema grande, un módulo nuevo sin pruebas casi no
+mueve el promedio global, y la puerta no lo notaría. El caso resuelto de más abajo lo muestra.
+
+Para que la puerta detenga de verdad hace falta un segundo mecanismo. GitHub permite exigir verificaciones de
+estado antes de unir a una rama protegida: la documentación indica que esas verificaciones deben terminar en
+estado exitoso, omitido o neutral antes de que se pueda cambiar la rama, y que se puede exigir un número de
+revisiones aprobadas. Sin esa protección, la puerta informa pero no obliga.
+
+::: {.callout-note}
+## Las puertas y las métricas de entrega
+
+El programa de investigación DORA sobre entrega de software define hoy cinco métricas. Tres miden
+velocidad (tiempo de entrega de un cambio, frecuencia de despliegue y tiempo de recuperación de un despliegue
+fallido) y dos miden inestabilidad: la tasa de fallo de cambios, que es la proporción de despliegues que exigen
+intervención inmediata, y la tasa de retrabajo de despliegues, la proporción de despliegues no planificados
+causados por un incidente. La puerta P4 del diagrama es la que alimenta esas dos últimas.
+:::
+
+### Ejemplo resuelto: una puerta que rechaza un cambio
+
+El equipo de la clínica codifica la puerta P2 en un script pequeño. Un pipeline interpreta un código de salida
+distinto de cero como fallo, así que el script devuelve 1 cuando algún criterio no se cumple. Los umbrales son
+los de la puerta "Sonar way" más cero pruebas fallidas, y la medición es de un cambio que agrega el módulo de recordatorios.
+
+```python
+import sys
+
+# Criterios de la puerta: sentido de la comparacion y umbral
+CRITERIOS = {
+    "pruebas_fallidas":          ("max", 0),
+    "cobertura_codigo_nuevo":    ("min", 80.0),
+    "duplicacion_codigo_nuevo":  ("max", 3.0),
+    "vulnerabilidades_criticas": ("max", 0),
+}
+
+# Medicion de ejemplo: lo que reportaria el pipeline para un cambio
+medicion = {
+    "pruebas_fallidas": 0,
+    "cobertura_codigo_nuevo": 74.5,
+    "duplicacion_codigo_nuevo": 1.2,
+    "vulnerabilidades_criticas": 0,
+}
+
+fallos = []
+for nombre, (sentido, umbral) in CRITERIOS.items():
+    valor = medicion[nombre]
+    cumple = valor <= umbral if sentido == "max" else valor >= umbral
+    print(f"{'OK  ' if cumple else 'FALLA'} {nombre}: {valor} (umbral {sentido} {umbral})")
+    if not cumple:
+        fallos.append(nombre)
+
+print("Puerta:", "APROBADA" if not fallos else "RECHAZADA")
+sys.exit(1 if fallos else 0)
+```
+
+Salida real de ejecutarlo con Python 3.13 (el resultado es determinista y no depende del equipo):
+
+```text
+OK   pruebas_fallidas: 0 (umbral max 0)
+FALLA cobertura_codigo_nuevo: 74.5 (umbral min 80.0)
+OK   duplicacion_codigo_nuevo: 1.2 (umbral max 3.0)
+OK   vulnerabilidades_criticas: 0 (umbral max 0)
+Puerta: RECHAZADA
+codigo de salida: 1
+```
+
+Lectura del resultado: tres criterios se cumplen y uno no. La cobertura del código nuevo es de 74,5 %, menor que
+80 %, y con una sola falla la puerta rechaza el cambio. Nadie discute si "se ve bien": el cambio vuelve a su autor
+con el motivo exacto. Para pasar, el autor agrega pruebas al módulo de recordatorios hasta superar el umbral, y la
+puerta se evalúa otra vez.
+
+### Trampas de las puertas
+
+Una puerta mal diseñada cuesta tiempo y no protege. Cuatro trampas son comunes.
+
+- Umbral sin respaldo. Un 80 % de cobertura copiado de una guía no dice nada sobre el riesgo de tu producto. El umbral debe poder justificarse y revisarse.
+- Medir lo fácil y no lo importante. La cobertura mide qué líneas ejecutan las pruebas, no si las pruebas verifican algo. Una puerta que solo mira cobertura se burla con pruebas sin comprobaciones.
+- Pruebas intermitentes. Una prueba que falla al azar enseña al equipo a volver a ejecutar hasta que pase, y la puerta pierde autoridad.
+- Saltarse la puerta. Si cualquiera puede unir sin pasar la puerta "solo esta vez", el criterio deja de ser un criterio. Las excepciones se registran con nombre y motivo.
+
+::: {.callout-tip}
+## Reto 1. Escribe el criterio de una puerta
+
+El equipo agrega la función que envía el recordatorio 24 horas antes del turno. Escribe un criterio de aceptación
+para la puerta P3 (antes de desplegar) con las cuatro piezas: qué se mide, el valor límite, las condiciones y cómo
+se comprueba. Debe mezclar evidencia de verificación y de validación.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+Hay varias respuestas válidas. Una posible es esta.
+
+- Qué se mide: porcentaje de recordatorios enviados dentro de la ventana prevista, y confirmación de un usuario real de que el mensaje es comprensible.
+- Valor límite: al menos 98 % de los recordatorios llegan entre 23 y 25 horas antes del turno, y 5 de 5 pacientes del piloto confirman que entendieron fecha, hora y consultorio.
+- Condiciones: 300 turnos sintéticos en el ambiente de pruebas con zonas horarias de Colombia, y un piloto con 5 pacientes reales de la clínica.
+- Cómo se comprueba: registro de envíos del servicio de mensajería adjunto a la solicitud de despliegue y acta del piloto firmada por la persona responsable del servicio.
+
+La medición de envíos es evidencia de verificación (el sistema hace lo especificado). La confirmación de los
+pacientes es evidencia de validación (el sistema sirve a quien lo usa). El umbral de 98 % y los números del
+piloto son ilustrativos. Una respuesta como "los recordatorios funcionan bien" no sirve, porque dos personas
+distintas podrían leerla y llegar a conclusiones opuestas.
+:::
+
+## Parte 2. Control estadístico básico
+
+Una puerta decide sobre un entregable. El control estadístico decide sobre el proceso: si los resultados que
+produce se comportan de forma estable o si algo cambió. Esta parte presenta tres herramientas, el gráfico de
+control, el diagrama de Pareto y la búsqueda de causa raíz, con datos de la clínica.
+
+### Variación común y causa especial
+
+Ningún proceso produce siempre el mismo resultado. Entre una semana y otra, el número de defectos que halla la
+regresión cambia aunque nadie haya modificado nada. A esa fluctuación natural se la llama *variación común*. Una
+*causa especial* o asignable es algo puntual que mueve el proceso fuera de su comportamiento habitual, como un
+módulo nuevo sin pruebas, un cambio de proveedor o una configuración equivocada.
+
+La distinción importa porque pide acciones distintas. Ante variación común, reaccionar a cada semana mala es
+perder tiempo y puede empeorar las cosas. Ante una causa especial, conviene buscarla y eliminarla. El gráfico de
+control es la herramienta que ayuda a distinguirlas. El Manual electrónico de métodos estadísticos de NIST y
+SEMATECH lo describe como una gráfica de una característica de calidad contra el tiempo, con una línea central que
+representa la media del proceso en control y dos líneas, el límite superior y el límite inferior de control, que se
+eligen para que casi todos los puntos caigan dentro mientras el proceso siga en control. Su origen se atribuye a
+Walter Shewhart y a su libro de 1931.
+
+### El gráfico c: contar defectos
+
+Cuando se cuentan defectos por unidad de inspección y la unidad no cambia, se usa un *gráfico c*. NIST modela el
+conteo con la distribución de Poisson, cuya media y varianza son iguales a c, y da los límites para k desviaciones:
+
+- Línea central: c barra, el promedio de defectos por unidad.
+- Límite superior (LSC): c barra más 3 veces la raíz cuadrada de c barra.
+- Límite inferior (LIC): c barra menos 3 veces la raíz cuadrada de c barra. Si sale negativo, no hay límite inferior.
+
+Si el tamaño de lo inspeccionado varía de una vez a otra, se usa el gráfico u (defectos por unidad), no el c. En
+este ejemplo la unidad es siempre la misma: la batería completa de regresión, una vez por semana.
+
+### Ejemplo resuelto 1: doce semanas de regresión
+
+El equipo registró cuántos defectos halló la prueba de regresión cada semana durante doce semanas. Los datos son
+ilustrativos.
+
+| Semana | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Defectos | 8 | 11 | 7 | 9 | 10 | 6 | 12 | 9 | 8 | 10 | 7 | 23 |
+
+1. Suma los conteos: 8 + 11 + 7 + 9 + 10 + 6 + 12 + 9 + 8 + 10 + 7 + 23 = 120.
+2. Promedio: c barra = 120 / 12 = 10,00.
+3. Raíz de c barra: raíz de 10 = 3,162.
+4. Límites: LSC = 10 + 3 x 3,162 = 19,49. LIC = 10 - 3 x 3,162 = 0,51.
+5. Compara cada punto. Los primeros once están entre 6 y 12, dentro de los límites. La semana 12, con 23, supera 19,49: es una señal.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gráfico de control c con doce semanas de conteo de defectos; la semana doce, con 23 defectos, queda por encima del límite superior de 19,49 mientras las otras once semanas oscilan entre 6 y 12" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t3c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Gráfico c: defectos hallados por la regresión semanal</text>
+  <g stroke="#cfd8e3" stroke-width="1.2"><path d="M60,240 L660,240"/><path d="M60,40 L60,240"/></g>
+  <path d="M60,84.1 L660,84.1" stroke="#e0a595" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <path d="M60,160.0 L660,160.0" stroke="#8fc9c5" stroke-width="1.6"/>
+  <path d="M60,235.9 L660,235.9" stroke="#e0a595" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <text x="668" y="88.1" font-size="11" fill="#5b6876">LSC 19,49</text><text x="668" y="164.0" font-size="11" fill="#5b6876">c 10,00</text><text x="668" y="239.9" font-size="11" fill="#5b6876">LIC 0,51</text>
+  <polyline points="90,176 140,152 190,184 240,168 290,160 340,192 390,144 440,168 490,176 540,160 590,184 640,56" fill="none" stroke="#8fb3d1" stroke-width="1.8"/>
+  <circle cx="90" cy="176" r="4.4" fill="#0e6f6c"/>
+  <text x="90" y="258" font-size="11" fill="#12324f" text-anchor="middle">1</text>
+  <circle cx="140" cy="152" r="4.4" fill="#0e6f6c"/>
+  <text x="140" y="258" font-size="11" fill="#12324f" text-anchor="middle">2</text>
+  <circle cx="190" cy="184" r="4.4" fill="#0e6f6c"/>
+  <text x="190" y="258" font-size="11" fill="#12324f" text-anchor="middle">3</text>
+  <circle cx="240" cy="168" r="4.4" fill="#0e6f6c"/>
+  <text x="240" y="258" font-size="11" fill="#12324f" text-anchor="middle">4</text>
+  <circle cx="290" cy="160" r="4.4" fill="#0e6f6c"/>
+  <text x="290" y="258" font-size="11" fill="#12324f" text-anchor="middle">5</text>
+  <circle cx="340" cy="192" r="4.4" fill="#0e6f6c"/>
+  <text x="340" y="258" font-size="11" fill="#12324f" text-anchor="middle">6</text>
+  <circle cx="390" cy="144" r="4.4" fill="#0e6f6c"/>
+  <text x="390" y="258" font-size="11" fill="#12324f" text-anchor="middle">7</text>
+  <circle cx="440" cy="168" r="4.4" fill="#0e6f6c"/>
+  <text x="440" y="258" font-size="11" fill="#12324f" text-anchor="middle">8</text>
+  <circle cx="490" cy="176" r="4.4" fill="#0e6f6c"/>
+  <text x="490" y="258" font-size="11" fill="#12324f" text-anchor="middle">9</text>
+  <circle cx="540" cy="160" r="4.4" fill="#0e6f6c"/>
+  <text x="540" y="258" font-size="11" fill="#12324f" text-anchor="middle">10</text>
+  <circle cx="590" cy="184" r="4.4" fill="#0e6f6c"/>
+  <text x="590" y="258" font-size="11" fill="#12324f" text-anchor="middle">11</text>
+  <circle cx="640" cy="56" r="4.4" fill="#c0503a"/>
+  <text x="640" y="258" font-size="11" fill="#12324f" text-anchor="middle">12</text>
+  <text x="630" y="42" font-size="11.5" font-weight="700" fill="#c0503a" text-anchor="end">Semana 12: 23 defectos, sobre el límite</text>
+  <text x="360" y="276" font-size="11" fill="#5b6876" text-anchor="middle">Semana de la prueba de regresión</text>
+  <text x="52" y="44" font-size="11" fill="#5b6876" text-anchor="end">23</text><text x="52" y="244" font-size="11" fill="#5b6876" text-anchor="end">0</text>
+</svg>
+
+:::
+
+Una señal indica que probablemente hay una causa especial. Como el límite se calculó con datos que incluyen ese
+punto raro, se recalcula la línea central y los límites sin él para tener una referencia del comportamiento
+habitual:
+
+6. Sin la semana 12: suma 97, once semanas, c barra = 8,82.
+7. Raíz de 8,82 = 2,970. LSC = 8,82 + 3 x 2,970 = 17,73. LIC = 8,82 - 8,91 es negativo, así que no hay límite inferior.
+
+El comportamiento habitual del proceso es de unos 9 defectos por semana, y una semana por encima de 17,73
+merece investigarse. El script siguiente repite el cálculo y su salida es real.
+
+```python
+import math
+
+defectos = [8, 11, 7, 9, 10, 6, 12, 9, 8, 10, 7, 23]  # una regresion por semana
+
+def limites(datos):
+    c = sum(datos) / len(datos)
+    s = math.sqrt(c)
+    return c, c + 3 * s, max(c - 3 * s, 0)
+
+c, lsc, lic = limites(defectos)
+print(f"Con las 12 semanas: c={c:.2f} LSC={lsc:.2f} LIC={lic:.2f}")
+fuera = [(i + 1, d) for i, d in enumerate(defectos) if d > lsc or d < lic]
+print("Fuera de limites:", fuera)
+
+base = [d for i, d in enumerate(defectos) if (i + 1) not in [s for s, _ in fuera]]
+c, lsc, lic = limites(base)
+print(f"Sin esas semanas: c={c:.2f} LSC={lsc:.2f} LIC={lic:.2f}")
+```
+
+```text
+Con las 12 semanas: c=10.00 LSC=19.49 LIC=0.51
+Fuera de limites: [(12, 23)]
+Sin esas semanas: c=8.82 LSC=17.73 LIC=0.00
+```
+
+Dos cuidados al usar el gráfico. Primero, un punto dentro de los límites no es prueba de que todo esté bien: solo
+dice que no hay señal. Segundo, existen reglas adicionales de rachas, como las de Nelson (1984), para detectar
+cambios pequeños y sostenidos, por ejemplo una larga serie de puntos del mismo lado de la línea central. Esta guía
+solo usa la regla del punto fuera de límites.
+
+::: {.callout-note}
+## Límites de control no son límites de especificación
+
+Los límites de control salen de los datos del proceso y dicen qué es normal en él. Un límite de especificación sale
+de un requisito y dice qué es aceptable. Un proceso estable puede producir 9 defectos semanales y aun así ser
+inaceptable si el requisito tolera 3. Controlar el proceso y cumplir el requisito son dos preguntas distintas.
+:::
+
+### El diagrama de Pareto: por dónde empezar
+
+Cuando hay muchos tipos de defecto, atacarlos todos a la vez no rinde. El *diagrama de Pareto* ordena las causas de
+mayor a menor frecuencia y dibuja una línea con el porcentaje acumulado. Aplica la idea de que unas pocas causas
+explican la mayor parte de los efectos, y ayuda a decidir dónde invertir primero.
+
+### Ejemplo resuelto 2: defectos por módulo
+
+En el trimestre de partida (el mismo que se usa más adelante para el costo de la calidad), el equipo halló 60
+defectos antes de entregar y los clasificó por módulo.
+
+| Módulo | Defectos | Porcentaje | Acumulado |
+|---|:-:|:-:|:-:|
+| Asignación de turnos | 27 | 45,0 % | 45,0 % |
+| Notificaciones | 14 | 23,3 % | 68,3 % |
+| Agenda de médicos | 8 | 13,3 % | 81,7 % |
+| Pagos y copagos | 5 | 8,3 % | 90,0 % |
+| Reportes | 3 | 5,0 % | 95,0 % |
+| Otros | 3 | 5,0 % | 100,0 % |
+
+1. Ordena de mayor a menor. La tabla ya está ordenada.
+2. Calcula cada porcentaje dividiendo entre 60. Por ejemplo, 27 / 60 = 45,0 %.
+3. Acumula: 45,0 + 23,3 = 68,3 y 68,3 + 13,3 = 81,7 (con los decimales exactos, 49 / 60 = 81,7 %).
+4. Lee dónde se cruza el 80 %: en el tercer módulo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 274" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de Pareto de 60 defectos por módulo: asignación de turnos 27, notificaciones 14, agenda 8, pagos 5, reportes 3 y otros 3, con línea de porcentaje acumulado que llega a 81,7 por ciento en el tercer módulo" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t3b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Defectos por módulo en el trimestre de partida (60 defectos)</text>
+  <g stroke="#cfd8e3" stroke-width="1.2"><path d="M60,240 L560,240"/><path d="M60,60 L60,240"/></g>
+  <path d="M60,96 L560,96" stroke="#e0a595" stroke-width="1.2" stroke-dasharray="5 4"/>
+  <text x="566" y="100" font-size="11" fill="#5b6876">80 %</text><text x="566" y="64" font-size="11" fill="#5b6876">100 %</text><text x="566" y="244" font-size="11" fill="#5b6876">0</text>
+  <rect x="70" y="159.0" width="56" height="81.0" fill="#fbeae5" stroke="#e0a595"/>
+  <text x="98" y="154.0" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">27</text>
+  <text x="98" y="258" font-size="11" fill="#12324f" text-anchor="middle">Asignación</text>
+  <rect x="148" y="198.0" width="56" height="42.0" fill="#fbeae5" stroke="#e0a595"/>
+  <text x="176" y="193.0" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">14</text>
+  <text x="176" y="258" font-size="11" fill="#12324f" text-anchor="middle">Notificac.</text>
+  <rect x="226" y="216.0" width="56" height="24.0" fill="#fbeae5" stroke="#e0a595"/>
+  <text x="254" y="211.0" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">8</text>
+  <text x="254" y="258" font-size="11" fill="#12324f" text-anchor="middle">Agenda</text>
+  <rect x="304" y="225.0" width="56" height="15.0" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="332" y="220.0" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">5</text>
+  <text x="332" y="258" font-size="11" fill="#12324f" text-anchor="middle">Pagos</text>
+  <rect x="382" y="231.0" width="56" height="9.0" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="410" y="226.0" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">3</text>
+  <text x="410" y="258" font-size="11" fill="#12324f" text-anchor="middle">Reportes</text>
+  <rect x="460" y="231.0" width="56" height="9.0" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="488" y="226.0" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">3</text>
+  <text x="488" y="258" font-size="11" fill="#12324f" text-anchor="middle">Otros</text>
+  <polyline points="98,159.0 176,117.0 254,93.0 332,78.0 410,69.0 488,60.0" fill="none" stroke="#0e6f6c" stroke-width="2"/>
+  <circle cx="98" cy="159.0" r="3.6" fill="#0e6f6c"/>
+  <circle cx="176" cy="117.0" r="3.6" fill="#0e6f6c"/>
+  <circle cx="254" cy="93.0" r="3.6" fill="#0e6f6c"/>
+  <circle cx="332" cy="78.0" r="3.6" fill="#0e6f6c"/>
+  <circle cx="410" cy="69.0" r="3.6" fill="#0e6f6c"/>
+  <circle cx="488" cy="60.0" r="3.6" fill="#0e6f6c"/>
+  <rect x="596" y="70" width="150" height="120" rx="9" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="608" y="92" font-size="11.5" font-weight="700" fill="#12324f">Lectura</text>
+  <text x="608" y="109" font-size="11.5" font-weight="400" fill="#5b6876">Tres módulos</text>
+  <text x="608" y="126" font-size="11.5" font-weight="400" fill="#5b6876">suman 49 de 60</text>
+  <text x="608" y="143" font-size="11.5" font-weight="400" fill="#5b6876">defectos (81,7 %).</text>
+  <text x="608" y="160" font-size="11.5" font-weight="400" fill="#5b6876">La línea verde es</text>
+  <text x="608" y="177" font-size="11.5" font-weight="400" fill="#5b6876">el acumulado.</text>
+</svg>
+
+:::
+
+Tres de seis módulos concentran 49 de 60 defectos, es decir 81,7 %. Si el equipo tiene un presupuesto limitado de
+revisiones, conviene empezar por asignación de turnos y notificaciones, que juntas suman 68,3 %. Una advertencia:
+Pareto cuenta frecuencia, no gravedad. Un solo defecto en pagos puede costar más que cinco en reportes, así que
+cuando el costo por defecto varía mucho conviene ordenar por costo y no por conteo.
+
+### Causa raíz: cinco porqués e Ishikawa
+
+Hallar el defecto no es lo mismo que hallar su causa. La *causa raíz* es la condición que, si se corrige, evita que
+el problema vuelva. Dos técnicas simples ayudan a buscarla. Los cinco porqués consisten en preguntar "por qué"
+sucesivamente hasta llegar a una causa que el equipo puede cambiar. Se asocia al sistema de producción de Toyota,
+en la exposición de Taiichi Ohno. El diagrama de Ishikawa, o de espina de pescado, organiza las causas posibles
+por categorías. Kaoru Ishikawa lo expuso en su guía de control de calidad de 1976.
+
+### Ejemplo resuelto 3: el pico de la semana 12
+
+El gráfico c marcó la semana 12. Un análisis de los 23 defectos mostró que 15 estaban en el módulo de notificaciones,
+recién agregado con los recordatorios. Se aplican los cinco porqués sobre ese pico.
+
+| Paso | Pregunta | Respuesta |
+|---|---|---|
+| 1 | Por qué hubo 23 defectos en la regresión | 15 estaban en el módulo de notificaciones |
+| 2 | Por qué el módulo de notificaciones llegó con tantos defectos | Se unió sin pruebas de formato de mensaje ni de zona horaria |
+| 3 | Por qué se unió sin esas pruebas | La puerta P2 pasó: la cobertura total era 78 % |
+| 4 | Por qué la puerta pasó con código nuevo sin pruebas | La puerta medía cobertura sobre todo el código y el módulo nuevo era una fracción pequeña |
+| 5 | Por qué se medía sobre todo el código | Al configurarla nadie definió que debía evaluar solo el código nuevo |
+
+La causa raíz es de proceso y no de personas: la puerta estaba configurada sobre el total. La acción correctiva es
+cambiarla para que exija cobertura del código nuevo mayor o igual a 80 %, como en la puerta "Sonar way". El
+diagrama de Ishikawa muestra además otras ramas que contribuyeron y que los cinco porqués por sí solos no
+revelan.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de Ishikawa con seis ramas, proceso, herramientas, requisitos, personas, entorno y datos, que desembocan en el pico de 23 defectos de la semana 12" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t3d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Ishikawa del pico de defectos de la semana 12</text>
+  <path d="M30,140 L596,140" stroke="#8fb3d1" stroke-width="2.6" marker-end="url(#u4t3d)" fill="none"/>
+  <rect x="600" y="108" width="146" height="64" rx="10" fill="#fbeae5" stroke="#e0a595"/>
+  <text x="673" y="134" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Pico de 23 defectos</text><text x="673" y="152" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">en la semana 12</text>
+  <path d="M120,48 L180,140" stroke="#8fb3d1" stroke-width="1.8" fill="none"/>
+  <rect x="72" y="26" width="96" height="22" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><text x="120" y="41" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Proceso</text>
+  <text x="162" y="72" font-size="10.5" fill="#5b6876">Puerta solo global</text>
+  <text x="162" y="88" font-size="10.5" fill="#5b6876">Sin pruebas en el PR</text>
+  <text x="162" y="104" font-size="10.5" fill="#5b6876">Revisión sin lista</text>
+  <path d="M270,48 L330,140" stroke="#8fb3d1" stroke-width="1.8" fill="none"/>
+  <rect x="222" y="26" width="96" height="22" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><text x="270" y="41" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Herramientas</text>
+  <text x="312" y="72" font-size="10.5" fill="#5b6876">Cobertura total</text>
+  <text x="312" y="88" font-size="10.5" fill="#5b6876">Sin análisis del nuevo</text>
+  <text x="312" y="104" font-size="10.5" fill="#5b6876">Pruebas lentas</text>
+  <path d="M420,48 L480,140" stroke="#8fb3d1" stroke-width="1.8" fill="none"/>
+  <rect x="372" y="26" width="96" height="22" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><text x="420" y="41" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Requisitos</text>
+  <text x="462" y="72" font-size="10.5" fill="#5b6876">Formato SMS ambiguo</text>
+  <text x="462" y="88" font-size="10.5" fill="#5b6876">Zona horaria vaga</text>
+  <text x="462" y="104" font-size="10.5" fill="#5b6876">Sin criterio de acept.</text>
+  <path d="M120,232 L180,140" stroke="#8fb3d1" stroke-width="1.8" fill="none"/>
+  <rect x="72" y="232" width="96" height="22" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><text x="120" y="247" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Personas</text>
+  <text x="168" y="166" font-size="10.5" fill="#5b6876">Módulo nuevo</text>
+  <text x="168" y="182" font-size="10.5" fill="#5b6876">Prisa por la fecha</text>
+  <text x="168" y="198" font-size="10.5" fill="#5b6876">Poca revisión</text>
+  <path d="M270,232 L330,140" stroke="#8fb3d1" stroke-width="1.8" fill="none"/>
+  <rect x="222" y="232" width="96" height="22" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><text x="270" y="247" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Entorno</text>
+  <text x="318" y="166" font-size="10.5" fill="#5b6876">Pocos datos de prueba</text>
+  <text x="318" y="182" font-size="10.5" fill="#5b6876">Staging distinto</text>
+  <text x="318" y="198" font-size="10.5" fill="#5b6876">Sin carga real</text>
+  <path d="M420,232 L480,140" stroke="#8fb3d1" stroke-width="1.8" fill="none"/>
+  <rect x="372" y="232" width="96" height="22" rx="6" fill="#eef4fa" stroke="#c7d6e6"/><text x="420" y="247" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Datos</text>
+  <text x="468" y="166" font-size="10.5" fill="#5b6876">Teléfonos sin +57</text>
+  <text x="468" y="182" font-size="10.5" fill="#5b6876">Citas sin zona</text>
+  <text x="468" y="198" font-size="10.5" fill="#5b6876">Idiomas mezclados</text>
+</svg>
+
+:::
+
+Los cinco porqués tienen límites. El resultado depende de quién pregunta y de cuándo se detiene, y una cadena lineal
+puede ocultar causas que ocurren a la vez. Card (2017) analiza críticamente la técnica en el ámbito de la seguridad
+del paciente. Por eso conviene combinarla con datos, como el gráfico y el Pareto, y con una estructura como la
+de Ishikawa, y verificar con evidencia cada eslabón de la cadena antes de aceptarlo.
+
+::: {.callout-tip}
+## Reto 2. Interpreta un gráfico c
+
+Otro equipo cuenta los defectos hallados por su regresión semanal durante diez semanas: 4, 6, 3, 5, 7, 4, 5, 6, 3 y
+17. Calcula c barra, el LSC y el LIC con las diez semanas. Indica si hay señal. Si la hay, recalcula sin ese punto.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+- Suma: 4 + 6 + 3 + 5 + 7 + 4 + 5 + 6 + 3 + 17 = 60. Entonces c barra = 60 / 10 = 6,00.
+- Raíz de 6 = 2,449. LSC = 6 + 3 x 2,449 = 13,35. LIC = 6 - 7,35 es negativo, así que no hay límite inferior.
+- La semana 10, con 17, supera 13,35: hay señal. Las otras nueve están entre 3 y 7.
+- Sin la semana 10: suma 43, nueve semanas, c barra = 4,78. Raíz = 2,186. LSC = 4,78 + 6,56 = 11,34.
+
+El comportamiento habitual es de unos 5 defectos por semana. Antes de actuar, el equipo busca qué ocurrió en la
+semana 10, que es la causa especial probable.
+:::
+
+::: {.callout-tip}
+## Reto 3. Pareto de reclamos
+
+La clínica recibió 80 reclamos en un mes. Por causa: turno duplicado, 32; recordatorio que no llegó, 24; hora
+equivocada, 12; médico no disponible, 8; otros, 4. Construye la tabla de porcentajes y acumulados. Indica cuántas
+causas hay que atacar para cubrir al menos 80 % de los reclamos y por qué ese conteo puede ser engañoso.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+| Causa | Reclamos | Porcentaje | Acumulado |
+|---|:-:|:-:|:-:|
+| Turno duplicado | 32 | 40,0 % | 40,0 % |
+| Recordatorio que no llegó | 24 | 30,0 % | 70,0 % |
+| Hora equivocada | 12 | 15,0 % | 85,0 % |
+| Médico no disponible | 8 | 10,0 % | 95,0 % |
+| Otros | 4 | 5,0 % | 100,0 % |
+
+Hay que atacar tres causas para superar 80 % (llegan a 85,0 %). Con dos solo se cubre 70,0 %. El conteo puede
+engañar porque cuenta reclamos y no su costo: si un turno duplicado cuesta una cita perdida y una hora equivocada
+cuesta una consulta con riesgo clínico, el orden por gravedad sería otro.
+:::
+
+## Parte 3. El costo de la calidad
+
+### Origen y cuatro categorías
+
+El *costo de la calidad* (COQ, *Cost of Quality*) es un modelo que ordena el dinero que una organización gasta
+alrededor de la calidad. El modelo de prevención, evaluación y falla (PAF) suele atribuirse a Armand Feigenbaum, en
+un artículo de 1956 en *Harvard Business Review*. Juran y Crosby lo desarrollaron después, cada uno con su manera
+de usarlo.
+
+El Tema 3 de la Unidad 1 ya presentó el costo de la mala calidad, con las cifras del NIST y del CISQ y la forma de
+leerlas, y un primer cálculo de cuatro costos. Aquí no se repite: se profundiza en cómo se decide con el modelo.
+Si no recuerdas qué incluye cada categoría, repásalo allí.
+
+Las cuatro categorías, con ejemplos nuevos de la versión 3.0 de la app:
+
+| Categoría | Qué paga | Ejemplo en la clínica |
+|---|---|---|
+| Prevención | Evitar que el defecto nazca | Revisión de requisitos de los recordatorios, guía de estilo de código, configurar la puerta |
+| Evaluación | Hallar el defecto antes de entregar | Mantener las pruebas automáticas, regresión manual, revisión de código |
+| Falla interna | Corregir lo hallado antes de entregar | Horas de arreglar los defectos que la regresión halló |
+| Falla externa | Corregir lo que llegó al usuario | Parche de emergencia, soporte, citas perdidas por un recordatorio erróneo |
+
+Prevención y evaluación forman el costo de conformidad, que se paga a propósito. Las dos fallas forman el costo
+de no conformidad, que aparece porque el defecto existió. Una misma actividad puede tocar dos categorías: una
+prueba que encuentra un defecto es evaluación, y su arreglo antes de entregar es falla interna.
+
+### Dos escuelas: Juran y Crosby
+
+Hay dos maneras clásicas de usar el modelo, y conviene conocer ambas porque llevan a decisiones distintas.
+
+La escuela de Juran trata la inversión en calidad como una decisión económica con un punto óptimo. Prevenir y
+evaluar cuesta, y cada peso extra rinde menos defectos evitados que el anterior. El óptimo es el nivel en que el
+costo total deja de bajar. Exigir más allá de ese punto cuesta más de lo que ahorra.
+
+La escuela de Crosby, expuesta en *Quality Is Free* (1979), defiende que la calidad se define como conformidad con
+los requisitos, que el estándar de desempeño es cero defectos y que lo que debe medirse es el costo de la no
+conformidad. Para Crosby, hacer las cosas bien desde el principio es más barato que corregirlas después.
+
+Las dos escuelas no se contradicen por completo. Ambas dicen que prevenir suele costar menos que reparar. Difieren
+en la meta (un óptimo económico frente a cero defectos) y en cuánto confían en que más prevención siempre rinda.
+
+::: {.callout-note}
+## Sobre las fuentes de esta sección
+
+El Manual de Juran y el libro de Crosby son obras extensas y de pago. La descripción de ambas escuelas es una
+paráfrasis de su exposición general y de la revisión de Schiffauerova y Thomson (2006), que concluye que el
+modelo de costo elegido debe ajustarse a la situación y a las necesidades de cada empresa. No se citan páginas
+concretas porque no se pudieron abrir los textos completos en esta revisión.
+:::
+
+### Ejemplo resuelto: tres niveles de puerta
+
+El equipo de la versión 3.0 evalúa tres niveles de inversión en controles y quiere saber cuál cuesta menos en total.
+Todas las cifras son ilustrativas. Una hora cuesta 60.000 pesos, una cita perdida 80.000 pesos, y cada defecto que
+llega a producción cuesta 15 horas (10 de arreglo y 5 de soporte) y 6 citas perdidas.
+
+Los tres niveles son:
+
+- Nivel 0, sin puerta de calidad: la regresión es manual y se unen cambios con revisión informal.
+- Nivel 1, puerta básica: puerta P2 sobre el código nuevo, pruebas automáticas y una revisión por cambio.
+- Nivel 2, puerta exigente: lo anterior más cobertura de 90 %, pruebas de mutación y dos personas revisando.
+
+Datos del trimestre en horas y defectos (hipótesis del equipo):
+
+| Rubro | Nivel 0 | Nivel 1 | Nivel 2 |
+|---|---|---|---|
+| Prevención (horas) | 50 | 90 | 110 |
+| Evaluación (horas) | 120 | 150 | 190 |
+| Defectos hallados antes de entregar | 60 | 70 | 76 |
+| Horas por defecto interno | 4 | 2 | 2 |
+| Defectos que llegan a producción | 14 | 6 | 4 |
+
+Cálculo del Nivel 0, paso a paso:
+
+1. Prevención: 50 h x 60.000 = 3.000.000.
+2. Evaluación: 120 h x 60.000 = 7.200.000.
+3. Fallas internas: 60 defectos x 4 h x 60.000 = 14.400.000.
+4. Fallas externas por horas: 14 defectos x 15 h x 60.000 = 12.600.000.
+5. Fallas externas por citas: 14 defectos x 6 citas x 80.000 = 6.720.000. Las fallas externas suman 19.320.000.
+6. Total: 3.000.000 + 7.200.000 + 14.400.000 + 19.320.000 = 43.920.000 pesos.
+7. Conformidad: 10.200.000. No conformidad: 33.720.000, o 76,8 % del total.
+
+El mismo cálculo para los otros dos niveles da este resultado, en pesos:
+
+| Componente | Nivel 0 | Nivel 1 | Nivel 2 |
+|---|---:|---:|---:|
+| Prevención | 3.000.000 | 5.400.000 | 6.600.000 |
+| Evaluación | 7.200.000 | 9.000.000 | 11.400.000 |
+| Fallas internas | 14.400.000 | 8.400.000 | 9.120.000 |
+| Fallas externas | 19.320.000 | 8.280.000 | 5.520.000 |
+| Total | 43.920.000 | 31.080.000 | 32.640.000 |
+| No conformidad sobre el total | 76,8 % | 53,7 % | 44,9 % |
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 296" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres columnas apiladas del costo de la calidad: el nivel 0 suma 43,92 millones, el nivel 1 suma 31,08 y el nivel 2 suma 32,64; las fallas externas bajan en cada nivel y los costos de conformidad suben" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t3e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Costo de la calidad por nivel de puerta (cifras ilustrativas, millones de pesos)</text>
+  <path d="M60,262 L480,262" stroke="#cfd8e3" stroke-width="1.4"/>
+  <rect x="90" y="249.4" width="96" height="12.6" fill="#fff3d6" stroke="#e6c46f"/>
+  <rect x="90" y="219.2" width="96" height="30.2" fill="#fff3d6" stroke="#e6c46f"/>
+  <text x="138" y="238.3" font-size="10.5" fill="#12324f" text-anchor="middle">7,20</text>
+  <rect x="90" y="158.7" width="96" height="60.5" fill="#fbeae5" stroke="#e0a595"/>
+  <text x="138" y="192.9" font-size="10.5" fill="#12324f" text-anchor="middle">14,40</text>
+  <rect x="90" y="77.5" width="96" height="81.1" fill="#fbeae5" stroke="#e0a595"/>
+  <text x="138" y="122.1" font-size="10.5" fill="#12324f" text-anchor="middle">19,32</text>
+  <text x="138" y="71.5" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">43,92</text>
+  <text x="138" y="280" font-size="12" fill="#12324f" text-anchor="middle">Nivel 0</text>
+  <rect x="220" y="239.3" width="96" height="22.7" fill="#fff3d6" stroke="#e6c46f"/>
+  <text x="268" y="254.7" font-size="10.5" fill="#12324f" text-anchor="middle">5,40</text>
+  <rect x="220" y="201.5" width="96" height="37.8" fill="#fff3d6" stroke="#e6c46f"/>
+  <text x="268" y="224.4" font-size="10.5" fill="#12324f" text-anchor="middle">9,00</text>
+  <rect x="220" y="166.2" width="96" height="35.3" fill="#fbeae5" stroke="#e0a595"/>
+  <text x="268" y="187.9" font-size="10.5" fill="#12324f" text-anchor="middle">8,40</text>
+  <rect x="220" y="131.5" width="96" height="34.8" fill="#fbeae5" stroke="#e0a595"/>
+  <text x="268" y="152.9" font-size="10.5" fill="#12324f" text-anchor="middle">8,28</text>
+  <text x="268" y="125.5" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">31,08</text>
+  <text x="268" y="280" font-size="12" fill="#12324f" text-anchor="middle">Nivel 1</text>
+  <rect x="350" y="234.3" width="96" height="27.7" fill="#fff3d6" stroke="#e6c46f"/>
+  <text x="398" y="252.1" font-size="10.5" fill="#12324f" text-anchor="middle">6,60</text>
+  <rect x="350" y="186.4" width="96" height="47.9" fill="#fff3d6" stroke="#e6c46f"/>
+  <text x="398" y="214.3" font-size="10.5" fill="#12324f" text-anchor="middle">11,40</text>
+  <rect x="350" y="148.1" width="96" height="38.3" fill="#fbeae5" stroke="#e0a595"/>
+  <text x="398" y="171.2" font-size="10.5" fill="#12324f" text-anchor="middle">9,12</text>
+  <rect x="350" y="124.9" width="96" height="23.2" fill="#fbeae5" stroke="#e0a595"/>
+  <text x="398" y="140.5" font-size="10.5" fill="#12324f" text-anchor="middle">5,52</text>
+  <text x="398" y="118.9" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">32,64</text>
+  <text x="398" y="280" font-size="12" fill="#12324f" text-anchor="middle">Nivel 2</text>
+  <rect x="508" y="60" width="238" height="190" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="522" y="84" font-size="12" font-weight="700" fill="#12324f">De abajo hacia arriba</text>
+  <rect x="522" y="96" width="14" height="14" fill="#fff3d6" stroke="#e6c46f"/><text x="544" y="108" font-size="11.5" fill="#12324f">Prevención</text>
+  <rect x="522" y="118" width="14" height="14" fill="#fff3d6" stroke="#e6c46f"/><text x="544" y="130" font-size="11.5" fill="#12324f">Evaluación</text>
+  <rect x="522" y="140" width="14" height="14" fill="#fbeae5" stroke="#e0a595"/><text x="544" y="152" font-size="11.5" fill="#12324f">Fallas internas</text>
+  <rect x="522" y="162" width="14" height="14" fill="#fbeae5" stroke="#e0a595"/><text x="544" y="174" font-size="11.5" fill="#12324f">Fallas externas</text>
+  <text x="522" y="204" font-size="11" fill="#5b6876">El total baja de 43,92 a 31,08</text>
+  <text x="522" y="220" font-size="11" fill="#5b6876">con la puerta básica y vuelve</text>
+  <text x="522" y="236" font-size="11" fill="#5b6876">a subir a 32,64 con la exigente.</text>
+</svg>
+
+:::
+
+Tres lecturas del resultado:
+
+- Pasar del nivel 0 al 1 baja el total en 12.840.000 pesos (29,2 %). El costo de conformidad sube 4.200.000, y las fallas bajan 17.040.000.
+- Pasar del nivel 1 al 2 sube el total en 1.560.000 pesos. Prevenir y evaluar más cuesta 3.600.000 y las fallas bajan solo 2.040.000. Es el punto de Juran: más allá del nivel 1, cada peso rinde menos.
+- Crosby miraría el nivel 2 con más simpatía porque se acerca a cero defectos externos (4 en lugar de 14), pero el cálculo muestra que alcanzarlo cuesta más de lo que ahorra en este producto.
+
+Una advertencia de honestidad: casi la mitad del ahorro del nivel 1 (6.000.000 de los 12.840.000 pesos) viene de las
+fallas internas, en parte porque se supone que cada defecto interno cuesta 2 horas y no 4. Es una hipótesis del equipo
+que se debe medir. El script de abajo permite probar otras hipótesis.
+
+#### Sensibilidad: qué pasa si la puerta rinde menos
+
+Supón que con el nivel 1 llegan 11 defectos a producción y no 6. Las fallas externas serían 11 x 15 h x 60.000 =
+9.900.000 más 11 x 6 x 80.000 = 5.280.000, es decir 15.180.000. El total del nivel 1 sube a 37.980.000. Sigue
+siendo menor que 43.920.000, por 5.940.000. La decisión de pasar del nivel 0 al 1 es robusta a ese error. En
+cambio, la de pasar del 1 al 2 depende más de los supuestos y se aprueba solo con datos propios.
+
+```python
+R, CITA = 60000, 80000
+
+def coq(prev_h, eval_h, n_int, h_int, n_ext, h_ext=15, citas=6):
+    prev, ev = prev_h * R, eval_h * R
+    interna = n_int * h_int * R
+    externa = n_ext * h_ext * R + n_ext * citas * CITA
+    return prev, ev, interna, externa, prev + ev + interna + externa
+
+for nombre, args in [("Nivel 0", (50, 120, 60, 4, 14)),
+                     ("Nivel 1", (90, 150, 70, 2, 6)),
+                     ("Nivel 2", (110, 190, 76, 2, 4)),
+                     ("Nivel 1 con 11 externos", (90, 150, 70, 2, 11))]:
+    p, e, i, x, t = coq(*args)
+    print(f"{nombre}: prev {p:,} eval {e:,} int {i:,} ext {x:,} total {t:,}")
+```
+
+```text
+Nivel 0: prev 3,000,000 eval 7,200,000 int 14,400,000 ext 19,320,000 total 43,920,000
+Nivel 1: prev 5,400,000 eval 9,000,000 int 8,400,000 ext 8,280,000 total 31,080,000
+Nivel 2: prev 6,600,000 eval 11,400,000 int 9,120,000 ext 5,520,000 total 32,640,000
+Nivel 1 con 11 externos: prev 5,400,000 eval 9,000,000 int 8,400,000 ext 15,180,000 total 37,980,000
+```
+
+### Lo que el modelo no capta
+
+El modelo solo suma lo que se registra. Quedan fuera costos reales y difíciles de medir: la pérdida de confianza del
+paciente, la rotación del equipo por trabajar apagando incendios, o una sanción por incumplir una ley de datos. Juran
+los llamaba costos intangibles y los separaba de los tangibles. Por eso un total bajo en el modelo no prueba que la
+calidad sea buena, y uno alto no cuantifica todo el daño.
+
+Medir cuesta. La investigación sobre su uso encuentra que el costo de la calidad se mide poco en la práctica: Sower,
+Quarles y Broussard (2007) señalan, entre las razones, la falta de apoyo de la dirección, y Schiffauerova y
+Thomson (2006) hallan que no se usa en la mayoría de los programas de calidad. Una forma barata de empezar es
+etiquetar en el gestor de tareas cada ticket con su categoría (prevención, evaluación, falla interna o externa) y
+registrar las horas. Con dos o tres trimestres de datos ya se puede construir una tabla como la anterior.
+
+::: {.callout-tip}
+## Reto 4. Calcula y evalúa una propuesta
+
+Otro equipo gastó en un trimestre: prevención 40 h, evaluación 100 h, 50 defectos internos de 3 h cada uno y 10
+defectos externos de 12 h cada uno con 5 citas perdidas por defecto. Con 60.000 pesos por hora y 80.000 pesos por cita,
+calcula las cuatro categorías, el total y el porcentaje de no conformidad. Luego evalúa la propuesta de agregar 30 h
+de prevención y 20 h de evaluación, que según el equipo reduce los externos a 6 y sube los internos hallados a 58 (3 h cada uno).
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+Situación actual:
+
+- Prevención: 40 x 60.000 = 2.400.000. Evaluación: 100 x 60.000 = 6.000.000.
+- Fallas internas: 50 x 3 x 60.000 = 9.000.000.
+- Fallas externas: 10 x 12 x 60.000 = 7.200.000, más 10 x 5 x 80.000 = 4.000.000, que suman 11.200.000.
+- Total: 2.400.000 + 6.000.000 + 9.000.000 + 11.200.000 = 28.600.000 pesos.
+- No conformidad: 9.000.000 + 11.200.000 = 20.200.000, o 70,6 % del total.
+
+Con la propuesta:
+
+- Prevención: 70 h = 4.200.000. Evaluación: 120 h = 7.200.000.
+- Fallas internas: 58 x 3 x 60.000 = 10.440.000.
+- Fallas externas: 6 x 12 x 60.000 = 4.320.000, más 6 x 5 x 80.000 = 2.400.000, que suman 6.720.000.
+- Total: 4.200.000 + 7.200.000 + 10.440.000 + 6.720.000 = 28.560.000 pesos.
+
+El ahorro es de 40.000 pesos, un 0,14 %, que está dentro del error de cualquier estimación. Con estos números la
+propuesta ni gana ni pierde en dinero medible. La decisión se apoya entonces en lo que el modelo no capta: si cada
+defecto externo trae riesgo de reputación o de sanción, menos defectos externos pueden justificar la inversión. Y
+conviene medir el trimestre siguiente si de verdad los externos bajaron a 6.
+:::
+
+::: {.callout-tip}
+## Reto 5. Clasifica ocho gastos
+
+Clasifica cada gasto de la versión 3.0 como prevención, evaluación, falla interna o falla externa: (1) taller de
+dos horas sobre cómo redactar criterios de aceptación; (2) ejecutar la regresión antes de cada unión; (3) rehacer el
+módulo de recordatorios porque no pasó la puerta P2; (4) un paciente reclama porque el recordatorio llegó un día
+tarde y soporte lo atiende; (5) configurar la puerta para que mida el código nuevo; (6) una auditoría de seguridad
+antes del lanzamiento; (7) parche de emergencia un sábado por un error de zona horaria; (8) compensar con una
+consulta gratis a quien perdió su cita por un fallo.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+| Gasto | Categoría | Pista |
+|---|---|---|
+| 1. Taller de criterios | Prevención | Ocurre antes de que exista el defecto |
+| 2. Regresión antes de cada unión | Evaluación | Busca defectos que podrían existir |
+| 3. Rehacer el módulo | Falla interna | El defecto se halló antes de entregar |
+| 4. Reclamo y soporte | Falla externa | El defecto llegó al paciente |
+| 5. Configurar la puerta | Prevención | Evita que pase código sin pruebas |
+| 6. Auditoría de seguridad | Evaluación | Busca vulnerabilidades, no corrige |
+| 7. Parche de emergencia | Falla externa | Corrige algo que ya está en producción |
+| 8. Consulta gratis de compensación | Falla externa | El paciente ya sufrió el daño |
+:::
+
+## Parte 4. Lectura crítica de "la calidad es gratis"
+
+### Lo que dijo Crosby
+
+Philip Crosby publicó *Quality Is Free* en 1979. La frase se cita con frecuencia como si dijera que hacer bien las
+cosas no cuesta. Lo que sostiene es otra cosa: lo que cuesta es la no conformidad, es decir, rehacer, reparar y
+recuperar la confianza del cliente, y esa suma supera lo que cuesta prevenir. Por eso, invertir en hacerlo bien desde
+el principio termina pagándose, y el resultado neto es, en la práctica, gratis.
+
+El malentendido más común va en sentido contrario: concluir que gastar menos en prevención ahorra dinero. La idea
+completa dice lo opuesto, que prevenir es lo que evita un gasto mayor más adelante. En el ejemplo de la clínica, el
+paso del nivel 0 al nivel 1 ilustra la tesis: se gastan 4.200.000 pesos más en conformidad y se ahorran 17.040.000
+en fallas.
+
+### Lo que la evidencia en software permite decir
+
+La evidencia empírica en software da un respaldo parcial. Harter, Krishnan y Slaughter (2000) estudiaron el
+desarrollo de 30 productos de software de una gran empresa de tecnología. Encontraron que niveles más altos de
+madurez de proceso, medidos con el modelo CMM del SEI, se asocian con mayor calidad del producto, pero también con
+más esfuerzo de desarrollo. Sin embargo, concluyen que las reducciones de tiempo de ciclo y de esfuerzo debidas a la
+mejor calidad superan los aumentos de lograr la madurez, así que el efecto neto es menos tiempo y menos esfuerzo. Es
+una versión empírica, para software y para ese conjunto de productos, de la idea de Crosby.
+
+Dos cautelas surgen de la misma literatura. Primero, la inversión se paga después, no de inmediato. Sower, Quarles y
+Broussard (2007) hallaron que el costo total de la calidad aumentó cuando las organizaciones pasaron de una
+madurez muy baja a una mayor, mientras que los costos de falla externa bajaron como porcentaje del total. Segundo,
+los rendimientos decrecen. Harter y Slaughter (2003) estudiaron diez años de datos de un gran fabricante de
+software y hallaron ahorros sustanciales en actividades de infraestructura gracias a la mejora de calidad, pero
+con rendimientos decrecientes. Esa es la intuición de Juran que el ejemplo de los tres niveles mostró con números.
+
+### Críticas y límites
+
+Resumiendo, las críticas razonables a la lectura ingenua de "la calidad es gratis" son cuatro:
+
+- No es gratis en el corto plazo. Exige inversión y paciencia, y el total puede subir primero.
+- No es ilimitada. Hay un punto, que varía por producto y organización, donde exigir más cuesta más de lo que ahorra.
+- Depende de medir. Sin registrar los costos, la afirmación es una creencia, y la evidencia es que pocas organizaciones los miden.
+- Los datos de otros no se trasladan sin más. Un ahorro medido en una gran empresa estadounidense no se multiplica por tu tamaño.
+
+::: {.callout-note}
+## Una cifra que esta guía no usa
+
+Es frecuente leer que, según la ASQ, el costo de la calidad ronda entre 10 % y 20 % de los ingresos, y hasta 40 %
+en organizaciones con problemas graves. La página de la ASQ sobre costo de la calidad no pudo abrirse en esta
+revisión (el servidor rechazó la consulta) y las fuentes secundarias que la repiten discrepan entre sí: unas
+hablan de 10 % a 20 %, otras de 15 % a 20 %, y una tercera distingue el costo de la mala calidad (10 % a 15 %) del
+total. Por eso se marca como no verificada en fuente primaria y no se usa. Si necesitas una proporción, mide la de tu
+propio proyecto como en el ejemplo anterior.
+:::
+
+::: {.callout-tip}
+## Reto 6. Lee con criterio una afirmación
+
+Un blog de una empresa de herramientas de prueba afirma: "cada peso invertido en prevención ahorra diez en fallas".
+Escribe cuatro preguntas que harías antes de usar esa cifra en un informe.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+Una lista posible, que sigue las cuatro preguntas del Tema 3 de la Unidad 1:
+
+1. Quién la estimó y con qué datos: si es un estudio con metodología pública o una afirmación comercial sin fuente.
+2. Qué incluye: qué se llamó prevención y qué se llamó falla, y si se contaron los costos intangibles.
+3. De qué sector, tamaño, país y año son los datos, y si se parecen a tu proyecto.
+4. Qué dice el propio autor sobre su límite: si da un rango, un promedio o un caso único.
+
+Además, quién gana si la cifra se cree (una empresa de herramientas vende el remedio), y si hay estudios
+independientes que la repliquen. Mientras no haya respuestas, se cita como afirmación sin verificar y no como dato.
+:::
+
+## Parte 5. Caso real: Healthcare.gov 2013
+
+Healthcare.gov es el sitio federal de Estados Unidos para comprar seguros de salud bajo la ley conocida como
+Affordable Care Act. La inscripción inicial empezó el 1 de octubre de 2013 y muchos usuarios tuvieron problemas
+para acceder y usar el sitio. La Oficina de Rendición de Cuentas del Gobierno de Estados Unidos (GAO) publicó dos
+informes que permiten estudiar qué puertas existieron y cuáles faltaron. Las cifras de esta sección salen de ellos.
+
+### Qué dicen los informes
+
+El primero es el GAO-14-694, de julio de 2014, sobre planificación y supervisión de contratos. Revisa dos órdenes de
+trabajo de la agencia CMS: el sistema del mercado federal (FFM) y el centro de datos (*data hub*) que verifica la
+información de los solicitantes. Sus hallazgos principales:
+
+- Las obligaciones del FFM subieron de 56 millones de dólares a más de 209 millones entre septiembre de 2011 y febrero de 2014. Las del centro de datos subieron de 30 millones a casi 85 millones.
+- La GAO atribuye el aumento principalmente a requisitos nuevos y cambiantes, agravados por brechas de supervisión. También menciona retrabajo por cambios de decisión de la agencia.
+- La agencia retrasó revisiones de gobierno clave: la evaluación de preparación del FFM pasó de marzo a septiembre de 2013, semanas antes del lanzamiento, y no obtuvo las aprobaciones requeridas.
+- Como resultado, la agencia lanzó el FFM sin la verificación requerida de que cumplía los requisitos de desempeño.
+- En marzo de 2013 la propia agencia estimaba que solo 65 % del FFM y 75 % del centro de datos estarían listos en septiembre de 2013.
+
+El segundo es el GAO-15-238, de marzo de 2015, sobre buenas prácticas de desarrollo de sistemas. Sus hallazgos
+sobre pruebas y calidad:
+
+- Healthcare.gov y los sistemas que lo respaldan no se probaron por completo antes del lanzamiento, y la documentación de pruebas carecía de elementos clave, como los criterios para decidir si un sistema pasaba una prueba.
+- En septiembre de 2013, menos de un mes antes del lanzamiento, una evaluación de verificación y validación independiente (IV&V) encargada por la agencia identificó 45 errores críticos y 324 graves de código en los módulos del FFM, y reportó que no había evidencia de que se estuvieran corrigiendo.
+- La agencia y sus contratistas identificaron errores de software que no corrigieron adecuadamente antes del lanzamiento.
+- Tras el lanzamiento, la agencia aumentó la capacidad, exigió revisiones adicionales de calidad del software y adjudicó un nuevo contrato. Después de esas acciones, los problemas de desempeño se redujeron de manera significativa.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 176" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Línea de tiempo de Healthcare.gov: contrato en septiembre de 2011, estimación de avance en marzo de 2013, revisión parcial en septiembre de 2013 con 45 errores críticos y 324 graves, lanzamiento el 1 de octubre de 2013, más de 209 millones en febrero de 2014 y los informes de la GAO de 2014 y 2015" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t3f" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Healthcare.gov: de 2011 a los informes de la GAO</text>
+  <path d="M24,64 L736,64" stroke="#c7d6e6" stroke-width="2.5" fill="none"/>
+  <circle cx="70" cy="64" r="7" fill="#0e6f6c"/><path d="M70,72 L70,90" stroke="#8fb3d1" stroke-width="1.5"/>
+  <rect x="14" y="92" width="112" height="64" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="70" y="50" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Sep. 2011</text>
+  <text x="70" y="120" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">Contrato del FFM</text><text x="70" y="138" font-size="11" fill="#5b6876" text-anchor="middle">56 millones</text>
+  <circle cx="190" cy="64" r="7" fill="#0e6f6c"/><path d="M190,72 L190,90" stroke="#8fb3d1" stroke-width="1.5"/>
+  <rect x="134" y="92" width="112" height="64" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="190" y="50" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Mar. 2013</text>
+  <text x="190" y="120" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">Se estima 65 % del</text><text x="190" y="138" font-size="11" fill="#5b6876" text-anchor="middle">FFM listo en sept.</text>
+  <circle cx="310" cy="64" r="7" fill="#0e6f6c"/><path d="M310,72 L310,90" stroke="#8fb3d1" stroke-width="1.5"/>
+  <rect x="254" y="92" width="112" height="64" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="310" y="50" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Sep. 2013</text>
+  <text x="310" y="120" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">Revisión parcial</text><text x="310" y="138" font-size="11" fill="#5b6876" text-anchor="middle">45 críticos, 324 graves</text>
+  <circle cx="430" cy="64" r="7" fill="#c0503a"/><path d="M430,72 L430,90" stroke="#8fb3d1" stroke-width="1.5"/>
+  <rect x="374" y="92" width="112" height="64" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="430" y="50" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">1 oct. 2013</text>
+  <text x="430" y="120" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">Lanzamiento</text><text x="430" y="138" font-size="11" fill="#5b6876" text-anchor="middle">sin verificación</text>
+  <circle cx="550" cy="64" r="7" fill="#0e6f6c"/><path d="M550,72 L550,90" stroke="#8fb3d1" stroke-width="1.5"/>
+  <rect x="494" y="92" width="112" height="64" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="550" y="50" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Feb. 2014</text>
+  <text x="550" y="120" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">FFM supera</text><text x="550" y="138" font-size="11" fill="#5b6876" text-anchor="middle">209 millones</text>
+  <circle cx="670" cy="64" r="7" fill="#0e6f6c"/><path d="M670,72 L670,90" stroke="#8fb3d1" stroke-width="1.5"/>
+  <rect x="614" y="92" width="112" height="64" rx="9" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="670" y="50" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">2014 y 2015</text>
+  <text x="670" y="120" font-size="11" font-weight="600" fill="#12324f" text-anchor="middle">GAO-14-694 y</text><text x="670" y="138" font-size="11" fill="#5b6876" text-anchor="middle">GAO-15-238</text>
+</svg>
+
+:::
+
+### Análisis del caso
+
+Antes de leer la respuesta, hazte esta pregunta de análisis: ¿qué debía exigir, como mínimo, el punto de control
+previo al lanzamiento para que esos defectos no llegaran a producción?
+
+El caso muestra puertas que existían y no funcionaron. Había una revisión de preparación, pero se hizo parcial,
+tarde y sin las aprobaciones requeridas. Había pruebas, pero sin criterios escritos de aprobación, y había una
+evaluación independiente que reportó 45 errores críticos y 324 graves sin que eso detuviera el lanzamiento. La
+fecha del lanzamiento, el 1 de octubre, pesó más que la evidencia.
+
+Un criterio de aceptación escrito como los de la Parte 1 habría tenido el estilo siguiente: "no se lanza con errores
+críticos abiertos, y el sistema sostiene una carga mínima definida, según el reporte de pruebas firmado por la
+persona responsable". Con ese criterio, el informe de verificación independiente habría bloqueado la salida o habría
+obligado a una decisión consciente y documentada de aceptar el riesgo.
+
+Dos precisiones para leer el caso con rigor:
+
+- La GAO atribuye el sobrecosto principalmente a requisitos cambiantes y a la supervisión, no a las pruebas. Las pruebas incompletas explican los problemas del lanzamiento, no la totalidad del aumento de costos.
+- Los informes no calculan un costo de la calidad ni separan cuánto del aumento fue retrabajo. Usar el caso como "ejemplo de falla externa" es una lectura razonable, pero esta guía no atribuye una cifra de falla externa que los informes no publican.
+
+El caso también conecta con el Tema 1: la evaluación IV&V de septiembre de 2013 es verificación y validación
+independiente, y encontró lo que debía. Lo que falló fue la decisión posterior. Una puerta sirve si su resultado
+manda.
+
+::: {.callout-tip}
+## Reto 7. Rediseña las puertas del caso
+
+Imagina que dirigías el proyecto en marzo de 2013, cuando se estimaba 65 % de avance del FFM con lanzamiento fijo el
+1 de octubre. Escribe tres puertas con su criterio de aceptación y su responsable que habrían forzado una decisión
+informada, y una acción para el caso en que el criterio no se cumpla a una fecha límite.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 7
+
+Una propuesta posible, ilustrativa:
+
+1. Puerta de preparación funcional, junio de 2013. Criterio: los flujos de crear cuenta, verificar elegibilidad e inscribirse pasan sus pruebas de aceptación. Responsable: la dirección del programa, con firma. Si falla: se recorta el alcance del lanzamiento a lo que sí pasa.
+2. Puerta de calidad de código, agosto de 2013. Criterio: cero errores críticos abiertos y plan fechado para los graves, según el reporte de la evaluación independiente. Responsable: el equipo de verificación independiente. Si falla: no se aprueba el paso a la puerta siguiente.
+3. Puerta de desempeño, septiembre de 2013. Criterio: una prueba de carga con el volumen de usuarios simultáneos esperado cumple los tiempos de respuesta acordados. Responsable: el área de operaciones. Si falla: se activa un lanzamiento gradual por grupos.
+
+Si a la fecha límite un criterio no se cumple, la decisión de lanzar de todos modos debe quedar escrita, con nombre
+del responsable y el riesgo aceptado. Así deja de ser una omisión y pasa a ser una decisión con dueño. Esta propuesta
+es un ejercicio de diseño y no una afirmación sobre lo que habría ocurrido.
+:::
+
+## Errores frecuentes
+
+- Confundir criterio de aceptación con deseo. "Debe funcionar bien" no es un criterio, porque no dice qué medir ni qué umbral.
+- Poner la puerta sobre el total y no sobre lo nuevo. Un módulo nuevo sin pruebas casi no mueve un promedio global.
+- Tratar toda variación como un problema. Ante variación común, reaccionar a cada semana mala empeora las cosas.
+- Confundir límites de control con límites de especificación. Los primeros describen el proceso y los segundos el requisito.
+- Ordenar el Pareto solo por frecuencia cuando el costo por defecto varía mucho.
+- Detener los cinco porqués en una persona. "Falló el desarrollador" no es una causa raíz que se pueda corregir en el proceso.
+- Clasificar mal el costo: la prueba es evaluación, su arreglo es falla interna, y el soporte posterior a la entrega es falla externa.
+- Leer "la calidad es gratis" como "gastar menos en calidad ahorra". Es lo contrario.
+- Citar una cifra de costo de la calidad sin fuente primaria, año y país.
+- Repetir "Healthcare.gov costó más por falta de pruebas". La GAO atribuye el sobrecosto principalmente a requisitos cambiantes y a la supervisión.
+
+## Autoevaluación
+
+Responde primero sin mirar la clave. Cada pregunta tiene una sola opción correcta.
+
+**1.** ¿Cuál es un criterio de aceptación bien escrito?
+
+<label><input type="checkbox"> El módulo de recordatorios debe estar listo antes de salir</label>
+<label><input type="checkbox"> La cobertura del código nuevo es de al menos 80 %, según el reporte del pipeline adjunto a la solicitud</label>
+<label><input type="checkbox"> El equipo hará su mejor esfuerzo para probar el módulo</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 1
+
+La opción 2. Dice qué se mide (cobertura del código nuevo), el valor límite (80 %) y cómo se comprueba (el reporte). Las otras dos no permiten que un tercero decida si se cumple.
+:::
+
+**2.** ¿Qué diferencia la visión de Juran de la de Crosby sobre el costo de la calidad?
+
+<label><input type="checkbox"> Juran busca un nivel económico óptimo de inversión y Crosby propone cero defectos</label>
+<label><input type="checkbox"> Juran defiende no medir costos y Crosby sí</label>
+<label><input type="checkbox"> Ambos sostienen que prevenir cuesta más que reparar</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 2
+
+La opción 1. Ambos creen que prevenir suele costar menos que reparar, pero Juran modela un óptimo con rendimientos decrecientes y Crosby fija cero defectos como estándar.
+:::
+
+**3.** En un flujo de CI/CD, ¿qué hace que una puerta de calidad realmente detenga un cambio?
+
+<label><input type="checkbox"> Que el resultado se publique en un informe para la reunión semanal</label>
+<label><input type="checkbox"> Que el pipeline falle con ese resultado y la rama exija esa verificación para unir</label>
+<label><input type="checkbox"> Que alguien reciba un correo con el resultado</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 3
+
+La opción 2. El estado de la puerta puede hacer fallar el pipeline, y una regla de rama protegida exige que las verificaciones terminen en estado exitoso antes de unir. Sin esas dos cosas, la puerta solo informa.
+:::
+
+**4.** Un gráfico c tiene c barra = 12. ¿Cuál es el límite superior de control y qué semana daría señal?
+
+<label><input type="checkbox"> LSC = 22,39. Una semana con 22 defectos no da señal y una con 23 sí</label>
+<label><input type="checkbox"> LSC = 24,00. Una semana con 23 defectos da señal</label>
+<label><input type="checkbox"> LSC = 15,46. Una semana con 14 defectos da señal</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 4
+
+La opción 1. LSC = 12 + 3 x raíz de 12 = 12 + 3 x 3,464 = 22,39. Un conteo es entero, así que 22 está dentro y 23 está fuera.
+:::
+
+**5.** Un Pareto de 100 defectos tiene causas con 40, 30, 20 y 10. ¿Cuánto explican las dos primeras?
+
+<label><input type="checkbox"> 50 %</label>
+<label><input type="checkbox"> 70 %</label>
+<label><input type="checkbox"> 90 %</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 5
+
+La opción 2. 40 + 30 = 70 de 100. Con la tercera causa el acumulado sube a 90 %.
+:::
+
+**6.** En un gráfico de control, la semana 5 tiene 12 defectos y está dentro de los límites, aunque es más alta que otras. ¿Qué conviene hacer?
+
+<label><input type="checkbox"> Investigar qué persona cometió errores esa semana</label>
+<label><input type="checkbox"> Tratarla como variación común y no reaccionar a ese punto aislado</label>
+<label><input type="checkbox"> Cambiar de inmediato el proceso de pruebas</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 6
+
+La opción 2. Un punto dentro de los límites es compatible con variación común. Reaccionar a cada fluctuación puede empeorar el proceso.
+:::
+
+**7.** Al aplicar los cinco porqués, ¿cuál es la mejor causa raíz de un defecto que pasó la puerta?
+
+<label><input type="checkbox"> El desarrollador se descuidó</label>
+<label><input type="checkbox"> La puerta medía cobertura sobre el total y no sobre el código nuevo</label>
+<label><input type="checkbox"> Hubo mala suerte esa semana</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 7
+
+La opción 2. Es una causa de proceso que el equipo puede cambiar. Las otras dos no llevan a ninguna acción correctiva verificable.
+:::
+
+**8.** Una prueba automática halla un defecto y el equipo lo corrige antes de entregar. ¿Cómo se clasifican la prueba y el arreglo?
+
+<label><input type="checkbox"> Prueba como evaluación y arreglo como falla interna</label>
+<label><input type="checkbox"> Prueba como prevención y arreglo como falla externa</label>
+<label><input type="checkbox"> Ambos como falla interna</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 8
+
+La opción 1. La prueba busca defectos (evaluación) y el arreglo corrige algo hallado antes de entregar (falla interna). Sería falla externa solo si el defecto ya hubiera llegado al usuario.
+:::
+
+**9.** ¿Cuál es la lectura correcta de "la calidad es gratis"?
+
+<label><input type="checkbox"> Hacer las cosas bien no cuesta nada</label>
+<label><input type="checkbox"> Gastar menos en prevención ahorra dinero</label>
+<label><input type="checkbox"> El costo de la no conformidad suele superar el de prevenirla, así que prevenir termina pagándose</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 9
+
+La opción 3. La prevención sí cuesta. La tesis es que cuesta menos que lo que evita y que el efecto neto es favorable a largo plazo, con cautelas sobre el corto plazo y los rendimientos decrecientes.
+:::
+
+**10.** Según los informes de la GAO sobre Healthcare.gov, ¿qué afirmación es correcta?
+
+<label><input type="checkbox"> El sobrecosto se debió principalmente a falta de pruebas</label>
+<label><input type="checkbox"> La documentación de pruebas carecía de criterios para decidir si un sistema pasaba, y el sobrecosto se atribuye principalmente a requisitos cambiantes y brechas de supervisión</label>
+<label><input type="checkbox"> Todas las pruebas se completaron antes del lanzamiento</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 10
+
+La opción 2. El GAO-15-238 dice que los sistemas no se probaron por completo y que faltaban los criterios de aprobación. El GAO-14-694 atribuye el aumento de costo principalmente a requisitos nuevos y cambiantes agravados por la supervisión.
+:::
+
+## Lo que te llevas
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Qué es un punto de control, qué lo distingue de una revisión informal y qué lleva un buen criterio de aceptación
+- [ ] Qué hace una puerta de calidad en CI/CD y por qué debe medir el código nuevo y bloquear de verdad
+- [ ] Qué es variación común y causa especial, y cómo se calculan los límites de un gráfico c
+- [ ] Cómo se construye un Pareto y qué advertencia lleva
+- [ ] Cómo se buscan causas raíz con los cinco porqués y con Ishikawa, y qué límites tienen
+- [ ] Las cuatro categorías del costo de la calidad y cómo se calcula el total de un escenario
+- [ ] La diferencia entre Juran y Crosby y por qué más inversión no siempre rinde más
+- [ ] Qué quiso decir Crosby con "la calidad es gratis" y qué cautelas aporta la evidencia en software
+- [ ] Qué puertas existieron y cuáles faltaron en Healthcare.gov 2013, según la GAO
+:::
+
+## Glosario
+
+- **Punto de control o puerta (gate).** Momento fijado de antemano en que un entregable se compara con un criterio escrito y se decide si avanza o vuelve.
+- **Criterio de aceptación.** Condición concreta y verificable con la que se decide si un entregable pasa: qué se mide, valor límite, condiciones y cómo se comprueba.
+- **Definición de terminado (Definition of Done).** Descripción formal, común al equipo, del estado de un incremento que cumple las medidas de calidad del producto.
+- **Puerta de calidad.** Condición medible en un flujo de CI/CD que detiene un cambio si no se cumple.
+- **CI/CD.** Integración y entrega continuas: flujo automático que construye, prueba y despliega los cambios.
+- **Rama protegida.** Rama de un repositorio que exige revisiones y verificaciones exitosas antes de aceptar cambios.
+- **Tasa de fallo de cambios.** Proporción de despliegues que exigen intervención inmediata, como una reversa o un parche urgente.
+- **Variación común.** Fluctuación natural de un proceso estable.
+- **Causa especial o asignable.** Causa puntual que mueve el proceso fuera de su comportamiento habitual.
+- **Gráfico de control.** Gráfica de una característica contra el tiempo con línea central y límites superior e inferior.
+- **Gráfico c.** Gráfico de control para el conteo de defectos por unidad de inspección constante.
+- **Límite de control.** Frontera calculada con los datos del proceso, distinta del límite de especificación.
+- **Diagrama de Pareto.** Gráfico de barras ordenadas por frecuencia con línea de porcentaje acumulado.
+- **Causa raíz.** Condición que, corregida, evita que el problema vuelva.
+- **Cinco porqués.** Técnica que pregunta "por qué" en cadena hasta una causa que el equipo puede cambiar.
+- **Diagrama de Ishikawa.** Diagrama de espina de pescado que organiza causas posibles por categorías.
+- **Costo de la calidad (COQ).** Dinero que se gasta para tener calidad y por no tenerla, en cuatro categorías.
+- **Modelo PAF.** Modelo de prevención, evaluación y falla.
+- **Prevención.** Gasto para evitar que el defecto nazca.
+- **Evaluación.** Gasto para hallar defectos antes de entregar.
+- **Falla interna.** Costo de corregir un defecto hallado antes de entregar.
+- **Falla externa.** Costo de un defecto que llegó al usuario.
+- **Costo de conformidad.** Prevención más evaluación.
+- **Costo de no conformidad.** Fallas internas más fallas externas.
+- **Costos intangibles.** Costos reales difíciles de medir, como la pérdida de confianza.
+- **Rendimientos decrecientes.** Cada unidad extra de inversión produce menos mejora que la anterior.
+- **IV&V.** Verificación y validación independiente, hecha por una parte ajena al equipo de desarrollo.
+- **FFM.** Mercado federal de seguros de salud de Estados Unidos, el sistema de Healthcare.gov.
+- **GAO.** Oficina de Rendición de Cuentas del Gobierno de Estados Unidos.
+
+## Bibliografía
+
+Control, puertas y proceso:
+
+- Schwaber, K. y Sutherland, J. (2020). *The Scrum Guide.* [scrumguides.org](https://scrumguides.org/scrum-guide.html).
+- SonarSource. *Introduction to quality gates.* Documentación de SonarQube Server. [Página](https://docs.sonarsource.com/sonarqube-server/quality-standards-administration/managing-quality-gates/introduction-to-quality-gates). Consultada en octubre de 2026.
+- GitHub. *About protected branches.* [Documentación](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches). Consultada en octubre de 2026.
+- DORA. *DORA's software delivery performance metrics.* [Guía](https://dora.dev/guides/dora-metrics/). Consultada en octubre de 2026.
+
+Control estadístico y causa raíz:
+
+- NIST/SEMATECH. *e-Handbook of Statistical Methods*, sección 6.3: [What are control charts?](https://www.itl.nist.gov/div898/handbook/pmc/section3/pmc31.htm) y [Counts control charts](https://www.itl.nist.gov/div898/handbook/pmc/section3/pmc331.htm).
+- Shewhart, W. A. (1931). *Economic Control of Quality of Manufactured Product.* Van Nostrand.
+- Nelson, L. S. (1984). The Shewhart Control Chart: Tests for Special Causes. *Journal of Quality Technology*, 16(4), 237 a 239. [DOI](https://doi.org/10.1080/00224065.1984.11978921).
+- Florac, W. A. y Carleton, A. D. (1999). *Measuring the Software Process: Statistical Process Control for Software Process Improvement.* Addison-Wesley.
+- Ishikawa, K. (1976). *Guide to Quality Control.* Asian Productivity Organization.
+- Ohno, T. (1988). *Toyota Production System: Beyond Large-Scale Production.* Productivity Press.
+- Card, A. J. (2017). The problem with "5 whys". *BMJ Quality & Safety*, 26(8), 671 a 677. [DOI](https://doi.org/10.1136/bmjqs-2016-005849).
+
+Costo de la calidad:
+
+- Feigenbaum, A. V. (1956). Total quality control. *Harvard Business Review*, 34(6), 93 a 101. Ficha tomada de fuentes secundarias; no se abrió el artículo.
+- Crosby, P. B. (1979). *Quality Is Free: The Art of Making Quality Certain.* McGraw-Hill.
+- Juran, J. M. y De Feo, J. A. (2010). *Juran's Quality Handbook: The Complete Guide to Performance Excellence* (6.a ed.). McGraw-Hill.
+- Schiffauerova, A. y Thomson, V. (2006). A review of research on cost of quality models and best practices. *International Journal of Quality & Reliability Management*, 23(6), 647 a 669. [DOI](https://doi.org/10.1108/02656710610672470).
+- Sower, V. E., Quarles, R. y Broussard, E. (2007). Cost of quality usage and its relationship to quality system maturity. *International Journal of Quality & Reliability Management*, 24(2), 121 a 140. [DOI](https://doi.org/10.1108/02656710710722257).
+- Harter, D. E., Krishnan, M. S. y Slaughter, S. A. (2000). Effects of process maturity on quality, cycle time, and effort in software product development. *Management Science*, 46(4), 451 a 466. [DOI](https://doi.org/10.1287/mnsc.46.4.451.12056).
+- Harter, D. E. y Slaughter, S. A. (2003). Quality improvement and infrastructure activity costs in software development: a longitudinal analysis. *Management Science*, 49(6), 784 a 800. [DOI](https://doi.org/10.1287/mnsc.49.6.784.16023).
+
+Caso real:
+
+- GAO (julio de 2014). *Healthcare.gov: Ineffective Planning and Oversight Practices Underscore the Need for Improved Contract Management.* GAO-14-694. [gao.gov](https://www.gao.gov/products/gao-14-694).
+- GAO (marzo de 2015). *Healthcare.gov: CMS Has Taken Steps to Address Problems, but Needs to Further Implement Systems Development Best Practices.* GAO-15-238. [gao.gov](https://www.gao.gov/products/gao-15-238).
+
+Para ampliar dentro del curso: [Tema 3 de la Unidad 1](../../unidad-01/tema-03-importancia-costo-mundo-globalizado/index.qmd) (costo de la mala calidad y curva del defecto), [Tema 1 de esta unidad](../tema-01-metodos-estandares-vv/index.qmd) (IEEE 1012 y modelo en V), [Tema 4 de la Unidad 3](../../unidad-03/tema-04-madurez-spice-cmmi/index.qmd) (modelos de madurez) y [Tema 4 de esta unidad](../tema-04-nomenclatura-certificacion/index.qmd) (certificación).
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

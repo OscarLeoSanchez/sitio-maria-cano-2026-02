@@ -1,0 +1,1236 @@
+---
+title: "Tema 5. Factores que determinan la calidad y el método ATAM"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                  |
+|--------|------------------------------------------------------------------|
+| Unidad | Unidad 4. Validación y verificación                              |
+| Tema   | Tema 5. Factores que determinan la calidad y el método ATAM      |
+:::
+
+[Presentación interactiva de la unidad](../presentacion-interactiva.html){.btn-curso}
+
+Tema anterior: [Tema 4. Nomenclatura y certificación](../tema-04-nomenclatura-certificacion/index.qmd).
+Este es el último tema del curso. La síntesis de las cuatro unidades está al final de esta guía, en la Parte 8.
+
+## Objetivo y resultado de aprendizaje
+
+Los cuatro temas anteriores de esta unidad enseñaron a verificar, a validar, a costear la calidad y a
+leer una certificación. Este tema mira el problema desde antes de que exista el producto, porque la
+calidad que un equipo puede alcanzar depende de factores que se deciden al diseñar y al organizar el
+trabajo. Aprendes a nombrarlos, a ver cómo chocan entre sí y a decidir con un método formal, el ATAM.
+
+Resultado de aprendizaje de la unidad: reconoce los diferentes usos de los procesos de validación y
+verificación. Este tema aporta la parte que decide qué conviene verificar primero, porque ordena los
+atributos de calidad por su importancia para el negocio y revela dónde la arquitectura los pone en
+riesgo. Al terminar puedes:
+
+- Describir los modelos clásicos de calidad (McCall, Boehm y FURPS+) y ubicarlos frente a la ISO/IEC 25010:2023.
+- Clasificar un factor que afecta la calidad como de proceso, de personas, de producto o de organización.
+- Reconocer un intercambio entre atributos de calidad y explicar qué gana y qué pierde cada decisión.
+- Escribir un escenario de atributo de calidad con sus seis partes y una medida verificable.
+- Construir un árbol de utilidad y conducir un ATAM reducido hasta encontrar puntos de sensibilidad, puntos de intercambio, riesgos y no riesgos.
+- Explicar con evidencia qué se sabe y qué no se sabe sobre la calidad del código generado por inteligencia artificial.
+- Conectar las cuatro unidades del curso en una sola forma de trabajar y trazar una ruta para seguir aprendiendo.
+
+Prerrequisitos: el Tema 2 de la Unidad 1 (las nueve características de la ISO/IEC 25010:2023) y los
+Temas 1 a 4 de esta unidad. No hace falta saber programar, aunque un ejemplo de la Parte 7 incluye
+código corto que se explica línea por línea.
+
+## Ruta de estudio
+
+Son unas 7 horas de trabajo independiente. Conviene partirlas en tres o cuatro sesiones. La Parte 6
+es la más larga y la más útil, así que merece una sesión propia con lápiz y papel.
+
+::: {.calendario}
+| Parte | Qué haces | Tiempo |
+|---|---|---|
+| 1. Qué es un factor de calidad | Lees la distinción entre atributo y factor | 25 min |
+| 2. Los modelos clásicos | Lees McCall, Boehm y FURPS+, los comparas con la ISO/IEC 25010:2023 y resuelves el Reto 1 | 50 min |
+| 3. Factores de proceso, personas, producto y organización | Lees, clasificas y resuelves el Reto 2 | 50 min |
+| 4. Intercambios entre atributos | Lees la tabla de intercambios y resuelves el Reto 3 | 40 min |
+| 5. El método ATAM | Lees los conceptos y los nueve pasos | 35 min |
+| 6. Ejemplo resuelto de ATAM | Sigues el ejemplo completo y resuelves el Reto 4 | 90 min |
+| 7. Código generado por IA | Lees la evidencia y resuelves el Reto 5 | 50 min |
+| 8. Síntesis del curso | Lees el recorrido de las cuatro unidades y trazas tu ruta | 45 min |
+| Cierre | Errores frecuentes, autoevaluación y glosario | 30 min |
+:::
+
+La presentación interactiva de la unidad cubre este tema con las mismas partes y los mismos nombres de
+concepto, y sirve como repaso. Esta guía trae todo lo necesario para estudiar sin ayuda, con ejemplos
+resueltos, ejercicios con solución, autoevaluación con clave y glosario.
+
+## El hilo conductor: la app de turnos de la Clínica Aurora
+
+El curso entero usa un producto ficticio, una app que asigna turnos médicos en la Clínica Aurora. Aquí
+la app hace de laboratorio para el ATAM. Se le piden requisitos de calidad, se examina una arquitectura
+propuesta y se encuentran sus riesgos. Todas las cifras de la clínica son ilustrativas, inventadas para
+que los cálculos se puedan seguir, y el texto lo vuelve a decir donde importa. Ninguna proviene de una
+medición real.
+
+## Parte 1. Qué es un factor de calidad
+
+La palabra factor se usa en este campo con dos sentidos que conviene separar desde el principio. En el
+primero, un factor de calidad es una propiedad que un producto debe tener, como la fiabilidad o la
+facilidad de uso. Los modelos clásicos de la Parte 2 usan la palabra así. En el segundo sentido, un
+factor es una causa, algo que empuja la calidad hacia arriba o hacia abajo, como la experiencia del
+equipo o la presión del calendario. La carta descriptiva del curso pide analizar los factores que
+determinan la calidad, y esta guía cubre los dos sentidos.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos sentidos de la palabra factor. A la izquierda, factores como propiedades del producto, por ejemplo fiabilidad y facilidad de uso, que describen cómo debe ser el producto. A la derecha, factores como causas, por ejemplo la experiencia del equipo y el calendario, que explican por qué el producto sale con la calidad que sale. Ambos se conectan con el producto final." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t5a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Dos sentidos de la palabra factor</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="40" width="300" height="120" rx="12"/><rect x="440" y="40" width="300" height="120" rx="12"/></g>
+  <rect x="250" y="190" width="260" height="46" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="170" y="66" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Factor como propiedad</text>
+  <text x="170" y="90" font-size="11.5" fill="#5b6876" text-anchor="middle">Cómo debe ser el producto</text>
+  <text x="170" y="114" font-size="11.5" fill="#3c7d7a" text-anchor="middle">fiabilidad, eficiencia,</text>
+  <text x="170" y="130" font-size="11.5" fill="#3c7d7a" text-anchor="middle">facilidad de uso, mantenibilidad</text>
+  <text x="590" y="66" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Factor como causa</text>
+  <text x="590" y="90" font-size="11.5" fill="#5b6876" text-anchor="middle">Por qué sale la calidad que sale</text>
+  <text x="590" y="114" font-size="11.5" fill="#3c7d7a" text-anchor="middle">experiencia del equipo, proceso,</text>
+  <text x="590" y="130" font-size="11.5" fill="#3c7d7a" text-anchor="middle">calendario, organización</text>
+  <text x="380" y="218" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Calidad del producto final</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u4t5a)"><path d="M170,162 C190,185 230,200 248,208"/><path d="M590,162 C570,185 530,200 512,208"/></g>
+</svg>
+
+:::
+
+Un ejemplo de la clínica separa los dos sentidos. Si Aurora escribe "la app debe tener alta
+disponibilidad", habla de una propiedad. Si el equipo reconoce que dos de sus cuatro integrantes
+llegaron hace un mes y que el lanzamiento se adelantó tres semanas, habla de causas. Las propiedades
+dicen hacia dónde se quiere llegar y las causas explican por qué un equipo llega o no llega.
+
+El ingeniero de calidad necesita las dos miradas. Las propiedades permiten escribir requisitos
+medibles, y las causas permiten prever dónde van a aparecer los defectos antes de que aparezcan. Un
+requisito sin análisis de causas se incumple por sorpresa, y un análisis de causas sin requisitos no
+sabe qué debe proteger.
+
+## Parte 2. Los modelos clásicos de calidad y la ISO/IEC 25010:2023
+
+Antes de la ISO/IEC 25010 hubo otros intentos de partir la calidad en piezas. Tres de ellos siguen
+apareciendo en libros, entrevistas y documentos de proyecto, así que conviene reconocerlos. Son el
+modelo de McCall, el de Boehm y FURPS+.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Línea de tiempo de los modelos de calidad. 1977 modelo de McCall. 1978 modelo de Boehm. 1987 FURPS de Grady y Caswell en Hewlett-Packard. 1991 ISO/IEC 9126. 2011 ISO/IEC 25010 primera edición. 2023 ISO/IEC 25010 segunda edición con nueve características." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">De los modelos de los años setenta a la norma de 2023</text>
+  <path d="M30,100 L730,100" stroke="#c7d6e6" stroke-width="2.5" fill="none"/>
+  <g fill="#0e6f6c"><circle cx="80" cy="100" r="7"/><circle cx="190" cy="100" r="7"/><circle cx="300" cy="100" r="7"/><circle cx="410" cy="100" r="7"/><circle cx="540" cy="100" r="7"/><circle cx="670" cy="100" r="7"/></g>
+  <g font-size="13" font-weight="700" fill="#12324f" text-anchor="middle"><text x="80" y="78">1977</text><text x="190" y="78">1978</text><text x="300" y="78">1987</text><text x="410" y="78">1991</text><text x="540" y="78">2011</text><text x="670" y="78">2023</text></g>
+  <g font-size="11.5" font-weight="600" fill="#0e6f6c" text-anchor="middle"><text x="80" y="130">McCall</text><text x="190" y="130">Boehm</text><text x="300" y="130">FURPS</text><text x="410" y="130">ISO/IEC 9126</text><text x="540" y="130">ISO/IEC 25010</text><text x="670" y="130">ISO/IEC 25010</text></g>
+  <g font-size="10.5" fill="#5b6876" text-anchor="middle"><text x="80" y="148">11 factores</text><text x="80" y="162">en 3 grupos</text><text x="190" y="148">jerarquía</text><text x="190" y="162">en capas</text><text x="300" y="148">Hewlett-Packard</text><text x="300" y="162">Grady y Caswell</text><text x="410" y="148">6 características</text><text x="410" y="162">primera norma</text><text x="540" y="148">8 características</text><text x="540" y="162">primera edición</text><text x="670" y="148">9 características</text><text x="670" y="162">edición vigente</text></g>
+  <text x="380" y="196" font-size="11" fill="#5b6876" text-anchor="middle">Cada modelo parte la calidad en piezas, y cada versión corrige limitaciones de la anterior</text>
+</svg>
+
+:::
+
+### 2.1 El modelo de McCall (1977)
+
+Jim McCall, Paul Richards y Gene Walters, de General Electric, publicaron en noviembre de 1977 el
+informe *Factors in Software Quality* (RADC-TR-77-369) para la Fuerza Aérea de Estados Unidos. El
+modelo clasifica los requisitos de software en 11 factores, repartidos en tres grupos según el momento
+de la vida del producto en que importan.
+
+::: {.tabla-ancha}
+| Grupo | Factor | Pregunta que responde | Ejemplo en la app de turnos |
+|---|---|---|---|
+| Operación del producto | Corrección | ¿Hace lo que se especificó? | Cada turno queda asignado al médico y la hora que eligió el paciente |
+| Operación del producto | Fiabilidad | ¿Lo hace sin fallar? | La app no se cae al cancelar un turno |
+| Operación del producto | Eficiencia | ¿Usa pocos recursos y responde rápido? | La agenda carga en menos de 2 segundos |
+| Operación del producto | Integridad | ¿Controla el acceso a datos y a funciones? | Un paciente no ve los turnos de otro |
+| Operación del producto | Facilidad de uso | ¿Es fácil de aprender y manejar? | Una persona de 70 años reserva sin ayuda |
+| Revisión del producto | Mantenibilidad | ¿Es fácil corregirlo? | Un error de horario se localiza y se arregla en horas |
+| Revisión del producto | Flexibilidad | ¿Es fácil cambiarlo? | Agregar una especialidad no exige reescribir módulos |
+| Revisión del producto | Facilidad de prueba | ¿Es fácil probarlo? | La lógica de asignación se prueba sin abrir la app |
+| Transición del producto | Portabilidad | ¿Se traslada a otro entorno? | La app corre en Android y en iOS |
+| Transición del producto | Reutilización | ¿Se pueden reusar sus piezas? | El módulo de notificaciones sirve para otra clínica |
+| Transición del producto | Interoperabilidad | ¿Se conecta con otros sistemas? | La app intercambia datos con la historia clínica |
+:::
+
+Los nombres en español son traducciones de esta guía, porque los factores originales están en inglés
+(*correctness*, *reliability*, *efficiency*, *integrity*, *usability*, *maintainability*,
+*flexibility*, *testability*, *portability*, *reusability* e *interoperability*). La lista y los tres
+grupos se verificaron en las referencias secundarias citadas en la bibliografía, y el informe original
+de 1977 no se pudo releer completo para esta guía.
+
+### 2.2 El modelo de Boehm (1978)
+
+Barry Boehm y sus colegas de TRW publicaron en 1978 *Characteristics of Software Quality*, con un
+modelo que se organiza en capas, en el que las características generales se descomponen hasta medidas
+que se calculan sobre el producto. La contribución de Boehm que más sobrevive es esa forma de
+jerarquía, donde cada característica se baja hasta algo medible. La ISO/IEC 25010 usa la misma idea con
+características, subcaracterísticas y medidas.
+
+::: {.callout-note}
+## Límite de la fuente
+
+El texto de 1978 es un libro agotado y no se pudo consultar completo. La referencia a la estructura
+en capas y su autoría en TRW se verificó en fuentes secundarias. Por eso esta guía no reproduce la
+lista exacta de características de Boehm y recomienda leer el original o un resumen académico antes
+de citarla en un trabajo.
+:::
+
+### 2.3 FURPS y FURPS+
+
+FURPS nació en Hewlett-Packard y lo describieron Robert Grady y Deborah Caswell en 1987 en *Software
+Metrics: Establishing a Company-wide Program*. El nombre es una sigla en inglés, Functionality,
+Usability, Reliability, Performance y Supportability, que en español se lee funcionalidad, facilidad
+de uso, fiabilidad, desempeño y capacidad de soporte.
+
+El signo más se añadió después. Extiende la lista con requisitos de diseño, de implementación, de
+interfaz y físicos, es decir, restricciones que no son atributos de calidad pero condicionan el
+producto. Un ejemplo para Aurora es "la app debe usar el servicio de mensajes de texto que la clínica
+ya contrató". Eso no mide qué tan bueno es el producto, pero limita las decisiones del equipo.
+
+::: {.callout-note}
+## Límite de la fuente
+
+La sigla, el origen en Hewlett-Packard, la autoría y el significado del signo más se verificaron en
+una referencia secundaria. La lista de subatributos que cada autor pone bajo cada letra cambia según la
+fuente, y esta guía no la fija. Para trabajar con FURPS+ en un proyecto, el equipo debe acordar su
+propia lista y escribirla.
+:::
+
+### 2.4 Cómo se relacionan con la ISO/IEC 25010:2023
+
+La Unidad 1, Tema 2, desarrolló la ISO/IEC 25010:2023 con sus nueve características, que aquí no se
+repiten. Los modelos clásicos no quedaron obsoletos por capricho. La norma recoge lo que sobrevivió,
+ordena nombres, agrega lo que faltaba (la seguridad frente a daños, *safety*, es nueva en 2023) y le
+suma subcaracterísticas medibles.
+
+La tabla siguiente es una correspondencia aproximada propuesta en esta guía, para que quien ya conoce
+un modelo clásico ubique cada pieza. No es una equivalencia oficial, y algunos factores clásicos
+quedan como subcaracterísticas de la norma.
+
+::: {.tabla-ancha}
+| Factor de McCall | Dónde cae en la ISO/IEC 25010:2023 | Observación |
+|---|---|---|
+| Corrección | Adecuación funcional | Mismo sentido, hacer lo especificado |
+| Fiabilidad | Fiabilidad | Mismo nombre |
+| Eficiencia | Eficiencia de desempeño | La norma separa tiempo, recursos y capacidad |
+| Integridad | Seguridad | La norma incluye confidencialidad, integridad y trazabilidad |
+| Facilidad de uso | Capacidad de interacción | Antes se llamaba usabilidad |
+| Mantenibilidad | Mantenibilidad | Mismo nombre |
+| Flexibilidad | Mantenibilidad, subcaracterística de modificabilidad | Cambiar el producto es modificabilidad. El nombre flexibilidad de la norma de 2023 designa la adaptación a otros entornos |
+| Facilidad de prueba | Mantenibilidad, subcaracterística de capacidad de prueba | Pasó a ser parte de otra característica |
+| Portabilidad | Flexibilidad | En 2011 era una característica aparte |
+| Reutilización | Mantenibilidad, subcaracterística de reusabilidad | Idem |
+| Interoperabilidad | Compatibilidad | La norma agrupa interoperabilidad y coexistencia |
+| (sin equivalente en 1977) | Seguridad frente a daños | Característica nueva en 2023 |
+:::
+
+Hay un uso práctico de esta tabla. Cuando un contrato antiguo o un libro habla de "portabilidad" o de
+"facilidad de uso", se entiende qué pide aunque la norma vigente use otro nombre. Al escribir un
+requisito nuevo, se usan los nombres de 2023 para no arrastrar vocabulario retirado.
+
+::: {.callout-tip}
+## Reto 1. Ubica cada requisito en los modelos
+
+Para cada requisito de la app de turnos, escribe qué factor de McCall lo describe y en qué
+característica de la ISO/IEC 25010:2023 cae.
+
+1. "El 95 % de las consultas de agenda responde en 2 segundos o menos con 200 usuarios conectados."
+2. "Agregar una nueva especialidad médica debe tomar menos de un día de trabajo del equipo."
+3. "Un paciente solo puede ver y cancelar sus propios turnos."
+4. "La app debe poder instalarse en teléfonos Android 10 y superiores, y en iOS 16 y superiores."
+5. "Si la app falla durante una reserva, el paciente no debe quedar con un turno a medias."
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+1. McCall, eficiencia. ISO/IEC 25010:2023, eficiencia de desempeño (comportamiento temporal).
+2. McCall, flexibilidad. ISO/IEC 25010:2023, mantenibilidad (modificabilidad), porque el requisito pide
+   cambiar el producto para agregar una capacidad. La característica flexibilidad de la ISO se refiere
+   a la adaptación a otros entornos, que aquí no es el caso.
+3. McCall, integridad. ISO/IEC 25010:2023, seguridad (confidencialidad e integridad).
+4. McCall, portabilidad. ISO/IEC 25010:2023, flexibilidad (instalabilidad y adaptabilidad). Además es
+   una restricción de plataforma en el sentido del signo más de FURPS+.
+5. McCall, fiabilidad. ISO/IEC 25010:2023, fiabilidad (tolerancia a fallos y recuperabilidad). Si el
+   problema fuera que el turno quedó asignado a la hora equivocada, sería corrección, es decir,
+   adecuación funcional.
+
+Tu respuesta puede variar en los puntos 2 y 5 siempre que justifiques la elección. Lo importante es
+que cada requisito se pueda medir, no que coincida con una sola etiqueta.
+:::
+
+## Parte 3. Factores que determinan la calidad
+
+Los modelos de la Parte 2 dicen cómo debe ser un producto. Esta parte pregunta qué hace que un equipo
+lo consiga. Para ordenar las causas se usa una clasificación en cuatro grupos, de proceso, de personas,
+de producto y de organización. Es una clasificación didáctica de esta guía, apoyada en los grupos con
+que el modelo de estimación COCOMO II separa los factores que influyen en el esfuerzo (producto,
+plataforma, personal y proyecto), en el trabajo de Conway sobre organización y diseño y en los
+informes DORA sobre prácticas de entrega.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro grupos de factores que determinan la calidad del producto. Proceso, con ejemplos de revisiones y pruebas. Personas, con ejemplos de experiencia y conocimiento del dominio. Producto, con ejemplos de complejidad y tamaño. Organización, con ejemplos de estructura de equipos, presión de calendario y cultura. Los cuatro grupos influyen en la calidad del producto, que está al centro." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t5b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro grupos de causas empujan la calidad</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="40" width="230" height="100" rx="10"/><rect x="520" y="40" width="230" height="100" rx="10"/><rect x="10" y="210" width="230" height="100" rx="10"/><rect x="520" y="210" width="230" height="100" rx="10"/></g>
+  <rect x="280" y="125" width="200" height="80" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="160" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Calidad del</text>
+  <text x="380" y="178" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">producto final</text>
+  <g text-anchor="middle" font-size="13" font-weight="600" fill="#12324f"><text x="125" y="64">Proceso</text><text x="635" y="64">Personas</text><text x="125" y="234">Producto</text><text x="635" y="234">Organización</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="125" y="88">revisiones, pruebas,</text><text x="125" y="104">gestión de cambios</text><text x="125" y="120">y control de versiones</text><text x="635" y="88">experiencia, dominio</text><text x="635" y="104">del negocio, rotación</text><text x="635" y="120">y formación</text><text x="125" y="258">complejidad, tamaño,</text><text x="125" y="274">exigencia de fiabilidad</text><text x="125" y="290">y deuda técnica</text><text x="635" y="258">estructura de equipos,</text><text x="635" y="274">presión de calendario,</text><text x="635" y="290">cultura y presupuesto</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u4t5b)"><path d="M240,100 C260,110 275,125 290,135"/><path d="M520,100 C500,110 485,125 470,135"/><path d="M240,250 C260,240 275,225 290,196"/><path d="M520,250 C500,240 485,225 470,196"/></g>
+</svg>
+
+:::
+
+### 3.1 Factores de proceso
+
+Un proceso con revisiones, pruebas automatizadas y gestión de cambios atrapa defectos antes de que
+lleguen al usuario. Las Unidades 2 y 3 desarrollaron las actividades de SQA y los modelos de madurez
+(SPICE y CMMI) que miden qué tan repetible y controlado es ese proceso. Los temas 1 y 3 de esta
+unidad mostraron cuándo se verifica y cuánto cuesta no hacerlo.
+
+Un factor de proceso se reconoce porque se puede cambiar sin cambiar a las personas. Si Aurora exige
+que ninguna reserva llegue a producción sin revisión por un segundo desarrollador, el proceso mejora
+aunque el equipo sea el mismo.
+
+### 3.2 Factores de personas
+
+La experiencia con el dominio, la experiencia con la tecnología y la continuidad del equipo afectan lo
+que el equipo produce. COCOMO II, el modelo de estimación de Boehm y sus colegas publicado en 2000,
+trata al personal como uno de los grupos de factores que más mueven el esfuerzo y la calidad, junto con
+el producto, la plataforma y el proyecto. La referencia está en la bibliografía.
+
+El conocimiento del dominio tiene un efecto particular en software de salud. Un desarrollador que no
+sabe que una consulta puede reprogramarse por motivos clínicos escribe una regla de negocio incompleta
+y las pruebas, escritas con el mismo desconocimiento, no la detectan. El defecto nace de una brecha de
+conocimiento, y por eso se corrige con formación y con revisión de requisitos con personal clínico.
+
+### 3.3 Factores de producto
+
+El propio producto condiciona la calidad. Un sistema grande, complejo, con requisitos de fiabilidad
+altos o con mucha deuda técnica acumulada es más difícil de mantener con calidad que uno pequeño y
+limpio. COCOMO II también agrupa estos factores, entre ellos la fiabilidad exigida y la complejidad.
+
+La consecuencia práctica es que los atributos exigidos no son gratis. Pedir disponibilidad de 99,99 %
+en lugar de 99,9 % cambia el producto, el costo y el equipo necesario. Por eso la Parte 4 y el método
+ATAM obligan a decidir qué atributos pesan más antes de construir.
+
+### 3.4 Factores de organización
+
+La organización decide el calendario, el presupuesto, la estructura de los equipos y qué se premia.
+En 1968 Melvin Conway observó que las organizaciones que diseñan sistemas producen diseños que
+copian su propia estructura de comunicación, una idea que se conoce como ley de Conway. Si Aurora
+tiene un equipo para la app móvil y otro para el servidor que casi no hablan, es probable que la
+frontera entre app y servidor sea rígida y difícil de cambiar.
+
+Los informes DORA de Google, que estudian miles de profesionales cada año, llegan a una conclusión
+parecida sobre prácticas y cultura. El informe de 2025 describe a la inteligencia artificial como un
+amplificador que magnifica las fortalezas de las organizaciones que ya trabajan bien y las
+disfunciones de las que no. Según ese informe, el resultado de una herramienta nueva depende de la
+organización que la adopta, como se detalla en la Parte 7.
+
+::: {.callout-note}
+## Cuidado con las leyes y los porcentajes
+
+La ley de Conway y los efectos de cada factor son tendencias observadas, no leyes físicas, y en cada
+proyecto pueden pesar distinto. Esta guía no da porcentajes de cuánto aporta cada grupo de factores
+porque no se verificó una fuente primaria que los respalde. Si un libro o un artículo los cita,
+conviene leer cómo se midieron antes de repetirlos.
+:::
+
+::: {.tabla-ancha}
+| Grupo | Cómo se mejora | Ejemplo en Aurora | Dónde se trabaja en el curso |
+|---|---|---|---|
+| Proceso | Cambiar cómo se trabaja | Revisión obligatoria de cada cambio en reservas | Unidades 2 y 3 |
+| Personas | Formar y retener | Taller de reglas clínicas con el personal médico | Unidad 2, Tema 3 |
+| Producto | Reducir complejidad y deuda | Separar el módulo de reservas del de notificaciones | Unidad 1, Tema 2 |
+| Organización | Alinear estructura, plazos y cultura | No fijar fechas sin una estimación del equipo | Esta unidad |
+:::
+
+::: {.callout-tip}
+## Reto 2. Clasifica seis situaciones
+
+Clasifica cada situación de Aurora como factor de proceso, de personas, de producto o de
+organización, y escribe qué defecto de calidad podría producir.
+
+1. No existe revisión de código antes de publicar cambios en el módulo de reservas.
+2. Tres de los cuatro desarrolladores nunca trabajaron con software clínico.
+3. El módulo de asignación de turnos tiene 40 caminos de decisión distintos en una sola función.
+4. La dirección adelantó tres semanas el lanzamiento sin quitar funciones.
+5. Dos equipos separados construyen la app y el servidor, y sus interfaces casi no cambian en un año.
+6. No hay presupuesto para pruebas de carga antes del lanzamiento.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+1. Proceso. Un defecto de reservas llega a producción sin que nadie lo vea, por ejemplo un turno
+   duplicado.
+2. Personas. Reglas clínicas incompletas, como reprogramar una consulta por una urgencia.
+3. Producto. Una función con 40 caminos es difícil de leer, de probar y de modificar, y cualquier cambio
+   puede romper otro camino sin que las pruebas lo noten.
+4. Organización. La presión de calendario recorta pruebas y revisiones. Una situación puede tocar dos
+   grupos, y aquí el factor de origen es la decisión de la dirección.
+5. Organización, por la ley de Conway. La rigidez entre app y servidor refleja la separación de los
+   equipos y no una necesidad técnica.
+6. Organización, porque el presupuesto lo fija quien dirige el proyecto. El defecto probable es una
+   falla bajo carga que nadie midió, que es el escenario de la Parte 6.
+
+Si clasificaste la 4 o la 6 como proceso, el argumento es razonable, porque ambas cambian cómo se
+trabaja. Lo que cuenta es que identifiques quién puede cambiar el factor.
+:::
+
+## Parte 4. Intercambios entre atributos de calidad
+
+Las nueve características de la ISO/IEC 25010:2023 casi nunca pueden maximizarse todas a la vez. Mejorar
+una cuesta algo en otra. La Unidad 1, Tema 2, mostró tres pares con ejemplos de la clínica. Esta parte
+amplía la tabla, explica de dónde vienen los intercambios y presenta el vocabulario para decidirlos.
+
+Los intercambios vienen de que cada atributo se consigue con decisiones de diseño que tienen efectos
+secundarios. Esas decisiones se llaman tácticas en la literatura de arquitectura (Bass, Clements y
+Kazman, 2021). Un caché mejora el tiempo de respuesta, pero puede mostrar datos viejos. Una capa más de
+verificación mejora la seguridad, pero agrega pasos al usuario.
+
+::: {.tabla-ancha}
+| Decisión en la app de turnos | Atributo que mejora | Atributo que se resiente |
+|---|---|---|
+| Código de verificación por mensaje en cada ingreso | Seguridad | Capacidad de interacción (un paso más) y fiabilidad (depende del proveedor de mensajes) |
+| Caché de la disponibilidad de turnos | Eficiencia de desempeño | Adecuación funcional (puede mostrar un cupo ya tomado) |
+| Cifrar cada campo con una llave distinta por paciente | Seguridad | Eficiencia de desempeño (no se puede buscar por nombre con un índice) |
+| Servicio de mensajes por una cola asíncrona | Fiabilidad (la reserva sigue aunque falle el envío) | Adecuación funcional (el recordatorio llega unos segundos después) y simplicidad operativa |
+| Una sola base de datos para toda la clínica | Mantenibilidad (menos piezas) | Fiabilidad (un solo punto de fallo) |
+| Permitir cancelar hasta 5 minutos antes | Capacidad de interacción | Eficiencia operativa de la clínica (cupos que se pierden) |
+:::
+
+Un intercambio no obliga a elegir siempre el mismo lado. Un banco acepta fricción en el ingreso para
+reducir fraude, mientras un juego acepta menos portabilidad para exprimir una consola. Lo que importa es
+que la elección sea consciente, y que quede escrita con su razón para que otro equipo pueda revisarla
+más tarde.
+
+Decidir un intercambio exige saber cuánto vale cada atributo para el negocio. Una táctica que mejora un
+atributo que nadie necesita, a costa de otro que sí importa, es un mal intercambio aunque técnicamente
+funcione. Los atributos con mayor valor para el negocio se llaman impulsores de calidad, y son la
+entrada del método de la Parte 5.
+
+::: {.callout-tip}
+## Reto 3. Nombra el intercambio
+
+Para cada decisión de la app, escribe qué atributo mejora, cuál se resiente y qué dato necesitaría el
+equipo para decidir con evidencia en vez de con intuición.
+
+1. Almacenar los turnos de los últimos 5 años en la misma tabla que los turnos futuros.
+2. Enviar recordatorios 24 horas y 2 horas antes de la cita en lugar de uno solo.
+3. Pedir el número de documento y la fecha de nacimiento antes de mostrar los turnos.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+1. Mejora la simplicidad y la mantenibilidad, porque hay una sola tabla y una sola consulta. Se
+   resiente la eficiencia de desempeño, porque la tabla crece y cada consulta de turnos futuros debe
+   saltar muchos registros viejos. Dato necesario, el tiempo de consulta con la tabla llena y la
+   existencia de un índice por fecha.
+2. Mejora la adecuación funcional, porque se reduce la ausencia de pacientes, que es un impulsor del
+   negocio. Se resiente la capacidad de interacción si el paciente siente que lo molestan, y el costo
+   del servicio de mensajes. Dato necesario, la tasa de ausencias con uno y con dos recordatorios, y el
+   precio por mensaje.
+3. Mejora la seguridad, porque exige dos datos del paciente. Se resiente la capacidad de interacción
+   para quien no recuerda uno de los dos datos, y la accesibilidad. Dato necesario, la tasa de
+   pacientes que abandonan en esa pantalla y el nivel de riesgo real de acceso indebido.
+:::
+
+## Parte 5. El método ATAM
+
+El *Architecture Tradeoff Analysis Method*, en español método de análisis de intercambios de
+arquitectura, se conoce por su sigla ATAM. Lo desarrolló el Software Engineering Institute (SEI) de la
+Universidad Carnegie Mellon, un centro de investigación federal financiado por el Departamento de
+Defensa de Estados Unidos. La descripción de referencia es el informe CMU/SEI-2000-TR-004 de Rick
+Kazman, Mark Klein y Paul Clements, fechado el 1 de agosto de 2000, y el libro de Clements, Kazman y Klein
+de 2002 (*Evaluating Software Architectures*).
+
+El ATAM evalúa una arquitectura propuesta, antes de construirla o mientras se construye, con una
+pregunta concreta. Dados los atributos de calidad que el negocio necesita, ¿qué decisiones de la
+arquitectura los ponen en riesgo y cuáles decisiones obligan a sacrificar un atributo por otro? No mide
+el producto terminado, porque para eso están las pruebas. Razona sobre el diseño para encontrar
+problemas cuando corregirlos todavía es barato, que es la idea de costo de la calidad del Tema 3.
+
+::: {.callout-note}
+## Fuentes y límites de esta parte
+
+El informe del SEI de 2000 (autores, fecha y número) y la estructura en nueve pasos en dos fases se
+verificaron en fuentes accesibles durante la consulta. El texto completo del informe y del libro no
+se pudo releer, así que las definiciones de esta parte parafrasean la literatura estándar del método y
+conviene cotejarlas con el informe antes de citarlas en un trabajo académico. Los números del ejemplo
+de la Parte 6 son ilustrativos y no provienen de ninguna fuente.
+:::
+
+### 5.1 Conceptos que se usan en el método
+
+El método tiene un vocabulario propio. Los términos siguientes se usan en el ejemplo de la Parte 6, así
+que conviene fijarlos ahora.
+
+- **Impulsor de negocio.** Una razón del negocio que justifica el sistema y que condiciona la arquitectura, por ejemplo reducir las citas perdidas por ausencia del paciente.
+- **Escenario de atributo de calidad.** Una descripción concreta de cómo debe comportarse el sistema ante un evento, con seis partes. La fuente del estímulo (quién o qué lo origina), el estímulo (el evento), el entorno (en qué condiciones ocurre), el artefacto (la parte del sistema afectada), la respuesta (qué hace el sistema) y la medida de la respuesta (cómo se comprueba que fue suficiente). Este formato aparece en Bass, Clements y Kazman (2021).
+- **Árbol de utilidad.** Una jerarquía que parte de la utilidad general del sistema, baja a los atributos de calidad, luego a refinamientos de cada atributo y termina en escenarios concretos. A cada escenario hoja se le asigna una prioridad con dos letras, la importancia para el negocio y la dificultad de lograrlo, cada una alta (H), media (M) o baja (L).
+- **Enfoque arquitectónico.** Una decisión o patrón de diseño que responde a uno o más escenarios, por ejemplo guardar los turnos en una base relacional con una restricción de unicidad.
+- **Punto de sensibilidad.** Una propiedad de un componente o de una decisión de la que depende la respuesta de un solo atributo de calidad. Si cambia, ese atributo cambia notablemente.
+- **Punto de intercambio.** Una propiedad o decisión de la que dependen varios atributos a la vez, y que los empuja en direcciones opuestas. Es un punto de sensibilidad que afecta a más de un atributo.
+- **Riesgo.** Una decisión de arquitectura que, tal como está, puede impedir cumplir un escenario importante.
+- **No riesgo.** Una decisión de arquitectura que, según el análisis, cumple el escenario y está bien justificada.
+- **Tema de riesgo.** Un patrón que se repite entre varios riesgos y apunta a una causa común, como la falta de pruebas automáticas o la dependencia de un único proveedor.
+
+### 5.2 Los nueve pasos
+
+El método tiene nueve pasos. Los seis primeros se hacen con el equipo de evaluación y los líderes del
+proyecto. Los tres últimos amplían la mirada a más interesados.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Los nueve pasos del ATAM en dos fases. Fase 1, pasos uno a seis: presentar el ATAM, presentar los impulsores de negocio, presentar la arquitectura, identificar los enfoques arquitectónicos, generar el árbol de utilidad y analizar los enfoques. Fase 2, pasos siete a nueve: lluvia de ideas y priorización de escenarios, nuevo análisis de enfoques y presentación de resultados." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t5d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Los nueve pasos del ATAM</text>
+  <text x="250" y="46" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Fase 1. Evaluadores y líderes del proyecto</text>
+  <text x="640" y="46" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Fase 2. Más interesados</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="58" width="145" height="62" rx="8"/><rect x="178" y="58" width="145" height="62" rx="8"/><rect x="336" y="58" width="145" height="62" rx="8"/><rect x="20" y="150" width="145" height="62" rx="8"/><rect x="178" y="150" width="145" height="62" rx="8"/><rect x="336" y="150" width="145" height="62" rx="8"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="520" y="58" width="220" height="62" rx="8"/><rect x="520" y="150" width="220" height="62" rx="8"/><rect x="520" y="242" width="220" height="62" rx="8"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="92" y="80" font-weight="700">1</text><text x="92" y="96">Presentar</text><text x="92" y="110">el ATAM</text><text x="250" y="80" font-weight="700">2</text><text x="250" y="96">Presentar los impulsores</text><text x="250" y="110">de negocio</text><text x="408" y="80" font-weight="700">3</text><text x="408" y="96">Presentar la</text><text x="408" y="110">arquitectura</text><text x="92" y="172" font-weight="700">4</text><text x="92" y="188">Identificar los enfoques</text><text x="92" y="202">arquitectónicos</text><text x="250" y="172" font-weight="700">5</text><text x="250" y="188">Generar el árbol</text><text x="250" y="202">de utilidad</text><text x="408" y="172" font-weight="700">6</text><text x="408" y="188">Analizar los enfoques</text><text x="408" y="202">contra los escenarios</text><text x="630" y="80" font-weight="700">7</text><text x="630" y="96">Lluvia de ideas y</text><text x="630" y="110">priorización de escenarios</text><text x="630" y="172" font-weight="700">8</text><text x="630" y="188">Analizar de nuevo los</text><text x="630" y="202">enfoques con los escenarios nuevos</text><text x="630" y="264" font-weight="700">9</text><text x="630" y="280">Presentar los resultados</text><text x="630" y="294">en un informe final</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#u4t5d)"><path d="M165,89 L176,89"/><path d="M323,89 L334,89"/><path d="M408,120 C408,132 150,132 92,148"/><path d="M165,181 L176,181"/><path d="M323,181 L334,181"/><path d="M481,120 L518,89"/><path d="M630,120 L630,148"/><path d="M630,212 L630,240"/></g>
+  <text x="250" y="260" font-size="11" fill="#5b6876" text-anchor="middle">Los pasos 5 y 6 producen el núcleo</text>
+  <text x="250" y="276" font-size="11" fill="#5b6876" text-anchor="middle">del análisis: escenarios priorizados</text>
+  <text x="250" y="292" font-size="11" fill="#5b6876" text-anchor="middle">y los hallazgos sobre cada enfoque</text>
+</svg>
+
+:::
+
+::: {.tabla-ancha}
+| Paso | Qué se hace | Qué sale |
+|---|---|---|
+| 1. Presentar el ATAM | El equipo evaluador explica el método a los participantes | Expectativas claras |
+| 2. Presentar los impulsores de negocio | Un líder del proyecto explica qué quiere lograr el negocio y con qué restricciones | Lista priorizada de impulsores |
+| 3. Presentar la arquitectura | El arquitecto expone el diseño propuesto y cómo responde a los impulsores | Vista común del diseño |
+| 4. Identificar los enfoques arquitectónicos | Se nombran los patrones y decisiones que sostienen los atributos | Catálogo de enfoques |
+| 5. Generar el árbol de utilidad | Se baja de los impulsores a los atributos y a escenarios, con prioridad H, M o L | Árbol de utilidad |
+| 6. Analizar los enfoques | Para cada escenario de alta prioridad se pregunta cómo responde la arquitectura | Puntos de sensibilidad, de intercambio, riesgos y no riesgos |
+| 7. Lluvia de ideas y priorización de escenarios | Un grupo más amplio propone escenarios nuevos y vota | Conjunto ampliado de escenarios |
+| 8. Analizar de nuevo los enfoques | Se repite el análisis con los escenarios nuevos más votados | Hallazgos adicionales |
+| 9. Presentar los resultados | Se entrega un informe con riesgos, no riesgos, puntos de intercambio y temas de riesgo | Informe final |
+:::
+
+La secuencia fija el orden de las preguntas. Primero se aclara qué importa al negocio (pasos 2 y 5), luego
+se examina el diseño (pasos 3, 4 y 6) y por último se amplía con más voces (pasos 7 y 8). El orden evita
+un error común en las revisiones de arquitectura, que es discutir tecnologías antes de saber qué
+atributo se está protegiendo.
+
+Una evaluación completa reúne a evaluadores externos, al arquitecto y a varios interesados, así que no
+cabe en todos los proyectos. Un equipo pequeño puede aplicar una versión reducida con los pasos 2, 3, 5 y
+6 en una o dos sesiones, que es la que sigue la Parte 6. La versión reducida pierde la mirada externa
+de los pasos 7 y 8, y por eso conviene decir en el informe que no se hicieron.
+
+## Parte 6. Ejemplo resuelto: un ATAM reducido para la app de turnos
+
+Esta parte sigue un ATAM reducido sobre la arquitectura propuesta para la app de turnos de Aurora, paso
+a paso y con números. Quien estudia solo juega todos los roles. Se recomienda leer cada paso, intentar el
+resultado en papel y comparar. Todas las cifras son ilustrativas, inventadas para el ejercicio.
+
+### 6.1 Paso 2. Los impulsores de negocio
+
+Aurora tiene tres sedes y una app que quiere abrir al público. La gerencia expone cuatro impulsores.
+
+1. Reducir en una cuarta parte las citas perdidas por ausencia del paciente, con recordatorios.
+2. Abrir cada día a las 7:00 a.m. los turnos de los siguientes siete días, un momento con mucha demanda
+   que la clínica estima en 600 usuarios conectados a la vez.
+3. Proteger los datos clínicos conforme a la Ley 1581 de 2012 de Colombia, que clasifica los datos de salud
+   como sensibles (se vio en la Unidad 1, Tema 3).
+4. Atender a pacientes mayores, muchos de ellos sin experiencia con aplicaciones, con un equipo de cuatro
+   desarrolladores y un presupuesto limitado.
+
+### 6.2 Paso 3. La arquitectura propuesta
+
+El arquitecto presenta el diseño inicial. Lo que sigue son decisiones, no código.
+
+::: {.tabla-ancha}
+| Decisión | Detalle |
+|---|---|
+| D1. Aplicación servidor | Un servidor modular con una API, conectado a una base de datos relacional |
+| D2. Pool de conexiones | 20 conexiones a la base de datos |
+| D3. Asignación de turnos | Una restricción de unicidad sobre la pareja (médico, hora de inicio) en la tabla de turnos |
+| D4. Caché de disponibilidad | Se guarda en memoria la lista de cupos libres de cada médico y día, con un tiempo de vida de 30 segundos |
+| D5. Recordatorios | Una cola de mensajes y un proceso que los envía a través de un único proveedor de mensajes de texto |
+| D6. Ingreso | Código de verificación por mensaje de texto, válido por 60 segundos, enviado por el mismo proveedor |
+| D7. Autorización | Cada punto de acceso de la API comprueba por su cuenta que el turno pertenece al paciente |
+| D8. Despliegue | Una sola región de nube |
+:::
+
+### 6.3 Paso 5. El árbol de utilidad
+
+El equipo baja de los impulsores a seis atributos y siete escenarios. Cada escenario lleva su prioridad
+con importancia primero y dificultad después.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 390" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Árbol de utilidad de la app de turnos. La raíz es la utilidad de la app. Seis atributos: desempeño con el escenario P1 prioridad alta alta, adecuación funcional con C1 alta media, seguridad con S1 alta baja, fiabilidad con A1 media media y A2 alta media, capacidad de interacción con U1 media alta, y mantenibilidad con M1 baja media." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t5c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="16" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Árbol de utilidad de la app de turnos (prioridad: importancia, dificultad)</text>
+  <rect x="8" y="160" width="118" height="70" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="67" y="190" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Utilidad de</text>
+  <text x="67" y="207" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">la app</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="190" y="30" width="170" height="40" rx="8"/><rect x="190" y="80" width="170" height="40" rx="8"/><rect x="190" y="130" width="170" height="40" rx="8"/><rect x="190" y="185" width="170" height="40" rx="8"/><rect x="190" y="268" width="170" height="40" rx="8"/><rect x="190" y="318" width="170" height="40" rx="8"/></g>
+  <g font-size="12" font-weight="600" fill="#12324f" text-anchor="middle"><text x="275" y="55">Eficiencia de desempeño</text><text x="275" y="105">Adecuación funcional</text><text x="275" y="155">Seguridad</text><text x="275" y="210">Fiabilidad</text><text x="275" y="293">Capacidad de interacción</text><text x="275" y="343">Mantenibilidad</text></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="410" y="30" width="340" height="40" rx="8"/><rect x="410" y="80" width="340" height="40" rx="8"/><rect x="410" y="130" width="340" height="40" rx="8"/><rect x="410" y="176" width="340" height="34" rx="8"/><rect x="410" y="218" width="340" height="34" rx="8"/><rect x="410" y="268" width="340" height="40" rx="8"/><rect x="410" y="318" width="340" height="40" rx="8"/></g>
+  <g font-size="10.8" fill="#5b6876"><text x="420" y="47">P1. 600 usuarios a las 7:00, 95 % de consultas</text><text x="420" y="62">de agenda en 2 s o menos. (H, H)</text><text x="420" y="97">C1. Dos pacientes eligen el mismo cupo a la vez,</text><text x="420" y="112">solo uno queda confirmado. (H, M)</text><text x="420" y="147">S1. Un paciente cambia el identificador en la</text><text x="420" y="162">dirección y no ve datos ajenos. (H, L)</text><text x="420" y="198">A1. Proveedor de mensajes caído 2 horas. (M, M)</text><text x="420" y="240">A2. Ingreso disponible el 99,9 % del mes. (H, M)</text><text x="420" y="285">U1. Mayor de 70 años reserva en 3 minutos</text><text x="420" y="300">o menos, al menos 9 de cada 10. (M, H)</text><text x="420" y="335">M1. Agregar un canal nuevo en 5 días de</text><text x="420" y="350">trabajo o menos. (L, M)</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.5" marker-end="url(#u4t5c)"><path d="M126,185 C150,120 170,80 188,52"/><path d="M126,190 C150,160 170,115 188,102"/><path d="M126,195 C150,170 170,155 188,150"/><path d="M126,200 L188,205"/><path d="M126,215 C150,250 170,280 188,290"/><path d="M126,225 C150,290 170,330 188,338"/><path d="M360,50 L408,50"/><path d="M360,100 L408,100"/><path d="M360,150 L408,150"/><path d="M360,200 L408,193"/><path d="M360,214 L408,235"/><path d="M360,288 L408,288"/><path d="M360,338 L408,338"/></g>
+</svg>
+
+:::
+
+El escenario P1 completo, con sus seis partes, queda así.
+
+::: {.tabla-ancha}
+| Parte | P1. Desempeño | C1. Consistencia de turnos |
+|---|---|---|
+| Fuente del estímulo | Pacientes en la app | Dos pacientes distintos |
+| Estímulo | Consultan la disponibilidad de un médico | Eligen el mismo cupo en el mismo instante |
+| Entorno | 7:00 a.m., apertura de turnos, 600 usuarios conectados | Operación normal, pico de reservas |
+| Artefacto | Servicio de consulta de agenda y base de datos | Servicio de reservas y tabla de turnos |
+| Respuesta | El sistema devuelve la lista de cupos libres | El sistema confirma a uno y rechaza al otro con un mensaje claro |
+| Medida de la respuesta | 95 % de las consultas en 2 segundos o menos | Cero turnos duplicados, y no más de 5 % de intentos que lleguen a un cupo ya tomado |
+:::
+
+Los demás escenarios se escriben igual. Ordenados por prioridad, el análisis arranca con P1, C1, A2 y S1
+(importancia alta), sigue con U1 (importancia media y dificultad alta) y deja A1 y M1 para el final.
+
+### 6.4 Paso 6. Análisis de los enfoques
+
+Se toma cada escenario de alta prioridad y se pregunta cómo responde la arquitectura. Cada análisis
+termina en un hallazgo con uno de cuatro nombres, punto de sensibilidad, punto de intercambio, riesgo o no
+riesgo.
+
+#### Escenario P1 y el pool de conexiones (D2)
+
+El equipo necesita saber cuántas consultas por segundo soporta la base de datos y cuántas llegan en el
+pico. Supone que 600 usuarios conectados consultan la agenda una vez cada 5 segundos mientras eligen.
+
+1. Carga sin caché. 600 usuarios por una consulta cada 5 segundos dan 600 / 5 = 120 consultas por
+   segundo hacia la base de datos.
+2. Capacidad de la base. Con 20 conexiones y una consulta de disponibilidad que tarda en promedio 0,25
+   segundos, la base atiende 20 / 0,25 = 80 consultas por segundo. Es una cifra supuesta para el ejercicio.
+3. Comparación. 120 es mayor que 80, así que sin caché el escenario P1 no se cumple. El caché de D4 no es un
+   lujo, es lo que hace posible el escenario.
+4. Qué tanto ayuda el caché. Hay 40 médicos con agenda visible y 7 días abiertos, lo que da 40 por 7 = 280
+   claves distintas. Con un tiempo de vida de 30 segundos, cada clave se consulta a la base como máximo
+   una vez cada 30 s, es decir 280 / 30 = 9,3 consultas por segundo. Con 5 segundos serían 280 / 5 = 56.
+
+El tamaño del pool es un punto de sensibilidad (SP1). Si con tiempo de vida de 5 segundos la base debe
+soportar 56 consultas por segundo y cada conexión atiende 1 / 0,25 = 4 por segundo, hacen falta como
+mínimo 56 / 4 = 14 conexiones. El pool de 20 deja un margen, pero si alguien lo baja a 10 por ahorrar
+recursos, la capacidad cae a 10 / 0,25 = 40 consultas por segundo y P1 deja de cumplirse. Un solo
+parámetro decide un solo atributo, el desempeño, y por eso es punto de sensibilidad y no de intercambio.
+
+#### Escenario C1 y la restricción de unicidad (D3)
+
+La decisión D3 hace que la propia base de datos rechace una segunda reserva del mismo médico a la misma
+hora, sin importar cuántos servidores atiendan al mismo tiempo. Por eso el escenario C1 queda cubierto en
+su parte más grave, cero turnos duplicados. Es un punto de sensibilidad (SP2), porque si alguien elimina
+la restricción por error la propiedad se pierde, y un no riesgo (NR1) porque la decisión está bien
+justificada. La Parte 7 muestra esta misma decisión en un ejemplo ejecutable.
+
+#### El caché de 30 segundos (D4) contra C1 y U1
+
+Este es el primer punto de intercambio (TP1). El caché que salvó a P1 muestra a veces un cupo que otro
+paciente acaba de tomar. Cuando el segundo paciente intenta reservar, D3 lo rechaza y la app le pide elegir
+otro, lo que arruina su experiencia justo al abrir los turnos. El equipo necesita saber cuántos intentos
+chocan, y lo hace con un modelo sencillo.
+
+Suposición del ejercicio, hasta que una prueba real la reemplace. Cada segundo de tiempo de vida del caché
+agrega 0,4 puntos porcentuales de intentos que llegan a un cupo ya tomado.
+
+::: {.tabla-ancha}
+| Tiempo de vida del caché | Consultas por segundo a la base | Margen frente a 80 | Intentos con cupo ya tomado | Cumple P1 | Cumple C1 (máximo 5 %) |
+|---|---|---|---|---|---|
+| 0 segundos (sin caché) | 120 | negativo | 0 % | No | Sí |
+| 5 segundos | 56 | 30 % libre | 2 % | Sí | Sí |
+| 30 segundos (diseño inicial) | 9,3 | 88 % libre | 12 % | Sí | No |
+:::
+
+Cómo se leen los números. Con 0 segundos se cumple la consistencia pero no el desempeño. Con 30 segundos
+se cumple el desempeño pero 12 de cada 100 intentos chocan, más del doble del máximo de 5 % que fija C1.
+El valor de 5 segundos cumple los dos escenarios, con 2 % de choques y un uso de la base de 56 / 80 = 70 %.
+
+El hallazgo se registra como riesgo (R1). El diseño inicial de 30 segundos incumple C1 y el equipo no lo
+sabía porque nadie había medido el costo del caché. La mitigación es fijar el tiempo de vida en 5 segundos
+y, como mejora posterior, invalidar la entrada del caché en el momento en que se toma un cupo, lo que
+eliminaría los choques a cambio de acoplar el servicio de reservas con el de consulta. Ese acoplamiento
+es otro intercambio contra la mantenibilidad, y queda anotado.
+
+#### Escenario A2 y el ingreso por mensaje (D6)
+
+La decisión de pedir un código por mensaje mejora la seguridad, el escenario S1 y el impulsor 3. Pero
+afecta a otros dos atributos, así que es el segundo punto de intercambio (TP2). El código de 60 segundos
+castiga a quien tarda en leerlo, y es una fricción que el escenario U1 no tolera con pacientes mayores. Y
+como el ingreso depende de que el proveedor entregue el mensaje, hereda su disponibilidad.
+
+El cálculo de disponibilidad muestra el problema. Se supone que el proveedor de mensajes tiene 99,5 % de
+disponibilidad mensual y que el resto de la app tiene 99,95 %. Un mes de 30 días tiene 720 horas.
+
+1. Tiempo caído permitido por el objetivo A2 de 99,9 %. 720 horas por 0,001 son 0,72 horas, unos 43 minutos.
+2. Disponibilidad del ingreso con un único proveedor. Como ambos deben funcionar, se multiplican. 0,9995 por
+   0,995 da 0,9945, o 99,45 %. Eso equivale a unas 720 por 0,0055 = 3,96 horas de ingreso caído al mes,
+   más de 5 veces el máximo que A2 tolera.
+3. Con un segundo canal independiente, por ejemplo un código por correo de 99 % de disponibilidad, el
+   ingreso solo falla si ambos canales fallan a la vez. 0,005 por 0,01 es 0,00005. La disponibilidad del
+   código pasa a 99,995 %, y con el resto de la app da 0,9995 por 0,99995 = 0,99945, o 99,945 %, que
+   cumple el 99,9 %. La suposición de independencia es una simplificación del ejercicio.
+
+El hallazgo es un riesgo (R2). Mitigaciones, ofrecer un segundo canal de verificación, ampliar la
+vigencia del código de 60 segundos a 5 minutos para reducir la fricción de U1, y permitir recordar el
+dispositivo, una decisión que devuelve algo de comodidad a cambio de un poco de seguridad. El equipo
+registra esta última como un intercambio aceptado y la deja a decisión de la gerencia.
+
+#### Escenario S1 y la autorización por punto de acceso (D7)
+
+El escenario S1 exige que cambiar un identificador en la dirección no exponga datos de otro paciente. La
+decisión D7 comprueba la propiedad del turno en cada punto de acceso por separado. El equipo cuenta 12
+puntos de acceso en la API y concluye que basta olvidar la comprobación en uno para que S1 falle.
+
+El hallazgo es un punto de sensibilidad (SP3) sobre un solo atributo, la seguridad, y un riesgo (R3),
+porque el diseño no ofrece una forma de garantizar que los 12 puntos hagan la comprobación. La mitigación
+es centralizar la regla en una capa común que todos los puntos usen, y agregar una prueba automática que
+llame a cada punto de acceso con el identificador de otro paciente y exija un rechazo.
+
+#### Los escenarios restantes
+
+El escenario A1 queda cubierto por la cola de mensajes de D5. Si el proveedor cae dos horas, las reservas
+siguen, porque no dependen de la cola, y los recordatorios se envían cuando el proveedor se recupera. Es un
+no riesgo (NR2). Sin embargo, el enfoque comparte con R2 una dependencia de un único proveedor. El
+escenario U1 se conecta con TP2 y se resuelve en parte con la mitigación de R2. El escenario M1 queda sin
+analizar a fondo por su prioridad baja, y el informe lo declara.
+
+### 6.5 Paso 9. El informe final
+
+El resultado de un ATAM es un documento breve y accionable. Para la app de turnos queda así.
+
+::: {.tabla-ancha}
+| Id | Tipo | Atributos | Decisión | Hallazgo y mitigación |
+|---|---|---|---|---|
+| SP1 | Punto de sensibilidad | Desempeño | D2 pool de conexiones | Debe tener al menos 14 conexiones con el caché de 5 s. Documentar el mínimo y probarlo |
+| SP2 | Punto de sensibilidad | Adecuación funcional | D3 restricción de unicidad | Mantenerla como regla protegida, con prueba de concurrencia |
+| SP3 | Punto de sensibilidad | Seguridad | D7 autorización por punto de acceso | Ver R3 |
+| TP1 | Punto de intercambio | Desempeño, adecuación funcional, capacidad de interacción | D4 tiempo de vida del caché | Elegir 5 s con los datos de la tabla. Medir el porcentaje real de choques |
+| TP2 | Punto de intercambio | Seguridad, capacidad de interacción, fiabilidad | D6 código por mensaje | Ver R2 |
+| R1 | Riesgo | Adecuación funcional | D4 con 30 s | Fijar 5 s. Evaluar invalidar por escritura |
+| R2 | Riesgo | Fiabilidad, seguridad | D6 con un solo proveedor | Segundo canal, vigencia de 5 minutos, recordar dispositivo |
+| R3 | Riesgo | Seguridad | D7 autorización dispersa | Capa común más prueba automática por punto de acceso |
+| NR1 | No riesgo | Adecuación funcional | D3 | Cumple C1 con cero duplicados |
+| NR2 | No riesgo | Fiabilidad | D5 cola de mensajes | Cumple A1 |
+:::
+
+Los riesgos se agrupan en temas, que son lo más útil para la gerencia porque apuntan a causas comunes. En
+este ejemplo hay dos. El primero, decisiones críticas sin verificación automática, reúne a R1 y R3 y a
+SP1 y señala que el equipo carece de pruebas de carga y de autorización repetibles. El segundo,
+dependencia de un único proveedor, reúne a R2 y al recordatorio de NR2. Un tema de riesgo conecta con el
+resto de la unidad, porque la verificación y la validación de los Temas 1 y 2 son las que cierran el
+primero.
+
+### 6.6 Qué aprendió el equipo y qué no cubre este ejemplo
+
+El ATAM encontró tres riesgos y dos intercambios antes de escribir la primera línea de código de
+producción. Corregir R1 antes de construir cuesta cambiar un número en el diseño. Descubrirlo en producción, con
+pacientes molestos en la apertura de turnos, cuesta mucho más, que es la lógica del costo de la calidad
+del Tema 3.
+
+El ejemplo tiene límites. Los números son supuestos, y el valor real de cada uno debe medirse con una
+prueba de carga y con datos de uso. El método tampoco decide por el equipo, porque entrega hallazgos y la
+decisión de aceptar o mitigar cada riesgo sigue siendo de la gerencia. Y un ATAM reducido por una sola
+persona pierde la diversidad de opiniones que el método busca.
+
+::: {.callout-tip}
+## Reto 4. Haz un ATAM reducido para la teleconsulta
+
+Aurora quiere agregar teleconsultas por video. La arquitectura propuesta guarda una grabación de cada
+sesión para auditoría. Datos del ejercicio. Hay 80 teleconsultas al día, cada una dura 20 minutos, el
+video se graba a 1,5 megabits por segundo, y los datos clínicos son datos sensibles según la Ley 1581.
+
+1. Escribe un escenario de seguridad o de privacidad con las seis partes y una medida verificable.
+2. Calcula cuánto espacio ocupan las grabaciones en un día y en 30 días.
+3. Decide si grabar es un punto de sensibilidad o un punto de intercambio, y nombra los atributos
+   involucrados.
+4. Escribe un riesgo con su mitigación.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+1. Un escenario posible. Fuente, una persona sin autorización. Estímulo, intenta abrir la grabación de una
+   consulta que no es suya. Entorno, operación normal. Artefacto, el servicio de almacenamiento de
+   grabaciones. Respuesta, el sistema niega el acceso y registra el intento. Medida, cero grabaciones
+   entregadas a quien no tiene permiso y el intento registrado en menos de 1 segundo.
+2. Una sesión ocupa 1,5 megabits por segundo por 1.200 segundos, que son 1.800 megabits. Dividido entre 8
+   son 225 megabytes. Con 80 sesiones al día son 80 por 225 = 18.000 megabytes, unos 18 gigabytes al día. En
+   30 días son 540 gigabytes.
+3. Es un punto de intercambio. Grabar mejora la trazabilidad y la capacidad de auditar (seguridad), pero
+   amplía la superficie de datos sensibles que hay que proteger (seguridad también, en sentido contrario),
+   sube el costo de almacenamiento (eficiencia de recursos) y puede inhibir al paciente en la consulta
+   (capacidad de interacción). Una sola decisión mueve varios atributos en direcciones opuestas.
+4. Riesgo, el almacenamiento crece 540 gigabytes al mes sin una política de retención, y cada grabación
+   es un dato sensible expuesto el tiempo que se conserve. Mitigación, definir con la gerencia y con el
+   asesor legal cuánto tiempo se conserva, cifrar las grabaciones y borrarlas al vencer el plazo. La guía no
+   fija ese plazo porque depende de la normativa y del criterio jurídico de la clínica.
+:::
+
+## Parte 7. La calidad del código generado por inteligencia artificial
+
+Los asistentes de programación basados en modelos de lenguaje se volvieron un factor nuevo en pocos años.
+Encaja en la clasificación de la Parte 3 como un factor de proceso y de personas a la vez, porque cambia
+cómo se escribe el código y también quién lo revisa. Esta parte resume lo que la evidencia verificada
+permite afirmar, y lo que no.
+
+::: {.callout-note}
+## Cómo leer esta parte
+
+Los estudios que siguen midieron herramientas de fechas distintas, algunas de 2021, y esas herramientas
+cambian cada pocos meses. Los resultados indican riesgos que se deben vigilar. No permiten afirmar cuánto
+vale una herramienta actual. Cada estudio se resume con su límite. Esta guía no cita cifras de informes
+comerciales de seguridad ni de calidad de código cuya metodología no se pudo verificar en una fuente
+primaria.
+:::
+
+### 7.1 Qué dice la evidencia
+
+::: {.tabla-ancha}
+| Estudio | Qué midió | Hallazgo | Límite |
+|---|---|---|---|
+| Pearce y otros (2021), *Asleep at the Keyboard?* | 89 escenarios de seguridad con GitHub Copilot, que produjeron 1.689 programas | Cerca del 40 % de los programas generados resultaron vulnerables | Herramienta de 2021. Escenarios elegidos por los autores |
+| Perry y otros (2023), *Do Users Write More Insecure Code with AI Assistants?* | Estudio con usuarios y un asistente basado en un modelo de OpenAI | Quienes usaron el asistente escribieron código significativamente menos seguro y creyeron más que era seguro. Quienes confiaron menos e interactuaron más produjeron menos vulnerabilidades | Tareas de laboratorio, herramienta de 2022 |
+| Fu y otros (2025), *Security Weaknesses of Copilot-Generated Code in GitHub Projects* | 733 fragmentos generados por IA en proyectos reales de GitHub | 29,5 % de los de Python y 24,2 % de los de JavaScript tenían debilidades de seguridad, repartidas en 43 categorías CWE | Solo fragmentos que los autores lograron identificar como generados por IA |
+| Becker y otros (METR, 2025) | Ensayo aleatorio con 16 desarrolladores experimentados en 246 tareas de proyectos que conocían | Con IA tardaron 19 % más. Esperaban ir 20 % más rápido | Muestra pequeña, herramientas de comienzos de 2025, proyectos grandes y maduros |
+| Informe DORA 2024 | Encuesta anual de profesionales de software | La adopción de IA aumenta la productividad individual, el flujo y la satisfacción, pero afecta negativamente la estabilidad y el rendimiento de la entrega | El informe resume una asociación estadística, no una causa demostrada |
+| Informe DORA 2025 | Encuesta y datos cualitativos de casi 5.000 profesionales | La IA actúa como un amplificador de las fortalezas y las disfunciones de la organización. El éxito depende de los sistemas y no solo de las herramientas | Resume capacidades organizacionales. Los detalles cuantitativos están en el informe completo |
+:::
+
+Leídos juntos, los estudios no dicen que el código generado por IA sea malo. Dicen que sale con defectos de
+seguridad a una tasa que no se puede ignorar, que puede dar una falsa sensación de seguridad al
+desarrollador, que el efecto sobre la velocidad depende del contexto y que el impacto en la entrega
+depende de la organización. Eso coincide con la clasificación de la Parte 3, porque el efecto de la
+herramienta lo moldean el proceso, las personas y la organización.
+
+### 7.2 Un ejemplo en la app de turnos
+
+Supón que un asistente propone el código de reserva de turnos con el patrón de revisar primero y escribir
+después. Primero pregunta si el cupo está libre y, si lo está, lo guarda. Parece correcto y pasa una
+prueba de un solo usuario. Pero entre la pregunta y el guardado, un segundo paciente puede preguntar lo
+mismo, así que ambos reservan el mismo cupo.
+
+La alternativa es la decisión D3 de la Parte 6, una restricción de unicidad que la base de datos hace
+cumplir. El programa siguiente simula las dos versiones de forma determinista, usando una base de datos
+SQLite en memoria que viene con Python. Cada paciente ve el cupo libre antes de que cualquiera escriba, y
+eso reproduce la intercalación que en producción ocurre al azar. Se ejecuta con `python turnos_demo.py`.
+
+```python
+import sqlite3
+
+def cupo_libre(db, medico, inicio):
+    # Patron revisar y luego escribir: entre esta pregunta y el INSERT otro paciente puede colarse.
+    return db.execute("SELECT COUNT(*) FROM turno WHERE medico_id=? AND inicio=?",
+                      (medico, inicio)).fetchone()[0] == 0
+
+db = sqlite3.connect(":memory:")
+db.execute("CREATE TABLE turno (id INTEGER PRIMARY KEY, medico_id INT NOT NULL, "
+           "inicio TEXT NOT NULL, paciente_id INT NOT NULL)")
+
+# Version A: sin restriccion unica. Los dos pacientes ven el cupo libre antes de que alguien escriba.
+vio_a = cupo_libre(db, 7, "2026-11-02 08:00")
+vio_b = cupo_libre(db, 7, "2026-11-02 08:00")
+for paciente, vio in ((101, vio_a), (102, vio_b)):
+    if vio:
+        db.execute("INSERT INTO turno (medico_id, inicio, paciente_id) VALUES (7, '2026-11-02 08:00', ?)",
+                   (paciente,))
+print("Version A, turnos guardados para el mismo cupo:",
+      db.execute("SELECT COUNT(*) FROM turno").fetchone()[0])
+
+# Version B: la base de datos garantiza la unicidad.
+db.execute("DROP TABLE turno")
+db.execute("CREATE TABLE turno (id INTEGER PRIMARY KEY, medico_id INT NOT NULL, inicio TEXT NOT NULL, "
+           "paciente_id INT NOT NULL, UNIQUE (medico_id, inicio))")
+for paciente in (101, 102):
+    try:
+        db.execute("INSERT INTO turno (medico_id, inicio, paciente_id) VALUES (7, '2026-11-02 08:00', ?)",
+                   (paciente,))
+        print("Version B, paciente", paciente, "confirmado")
+    except sqlite3.IntegrityError as error:
+        print("Version B, paciente", paciente, "rechazado:", error)
+print("Version B, turnos guardados para el mismo cupo:",
+      db.execute("SELECT COUNT(*) FROM turno").fetchone()[0])
+```
+
+Salida real de una ejecución de este programa con Python 3. Es determinista, así que cualquier equipo
+debe obtener lo mismo.
+
+```text
+Version A, turnos guardados para el mismo cupo: 2
+Version B, paciente 101 confirmado
+Version B, paciente 102 rechazado: UNIQUE constraint failed: turno.medico_id, turno.inicio
+Version B, turnos guardados para el mismo cupo: 1
+```
+
+La versión A deja dos turnos para el mismo cupo y la versión B guarda uno y rechaza el otro con un
+mensaje claro. Un asistente puede producir cualquiera de las dos, y una prueba funcional de un solo
+usuario no distingue una de otra. Solo una prueba de concurrencia o una revisión que pregunte qué
+pasa si dos pacientes eligen a la vez las separa, y por eso el escenario C1 existe como requisito.
+
+### 7.3 Qué prácticas siguen valiendo
+
+Del conjunto de la evidencia salen prácticas que no dependen de la herramienta del momento.
+
+- **Tratar el código generado como el de un colaborador desconocido.** Pasa por las mismas revisiones, pruebas y análisis estático que el código humano. La Unidad 2 desarrolló esas actividades.
+- **Mantener cambios pequeños.** El informe DORA de 2024 destaca los lotes pequeños y las pruebas sólidas como prácticas que siguen siendo esenciales con IA.
+- **Escribir primero el escenario y la medida.** Pedir código sin un escenario de calidad deja al asistente adivinar el criterio.
+- **Mantener un responsable humano.** Quien acepta el cambio responde por él. La falsa confianza que muestra Perry y otros (2023) se combate con revisión y no con más fe en la herramienta.
+- **Revisar las decisiones de arquitectura con el ATAM, no con el asistente.** Los puntos de intercambio exigen conocer el negocio, que es lo que el modelo no tiene.
+
+::: {.callout-tip}
+## Reto 5. Un cambio propuesto por un asistente
+
+Un asistente propone cambiar el caché de disponibilidad de 5 a 60 segundos "para mejorar el rendimiento".
+La prueba de un solo usuario sigue pasando.
+
+1. Usa el modelo de la Parte 6 para calcular las consultas por segundo y el porcentaje de intentos con
+   cupo ya tomado.
+2. Decide si el cambio debe aceptarse y qué pregunta habría que haber hecho antes.
+3. Nombra un factor de proceso que habría detectado el problema.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+1. Consultas por segundo a la base, 280 / 60 = 4,7, muy por debajo de 80. Intentos con cupo ya tomado,
+   60 segundos por 0,4 puntos porcentuales por segundo son 24 %. Con la suposición del ejercicio, 24 % es
+   casi cinco veces el máximo de 5 % de C1.
+2. No debe aceptarse. El rendimiento no estaba en riesgo, porque con 5 segundos P1 ya se cumplía con un
+   margen de 30 %. La pregunta previa era qué escenario se beneficia del cambio y cuál se perjudica, es
+   decir, qué intercambio estaba moviendo.
+3. Una verificación automática de los escenarios, por ejemplo una prueba de carga con intentos
+   simultáneos y un umbral de 5 % de conflictos que bloquee la integración del cambio. Es el tema de
+   riesgo de la Parte 6, decisiones críticas sin verificación automática.
+:::
+
+## Parte 8. Síntesis del curso
+
+Con este tema termina el curso de Calidad del software. Esta parte junta las cuatro unidades en una sola
+forma de trabajar y deja una ruta para seguir aprendiendo.
+
+### 8.1 Qué se aprendió en cada unidad
+
+::: {.tabla-ancha}
+| Unidad | Pregunta que responde | Ideas que se llevan |
+|---|---|---|
+| 1. Calidad del software y estándares | ¿Qué es la calidad y quién la juzga? | La calidad se define frente a requisitos y a la necesidad de quien usa el producto. La ISO/IEC 25010:2023 la parte en nueve características. La mala calidad cuesta, y las cifras se leen con criterio |
+| 2. Procesos de calidad del software, modelos y métricas | ¿Cómo se organiza el trabajo de sostenerla? | El SQA no es un departamento al final. Cada fase del ciclo de vida tiene actividades de calidad, con roles, revisiones y herramientas |
+| 3. Estándares de calidad aplicados al software | ¿Con qué marcos la industria formaliza ese trabajo? | IEEE e ISO dan documentos y requisitos. Un marco de madurez como CMMI o SPICE mide el proceso. La usabilidad tiene sus propios marcos |
+| 4. Validación y verificación | ¿Cómo se comprueba, cuánto cuesta y qué se comunica? | Verificar y validar son preguntas distintas. Los requisitos también se verifican y se validan. El costo de prevenir se compara con el de corregir tarde. Una certificación dice qué se evaluó y cuándo, no que el producto sea perfecto. Los factores de calidad y sus intercambios se analizan antes de construir, con un método como el ATAM |
+:::
+
+### 8.2 Cómo se conectan los temas
+
+Las cuatro unidades forman un ciclo de decidir, construir, comprobar y comunicar. Los factores y los
+intercambios de este tema sirven para decidir. Los procesos y las actividades de SQA de la Unidad 2 sirven
+para construir con control. La verificación y la validación de la Unidad 4 sirven para comprobar. Las
+certificaciones, las métricas y el costo de la calidad sirven para comunicar a un tercero que el trabajo se
+hizo bien y para saber si el esfuerzo valió la pena.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ciclo de cuatro pasos que resume el curso. Decidir con factores e intercambios, usando requisitos medibles, el ATAM y la ISO/IEC 25010. Construir con proceso de SQA, actividades y estándares. Comprobar con verificación y validación. Comunicar con métricas, costo de la calidad y certificación. El resultado de comunicar alimenta las decisiones del siguiente ciclo." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t5e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">El curso como un ciclo de calidad</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="50" width="300" height="100" rx="12"/><rect x="440" y="50" width="300" height="100" rx="12"/><rect x="440" y="200" width="300" height="100" rx="12"/><rect x="20" y="200" width="300" height="100" rx="12"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="700" fill="#0e6f6c"><text x="170" y="76">1. Decidir</text><text x="590" y="76">2. Construir</text><text x="590" y="226">3. Comprobar</text><text x="170" y="226">4. Comunicar</text></g>
+  <g text-anchor="middle" font-size="11.2" fill="#5b6876"><text x="170" y="98">requisitos medibles, factores,</text><text x="170" y="114">intercambios y ATAM</text><text x="170" y="130">(Unidades 1 y 4)</text><text x="590" y="98">proceso de SQA, actividades,</text><text x="590" y="114">roles, herramientas y estándares</text><text x="590" y="130">(Unidades 2 y 3)</text><text x="590" y="248">verificación y validación,</text><text x="590" y="264">de requisitos y de producto</text><text x="590" y="280">(Unidad 4)</text><text x="170" y="248">métricas, costo de la calidad</text><text x="170" y="264">y certificación leída con criterio</text><text x="170" y="280">(Unidades 2, 3 y 4)</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="2" marker-end="url(#u4t5e)"><path d="M322,100 L438,100"/><path d="M590,152 L590,198"/><path d="M438,250 L322,250"/><path d="M170,198 L170,152"/></g>
+  <text x="380" y="176" font-size="11.5" fill="#12324f" text-anchor="middle">Cada vuelta alimenta</text>
+  <text x="380" y="192" font-size="11.5" fill="#12324f" text-anchor="middle">las decisiones de la siguiente</text>
+</svg>
+
+:::
+
+La idea que atraviesa los cuatro bloques es que la calidad no es un estado que se alcanza una vez, es una
+disciplina que se sostiene entrega tras entrega con evidencia verificable. Evidencia significa requisitos
+con una medida, revisiones registradas, pruebas que ejercitan lo que importa, métricas leídas con
+criterio y certificaciones interpretadas por lo que certifican. En el ejemplo de la clínica, esa evidencia
+fue la tabla de la Parte 6, que convirtió una intuición sobre un caché en una decisión con números.
+
+### 8.3 Una ruta para seguir aprendiendo
+
+Los recursos de esta lista se consultaron el 3 de octubre de 2026. Las normas y las versiones cambian, así
+que antes de citar una edición conviene confirmarla en la página oficial.
+
+::: {.tabla-ancha}
+| Paso | Recurso | Para qué sirve | Estado verificado |
+|---|---|---|---|
+| 1. Un mapa completo de la disciplina | SWEBOK Guide, versión 4.0 de IEEE Computer Society, con 18 áreas de conocimiento entre ellas Calidad del software y Arquitectura de software | Ver qué más hay y cuánto se profundiza en cada área | Versión 4.0 de 2024, con actualización menor 4.0a del 25 de septiembre de 2025. Acceso gratuito |
+| 2. Pruebas, con una credencial reconocida | Programa del nivel básico de ISTQB, versión 4.0 | Aprender técnicas de prueba y preparar una certificación de personas | El programa está disponible gratis en la página de ISTQB. La página muestra la versión 4.0.1 del programa |
+| 3. Arquitectura y atributos de calidad | Bass, Clements y Kazman, *Software Architecture in Practice*, 4.a edición (2021), y el informe del SEI sobre el ATAM | Profundizar en tácticas, escenarios y evaluación de arquitectura | Los datos del informe del SEI se verificaron. La edición del libro no pudo cotejarse en línea |
+| 4. Documentar la arquitectura con calidad | Plantilla arc42, con la sección 10 de requisitos de calidad (árbol y escenarios) y la sección 11 de riesgos y deuda técnica | Aplicar lo de este tema en un proyecto real con una plantilla abierta | Licencia CC BY-SA 4.0 |
+| 5. Entrega y cultura | Informes DORA de 2024 y 2025 | Seguir la evidencia sobre prácticas de entrega y sobre IA | Páginas oficiales de DORA consultadas |
+| 6. La norma de producto | ISO/IEC 25010:2023 en iso.org | Usar los nombres vigentes de las características | Ver Unidad 1, Tema 2. El texto completo es de pago |
+:::
+
+Una forma práctica de empezar es repetir el ATAM reducido de la Parte 6 sobre un proyecto propio, con
+tres escenarios, y compartir el informe con otra persona para que lo cuestione. El primer informe suele
+salir flojo, y el segundo ya muestra qué atributos faltaban. Quien trabaje en equipo puede sumar la
+plantilla arc42 para dejar el árbol de calidad escrito en el repositorio del proyecto.
+
+## Errores frecuentes
+
+- Usar "factor de calidad" para dos cosas distintas sin decir cuál, la propiedad del producto o la causa que la mueve.
+- Citar el modelo de McCall, de Boehm o FURPS+ con nombres retirados en un requisito nuevo, en lugar de los de la ISO/IEC 25010:2023.
+- Escribir un requisito de calidad sin una medida, como "debe ser rápido", que nadie puede comprobar.
+- Pedir todos los atributos al máximo, sin reconocer que mejorar uno cuesta otro.
+- Confundir un punto de sensibilidad, que afecta un atributo, con un punto de intercambio, que afecta varios.
+- Tomar un número del ejemplo como si fuera un dato real. Las cifras de Aurora son supuestos del ejercicio.
+- Dar por terminado un ATAM sin escribir riesgos, no riesgos y temas de riesgo en un informe.
+- Aceptar código de un asistente porque pasa una prueba de un solo usuario, sin una prueba de concurrencia ni una revisión.
+- Repetir cifras sobre la calidad del código de IA sin decir de qué estudio vienen, de qué año y con qué herramienta.
+- Creer que el ATAM sustituye las pruebas. Razona sobre el diseño, y las pruebas comprueban el producto.
+
+## Autoevaluación
+
+Responde sin mirar la guía. Marca tu opción y abre la clave para comprobarla. Es una práctica formativa y no
+tiene nota.
+
+**1.** ¿Cuántos factores y cuántos grupos tiene el modelo de McCall de 1977?
+
+<label><input type="checkbox"> 8 factores en 2 grupos</label>
+<label><input type="checkbox"> 11 factores en 3 grupos, de operación, de revisión y de transición del producto</label>
+<label><input type="checkbox"> 9 factores en 4 grupos</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 1
+
+La opción 2. McCall, Richards y Walters clasificaron 11 factores en operación del producto (corrección,
+fiabilidad, eficiencia, integridad y facilidad de uso), revisión (mantenibilidad, flexibilidad y facilidad
+de prueba) y transición (portabilidad, reutilización e interoperabilidad).
+:::
+
+**2.** ¿Qué aporta el signo más de FURPS+?
+
+<label><input type="checkbox"> Añade más atributos de calidad medibles al producto</label>
+<label><input type="checkbox"> Añade restricciones de diseño, implementación, interfaz y físicas que condicionan el producto</label>
+<label><input type="checkbox"> Indica que el modelo es mejor que FURPS sin el signo</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 2
+
+La opción 2. El signo más extiende la lista con requisitos de diseño, de implementación, de interfaz y
+físicos. Esos requisitos son restricciones, y no atributos de calidad del producto.
+:::
+
+**3.** "La experiencia del equipo con software clínico" es un factor de
+
+<label><input type="checkbox"> Proceso</label>
+<label><input type="checkbox"> Personas</label>
+<label><input type="checkbox"> Producto</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 3
+
+La opción 2. Es un factor de personas. Se mejora con formación y retención, y no cambiando el proceso
+ni el producto.
+:::
+
+**4.** Elegir un caché más largo mejora la velocidad de consulta pero muestra más cupos ya tomados. Esa decisión es
+
+<label><input type="checkbox"> Un punto de sensibilidad, porque solo afecta el desempeño</label>
+<label><input type="checkbox"> Un punto de intercambio, porque mueve el desempeño y la adecuación funcional en sentidos opuestos</label>
+<label><input type="checkbox"> Un no riesgo, porque el caché siempre es bueno</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 4
+
+La opción 2. Una sola decisión afecta dos atributos en direcciones opuestas, que es la definición de punto
+de intercambio. Un punto de sensibilidad afectaría un solo atributo.
+:::
+
+**5.** ¿Cuáles son las seis partes de un escenario de atributo de calidad?
+
+<label><input type="checkbox"> Fuente, estímulo, entorno, artefacto, respuesta y medida de la respuesta</label>
+<label><input type="checkbox"> Requisito, diseño, código, prueba, error y corrección</label>
+<label><input type="checkbox"> Objetivo, riesgo, costo, plazo, responsable y estado</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 5
+
+La opción 1. Es el formato de Bass, Clements y Kazman. La medida de la respuesta es la parte que vuelve
+verificable al escenario.
+:::
+
+**6.** En un árbol de utilidad, un escenario con prioridad (H, H) significa
+
+<label><input type="checkbox"> Importancia alta para el negocio y dificultad alta de lograrlo</label>
+<label><input type="checkbox"> Hecho y hallado</label>
+<label><input type="checkbox"> Hora y horizonte de entrega</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 6
+
+La opción 1. La primera letra es la importancia y la segunda la dificultad, cada una alta, media o baja.
+Los escenarios (H, H) y (H, M) se analizan primero.
+:::
+
+**7.** En el ejemplo de Aurora, el caché de 30 segundos genera 12 % de intentos con cupo ya tomado y C1 permite 5 %. ¿Qué
+tipo de hallazgo es?
+
+<label><input type="checkbox"> Un no riesgo</label>
+<label><input type="checkbox"> Un riesgo, porque la decisión tal como está impide cumplir un escenario importante</label>
+<label><input type="checkbox"> Un punto de sensibilidad sin consecuencias</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 7
+
+La opción 2. El diseño inicial incumple C1, así que es un riesgo (R1). La mitigación es fijar el tiempo de
+vida en 5 segundos, que cumple los dos escenarios.
+:::
+
+**8.** Un ingreso por mensaje de texto de un único proveedor con 99,5 % de disponibilidad, combinado con una app de 99,95 %, da una
+disponibilidad aproximada de
+
+<label><input type="checkbox"> 99,95 %</label>
+<label><input type="checkbox"> 99,45 %</label>
+<label><input type="checkbox"> 100 %</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 8
+
+La opción 2. Como ambos deben funcionar, se multiplican, 0,9995 por 0,995 = 0,9945. Es menor que el 99,9 %
+que pide el escenario A2, y por eso se recomienda un segundo canal.
+:::
+
+**9.** ¿Cuál es la lectura correcta de los estudios sobre código generado por IA?
+
+<label><input type="checkbox"> El código de IA siempre es inseguro</label>
+<label><input type="checkbox"> La evidencia muestra defectos de seguridad a una tasa no ignorable, falsa confianza en el usuario y efectos que dependen del contexto y de la organización</label>
+<label><input type="checkbox"> No hay ninguna evidencia sobre su calidad</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 9
+
+La opción 2. Los estudios de Pearce y otros (2021), Perry y otros (2023), Fu y otros (2025), METR (2025) y
+los informes DORA de 2024 y 2025 apoyan esa lectura matizada. Ninguno permite afirmar nada absoluto, y
+las herramientas cambian rápido.
+:::
+
+**10.** ¿Qué hace el ATAM que las pruebas no hacen?
+
+<label><input type="checkbox"> Mide el producto terminado con usuarios reales</label>
+<label><input type="checkbox"> Razona sobre una arquitectura propuesta para hallar riesgos e intercambios antes de construirla</label>
+<label><input type="checkbox"> Sustituye la verificación y la validación</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 10
+
+La opción 2. El ATAM evalúa el diseño y sus decisiones frente a escenarios priorizados por el negocio. No
+mide el producto terminado ni reemplaza la verificación y la validación, que lo complementan.
+:::
+
+## Lo que te llevas
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Los dos sentidos de la palabra factor, como propiedad del producto y como causa de su calidad
+- [ ] Los modelos de McCall, Boehm y FURPS+ y su relación con la ISO/IEC 25010:2023
+- [ ] Los cuatro grupos de factores, proceso, personas, producto y organización, con un ejemplo de cada uno
+- [ ] Qué es un intercambio entre atributos y por qué hay que decidirlo con evidencia
+- [ ] Las seis partes de un escenario de atributo de calidad y qué es un árbol de utilidad
+- [ ] La diferencia entre punto de sensibilidad, punto de intercambio, riesgo, no riesgo y tema de riesgo
+- [ ] Los nueve pasos del ATAM y cómo se hace una versión reducida
+- [ ] Qué se sabe y qué no se sabe sobre la calidad del código generado por IA
+- [ ] Cómo se conectan las cuatro unidades del curso y por dónde seguir aprendiendo
+:::
+
+## Glosario
+
+- **Factor de calidad.** Propiedad que debe tener un producto de software, como la fiabilidad (sentido de los modelos clásicos). En sentido amplio, también una causa que mueve la calidad, como la experiencia del equipo.
+- **Atributo de calidad.** Propiedad medible del producto, equivalente a una característica de la ISO/IEC 25010.
+- **Modelo de McCall.** Modelo de 1977 con 11 factores en tres grupos, de operación, revisión y transición del producto.
+- **Modelo de Boehm.** Modelo de 1978 en capas, que baja de propósitos generales a medidas concretas.
+- **FURPS+.** Modelo de Hewlett-Packard cuya sigla agrupa funcionalidad, facilidad de uso, fiabilidad, desempeño y capacidad de soporte. El signo más añade restricciones de diseño, implementación, interfaz y físicas.
+- **ISO/IEC 25010:2023.** Norma vigente de calidad de producto con nueve características (ver Unidad 1, Tema 2).
+- **Factor de proceso.** Causa de calidad ligada a cómo se trabaja, como las revisiones y las pruebas.
+- **Factor de personas.** Causa ligada al conocimiento, la experiencia y la continuidad del equipo.
+- **Factor de producto.** Causa ligada a las propiedades del propio producto, como su complejidad o su deuda técnica.
+- **Factor de organización.** Causa ligada a la estructura, los plazos, el presupuesto y la cultura.
+- **Ley de Conway.** Observación de Melvin Conway de 1968 según la cual las organizaciones producen diseños que copian su estructura de comunicación.
+- **COCOMO II.** Modelo de estimación de esfuerzo de Boehm y colegas publicado en 2000, que agrupa factores de producto, plataforma, personal y proyecto.
+- **Intercambio (tradeoff).** Situación en la que mejorar un atributo de calidad cuesta algo en otro.
+- **Táctica arquitectónica.** Decisión de diseño que influye en un atributo de calidad, como un caché para el desempeño.
+- **Impulsor de negocio.** Razón del negocio que justifica el sistema y condiciona su arquitectura.
+- **Escenario de atributo de calidad.** Descripción de cómo debe responder el sistema a un evento, con fuente, estímulo, entorno, artefacto, respuesta y medida de la respuesta.
+- **Árbol de utilidad.** Jerarquía que baja de la utilidad del sistema a atributos y a escenarios con prioridad.
+- **Prioridad (importancia, dificultad).** Par de letras H, M o L que ordena los escenarios del árbol de utilidad.
+- **ATAM.** *Architecture Tradeoff Analysis Method*, método del SEI para evaluar una arquitectura frente a escenarios de calidad priorizados.
+- **SEI.** *Software Engineering Institute*, centro de investigación de la Universidad Carnegie Mellon.
+- **Enfoque arquitectónico.** Decisión o patrón de diseño que responde a uno o más escenarios.
+- **Punto de sensibilidad.** Propiedad de una decisión de la que depende un solo atributo.
+- **Punto de intercambio.** Propiedad de una decisión de la que dependen varios atributos en direcciones opuestas.
+- **Riesgo.** Decisión de arquitectura que puede impedir cumplir un escenario importante.
+- **No riesgo.** Decisión que cumple el escenario y está bien justificada.
+- **Tema de riesgo.** Patrón que se repite entre varios riesgos y señala una causa común.
+- **Restricción de unicidad.** Regla de la base de datos que impide dos filas con el mismo valor en una columna o en una pareja de columnas.
+- **Condición de carrera.** Defecto que aparece cuando el resultado depende del orden en que dos procesos se intercalan.
+- **Disponibilidad.** Proporción del tiempo en que un servicio funciona. Dos partes en serie multiplican sus disponibilidades.
+- **Código generado por IA.** Código producido o propuesto por un asistente basado en un modelo de lenguaje.
+- **DORA.** Programa de investigación de Google sobre prácticas de entrega de software, que publica un informe anual.
+- **SWEBOK.** Guía del cuerpo de conocimiento de la ingeniería de software de IEEE Computer Society.
+
+## Bibliografía
+
+Modelos de calidad y factores:
+
+- McCall, J. A., Richards, P. K. y Walters, G. F. (1977). *Factors in Software Quality.* RADC-TR-77-369, General Electric para Rome Air Development Center. [Informe en DTIC](https://apps.dtic.mil/sti/pdfs/ADA049014.pdf).
+- Boehm, B. W., Brown, J. R., Kaspar, H., Lipow, M., MacLeod, G. J. y Merritt, M. J. (1978). *Characteristics of Software Quality.* TRW Series of Software Technology, North-Holland.
+- Grady, R. B. y Caswell, D. L. (1987). *Software Metrics: Establishing a Company-wide Program.* Prentice Hall. Resumen en [Wikipedia: FURPS](https://en.wikipedia.org/wiki/FURPS).
+- Boehm, B. W. y otros (2000). *Software Cost Estimation with COCOMO II.* Prentice Hall. Resumen en [Wikipedia: COCOMO](https://en.wikipedia.org/wiki/COCOMO).
+- Conway, M. E. (abril de 1968). How Do Committees Invent? *Datamation*, 14(5). Resumen en [Wikipedia: Conway's law](https://en.wikipedia.org/wiki/Conway%27s_law).
+- ISO/IEC 25010:2023. *Systems and software engineering, Systems and software Quality Requirements and Evaluation (SQuaRE), Product quality model.* Ficha en [iso.org](https://www.iso.org/standard/78176.html).
+
+ATAM y arquitectura:
+
+- Kazman, R., Klein, M. y Clements, P. (2000). *ATAM: Method for Architecture Evaluation.* CMU/SEI-2000-TR-004, Software Engineering Institute, Carnegie Mellon University. [Informe](https://www.sei.cmu.edu/documents/629/2000_005_001_13706.pdf).
+- Clements, P., Kazman, R. y Klein, M. (2002). *Evaluating Software Architectures: Methods and Case Studies.* Addison-Wesley.
+- Bass, L., Clements, P. y Kazman, R. (2021). *Software Architecture in Practice* (4.a ed.). Addison-Wesley.
+- [Wikipedia: Architecture tradeoff analysis method](https://en.wikipedia.org/wiki/Architecture_tradeoff_analysis_method). Resumen de los nueve pasos y las dos fases.
+- [arc42](https://arc42.org/overview). Plantilla de documentación de arquitectura, secciones 10 y 11.
+
+Código generado por inteligencia artificial:
+
+- Pearce, H., Ahmad, B., Tan, B., Dolan-Gavitt, B. y Karri, R. (2021). *Asleep at the Keyboard? Assessing the Security of GitHub Copilot's Code Contributions.* [arXiv 2108.09293](https://arxiv.org/abs/2108.09293).
+- Perry, N., Srivastava, M., Kumar, D. y Boneh, D. (2023). *Do Users Write More Insecure Code with AI Assistants?* ACM CCS 2023. [arXiv 2211.03622](https://arxiv.org/abs/2211.03622).
+- Fu, Y., Liang, P., Tahir, A., Li, Z., Shahin, M., Yu, J. y Chen, J. (2025). *Security Weaknesses of Copilot-Generated Code in GitHub Projects: An Empirical Study.* ACM TOSEM. [arXiv 2310.02059](https://arxiv.org/abs/2310.02059).
+- Becker, J. y otros (2025). *Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity.* METR. [arXiv 2507.09089](https://arxiv.org/abs/2507.09089).
+- DORA (2024). *Accelerate State of DevOps Report 2024.* [dora.dev](https://dora.dev/research/2024/dora-report/).
+- DORA (2025). *State of AI-assisted Software Development.* [dora.dev](https://dora.dev/research/2025/dora-report/).
+
+Para seguir aprendiendo:
+
+- IEEE Computer Society (2024). *SWEBOK Guide, versión 4.0* (actualización 4.0a, 25 de septiembre de 2025). [computer.org](https://www.computer.org/education/bodies-of-knowledge/software-engineering).
+- ISTQB. *Certified Tester Foundation Level, v4.0.* [istqb.org](https://istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/).
+- Sommerville, I. *Ingeniería de software.* Capítulos sobre gestión de calidad.
+- Pressman, R. S. *Ingeniería de software: un enfoque práctico.* Capítulos sobre calidad del software.
+- Galin, D. *Software Quality: Concepts and Practice.* Capítulos sobre factores y modelos de calidad.
+
+Los datos de libros (editorial, edición y año) provienen del conocimiento bibliográfico de quien redacta y
+no pudieron cotejarse en línea durante esta revisión. Las demás fuentes se consultaron el 3 de octubre de
+2026.
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

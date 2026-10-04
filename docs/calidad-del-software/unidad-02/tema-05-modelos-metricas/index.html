@@ -1,0 +1,2553 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Oscar Leonel Sánchez Conde">
+
+<title>Tema 5. Modelos y métricas de calidad – Clases María Cano 2026-02</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../estilos/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-8713356167177fd77be9341a95314561.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-95bfa606010d176c52cfb6b551730f65.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No se han encontrado resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../calidad-del-software/unidad-02/index.html">Unidad 2. Procesos de calidad del software. Modelos y métricas</a></li><li class="breadcrumb-item"><a href="../../../calidad-del-software/unidad-02/tema-05-modelos-metricas/index.html">Tema 5. Modelos y métricas de calidad</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../../../">Clases María Cano 2026-02</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Presentación del curso</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 1. Calidad del software y estándares de calidad</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-01/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-01/tema-01-que-es-calidad-quien-la-define/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Qué es la calidad y quién la define</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-01/tema-02-calidad-proceso-producto-iso-25010/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. Calidad de proceso y de producto: ISO/IEC 25010:2023</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-01/tema-03-importancia-costo-mundo-globalizado/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Importancia, costo y calidad en un mundo globalizado</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 2. Procesos de calidad del software. Modelos y métricas</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-02/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-02/tema-01-sqa-relacion-ingenieria/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Qué es el SQA y su relación con la ingeniería de software</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-02/tema-02-calidad-ciclo-vida/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. La calidad en cada fase del ciclo de vida</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-02/tema-03-roles-habilidades/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Roles, responsabilidades y habilidades del personal de SQA</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-02/tema-04-actividades-sqa/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 4. Actividades del SQA: revisiones, auditorías y gestión de configuración</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-02/tema-05-modelos-metricas/index.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Tema 5. Modelos y métricas de calidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-02/tema-06-herramientas/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 6. Herramientas de SQA en la industria</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 3. Estándares de calidad aplicados al software</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-03/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-03/tema-01-estandares-ieee/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Estándares IEEE para la calidad del software</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-03/tema-02-normas-iso/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. La familia ISO para software: SQuaRE, calidad de datos, gestión e IA</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-03/tema-03-usabilidad/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Marcos para evaluar la usabilidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-03/tema-04-madurez-spice-cmmi/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 4. Madurez de procesos: SPICE y CMMI</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unidad 4. Validación y verificación</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-04/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introducción a la unidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-04/tema-01-metodos-estandares-vv/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 1. Métodos, metodologías y estándares de verificación y validación</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-04/tema-02-validacion-verificacion-requisitos/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 2. Validación y verificación de requisitos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-04/tema-03-control-costo-calidad/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 3. Control de la calidad y costo de la calidad</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-04/tema-04-nomenclatura-certificacion/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 4. Nomenclatura y certificación</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../calidad-del-software/unidad-04/tema-05-factores-atam/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tema 5. Factores que determinan la calidad y el método ATAM</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En esta guía</h2>
+   
+  <ul>
+  <li><a href="#objetivo-y-resultado-de-aprendizaje" id="toc-objetivo-y-resultado-de-aprendizaje" class="nav-link active" data-scroll-target="#objetivo-y-resultado-de-aprendizaje"><span class="header-section-number">1</span> Objetivo y resultado de aprendizaje</a></li>
+  <li><a href="#ruta-de-estudio" id="toc-ruta-de-estudio" class="nav-link" data-scroll-target="#ruta-de-estudio"><span class="header-section-number">2</span> Ruta de estudio</a></li>
+  <li><a href="#el-hilo-conductor-la-app-de-turnos-de-la-clínica-aurora" id="toc-el-hilo-conductor-la-app-de-turnos-de-la-clínica-aurora" class="nav-link" data-scroll-target="#el-hilo-conductor-la-app-de-turnos-de-la-clínica-aurora"><span class="header-section-number">3</span> El hilo conductor: la app de turnos de la Clínica Aurora</a></li>
+  <li><a href="#parte-1.-medir-para-decidir" id="toc-parte-1.-medir-para-decidir" class="nav-link" data-scroll-target="#parte-1.-medir-para-decidir"><span class="header-section-number">4</span> Parte 1. Medir para decidir</a>
+  <ul class="collapse">
+  <li><a href="#dato-medida-métrica-e-indicador" id="toc-dato-medida-métrica-e-indicador" class="nav-link" data-scroll-target="#dato-medida-métrica-e-indicador">Dato, medida, métrica e indicador</a></li>
+  <li><a href="#qué-hace-buena-a-una-métrica" id="toc-qué-hace-buena-a-una-métrica" class="nav-link" data-scroll-target="#qué-hace-buena-a-una-métrica">Qué hace buena a una métrica</a></li>
+  </ul></li>
+  <li><a href="#parte-2.-los-modelos-de-calidad-dicen-qué-medir" id="toc-parte-2.-los-modelos-de-calidad-dicen-qué-medir" class="nav-link" data-scroll-target="#parte-2.-los-modelos-de-calidad-dicen-qué-medir"><span class="header-section-number">5</span> Parte 2. Los modelos de calidad dicen qué medir</a>
+  <ul class="collapse">
+  <li><a href="#isoiec-250102023-en-una-referencia" id="toc-isoiec-250102023-en-una-referencia" class="nav-link" data-scroll-target="#isoiec-250102023-en-una-referencia">ISO/IEC 25010:2023, en una referencia</a></li>
+  <li><a href="#cmmi-en-una-referencia" id="toc-cmmi-en-una-referencia" class="nav-link" data-scroll-target="#cmmi-en-una-referencia">CMMI, en una referencia</a></li>
+  </ul></li>
+  <li><a href="#parte-3.-gqm-de-la-meta-a-la-métrica" id="toc-parte-3.-gqm-de-la-meta-a-la-métrica" class="nav-link" data-scroll-target="#parte-3.-gqm-de-la-meta-a-la-métrica"><span class="header-section-number">6</span> Parte 3. GQM: de la meta a la métrica</a>
+  <ul class="collapse">
+  <li><a href="#el-problema-de-empezar-por-las-métricas" id="toc-el-problema-de-empezar-por-las-métricas" class="nav-link" data-scroll-target="#el-problema-de-empezar-por-las-métricas">El problema de empezar por las métricas</a></li>
+  <li><a href="#tres-niveles" id="toc-tres-niveles" class="nav-link" data-scroll-target="#tres-niveles">Tres niveles</a></li>
+  <li><a href="#ejemplo-resuelto-del-problema-a-la-medición" id="toc-ejemplo-resuelto-del-problema-a-la-medición" class="nav-link" data-scroll-target="#ejemplo-resuelto-del-problema-a-la-medición">Ejemplo resuelto: del problema a la medición</a></li>
+  </ul></li>
+  <li><a href="#parte-4.-métricas-de-proceso-de-producto-y-de-proyecto" id="toc-parte-4.-métricas-de-proceso-de-producto-y-de-proyecto" class="nav-link" data-scroll-target="#parte-4.-métricas-de-proceso-de-producto-y-de-proyecto"><span class="header-section-number">7</span> Parte 4. Métricas de proceso, de producto y de proyecto</a>
+  <ul class="collapse">
+  <li><a href="#métricas-del-producto-en-uso-y-del-proceso-de-entrega" id="toc-métricas-del-producto-en-uso-y-del-proceso-de-entrega" class="nav-link" data-scroll-target="#métricas-del-producto-en-uso-y-del-proceso-de-entrega">Métricas del producto en uso y del proceso de entrega</a></li>
+  </ul></li>
+  <li><a href="#parte-5.-métricas-de-defectos-densidad-dre-y-fuga" id="toc-parte-5.-métricas-de-defectos-densidad-dre-y-fuga" class="nav-link" data-scroll-target="#parte-5.-métricas-de-defectos-densidad-dre-y-fuga"><span class="header-section-number">8</span> Parte 5. Métricas de defectos: densidad, DRE y fuga</a>
+  <ul class="collapse">
+  <li><a href="#densidad-de-defectos" id="toc-densidad-de-defectos" class="nav-link" data-scroll-target="#densidad-de-defectos">Densidad de defectos</a></li>
+  <li><a href="#eficiencia-de-eliminación-de-defectos-dre" id="toc-eficiencia-de-eliminación-de-defectos-dre" class="nav-link" data-scroll-target="#eficiencia-de-eliminación-de-defectos-dre">Eficiencia de eliminación de defectos (DRE)</a></li>
+  <li><a href="#ejemplo-resuelto-1-densidad-de-defectos-por-módulo" id="toc-ejemplo-resuelto-1-densidad-de-defectos-por-módulo" class="nav-link" data-scroll-target="#ejemplo-resuelto-1-densidad-de-defectos-por-módulo">Ejemplo resuelto 1: densidad de defectos por módulo</a></li>
+  <li><a href="#ejemplo-resuelto-2-dre-y-fuga-de-la-versión-2.0" id="toc-ejemplo-resuelto-2-dre-y-fuga-de-la-versión-2.0" class="nav-link" data-scroll-target="#ejemplo-resuelto-2-dre-y-fuga-de-la-versión-2.0">Ejemplo resuelto 2: DRE y fuga de la versión 2.0</a></li>
+  <li><a href="#ejemplo-resuelto-3-la-eficiencia-de-cada-filtro" id="toc-ejemplo-resuelto-3-la-eficiencia-de-cada-filtro" class="nav-link" data-scroll-target="#ejemplo-resuelto-3-la-eficiencia-de-cada-filtro">Ejemplo resuelto 3: la eficiencia de cada filtro</a></li>
+  <li><a href="#ejemplo-resuelto-4-la-dre-por-módulo-y-por-severidad" id="toc-ejemplo-resuelto-4-la-dre-por-módulo-y-por-severidad" class="nav-link" data-scroll-target="#ejemplo-resuelto-4-la-dre-por-módulo-y-por-severidad">Ejemplo resuelto 4: la DRE por módulo y por severidad</a></li>
+  <li><a href="#límites-de-estas-métricas" id="toc-límites-de-estas-métricas" class="nav-link" data-scroll-target="#límites-de-estas-métricas">Límites de estas métricas</a></li>
+  </ul></li>
+  <li><a href="#parte-6.-mttr-y-las-métricas-dora" id="toc-parte-6.-mttr-y-las-métricas-dora" class="nav-link" data-scroll-target="#parte-6.-mttr-y-las-métricas-dora"><span class="header-section-number">9</span> Parte 6. MTTR y las métricas DORA</a>
+  <ul class="collapse">
+  <li><a href="#mttr" id="toc-mttr" class="nav-link" data-scroll-target="#mttr">MTTR</a></li>
+  <li><a href="#las-métricas-dora" id="toc-las-métricas-dora" class="nav-link" data-scroll-target="#las-métricas-dora">Las métricas DORA</a></li>
+  <li><a href="#cómo-llegaron-a-cinco" id="toc-cómo-llegaron-a-cinco" class="nav-link" data-scroll-target="#cómo-llegaron-a-cinco">Cómo llegaron a cinco</a></li>
+  <li><a href="#ejemplo-resuelto-las-cinco-métricas-dora-en-un-mes-de-la-app" id="toc-ejemplo-resuelto-las-cinco-métricas-dora-en-un-mes-de-la-app" class="nav-link" data-scroll-target="#ejemplo-resuelto-las-cinco-métricas-dora-en-un-mes-de-la-app">Ejemplo resuelto: las cinco métricas DORA en un mes de la app</a></li>
+  <li><a href="#cómo-usar-dora-con-criterio" id="toc-cómo-usar-dora-con-criterio" class="nav-link" data-scroll-target="#cómo-usar-dora-con-criterio">Cómo usar DORA con criterio</a></li>
+  </ul></li>
+  <li><a href="#parte-7.-métricas-del-código-complejidad-ciclomática-y-cobertura" id="toc-parte-7.-métricas-del-código-complejidad-ciclomática-y-cobertura" class="nav-link" data-scroll-target="#parte-7.-métricas-del-código-complejidad-ciclomática-y-cobertura"><span class="header-section-number">10</span> Parte 7. Métricas del código: complejidad ciclomática y cobertura</a>
+  <ul class="collapse">
+  <li><a href="#complejidad-ciclomática" id="toc-complejidad-ciclomática" class="nav-link" data-scroll-target="#complejidad-ciclomática">Complejidad ciclomática</a></li>
+  <li><a href="#ejemplo-resuelto-complejidad-de-un-método-de-la-app" id="toc-ejemplo-resuelto-complejidad-de-un-método-de-la-app" class="nav-link" data-scroll-target="#ejemplo-resuelto-complejidad-de-un-método-de-la-app">Ejemplo resuelto: complejidad de un método de la app</a></li>
+  <li><a href="#qué-umbral-usar" id="toc-qué-umbral-usar" class="nav-link" data-scroll-target="#qué-umbral-usar">Qué umbral usar</a></li>
+  <li><a href="#cobertura-de-pruebas" id="toc-cobertura-de-pruebas" class="nav-link" data-scroll-target="#cobertura-de-pruebas">Cobertura de pruebas</a></li>
+  <li><a href="#los-límites-de-la-cobertura" id="toc-los-límites-de-la-cobertura" class="nav-link" data-scroll-target="#los-límites-de-la-cobertura">Los límites de la cobertura</a></li>
+  </ul></li>
+  <li><a href="#parte-8.-deuda-técnica" id="toc-parte-8.-deuda-técnica" class="nav-link" data-scroll-target="#parte-8.-deuda-técnica"><span class="header-section-number">11</span> Parte 8. Deuda técnica</a>
+  <ul class="collapse">
+  <li><a href="#la-metáfora" id="toc-la-metáfora" class="nav-link" data-scroll-target="#la-metáfora">La metáfora</a></li>
+  <li><a href="#cómo-se-mide" id="toc-cómo-se-mide" class="nav-link" data-scroll-target="#cómo-se-mide">Cómo se mide</a></li>
+  <li><a href="#ejemplo-resuelto-razón-de-deuda-de-los-cuatro-módulos" id="toc-ejemplo-resuelto-razón-de-deuda-de-los-cuatro-módulos" class="nav-link" data-scroll-target="#ejemplo-resuelto-razón-de-deuda-de-los-cuatro-módulos">Ejemplo resuelto: razón de deuda de los cuatro módulos</a></li>
+  </ul></li>
+  <li><a href="#parte-9.-cuando-la-métrica-se-vuelve-meta" id="toc-parte-9.-cuando-la-métrica-se-vuelve-meta" class="nav-link" data-scroll-target="#parte-9.-cuando-la-métrica-se-vuelve-meta"><span class="header-section-number">12</span> Parte 9. Cuando la métrica se vuelve meta</a>
+  <ul class="collapse">
+  <li><a href="#la-ley-de-goodhart" id="toc-la-ley-de-goodhart" class="nav-link" data-scroll-target="#la-ley-de-goodhart">La ley de Goodhart</a></li>
+  <li><a href="#un-caso-documentado-en-la-propia-fuente" id="toc-un-caso-documentado-en-la-propia-fuente" class="nav-link" data-scroll-target="#un-caso-documentado-en-la-propia-fuente">Un caso documentado en la propia fuente</a></li>
+  <li><a href="#otras-formas-de-abuso-en-el-hilo-conductor" id="toc-otras-formas-de-abuso-en-el-hilo-conductor" class="nav-link" data-scroll-target="#otras-formas-de-abuso-en-el-hilo-conductor">Otras formas de abuso en el hilo conductor</a></li>
+  <li><a href="#salvaguardas" id="toc-salvaguardas" class="nav-link" data-scroll-target="#salvaguardas">Salvaguardas</a></li>
+  </ul></li>
+  <li><a href="#parte-10.-tablero-de-la-versión-2.0" id="toc-parte-10.-tablero-de-la-versión-2.0" class="nav-link" data-scroll-target="#parte-10.-tablero-de-la-versión-2.0"><span class="header-section-number">13</span> Parte 10. Tablero de la versión 2.0</a>
+  <ul class="collapse">
+  <li><a href="#ejemplo-resuelto-leer-el-tablero-y-decidir" id="toc-ejemplo-resuelto-leer-el-tablero-y-decidir" class="nav-link" data-scroll-target="#ejemplo-resuelto-leer-el-tablero-y-decidir">Ejemplo resuelto: leer el tablero y decidir</a></li>
+  </ul></li>
+  <li><a href="#errores-frecuentes" id="toc-errores-frecuentes" class="nav-link" data-scroll-target="#errores-frecuentes"><span class="header-section-number">14</span> Errores frecuentes</a></li>
+  <li><a href="#autoevaluación" id="toc-autoevaluación" class="nav-link" data-scroll-target="#autoevaluación"><span class="header-section-number">15</span> Autoevaluación</a></li>
+  <li><a href="#lo-que-te-llevas" id="toc-lo-que-te-llevas" class="nav-link" data-scroll-target="#lo-que-te-llevas"><span class="header-section-number">16</span> Lo que te llevas</a></li>
+  <li><a href="#glosario" id="toc-glosario" class="nav-link" data-scroll-target="#glosario"><span class="header-section-number">17</span> Glosario</a></li>
+  <li><a href="#bibliografía" id="toc-bibliografía" class="nav-link" data-scroll-target="#bibliografía"><span class="header-section-number">18</span> Bibliografía</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../calidad-del-software/unidad-02/index.html">Unidad 2. Procesos de calidad del software. Modelos y métricas</a></li><li class="breadcrumb-item"><a href="../../../calidad-del-software/unidad-02/tema-05-modelos-metricas/index.html">Tema 5. Modelos y métricas de calidad</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Tema 5. Modelos y métricas de calidad</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Autor/a</div>
+    <div class="quarto-title-meta-contents">
+             <p>Oscar Leonel Sánchez Conde </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Fecha de publicación</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">3 de octubre de 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="ficha">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 89%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Unidad</td>
+<td>Unidad 2. Procesos de calidad del software. Modelos y métricas</td>
+</tr>
+<tr class="even">
+<td>Tema</td>
+<td>Tema 5. Modelos y métricas de calidad</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><a href="../presentacion-interactiva.html" class="btn-curso">Presentación interactiva de la unidad</a></p>
+<p>Tema anterior: <a href="../../../calidad-del-software/unidad-02/tema-04-actividades-sqa/index.html">Tema 4. Actividades de SQA</a>. Tema siguiente: <a href="../../../calidad-del-software/unidad-02/tema-06-herramientas/index.html">Tema 6. Herramientas de SQA</a>.</p>
+<section id="objetivo-y-resultado-de-aprendizaje" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="objetivo-y-resultado-de-aprendizaje"><span class="header-section-number">1</span> Objetivo y resultado de aprendizaje</h2>
+<p>Los temas anteriores de la unidad describieron quién hace SQA, en qué momento del ciclo de vida entra y con qué actividades trabaja. Este tema responde cómo se sabe si todo eso funciona. La respuesta son los números, y también el cuidado necesario para no engañarse con ellos.</p>
+<p>Al terminar puedes:</p>
+<ul>
+<li>Distinguir dato, medida, métrica e indicador, y decir qué decisión sostiene cada uno.</li>
+<li>Construir un plan de medición con el método GQM (<em>Goal, Question, Metric</em>), partiendo de una meta.</li>
+<li>Clasificar métricas como de proceso, de producto o de proyecto.</li>
+<li>Calcular a mano la densidad de defectos, la eficiencia de eliminación de defectos (DRE), la fuga de defectos y el MTTR, e interpretar el resultado.</li>
+<li>Nombrar las cinco métricas DORA vigentes, definirlas y calcularlas con datos de un mes de trabajo.</li>
+<li>Calcular la complejidad ciclomática de un método, derivar sus casos de prueba y explicar por qué la cobertura de pruebas no garantiza pruebas buenas.</li>
+<li>Calcular la razón de deuda técnica y su calificación, y explicar la deuda técnica como metáfora.</li>
+<li>Reconocer cuándo una métrica se vuelve meta y deja de informar (ley de Goodhart), y proponer salvaguardas.</li>
+</ul>
+<p>Prerrequisitos: los Temas 1 a 4 de esta unidad y el Tema 2 de la Unidad 1. Necesitas distinguir <em>defecto</em> de <em>falla</em>, y saber qué es una prueba automatizada y qué es una revisión de código.</p>
+</section>
+<section id="ruta-de-estudio" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="ruta-de-estudio"><span class="header-section-number">2</span> Ruta de estudio</h2>
+<p>Son unas 8 horas de trabajo independiente. Puedes partirlas en tres o cuatro sesiones. La presentación interactiva de la unidad sigue estos mismos conceptos, así que sirve de repaso.</p>
+<div class="calendario">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parte</th>
+<th>Qué haces</th>
+<th>Tiempo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1. Medir para decidir</td>
+<td>Lees las definiciones y las aplicas al hilo conductor</td>
+<td>35 min</td>
+</tr>
+<tr class="even">
+<td>2. Los modelos dicen qué medir</td>
+<td>Relacionas ISO/IEC 25010 y CMMI con las métricas</td>
+<td>20 min</td>
+</tr>
+<tr class="odd">
+<td>3. GQM</td>
+<td>Construyes un plan de medición y resuelves el Reto 1</td>
+<td>50 min</td>
+</tr>
+<tr class="even">
+<td>4. Proceso, producto y proyecto</td>
+<td>Clasificas métricas y resuelves el Reto 2</td>
+<td>30 min</td>
+</tr>
+<tr class="odd">
+<td>5. Defectos</td>
+<td>Sigues el ejemplo de densidad, DRE y fuga, y resuelves el Reto 3</td>
+<td>60 min</td>
+</tr>
+<tr class="even">
+<td>6. MTTR y DORA</td>
+<td>Calculas las cinco métricas DORA y resuelves el Reto 4</td>
+<td>70 min</td>
+</tr>
+<tr class="odd">
+<td>7. Código</td>
+<td>Calculas complejidad y cobertura, y resuelves los Retos 5 y 6</td>
+<td>70 min</td>
+</tr>
+<tr class="even">
+<td>8. Deuda técnica</td>
+<td>Calculas la razón de deuda y resuelves el Reto 7</td>
+<td>30 min</td>
+</tr>
+<tr class="odd">
+<td>9. Cuando la métrica se vuelve meta</td>
+<td>Lees la ley de Goodhart y resuelves el Reto 8</td>
+<td>30 min</td>
+</tr>
+<tr class="even">
+<td>10. Tablero de la versión 2.0</td>
+<td>Lees todas las métricas juntas y decides</td>
+<td>30 min</td>
+</tr>
+<tr class="odd">
+<td>Cierre</td>
+<td>Autoevaluación y glosario</td>
+<td>40 min</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="el-hilo-conductor-la-app-de-turnos-de-la-clínica-aurora" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="el-hilo-conductor-la-app-de-turnos-de-la-clínica-aurora"><span class="header-section-number">3</span> El hilo conductor: la app de turnos de la Clínica Aurora</h2>
+<p>La app de turnos médicos es un producto ficticio que atraviesa todo el curso. Su requisito de partida dice que la app asigna hasta 20 turnos por día a cada especialidad. En este tema se le mide la versión 2.0, que ya salió a producción.</p>
+<p>Todas las cifras de la clínica son ilustrativas. Se inventaron para practicar el cálculo y no vienen de ningún proyecto real. Los datos base de la versión 2.0 son estos.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 27%">
+<col style="width: 27%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Módulo</th>
+<th style="text-align: center;">Tamaño</th>
+<th style="text-align: center;">Defectos hallados antes de entregar</th>
+<th style="text-align: center;">Defectos reportados en producción (90 días)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Asignación de turnos</td>
+<td style="text-align: center;">14 kLOC</td>
+<td style="text-align: center;">56</td>
+<td style="text-align: center;">14</td>
+</tr>
+<tr class="even">
+<td>Notificaciones</td>
+<td style="text-align: center;">6 kLOC</td>
+<td style="text-align: center;">14</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="odd">
+<td>Pacientes</td>
+<td style="text-align: center;">10 kLOC</td>
+<td style="text-align: center;">30</td>
+<td style="text-align: center;">6</td>
+</tr>
+<tr class="even">
+<td>Facturación</td>
+<td style="text-align: center;">10 kLOC</td>
+<td style="text-align: center;">40</td>
+<td style="text-align: center;">12</td>
+</tr>
+<tr class="odd">
+<td>Total</td>
+<td style="text-align: center;">40 kLOC</td>
+<td style="text-align: center;">140</td>
+<td style="text-align: center;">35</td>
+</tr>
+</tbody>
+</table>
+<p>La sigla kLOC significa miles de líneas de código (<em>kilo lines of code</em>). Los 140 defectos de la columna central se hallaron con cuatro actividades, y esa distribución se usa en la Parte 5.</p>
+</section>
+<section id="parte-1.-medir-para-decidir" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="parte-1.-medir-para-decidir"><span class="header-section-number">4</span> Parte 1. Medir para decidir</h2>
+<section id="dato-medida-métrica-e-indicador" class="level3">
+<h3 class="anchored" data-anchor-id="dato-medida-métrica-e-indicador">Dato, medida, métrica e indicador</h3>
+<p>Los textos de la disciplina usan estas palabras con matices distintos según el autor. Esta guía fija cuatro significados y los mantiene de principio a fin.</p>
+<ul>
+<li><strong>Dato.</strong> Un hecho registrado, como “el defecto 311 de Facturación se reportó el 14 de octubre”.</li>
+<li><strong>Medida.</strong> Un valor obtenido al contar o medir algo con una regla definida, como “12 defectos de Facturación en 90 días” o “10 kLOC”.</li>
+<li><strong>Métrica.</strong> Una medida, o un cociente entre medidas, con su definición, su unidad y su regla de cálculo, como “1,2 defectos por kLOC”.</li>
+<li><strong>Indicador.</strong> Una métrica interpretada frente a un criterio, que puede ser un umbral, una meta o una tendencia, y que sirve para tomar una decisión.</li>
+</ul>
+<p>Una cifra sola no decide nada. Que Facturación tenga 1,2 defectos por kLOC es una métrica. Que el equipo haya acordado un umbral de 1,0 y que 1,2 lo supere convierte esa métrica en un indicador, y ese indicador dispara una decisión.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cadena de cinco pasos, dato, medida, metrica, indicador y decision, con el ejemplo de los defectos de Facturacion de la app de turnos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="u2t5a" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">De un dato a una decisión</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="11" y="42" width="130" height="104" rx="10"></rect><rect x="163" y="42" width="130" height="104" rx="10"></rect><rect x="315" y="42" width="130" height="104" rx="10"></rect></g> <rect x="467" y="42" width="130" height="104" rx="10" fill="#e4f2f1" stroke="#8fc9c5"></rect> <rect x="619" y="42" width="130" height="104" rx="10" fill="#fff3d6" stroke="#e6c46f"></rect> <g text-anchor="middle" font-size="13" font-weight="700" fill="#12324f"><text x="76" y="68">Dato</text><text x="228" y="68">Medida</text><text x="380" y="68">Métrica</text><text x="532" y="68" fill="#0e6f6c">Indicador</text><text x="684" y="68">Decisión</text></g> <g text-anchor="middle" font-size="11" fill="#5b6876"> <text x="76" y="92">Un defecto de</text><text x="76" y="108">Facturación se</text><text x="76" y="124">reporta en producción</text> <text x="228" y="92">12 defectos en</text><text x="228" y="108">90 días y</text><text x="228" y="124">10 kLOC</text> <text x="380" y="92">1,2 defectos</text><text x="380" y="108">por kLOC, con su</text><text x="380" y="124">regla de cálculo</text> <text x="532" y="92">1,2 supera el</text><text x="532" y="108">umbral acordado</text><text x="532" y="124">de 1,0</text> <text x="684" y="92">Reforzar la</text><text x="684" y="108">revisión de código</text><text x="684" y="124">de Facturación</text> </g> <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t5a)"><path d="M141,94 L161,94"></path><path d="M293,94 L313,94"></path><path d="M445,94 L465,94"></path><path d="M597,94 L617,94"></path></g> <text x="380" y="190" font-size="12" fill="#12324f" text-anchor="middle">Cada paso agrega interpretación. Solo el último cambia el producto o el proceso.</text> <text x="380" y="210" font-size="11" fill="#5b6876" text-anchor="middle">Las cifras son ilustrativas.</text>
+</svg>
+</div>
+</section>
+<section id="qué-hace-buena-a-una-métrica" class="level3">
+<h3 class="anchored" data-anchor-id="qué-hace-buena-a-una-métrica">Qué hace buena a una métrica</h3>
+<p>Medir cuesta tiempo, y una métrica mal definida cuesta más porque produce discusiones en lugar de decisiones. Una métrica útil cumple estas condiciones.</p>
+<ul>
+<li><strong>Definida sin ambigüedad.</strong> Dice qué se cuenta, qué se deja fuera y en qué unidad. Por ejemplo, si las kLOC incluyen o no el código generado.</li>
+<li><strong>Repetible.</strong> Dos personas que la calculen con los mismos datos obtienen el mismo número.</li>
+<li><strong>Ligada a una decisión.</strong> Existe alguien que cambiaría algo según su valor. Si nadie la usaría, no se mide.</li>
+<li><strong>Comparable en el tiempo.</strong> Se calcula con la misma regla cada vez, de modo que la tendencia significa algo.</li>
+<li><strong>Difícil de manipular.</strong> Cambiar el número sin cambiar la realidad cuesta más que mejorar la realidad. La Parte 9 explica por qué esta condición es la más difícil.</li>
+<li><strong>Leída con otras.</strong> Ninguna métrica sola describe la calidad. La Parte 10 las junta.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Una medida no es el objeto medido
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Cada métrica de este tema es una representación parcial. Las líneas de código no son el tamaño funcional del producto, los defectos reportados no son todos los defectos presentes, y la cobertura no es la calidad de las pruebas. Esa distancia entre el número y lo que representa es la fuente de casi todos los errores de interpretación de la Parte 9.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="parte-2.-los-modelos-de-calidad-dicen-qué-medir" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="parte-2.-los-modelos-de-calidad-dicen-qué-medir"><span class="header-section-number">5</span> Parte 2. Los modelos de calidad dicen qué medir</h2>
+<p>Un modelo de calidad dice qué propiedades importan. Una métrica dice cuánto vale una de ellas. Sin modelo, el equipo mide lo que la herramienta ya trae. Sin métricas, el modelo queda como una lista de buenas intenciones.</p>
+<section id="isoiec-250102023-en-una-referencia" class="level3">
+<h3 class="anchored" data-anchor-id="isoiec-250102023-en-una-referencia">ISO/IEC 25010:2023, en una referencia</h3>
+<p>La ISO/IEC 25010 define el modelo de calidad de producto. Su edición de 2023 tiene nueve características, y el Tema 2 de la Unidad 1 las desarrolla con sus subcaracterísticas y con lo que cambió respecto a la edición de 2011. Aquí solo interesa un punto de ese tema, la cadena característica, subcaracterística, medida y requisito. La norma aporta los dos primeros pasos y cada proyecto elige la medida y el valor.</p>
+<p>La ISO/IEC 25023:2016 trae medidas para esas características. Es anterior al modelo de 2023, así que esta guía no afirma cómo se alinea con él. Los nombres de las métricas de la tabla siguiente son ejemplos del hilo conductor y no medidas oficiales de esa norma.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Característica (ISO/IEC 25010:2023)</th>
+<th>Pregunta sobre la app de turnos</th>
+<th>Métrica candidata</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Adecuación funcional</td>
+<td>¿Hace lo que los requisitos dicen?</td>
+<td>Requisitos con pruebas aprobadas, sobre el total de requisitos</td>
+</tr>
+<tr class="even">
+<td>Eficiencia de desempeño</td>
+<td>¿Responde a tiempo con carga real?</td>
+<td>Tiempo de respuesta al listar turnos, percentil 95</td>
+</tr>
+<tr class="odd">
+<td>Fiabilidad</td>
+<td>¿Está disponible cuando se necesita?</td>
+<td>Minutos operativos del mes, sobre los minutos totales</td>
+</tr>
+<tr class="even">
+<td>Capacidad de interacción</td>
+<td>¿Un paciente logra pedir su turno?</td>
+<td>Porcentaje de pacientes que completan la solicitud sin ayuda</td>
+</tr>
+<tr class="odd">
+<td>Mantenibilidad</td>
+<td>¿Es costoso cambiarla?</td>
+<td>Complejidad ciclomática y razón de deuda técnica por módulo</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="cmmi-en-una-referencia" class="level3">
+<h3 class="anchored" data-anchor-id="cmmi-en-una-referencia">CMMI, en una referencia</h3>
+<p>CMMI es un modelo de madurez de procesos, y la Unidad 3, Tema 4, explica su versión vigente, la 3.0 publicada en abril de 2023. Para este tema basta una idea. Cuando una organización quiere demostrar que su proceso es predecible, la evidencia son datos como los que se calculan a continuación, con definiciones estables y recogidos de la misma manera en cada proyecto.</p>
+<p>Dos modelos, dos preguntas distintas. El de producto pregunta qué propiedades tiene lo que se construyó. El de proceso pregunta cómo trabaja la organización. Las métricas de las partes siguientes sirven a las dos.</p>
+</section>
+</section>
+<section id="parte-3.-gqm-de-la-meta-a-la-métrica" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="parte-3.-gqm-de-la-meta-a-la-métrica"><span class="header-section-number">6</span> Parte 3. GQM: de la meta a la métrica</h2>
+<section id="el-problema-de-empezar-por-las-métricas" class="level3">
+<h3 class="anchored" data-anchor-id="el-problema-de-empezar-por-las-métricas">El problema de empezar por las métricas</h3>
+<p>Muchos equipos empiezan por lo que su herramienta ya reporta, como líneas de código, número de commits o cobertura. Al cabo de unos meses tienen un tablero lleno de cifras y ninguna decisión que tomar con ellas. El método GQM (<em>Goal, Question, Metric</em>, en español meta, pregunta, métrica) propone el camino inverso.</p>
+<p>El método lo desarrolló Victor Basili con colegas en el Goddard Space Flight Center de la NASA y la Universidad de Maryland. La referencia habitual es el capítulo de Basili, Caldiera y Rombach de 1994 en la <em>Encyclopedia of Software Engineering</em>.</p>
+</section>
+<section id="tres-niveles" class="level3">
+<h3 class="anchored" data-anchor-id="tres-niveles">Tres niveles</h3>
+<ul>
+<li><strong>Meta (nivel conceptual).</strong> Lo que la organización quiere lograr con respecto a un objeto, desde un punto de vista y en un contexto.</li>
+<li><strong>Pregunta (nivel operativo).</strong> Lo que hay que saber para decidir si la meta se alcanza.</li>
+<li><strong>Métrica (nivel cuantitativo).</strong> El dato que responde cada pregunta.</li>
+</ul>
+<p>Una meta bien formulada nombra cinco elementos. El objeto que se estudia, el propósito, el aspecto de calidad en foco, el punto de vista y el contexto. Esos cinco elementos evitan metas vagas como “mejorar la calidad”.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol GQM, una meta sobre turnos duplicados de la version 2.1, tres preguntas que la desglosan y una metrica bajo cada pregunta" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="u2t5b" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Árbol GQM de la app de turnos</text> <rect x="170" y="34" width="420" height="68" rx="12" fill="#e4f2f1" stroke="#8fc9c5"></rect> <text x="380" y="56" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">META</text> <text x="380" y="74" font-size="12" fill="#12324f" text-anchor="middle">Reducir los turnos duplicados de la versión 2.1,</text> <text x="380" y="91" font-size="12" fill="#12324f" text-anchor="middle">desde el punto de vista del personal de recepción</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="14" y="138" width="226" height="74" rx="10"></rect><rect x="267" y="138" width="226" height="74" rx="10"></rect><rect x="520" y="138" width="226" height="74" rx="10"></rect></g> <g text-anchor="middle" font-size="11.5" fill="#12324f"> <text x="127" y="160" font-weight="700">PREGUNTA 1</text><text x="127" y="178">¿Cuántos duplicados hay</text><text x="127" y="194">y cómo evolucionan?</text> <text x="380" y="160" font-weight="700">PREGUNTA 2</text><text x="380" y="178">¿En qué flujo de la app</text><text x="380" y="194">nacen los duplicados?</text> <text x="633" y="160" font-weight="700">PREGUNTA 3</text><text x="633" y="178">¿Las correcciones funcionan</text><text x="633" y="194">o el defecto reaparece?</text> </g> <g fill="#fff3d6" stroke="#e6c46f"><rect x="14" y="248" width="226" height="82" rx="10"></rect><rect x="267" y="248" width="226" height="82" rx="10"></rect><rect x="520" y="248" width="226" height="82" rx="10"></rect></g> <g text-anchor="middle" font-size="11.5" fill="#12324f"> <text x="127" y="270" font-weight="700">MÉTRICA 1</text><text x="127" y="288">Turnos duplicados por cada</text><text x="127" y="304">1.000 asignados, por semana</text> <text x="380" y="270" font-weight="700">MÉTRICA 2</text><text x="380" y="288">Porcentaje de duplicados por</text><text x="380" y="304">origen: web, teléfono, reasignación</text> <text x="633" y="270" font-weight="700">MÉTRICA 3</text><text x="633" y="288">Defectos de duplicado</text><text x="633" y="304">reabiertos, sobre los cerrados</text> </g> <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t5b)"><path d="M300,102 C230,116 170,124 140,136"></path><path d="M380,102 L380,136"></path><path d="M460,102 C530,116 590,124 620,136"></path><path d="M127,212 L127,246"></path><path d="M380,212 L380,246"></path><path d="M633,212 L633,246"></path></g>
+</svg>
+</div>
+</section>
+<section id="ejemplo-resuelto-del-problema-a-la-medición" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-resuelto-del-problema-a-la-medición">Ejemplo resuelto: del problema a la medición</h3>
+<p>Después del lanzamiento, recepción reporta que algunos pacientes llegan con un turno que otro paciente también tiene. El equipo decide medir antes de arreglar.</p>
+<ol type="1">
+<li>Formula la meta con los cinco elementos. Objeto, la asignación de turnos. Propósito, reducir. Aspecto de calidad, turnos duplicados. Punto de vista, el personal de recepción. Contexto, la versión 2.1 en producción.</li>
+<li>Deriva las preguntas. Qué tan grande es el problema, de dónde viene y si las correcciones lo resuelven.</li>
+<li>Elige una métrica por pregunta, con su definición completa. La métrica 1 divide los turnos con paciente duplicado entre los turnos asignados de la semana y multiplica por 1.000.</li>
+<li>Define el indicador. El equipo acuerda que más de 2 duplicados por cada 1.000 turnos asignados exige una acción esa misma semana.</li>
+<li>Revisa lo que no se midió. Nadie midió el tiempo de espera de recepción. La meta lo deja fuera a propósito, porque el punto de vista es el de los duplicados y no el de la espera.</li>
+</ol>
+<p>Una semana con 3.200 turnos asignados y 9 duplicados da 9 dividido entre 3.200 por 1.000, es decir 2,8 duplicados por cada 1.000 turnos. Supera el umbral de 2, así que el indicador pide acción. Si en la semana siguiente hay 3.400 turnos y 5 duplicados, la métrica baja a 1,5 y el indicador queda en verde.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Sobre el origen del método
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Los tres niveles y la secuencia meta, pregunta, métrica están en la referencia citada. La plantilla de cinco elementos de la meta es la formulación habitual del método, escrita aquí en español. El texto original de 1994 no se pudo consultar completo durante la preparación de esta guía, así que la redacción de la plantilla es una paráfrasis y no una cita.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 1. Construye un árbol GQM
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La clínica quiere reducir las cancelaciones de turnos que ocurren en la misma mañana de la cita. Escribe la meta con sus cinco elementos, tres preguntas y una métrica por pregunta, y define el indicador de una de ellas.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 1
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Una solución posible, entre varias válidas.</p>
+<ul>
+<li>Meta. Analizar los turnos cancelados el mismo día de la cita (objeto), con el propósito de reducirlos, respecto a su frecuencia y causa (aspecto de calidad), desde el punto de vista de la dirección de la clínica, en la app versión 2.1 con pacientes ambulatorios (contexto).</li>
+<li>Pregunta 1. ¿Qué porcentaje de turnos se cancela el mismo día? Métrica, cancelaciones del mismo día divididas entre los turnos asignados, por mes.</li>
+<li>Pregunta 2. ¿Quién cancela y por qué motivo? Métrica, porcentaje de cancelaciones por motivo registrado (olvido, cruce de agenda, enfermedad, otro).</li>
+<li>Pregunta 3. ¿Un recordatorio reduce las cancelaciones? Métrica, la métrica 1 de los pacientes que recibieron recordatorio frente a los que no.</li>
+<li>Indicador de la pregunta 1. Si el porcentaje supera el 8 % durante dos meses seguidos, se revisa el flujo de recordatorios. El 8 % es un valor inventado para el ejemplo. En un caso real se obtiene de los datos históricos.</li>
+</ul>
+<p>Tu redacción puede variar. Lo que se revisa es que cada métrica responda una pregunta y que cada pregunta salga de la meta. Una métrica sin pregunta, como “número de pacientes registrados”, no pertenece al árbol.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="parte-4.-métricas-de-proceso-de-producto-y-de-proyecto" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="parte-4.-métricas-de-proceso-de-producto-y-de-proyecto"><span class="header-section-number">7</span> Parte 4. Métricas de proceso, de producto y de proyecto</h2>
+<p>La literatura agrupa las métricas según lo que observan. La clasificación ayuda a decidir quién usa cada número y con qué rapidez reacciona.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Categoría</th>
+<th>Qué observa</th>
+<th>Ejemplos en la app de turnos</th>
+<th>Quién decide con ella</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Proceso</td>
+<td>Cómo se trabaja</td>
+<td>Tiempo medio de resolución de un defecto, tasa de reapertura de defectos, porcentaje de cambios revisados antes de fusionarse</td>
+<td>Quien mejora el método de trabajo</td>
+</tr>
+<tr class="even">
+<td>Producto</td>
+<td>Propiedades de lo construido</td>
+<td>Densidad de defectos, complejidad ciclomática, cobertura de pruebas, deuda técnica, tiempo de respuesta</td>
+<td>Quien diseña, prueba y mantiene</td>
+</tr>
+<tr class="odd">
+<td>Proyecto</td>
+<td>Salud del proyecto</td>
+<td>Esfuerzo real frente al planificado, cumplimiento del cronograma, uso del presupuesto</td>
+<td>Quien gestiona recursos y compromisos</td>
+</tr>
+</tbody>
+</table>
+<p>Los límites se cruzan. La eficiencia de eliminación de defectos describe el producto, porque cuenta defectos, pero también juzga el proceso de revisión y prueba que los encontró. Cuando una métrica admite dos lecturas, importa menos la etiqueta que la decisión a la que sirve.</p>
+<section id="métricas-del-producto-en-uso-y-del-proceso-de-entrega" class="level3">
+<h3 class="anchored" data-anchor-id="métricas-del-producto-en-uso-y-del-proceso-de-entrega">Métricas del producto en uso y del proceso de entrega</h3>
+<p>Dos familias que aparecen más adelante merecen nombre propio. Las de calidad del producto en operación, como la disponibilidad o el tiempo de respuesta, miden lo que el usuario experimenta. Las de entrega, como las cinco de DORA, miden qué tan rápido y qué tan estable es el flujo que lleva un cambio desde el repositorio hasta producción.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 2. Clasifica ocho métricas
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Clasifica cada métrica como de proceso, de producto o de proyecto. Luego marca cuál de ellas necesita un umbral para convertirse en indicador.</p>
+<ol type="1">
+<li>Tasa de reapertura de defectos.</li>
+<li>Complejidad ciclomática de la clase que asigna turnos.</li>
+<li>Horas de trabajo reales frente a las planificadas.</li>
+<li>Densidad de defectos de Facturación.</li>
+<li>Porcentaje de cambios revisados por otra persona antes de fusionarse.</li>
+<li>Entregas realizadas en la fecha acordada.</li>
+<li>Cobertura de pruebas del módulo Pacientes.</li>
+<li>Tiempo medio de resolución de un defecto.</li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 2
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li>Proceso, las métricas 1, 5 y 8. Describen cómo trabaja el equipo con los defectos y con las revisiones.</li>
+<li>Producto, las métricas 2, 4 y 7. Describen propiedades del código entregado.</li>
+<li>Proyecto, las métricas 3 y 6. Describen esfuerzo y cumplimiento de compromisos.</li>
+</ul>
+<p>Las ocho son métricas y ninguna es indicador por sí sola. Cualquiera se convierte en indicador al compararla con un umbral o una meta. Por ejemplo, la complejidad de la métrica 2 se vuelve indicador cuando el equipo acuerda un límite, como el de 10 que se trata en la Parte 7.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="parte-5.-métricas-de-defectos-densidad-dre-y-fuga" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="parte-5.-métricas-de-defectos-densidad-dre-y-fuga"><span class="header-section-number">8</span> Parte 5. Métricas de defectos: densidad, DRE y fuga</h2>
+<section id="densidad-de-defectos" class="level3">
+<h3 class="anchored" data-anchor-id="densidad-de-defectos">Densidad de defectos</h3>
+<p>La <em>densidad de defectos</em> divide la cantidad de defectos entre el tamaño del software.</p>
+<blockquote class="blockquote">
+<p>Densidad de defectos = defectos / tamaño</p>
+</blockquote>
+<p>El tamaño suele expresarse en kLOC o en puntos de función. Cada elección tiene sus problemas. Las líneas de código dependen del lenguaje y de cómo se escribe, y los puntos de función exigen un conteo laborioso. Lo importante es fijar una regla, por ejemplo excluir el código generado, y no cambiarla.</p>
+<p>La densidad permite comparar módulos de distinto tamaño. Un módulo grande acumula más defectos solo por ser grande, y dividir entre el tamaño corrige esa distorsión. También hay que declarar qué defectos se cuentan, los hallados antes de entregar, los reportados después, o ambos.</p>
+</section>
+<section id="eficiencia-de-eliminación-de-defectos-dre" class="level3">
+<h3 class="anchored" data-anchor-id="eficiencia-de-eliminación-de-defectos-dre">Eficiencia de eliminación de defectos (DRE)</h3>
+<p>La <em>eficiencia de eliminación de defectos</em>, en inglés <em>defect removal efficiency</em> o DRE, mide qué fracción de los defectos presentes se eliminó antes de entregar.</p>
+<blockquote class="blockquote">
+<p>DRE = defectos hallados antes de entregar / (defectos hallados antes de entregar + defectos hallados después)</p>
+</blockquote>
+<p>El denominador usa los defectos hallados después de la entrega durante una ventana acordada, por ejemplo 90 días. Eso hace de la DRE una métrica retrospectiva. Su valor depende de cuánto tiempo se espera antes de calcularla, porque los defectos de producción siguen apareciendo.</p>
+<p>La <em>fuga de defectos</em> (<em>defect leakage</em>) es el complemento. Es la fracción que escapó a producción.</p>
+<blockquote class="blockquote">
+<p>Fuga = defectos hallados después / (defectos hallados antes + defectos hallados después) = 1 - DRE</p>
+</blockquote>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Sobre estas fórmulas
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La DRE y la fuga se definen aquí con la formulación habitual de la literatura de calidad de software, por ejemplo en los libros de Kan (2003) y de Jones y Bonsignour (2012). Ambos son de pago y no se pudo verificar la página exacta de cada definición. Esta guía no cita valores de referencia de la industria para la DRE, porque no se verificaron en una fuente primaria.</p>
+</div>
+</div>
+</section>
+<section id="ejemplo-resuelto-1-densidad-de-defectos-por-módulo" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-resuelto-1-densidad-de-defectos-por-módulo">Ejemplo resuelto 1: densidad de defectos por módulo</h3>
+<p>Con la tabla de datos base se calcula la densidad de defectos de producción de cada módulo, dividiendo los defectos reportados entre las kLOC.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 27%">
+<col style="width: 27%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Módulo</th>
+<th style="text-align: center;">Defectos en producción</th>
+<th style="text-align: center;">kLOC</th>
+<th style="text-align: center;">Densidad (defectos por kLOC)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Asignación de turnos</td>
+<td style="text-align: center;">14</td>
+<td style="text-align: center;">14</td>
+<td style="text-align: center;">14 / 14 = 1,00</td>
+</tr>
+<tr class="even">
+<td>Notificaciones</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">3 / 6 = 0,50</td>
+</tr>
+<tr class="odd">
+<td>Pacientes</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">6 / 10 = 0,60</td>
+</tr>
+<tr class="even">
+<td>Facturación</td>
+<td style="text-align: center;">12</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">12 / 10 = 1,20</td>
+</tr>
+<tr class="odd">
+<td>Total</td>
+<td style="text-align: center;">35</td>
+<td style="text-align: center;">40</td>
+<td style="text-align: center;">35 / 40 = 0,875</td>
+</tr>
+</tbody>
+</table>
+<p>Lectura. Asignación de turnos tiene la mayor cantidad de defectos, 14, pero Facturación tiene la mayor densidad, 1,20. Con 10 kLOC genera casi tantos defectos como el módulo grande con 14. Si el equipo decidiera solo por la cuenta absoluta, reforzaría el módulo equivocado.</p>
+<p>La densidad previa a la entrega también merece lectura. Se hallaron 140 defectos antes de entregar en 40 kLOC, es decir 3,5 defectos por kLOC. Esa cifra alta no dice si el producto es bueno o malo. Puede significar que el código nació con muchos defectos, o que las revisiones y pruebas fueron eficaces. Para separar las dos lecturas hace falta la DRE.</p>
+</section>
+<section id="ejemplo-resuelto-2-dre-y-fuga-de-la-versión-2.0" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-resuelto-2-dre-y-fuga-de-la-versión-2.0">Ejemplo resuelto 2: DRE y fuga de la versión 2.0</h3>
+<ol type="1">
+<li>Defectos hallados antes de entregar. 140.</li>
+<li>Defectos hallados en producción durante 90 días. 35.</li>
+<li>Total de defectos conocidos. 140 + 35 = 175.</li>
+<li>DRE. 140 / 175 = 0,80, es decir 80,0 %.</li>
+<li>Fuga. 35 / 175 = 0,20, es decir 20,0 %. Coincide con 1 - 0,80.</li>
+</ol>
+<p>De cada cinco defectos que tenía la versión 2.0, el proceso encontró cuatro antes de entregar y uno llegó al paciente.</p>
+</section>
+<section id="ejemplo-resuelto-3-la-eficiencia-de-cada-filtro" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-resuelto-3-la-eficiencia-de-cada-filtro">Ejemplo resuelto 3: la eficiencia de cada filtro</h3>
+<p>Los 140 defectos previos a la entrega se hallaron con cuatro actividades, que trabajan como filtros en serie. Cada filtro recibe lo que dejó pasar el anterior.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Actividad</th>
+<th style="text-align: center;">Defectos que le llegan</th>
+<th style="text-align: center;">Hallados</th>
+<th style="text-align: center;">Eficiencia del filtro</th>
+<th style="text-align: center;">Quedan</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Revisión de requisitos</td>
+<td style="text-align: center;">175</td>
+<td style="text-align: center;">14</td>
+<td style="text-align: center;">14 / 175 = 8,0 %</td>
+<td style="text-align: center;">161</td>
+</tr>
+<tr class="even">
+<td>Revisión de código</td>
+<td style="text-align: center;">161</td>
+<td style="text-align: center;">41</td>
+<td style="text-align: center;">41 / 161 = 25,5 %</td>
+<td style="text-align: center;">120</td>
+</tr>
+<tr class="odd">
+<td>Pruebas automáticas</td>
+<td style="text-align: center;">120</td>
+<td style="text-align: center;">58</td>
+<td style="text-align: center;">58 / 120 = 48,3 %</td>
+<td style="text-align: center;">62</td>
+</tr>
+<tr class="even">
+<td>Piloto con pacientes</td>
+<td style="text-align: center;">62</td>
+<td style="text-align: center;">27</td>
+<td style="text-align: center;">27 / 62 = 43,5 %</td>
+<td style="text-align: center;">35</td>
+</tr>
+</tbody>
+</table>
+<p>Los 35 que quedan son los que llegan a producción, y coinciden con la fila de totales del hilo conductor. La DRE global es 80,0 %, pero el cuadro agrega información. La revisión de requisitos atrapa solo el 8,0 % de lo que le llega. El piloto con pacientes atrapa casi la mitad de lo que sobrevivió a las demás actividades, lo que indica que las actividades anteriores dejan pasar mucho.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro filtros en serie que atrapan defectos, de 175 defectos presentes quedan 161, 120, 62 y finalmente 35 llegan a produccion, con una DRE de 80 por ciento" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="u2t5c" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Los defectos de la versión 2.0 pasan por cuatro filtros</text> <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="44" width="124" height="118" rx="10"></rect><rect x="162" y="44" width="124" height="118" rx="10"></rect><rect x="314" y="44" width="124" height="118" rx="10"></rect><rect x="466" y="44" width="124" height="118" rx="10"></rect></g> <rect x="618" y="44" width="124" height="118" rx="10" fill="#fbeae5" stroke="#e0a595"></rect> <g text-anchor="middle" font-size="12" font-weight="700" fill="#12324f"> <text x="72" y="66">Revisión de</text><text x="72" y="81">requisitos</text> <text x="224" y="66">Revisión</text><text x="224" y="81">de código</text> <text x="376" y="66">Pruebas</text><text x="376" y="81">automáticas</text> <text x="528" y="66">Piloto con</text><text x="528" y="81">pacientes</text> <text x="680" y="66">Producción</text> </g> <g text-anchor="middle" font-size="11" fill="#5b6876"> <text x="72" y="104">entran 175</text><text x="224" y="104">entran 161</text><text x="376" y="104">entran 120</text><text x="528" y="104">entran 62</text><text x="680" y="104">llegan 35</text> </g> <g text-anchor="middle" font-size="13" font-weight="700" fill="#0e6f6c"> <text x="72" y="126">halla 14</text><text x="224" y="126">halla 41</text><text x="376" y="126">halla 58</text><text x="528" y="126">halla 27</text> </g> <g text-anchor="middle" font-size="11" fill="#12324f"> <text x="72" y="146">8,0 %</text><text x="224" y="146">25,5 %</text><text x="376" y="146">48,3 %</text><text x="528" y="146">43,5 %</text> </g> <text x="680" y="132" font-size="13" font-weight="700" fill="#9a3b25" text-anchor="middle">fuga 20,0 %</text> <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t5c)"><path d="M134,103 L160,103"></path><path d="M286,103 L312,103"></path><path d="M438,103 L464,103"></path><path d="M590,103 L616,103"></path></g> <text x="380" y="200" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">DRE = 140 / 175 = 80,0 %</text> <text x="380" y="222" font-size="11" fill="#5b6876" text-anchor="middle">Cifras ilustrativas. La eficiencia de cada filtro se calcula sobre los defectos que le llegan.</text>
+</svg>
+</div>
+</section>
+<section id="ejemplo-resuelto-4-la-dre-por-módulo-y-por-severidad" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-resuelto-4-la-dre-por-módulo-y-por-severidad">Ejemplo resuelto 4: la DRE por módulo y por severidad</h3>
+<p>La DRE global puede esconder diferencias. Con los defectos previos a la entrega de cada módulo se calcula la de cada uno.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Módulo</th>
+<th style="text-align: center;">Antes de entregar</th>
+<th style="text-align: center;">En producción</th>
+<th style="text-align: center;">Total</th>
+<th style="text-align: center;">DRE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Asignación de turnos</td>
+<td style="text-align: center;">56</td>
+<td style="text-align: center;">14</td>
+<td style="text-align: center;">70</td>
+<td style="text-align: center;">56 / 70 = 80,0 %</td>
+</tr>
+<tr class="even">
+<td>Notificaciones</td>
+<td style="text-align: center;">14</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">17</td>
+<td style="text-align: center;">14 / 17 = 82,4 %</td>
+</tr>
+<tr class="odd">
+<td>Pacientes</td>
+<td style="text-align: center;">30</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">36</td>
+<td style="text-align: center;">30 / 36 = 83,3 %</td>
+</tr>
+<tr class="even">
+<td>Facturación</td>
+<td style="text-align: center;">40</td>
+<td style="text-align: center;">12</td>
+<td style="text-align: center;">52</td>
+<td style="text-align: center;">40 / 52 = 76,9 %</td>
+</tr>
+</tbody>
+</table>
+<p>Facturación combina la mayor densidad y la menor DRE. Dos métricas distintas señalan el mismo módulo, lo que da más confianza para actuar sobre él.</p>
+<p>Por severidad aparece otro matiz. De los 35 defectos de producción, 3 fueron críticos, 11 mayores y 21 menores. Antes de entregar se habían hallado 9 críticos. La DRE de los críticos es 9 / (9 + 3) = 0,75, es decir 75,0 %, menor que la global de 80,0 %. El proceso encuentra peor justo los defectos que más duelen, y esa es una conclusión que la cifra global no muestra.</p>
+</section>
+<section id="límites-de-estas-métricas" class="level3">
+<h3 class="anchored" data-anchor-id="límites-de-estas-métricas">Límites de estas métricas</h3>
+<ul>
+<li>Los defectos no reportados no existen para la métrica. Un módulo que casi nadie usa parece sano.</li>
+<li>La ventana de 90 días es una decisión. Con una ventana de 30 días la DRE se ve mejor, porque todavía no llegaron los reportes tardíos.</li>
+<li>Un conteo de defectos depende de qué se considera defecto y de quién lo registra. Sin una definición compartida, los números de dos equipos no se comparan.</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 3. Calcula las métricas de la versión 2.1
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La versión 2.1 tiene 44 kLOC. Se hallaron 150 defectos antes de entregar y 25 en producción durante 90 días. Calcula la densidad de defectos de producción, la DRE y la fuga. Compáralas con las de la versión 2.0. Después calcula la DRE que se habría reportado si solo hubieran pasado 30 días y para entonces se hubieran reportado 12 defectos.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 3
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li>Densidad en producción. 25 / 44 = 0,568, es decir 0,57 defectos por kLOC. En la versión 2.0 era 0,875, así que bajó.</li>
+<li>DRE. 150 / (150 + 25) = 150 / 175 = 0,857, es decir 85,7 %. En la 2.0 era 80,0 %.</li>
+<li>Fuga. 25 / 175 = 0,143, es decir 14,3 %. Coincide con 1 - 0,857.</li>
+<li>Con 30 días y 12 defectos en producción, la DRE sería 150 / 162 = 0,926, es decir 92,6 %. Parece mejor, pero es una ilusión producida por una ventana corta.</li>
+</ul>
+<p>Las tres métricas mejoran de la 2.0 a la 2.1. La conclusión de que el proceso mejoró solo se sostiene si las dos versiones se midieron con la misma ventana de 90 días y con la misma regla de conteo.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="parte-6.-mttr-y-las-métricas-dora" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="parte-6.-mttr-y-las-métricas-dora"><span class="header-section-number">9</span> Parte 6. MTTR y las métricas DORA</h2>
+<section id="mttr" class="level3">
+<h3 class="anchored" data-anchor-id="mttr">MTTR</h3>
+<p>El MTTR, siglas de <em>mean time to repair</em>, <em>recover</em>, <em>restore</em> o <em>resolve</em>, según el autor, es el promedio de tiempo que tarda en resolverse un incidente. La letra R admite varias lecturas, y por eso conviene fijar la definición antes de comparar dos números.</p>
+<blockquote class="blockquote">
+<p>MTTR = suma de las duraciones de los incidentes / número de incidentes</p>
+</blockquote>
+<p>Ejemplo resuelto. En el mes siguiente a la entrega de la versión 2.0, el registro de incidentes de la app tiene cinco entradas.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Incidente</th>
+<th>Causa</th>
+<th style="text-align: center;">Duración hasta restaurar el servicio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Un despliegue con un defecto en notificaciones</td>
+<td style="text-align: center;">30 min</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Un despliegue con un defecto en la asignación</td>
+<td style="text-align: center;">45 min</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Un despliegue con un defecto en facturación</td>
+<td style="text-align: center;">105 min</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Caída del proveedor externo de mensajes de texto</td>
+<td style="text-align: center;">120 min</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Saturación del servicio de base de datos en la nube</td>
+<td style="text-align: center;">25 min</td>
+</tr>
+</tbody>
+</table>
+<ol type="1">
+<li>Suma de duraciones. 30 + 45 + 105 + 120 + 25 = 325 minutos.</li>
+<li>Número de incidentes. 5.</li>
+<li>MTTR. 325 / 5 = 65 minutos.</li>
+<li>Mediana. Los valores ordenados son 25, 30, 45, 105 y 120. El valor central es 45 minutos.</li>
+</ol>
+<p>La media, 65 minutos, supera la mediana, 45, porque unos pocos incidentes largos la arrastran hacia arriba. En datos de tiempos de recuperación la distribución casi siempre es asimétrica. Por eso muchos equipos reportan la mediana junto con la media, o en su lugar, y fijan cuál usan.</p>
+</section>
+<section id="las-métricas-dora" class="level3">
+<h3 class="anchored" data-anchor-id="las-métricas-dora">Las métricas DORA</h3>
+<p>DORA (<em>DevOps Research and Assessment</em>) es el programa de investigación de Google Cloud que estudia qué prácticas llevan a equipos de software a entregar mejor. Su informe anual, conocido como <em>Accelerate State of DevOps</em>, popularizó un conjunto de métricas de entrega. Libros como <em>Accelerate</em> (Forsgren, Humble y Kim, 2018) explican el trabajo de investigación que las sustenta.</p>
+<p>La guía actual de DORA, actualizada el 5 de enero de 2026, define cinco métricas de entrega de software y las agrupa en dos factores.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Factor</th>
+<th>Métrica</th>
+<th>Definición de DORA, en español</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rendimiento (<em>throughput</em>)</td>
+<td>Tiempo de entrega del cambio (<em>change lead time</em>)</td>
+<td>Tiempo que tarda un cambio desde que se registra en el control de versiones hasta que está desplegado en producción</td>
+</tr>
+<tr class="even">
+<td>Rendimiento (<em>throughput</em>)</td>
+<td>Frecuencia de despliegue (<em>deployment frequency</em>)</td>
+<td>Número de despliegues en un periodo, o el tiempo entre despliegues</td>
+</tr>
+<tr class="odd">
+<td>Rendimiento (<em>throughput</em>)</td>
+<td>Tiempo de recuperación de un despliegue fallido (<em>failed deployment recovery time</em>)</td>
+<td>Tiempo que tarda en recuperarse un despliegue que falla y exige intervención inmediata</td>
+</tr>
+<tr class="even">
+<td>Inestabilidad (<em>instability</em>)</td>
+<td>Tasa de fallo de cambios (<em>change fail rate</em>)</td>
+<td>Proporción de despliegues que exigen intervención inmediata tras desplegarse</td>
+</tr>
+<tr class="odd">
+<td>Inestabilidad (<em>instability</em>)</td>
+<td>Tasa de retrabajo de despliegues (<em>deployment rework rate</em>)</td>
+<td>Proporción de despliegues no planificados que ocurren como resultado de un incidente en producción</td>
+</tr>
+</tbody>
+</table>
+<div class="diagrama">
+<svg viewbox="0 0 760 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Linea de tiempo de un despliegue, del commit al despliegue es el change lead time, de la falla a la recuperacion es el failed deployment recovery time, con las cinco metricas DORA agrupadas en rendimiento e inestabilidad" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="u2t5d" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Dónde se mide cada métrica DORA</text> <line x1="40" y1="118" x2="720" y2="118" stroke="#8fb3d1" stroke-width="2.4"></line> <g fill="#eef4fa" stroke="#8fb3d1" stroke-width="2"><circle cx="70" cy="118" r="9"></circle><circle cx="330" cy="118" r="9"></circle></g> <circle cx="480" cy="118" r="9" fill="#fbeae5" stroke="#e0a595" stroke-width="2"></circle> <circle cx="690" cy="118" r="9" fill="#e4f2f1" stroke="#8fc9c5" stroke-width="2"></circle> <g text-anchor="middle" font-size="11" fill="#12324f"><text x="70" y="146">commit en el</text><text x="70" y="161">control de versiones</text><text x="330" y="146">despliegue a</text><text x="330" y="161">producción</text><text x="480" y="146">falla que exige</text><text x="480" y="161">intervención</text><text x="690" y="146">servicio</text><text x="690" y="161">restaurado</text></g> <g fill="none" stroke="#0e6f6c" stroke-width="1.6"><path d="M70,98 L70,78 L330,78 L330,98"></path><path d="M480,98 L480,78 L690,78 L690,98"></path></g> <text x="200" y="68" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Change lead time</text> <text x="585" y="68" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Failed deployment recovery time</text> <text x="380" y="48" font-size="11" fill="#5b6876" text-anchor="middle">Deployment frequency cuenta cuántos despliegues ocurren en el periodo</text> <rect x="20" y="190" width="350" height="84" rx="10" fill="#e4f2f1" stroke="#8fc9c5"></rect> <rect x="390" y="190" width="350" height="84" rx="10" fill="#fbeae5" stroke="#e0a595"></rect> <g font-size="12" fill="#12324f"><text x="38" y="212" font-weight="700">Rendimiento (throughput)</text><text x="38" y="232">Change lead time</text><text x="38" y="248">Deployment frequency</text><text x="38" y="264">Failed deployment recovery time</text></g> <g font-size="12" fill="#12324f"><text x="408" y="212" font-weight="700">Inestabilidad (instability)</text><text x="408" y="232">Change fail rate</text><text x="408" y="248">Deployment rework rate</text></g>
+</svg>
+</div>
+</section>
+<section id="cómo-llegaron-a-cinco" class="level3">
+<h3 class="anchored" data-anchor-id="cómo-llegaron-a-cinco">Cómo llegaron a cinco</h3>
+<p>DORA publica una historia de sus propias métricas. Los cambios que cuenta son estos.</p>
+<ul>
+<li>En 2014, el primer estudio identificó cuatro variables, frecuencia de despliegue, tiempo de entrega de los cambios, tiempo medio de recuperación (MTTR) y tasa de fallo de cambios.</li>
+<li>En 2018 se agregó la disponibilidad como medida de salud operativa. En 2021 se amplió a fiabilidad, porque esta abarca también latencia, desempeño y escalabilidad. La fiabilidad se sigue midiendo aparte de las métricas de entrega.</li>
+<li>En 2023 el MTTR se renombró y redefinió como tiempo de recuperación de un despliegue fallido. El cambio separa los fallos que causa un cambio de software de los que vienen de fuera, como la caída de un centro de datos.</li>
+<li>En 2024 se añadió la tasa de retrabajo de despliegues, porque la tasa de fallo de cambios funcionaba como un indicio indirecto de cuánto retrabajo debía hacer el equipo.</li>
+<li>El informe de 2025, publicado el 23 de septiembre de 2025, propone siete perfiles de equipo que combinan las métricas con bienestar y factores organizativos, porque las métricas solas dicen qué pasa pero no por qué.</li>
+</ul>
+<p>Una consecuencia práctica. Un texto que hable de “las cuatro métricas DORA” o que use MTTR como una de ellas describe una versión anterior. La definición vigente tiene cinco métricas y reserva la sigla MTTR para el uso general de la industria.</p>
+</section>
+<section id="ejemplo-resuelto-las-cinco-métricas-dora-en-un-mes-de-la-app" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-resuelto-las-cinco-métricas-dora-en-un-mes-de-la-app">Ejemplo resuelto: las cinco métricas DORA en un mes de la app</h3>
+<p>El mes siguiente a la entrega de la versión 2.0, el equipo registra estos datos de la app.</p>
+<ul>
+<li>24 despliegues a producción en 30 días.</li>
+<li>3 de esos despliegues fallaron y exigieron intervención inmediata, que son los de los incidentes 1, 2 y 3 de la tabla anterior.</li>
+<li>4 de los 24 despliegues fueron no planificados y ocurrieron por un incidente en producción. Son las 3 correcciones de los despliegues fallidos más un cambio de configuración para esquivar la caída del proveedor de mensajes.</li>
+<li>Una muestra de seis cambios tardó, desde el commit hasta producción, 6, 20, 4, 52, 8 y 30 horas.</li>
+</ul>
+<ol type="1">
+<li>Frecuencia de despliegue. 24 despliegues / 30 días = 0,8 por día, unos 5,6 por semana.</li>
+<li>Tiempo de entrega del cambio. Los seis valores ordenados son 4, 6, 8, 20, 30 y 52. La mediana es (8 + 20) / 2 = 14 horas. La media sería 120 / 6 = 20 horas. Aquí se usa la mediana porque un solo cambio de 52 horas arrastra la media, y lo importante es fijar la regla y mantenerla.</li>
+<li>Tasa de fallo de cambios. 3 / 24 = 0,125, es decir 12,5 %.</li>
+<li>Tiempo de recuperación de un despliegue fallido. Solo cuentan los incidentes 1, 2 y 3, con 30, 45 y 105 minutos. La media es 180 / 3 = 60 minutos. Los incidentes 4 y 5 no cuentan, porque no los causó un despliegue.</li>
+<li>Tasa de retrabajo de despliegues. 4 / 24 = 0,167, es decir 16,7 %.</li>
+</ol>
+<p>Compara dos números del mismo mes. El MTTR de todos los incidentes fue 65 minutos y el tiempo de recuperación de un despliegue fallido fue 60 minutos. No miden lo mismo, y la diferencia nace de las causas externas que el segundo deja fuera.</p>
+<p>Para saber si el equipo mejora hay que comparar con el mes anterior. Supón que en ese mes hubo 12 despliegues, 3 fallidos y una mediana de tiempo de entrega de 40 horas. La frecuencia pasó de 12 a 24 despliegues, la mediana bajó de 40 a 14 horas y la tasa de fallo de cambios bajó de 25,0 % (3 / 12) a 12,5 %. El equipo entrega más rápido y falla proporcionalmente menos. Eso es lo que DORA llama rendimiento e inestabilidad que mejoran juntos.</p>
+</section>
+<section id="cómo-usar-dora-con-criterio" class="level3">
+<h3 class="anchored" data-anchor-id="cómo-usar-dora-con-criterio">Cómo usar DORA con criterio</h3>
+<p>DORA advierte sobre los usos que dañan la medición. Su guía enumera siete errores frecuentes.</p>
+<ul>
+<li>Convertir las métricas en una meta.</li>
+<li>Esperar que una sola métrica lo resuma todo.</li>
+<li>Usar el sector como excusa para no mejorar.</li>
+<li>Comparar sistemas muy distintos entre sí.</li>
+<li>Que cada área mida por separado y nadie vea el conjunto.</li>
+<li>Poner a los equipos a competir entre ellos.</li>
+<li>Concentrarse en medir y dejar de mejorar.</li>
+</ul>
+<p>La guía recomienda aplicar las métricas a una aplicación o servicio concreto y no a toda una organización, y no comparar, por ejemplo, una app móvil con un sistema de mainframe. En este tema los números de la app de turnos sirven para comparar la app consigo misma entre meses.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Qué dice DORA sobre la inteligencia artificial
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Los informes de 2024 y 2025 estudian el efecto de las herramientas de IA en el desarrollo. DORA resume su hallazgo de 2025 así, la IA mejora el rendimiento, pero a menudo a costa de la estabilidad si los cimientos del equipo no son sólidos. Es un resumen del informe, y su detalle y sus cifras están en el documento original.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 4. Calcula las cinco métricas del mes siguiente
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>En el mes siguiente, el equipo registra 30 despliegues en 30 días. Tres fallaron y exigieron intervención inmediata, y se recuperaron en 20, 40 y 60 minutos. Cinco de los 30 despliegues fueron no planificados y se debieron a incidentes. Una muestra de cinco cambios tardó 10, 12, 30, 5 y 18 horas desde el commit hasta producción. Calcula las cinco métricas y compáralas con las del mes de la Parte 6. Escribe un cuidado antes de concluir que el equipo mejoró.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 4
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li>Frecuencia de despliegue. 30 / 30 = 1 por día.</li>
+<li>Tiempo de entrega. Ordenados, 5, 10, 12, 18 y 30. La mediana es 12 horas.</li>
+<li>Tasa de fallo de cambios. 3 / 30 = 10,0 %.</li>
+<li>Tiempo de recuperación de un despliegue fallido. (20 + 40 + 60) / 3 = 40 minutos.</li>
+<li>Tasa de retrabajo. 5 / 30 = 16,7 %.</li>
+</ul>
+<p>Frente al mes anterior, la frecuencia sube de 0,8 a 1 por día, la mediana de entrega baja de 14 a 12 horas, la tasa de fallo de cambios baja de 12,5 % a 10,0 % y la recuperación baja de 60 a 40 minutos. La tasa de retrabajo se mantiene en 16,7 %.</p>
+<p>El cuidado es el tamaño de las muestras. La mediana de entrega sale de seis cambios un mes y de cinco el otro, y tres fallos por mes dan una tasa que se mueve mucho con un solo caso más. Antes de concluir que el equipo mejoró conviene mirar varios meses seguidos y la tendencia, y no la diferencia entre dos.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="parte-7.-métricas-del-código-complejidad-ciclomática-y-cobertura" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="parte-7.-métricas-del-código-complejidad-ciclomática-y-cobertura"><span class="header-section-number">10</span> Parte 7. Métricas del código: complejidad ciclomática y cobertura</h2>
+<section id="complejidad-ciclomática" class="level3">
+<h3 class="anchored" data-anchor-id="complejidad-ciclomática">Complejidad ciclomática</h3>
+<p>La <em>complejidad ciclomática</em> mide cuántos caminos linealmente independientes tiene el flujo de control de un fragmento de código. La propuso Thomas McCabe en un artículo de 1976 en <em>IEEE Transactions on Software Engineering</em>. Cuantos más caminos, más casos de prueba hacen falta y más difícil es razonar sobre el código.</p>
+<p>Sobre el grafo de flujo de control, donde cada bloque sin bifurcaciones es un nodo y cada salto posible es una arista, la fórmula es M = E - N + 2P. E es el número de aristas, N el de nodos y P el de componentes conectados, que vale 1 para una sola función.</p>
+<p>La publicación del NIST sobre pruebas estructuradas (Special Publication 500-235, 1996) muestra una regla equivalente y más rápida. Si todas las decisiones son binarias, la complejidad es el número de decisiones más uno. Cada <code>if</code>, cada <code>while</code> y cada <code>for</code> suma una decisión. Los operadores booleanos con evaluación de cortocircuito, como <code>&amp;&amp;</code> y <code>||</code> en Java, suman una decisión cada uno, porque pueden omitir la evaluación del segundo operando.</p>
+</section>
+<section id="ejemplo-resuelto-complejidad-de-un-método-de-la-app" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-resuelto-complejidad-de-un-método-de-la-app">Ejemplo resuelto: complejidad de un método de la app</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">boolean</span> <span class="fu">puedeAsignarTurno</span><span class="op">(</span>Paciente p<span class="op">,</span> Especialidad esp<span class="op">,</span> LocalDate dia<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>p <span class="op">==</span> <span class="kw">null</span> <span class="op">||</span> <span class="op">!</span>p<span class="op">.</span><span class="fu">activo</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>esp<span class="op">.</span><span class="fu">turnosAsignados</span><span class="op">(</span>dia<span class="op">)</span> <span class="op">&gt;=</span> <span class="dv">20</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span>Turno t <span class="op">:</span> p<span class="op">.</span><span class="fu">turnosDelDia</span><span class="op">(</span>dia<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>t<span class="op">.</span><span class="fu">especialidad</span><span class="op">().</span><span class="fu">equals</span><span class="op">(</span>esp<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<ol type="1">
+<li>Cuenta las decisiones. El primer <code>if</code> suma uno, y el operador <code>||</code> suma otro. El segundo <code>if</code> suma uno. El <code>for</code> suma uno. El <code>if</code> dentro del <code>for</code> suma uno. En total, 5 decisiones.</li>
+<li>Aplica la regla. M = 5 + 1 = 6.</li>
+<li>Verifica con el grafo. Con un nodo por condición, uno por la prueba del <code>for</code>, uno por cada <code>return</code> y uno de salida, el grafo tiene 10 nodos y 14 aristas, y 14 - 10 + 2 da 6. El resultado coincide.</li>
+</ol>
+<p>Algunas herramientas no cuentan <code>&amp;&amp;</code> ni <code>||</code>, y entonces reportan 5. Antes de comparar números de dos herramientas, confirma qué regla usa cada una.</p>
+<p>La complejidad también dice cuántos casos de prueba cubren todos los caminos básicos. El NIST explica que, en su metodología de pruebas estructuradas, el número de caminos de prueba requeridos por un módulo es exactamente su complejidad ciclomática. Para este método son seis.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Caso</th>
+<th>Entrada</th>
+<th>Resultado esperado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Paciente nulo</td>
+<td>false</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Paciente existente pero inactivo</td>
+<td>false</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Paciente activo, la especialidad ya tiene 25 turnos ese día</td>
+<td>false</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Paciente activo, con un turno de la misma especialidad ese día</td>
+<td>false</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Paciente activo, con un turno de otra especialidad ese día</td>
+<td>true</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>Paciente activo, sin turnos ese día</td>
+<td>true</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="qué-umbral-usar" class="level3">
+<h3 class="anchored" data-anchor-id="qué-umbral-usar">Qué umbral usar</h3>
+<p>McCabe propuso dividir un módulo cuando su complejidad superara 10. El NIST, en la sección 2.5 de su publicación, señala que ese límite tiene respaldo empírico significativo y que límites de hasta 15 se han usado con éxito, pero solo en proyectos con ventajas operativas claras, como personal con experiencia, diseño formal, lenguaje moderno y un plan de pruebas completo. También advierte que el número exacto es algo controvertido, y que importan más las excepciones que se admiten que el valor del límite.</p>
+<p>Para la app de turnos, un equipo podría acordar el límite de 10 como indicador y revisar cada método que lo supere. El método del ejemplo, con 6, está dentro del límite.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Complejidad cognitiva
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La documentación de SonarQube define la complejidad cognitiva como una cualificación de qué tan difícil es entender el flujo de control del código, con un modelo matemático distinto al de la complejidad ciclomática. La ciclomática cuenta caminos y la cognitiva intenta medir esfuerzo de lectura. Esta guía no desarrolla las reglas de cálculo de la cognitiva, porque no se verificaron contra la fuente primaria.</p>
+</div>
+</div>
+</section>
+<section id="cobertura-de-pruebas" class="level3">
+<h3 class="anchored" data-anchor-id="cobertura-de-pruebas">Cobertura de pruebas</h3>
+<p>La <em>cobertura de pruebas</em> mide qué porción del código ejecutan las pruebas. Se calcula con varios criterios. La cobertura de líneas divide las líneas ejecutadas entre las ejecutables. La cobertura de condiciones (o de ramas) cuenta cuántas veces cada condición se evaluó como verdadera y como falsa. Según la documentación de SonarQube, la de condiciones es (condiciones evaluadas como verdaderas + condiciones evaluadas como falsas) / (2 x número de condiciones).</p>
+<p>Con el método <code>puedeAsignarTurno</code>, que tiene 8 líneas ejecutables y 4 condiciones (<code>p == null</code>, <code>!p.activo()</code>, <code>&gt;= 20</code> y <code>equals</code>), se calcula la cobertura de una prueba aislada. Considera solo el caso 6, un paciente activo sin turnos en una especialidad con 3 turnos.</p>
+<ol type="1">
+<li>Líneas ejecutadas. La del primer <code>if</code>, la del segundo <code>if</code>, la del <code>for</code> y la del <code>return true</code>. Son 4 de 8, es decir 50,0 %.</li>
+<li>Condiciones. <code>p == null</code> se evaluó como falsa, <code>!p.activo()</code> como falsa, <code>&gt;= 20</code> como falsa, y <code>equals</code> nunca se evaluó. Son 3 evaluaciones de 8 posibles, es decir 3 / 8 = 37,5 %.</li>
+</ol>
+<p>Con los seis casos de la tabla anterior, todas las líneas se ejecutan y todas las condiciones se evalúan en sus dos sentidos. La cobertura de líneas llega a 8 / 8 = 100 % y la de condiciones a 8 / 8 = 100 %.</p>
+</section>
+<section id="los-límites-de-la-cobertura" class="level3">
+<h3 class="anchored" data-anchor-id="los-límites-de-la-cobertura">Los límites de la cobertura</h3>
+<p>El 100 % anterior no garantiza que el código esté bien probado. Hay tres razones.</p>
+<ul>
+<li>Una prueba sin comprobaciones ejecuta el código y no verifica nada. Si los seis casos llaman al método y no comparan el resultado, la cobertura sigue en 100 %.</li>
+<li>La cobertura no detecta casos que faltan. Si el código dijera <code>&gt; 20</code> en lugar de <code>&gt;= 20</code>, los seis casos de la tabla pasarían igual, porque el caso 3 usa 25 turnos y el 5 y el 6 usan pocos. Solo un séptimo caso, con exactamente 20 turnos ya asignados, revela que el turno 21 se asigna cuando no debería. Ese séptimo caso es una prueba de valor límite, y la complejidad ciclomática no la pide.</li>
+<li>Medir cobertura no dice nada sobre lo que el código debería hacer. Las pruebas del ejemplo cubren el método, pero ninguna dice si el requisito de 20 turnos por día es el correcto.</li>
+</ul>
+<p>Una técnica que ataca el segundo problema es la <em>prueba de mutación</em>. Una herramienta introduce cambios pequeños en el código, como convertir <code>&gt;=</code> en <code>&gt;</code>, y comprueba si alguna prueba falla. Si ninguna falla, el cambio sobrevive y señala una prueba que falta.</p>
+<p>El trabajo de Ivankovic, Petrovic, Just y Fraser (2019) describe cómo Google calcula cobertura sobre su código y qué decide hacer con ella, y concluye que resulta accionable cuando se aplica sobre el conjunto de cambios de una revisión de código y no como un número global.</p>
+<p>Otro estudio, de Inozemtseva y Holmes (2014), lleva por título <em>Coverage is not strongly correlated with test suite effectiveness</em>, es decir, que la cobertura no se correlaciona fuertemente con la eficacia del conjunto de pruebas. El título resume su conclusión. El texto completo del segundo estudio no se pudo leer durante la preparación de esta guía.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 5. Complejidad y casos de prueba
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Calcula la complejidad ciclomática del método siguiente, con la regla de decisiones más uno, y escribe los casos de prueba de sus caminos básicos.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode java code-with-copy"><code class="sourceCode java"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span> <span class="dt">int</span> <span class="fu">contarTurnosValidos</span><span class="op">(</span><span class="bu">List</span><span class="op">&lt;</span>Turno<span class="op">&gt;</span> turnos<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> validos <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span>Turno t <span class="op">:</span> turnos<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>t<span class="op">.</span><span class="fu">confirmado</span><span class="op">()</span> <span class="op">&amp;&amp;</span> <span class="op">!</span>t<span class="op">.</span><span class="fu">vencido</span><span class="op">())</span> <span class="op">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            validos<span class="op">++;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> validos<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 5
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-15" class="callout-15-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Las decisiones son el <code>for</code>, el <code>if</code> y el operador <code>&amp;&amp;</code>, que por ser de cortocircuito suma una. Son 3 decisiones y M = 3 + 1 = 4. Una herramienta que no cuente <code>&amp;&amp;</code> reportaría 3.</p>
+<p>Los cuatro casos de prueba de los caminos básicos son estos.</p>
+<ol type="1">
+<li>Lista vacía. El ciclo no se ejecuta y el resultado es 0.</li>
+<li>Un turno no confirmado. Falla la primera condición, y el resultado es 0.</li>
+<li>Un turno confirmado pero vencido. Falla la segunda condición, y el resultado es 0.</li>
+<li>Un turno confirmado y vigente. El resultado es 1.</li>
+</ol>
+<p>La complejidad no depende de cuántos elementos tenga la lista, sino de cuántas decisiones tiene el código. Con 3 o con 3.000 turnos, M sigue siendo 4.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 6. Cobertura de un conjunto parcial
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Un equipo escribe solo dos pruebas para <code>puedeAsignarTurno</code>. La primera llama al método con un paciente nulo. La segunda lo llama con un paciente activo sin turnos, en una especialidad con 3 turnos asignados. Calcula la cobertura de líneas y de condiciones del conjunto. Después indica qué prueba agregarías primero para subir la cobertura de condiciones y qué prueba descubriría un cambio de <code>&gt;= 20</code> por <code>&gt; 20</code>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-17-contents" aria-controls="callout-17" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 6
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-17" class="callout-17-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li>Líneas. La primera prueba ejecuta el primer <code>if</code> y su <code>return false</code>. La segunda ejecuta el primer <code>if</code>, el segundo <code>if</code>, el <code>for</code> y el <code>return true</code>. La unión es de 5 líneas de 8, es decir 62,5 %.</li>
+<li>Condiciones. <code>p == null</code> se evaluó como verdadera y como falsa, que son 2 de 2. <code>!p.activo()</code> solo se evaluó como falsa, 1 de 2. <code>&gt;= 20</code> solo como falsa, 1 de 2. <code>equals</code> nunca se evaluó, 0 de 2. Son 4 evaluaciones de 8, es decir 50,0 %.</li>
+<li>Para subir la cobertura de condiciones, agregar el caso de un paciente inactivo, que evalúa <code>!p.activo()</code> como verdadera. También sirve el caso de una especialidad llena.</li>
+<li>Para descubrir el cambio de <code>&gt;= 20</code> por <code>&gt; 20</code>, agregar el caso de una especialidad con exactamente 20 turnos asignados. Con <code>&gt;=</code> el método devuelve false, y con <code>&gt;</code> devolvería true.</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="parte-8.-deuda-técnica" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="parte-8.-deuda-técnica"><span class="header-section-number">11</span> Parte 8. Deuda técnica</h2>
+<section id="la-metáfora" class="level3">
+<h3 class="anchored" data-anchor-id="la-metáfora">La metáfora</h3>
+<p><em>Deuda técnica</em> es una metáfora que Ward Cunningham presentó en 1992 en un informe de experiencia de la conferencia OOPSLA, sobre el sistema WyCash. La idea es que publicar código con una solución imperfecta se parece a endeudarse. Un poco de deuda acelera el desarrollo, siempre que se pague pronto con una reescritura. El peligro aparece cuando no se paga, porque los intereses, el costo extra de cada cambio posterior, se acumulan.</p>
+<p>Martin Fowler, en una nota del 14 de octubre de 2009, clasificó la deuda en cuatro tipos según dos ejes, si fue deliberada o inadvertida, y si fue prudente o imprudente.</p>
+<ul>
+<li><strong>Deliberada y prudente.</strong> El equipo toma un atajo consciente para cumplir una fecha y planifica pagarlo.</li>
+<li><strong>Deliberada e imprudente.</strong> El equipo ignora el diseño porque cree que no tiene tiempo, y subestima lo que costará.</li>
+<li><strong>Inadvertida e imprudente.</strong> El equipo no sabe diseñar bien y acumula deuda sin notarlo.</li>
+<li><strong>Inadvertida y prudente.</strong> El equipo aprende con el tiempo lo que el diseño debió ser. Es inevitable incluso en buenos equipos.</li>
+</ul>
+</section>
+<section id="cómo-se-mide" class="level3">
+<h3 class="anchored" data-anchor-id="cómo-se-mide">Cómo se mide</h3>
+<p>La deuda técnica no se mide directamente. Una herramienta de análisis estático como SonarQube estima el esfuerzo para corregir los problemas de mantenibilidad que detecta. Según su documentación, la deuda técnica es la suma de los costos de corrección de cada problema, donde cada regla tiene asignado un esfuerzo en minutos, y cuando se muestra en días se asume una jornada de 8 horas.</p>
+<p>La <em>razón de deuda técnica</em> compara esa deuda con el costo de desarrollar el código desde cero.</p>
+<blockquote class="blockquote">
+<p>Razón de deuda = deuda técnica / (costo de desarrollar una línea x número de líneas)</p>
+</blockquote>
+<p>SonarQube asume por defecto 30 minutos de desarrollo por línea, valor configurable. Su calificación de mantenibilidad usa estos rangos de la razón: A, hasta 5 %. B, de 5 % a menos de 10 %. C, de 10 % a menos de 20 %. D, de 20 % a menos de 50 %. E, 50 % o más.</p>
+</section>
+<section id="ejemplo-resuelto-razón-de-deuda-de-los-cuatro-módulos" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-resuelto-razón-de-deuda-de-los-cuatro-módulos">Ejemplo resuelto: razón de deuda de los cuatro módulos</h3>
+<p>Una herramienta estima la deuda de cada módulo de la app. El costo de desarrollo de cada módulo es su cantidad de líneas por 30 minutos, convertido a horas.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Módulo</th>
+<th style="text-align: center;">Líneas</th>
+<th style="text-align: center;">Costo de desarrollo</th>
+<th style="text-align: center;">Deuda estimada</th>
+<th style="text-align: center;">Razón</th>
+<th style="text-align: center;">Calificación</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Asignación de turnos</td>
+<td style="text-align: center;">14.000</td>
+<td style="text-align: center;">14.000 x 30 min = 7.000 h</td>
+<td style="text-align: center;">1.260 h</td>
+<td style="text-align: center;">1.260 / 7.000 = 18,0 %</td>
+<td style="text-align: center;">C</td>
+</tr>
+<tr class="even">
+<td>Notificaciones</td>
+<td style="text-align: center;">6.000</td>
+<td style="text-align: center;">6.000 x 30 min = 3.000 h</td>
+<td style="text-align: center;">90 h</td>
+<td style="text-align: center;">90 / 3.000 = 3,0 %</td>
+<td style="text-align: center;">A</td>
+</tr>
+<tr class="odd">
+<td>Pacientes</td>
+<td style="text-align: center;">10.000</td>
+<td style="text-align: center;">10.000 x 30 min = 5.000 h</td>
+<td style="text-align: center;">150 h</td>
+<td style="text-align: center;">150 / 5.000 = 3,0 %</td>
+<td style="text-align: center;">A</td>
+</tr>
+<tr class="even">
+<td>Facturación</td>
+<td style="text-align: center;">10.000</td>
+<td style="text-align: center;">10.000 x 30 min = 5.000 h</td>
+<td style="text-align: center;">400 h</td>
+<td style="text-align: center;">400 / 5.000 = 8,0 %</td>
+<td style="text-align: center;">B</td>
+</tr>
+<tr class="odd">
+<td>Total</td>
+<td style="text-align: center;">40.000</td>
+<td style="text-align: center;">20.000 h</td>
+<td style="text-align: center;">1.900 h</td>
+<td style="text-align: center;">1.900 / 20.000 = 9,5 %</td>
+<td style="text-align: center;">B</td>
+</tr>
+</tbody>
+</table>
+<p>Lectura. La deuda concentra en Asignación de turnos, con 1.260 de las 1.900 horas, y ese módulo es el único con calificación C. Facturación tiene la mayor densidad de defectos, pero su deuda es moderada. Eso sugiere que sus defectos nacen de algo distinto a la mantenibilidad, quizá requisitos mal entendidos o pruebas insuficientes, y que pagar deuda no basta para resolverlos.</p>
+<p>Cuidado con la interpretación. La razón compara una estimación de la herramienta con un costo hipotético de reescritura. No es dinero gastado ni medido, y cambia al cambiar las reglas de la herramienta o el costo por línea.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 7. Razón de deuda y calificación
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Un módulo nuevo tiene 8.000 líneas y la herramienta estima 700 horas de deuda. Calcula la razón de deuda y su calificación con el costo por defecto de 30 minutos por línea. Luego calcula cuántas horas habría que eliminar para llegar a la calificación B.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-19-contents" aria-controls="callout-19" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 7
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-19" class="callout-19-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li>Costo de desarrollo. 8.000 x 30 min = 240.000 min = 4.000 h.</li>
+<li>Razón. 700 / 4.000 = 0,175, es decir 17,5 %. Cae entre 10 % y menos de 20 %, así que la calificación es C.</li>
+<li>Para la calificación B hace falta una razón menor que 10 %, es decir una deuda menor que 400 horas. Con exactamente 400 horas la razón sería 10,0 % y seguiría en C. Hay que eliminar más de 300 horas.</li>
+</ul>
+<p>La conclusión práctica es que el número de horas por pagar es un objetivo de mejora y no una orden. Qué deuda pagar primero depende de en qué módulos se hacen cambios con frecuencia.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="parte-9.-cuando-la-métrica-se-vuelve-meta" class="level2" data-number="12">
+<h2 data-number="12" class="anchored" data-anchor-id="parte-9.-cuando-la-métrica-se-vuelve-meta"><span class="header-section-number">12</span> Parte 9. Cuando la métrica se vuelve meta</h2>
+<section id="la-ley-de-goodhart" class="level3">
+<h3 class="anchored" data-anchor-id="la-ley-de-goodhart">La ley de Goodhart</h3>
+<p>En 1975, el economista Charles Goodhart escribió, sobre política monetaria, que cualquier regularidad estadística observada tiende a colapsar cuando se presiona sobre ella con fines de control. En 1997, la antropóloga Marilyn Strathern la resumió en una frase que se hizo célebre, cuando una medida se convierte en objetivo, deja de ser una buena medida. Esa formulación aparece en su artículo <em>‘Improving ratings’: audit in the British University system</em>, en <em>European Review</em>.</p>
+<p>En software ocurre así. Una métrica sirve mientras nadie tiene interés en cambiarla sin cambiar lo que mide. Cuando alguien recibe un premio o un castigo según su valor, las personas racionales optimizan el número, y el número deja de representar lo que representaba.</p>
+<div class="diagrama">
+<svg viewbox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro pasos de la ley de Goodhart con el ejemplo de la cobertura de pruebas, la cobertura refleja la calidad de las pruebas, se vuelve meta, el equipo escribe pruebas sin comprobaciones, la cobertura sube y la calidad no" font-family="Segoe UI, Inter, system-ui, sans-serif">
+<defs><marker id="u2t5e" markerwidth="10" markerheight="10" refx="8" refy="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"></path></marker></defs> <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cómo una métrica se separa de su objetivo</text> <rect x="10" y="40" width="160" height="116" rx="10" fill="#eef4fa" stroke="#c7d6e6"></rect> <rect x="196" y="40" width="160" height="116" rx="10" fill="#fff3d6" stroke="#e6c46f"></rect> <rect x="382" y="40" width="160" height="116" rx="10" fill="#fff3d6" stroke="#e6c46f"></rect> <rect x="568" y="40" width="160" height="116" rx="10" fill="#fbeae5" stroke="#e0a595"></rect> <g text-anchor="middle" font-size="12" font-weight="700" fill="#12324f"><text x="90" y="64">1. La métrica refleja</text><text x="90" y="80">el objetivo</text><text x="276" y="64">2. Se vuelve meta</text><text x="276" y="80">con premio o castigo</text><text x="462" y="64">3. El equipo optimiza</text><text x="462" y="80">el número</text><text x="648" y="64">4. El número mejora y</text><text x="648" y="80">el objetivo no</text></g> <g text-anchor="middle" font-size="11" fill="#5b6876"> <text x="90" y="106">Una cobertura alta</text><text x="90" y="122">suele indicar</text><text x="90" y="138">pruebas más completas</text> <text x="276" y="106">La dirección exige</text><text x="276" y="122">90 % de cobertura</text><text x="276" y="138">para fusionar</text> <text x="462" y="106">Se escriben pruebas</text><text x="462" y="122">que ejecutan código</text><text x="462" y="138">sin comprobar nada</text> <text x="648" y="106">La cobertura marca 90 %</text><text x="648" y="122">y los defectos en</text><text x="648" y="138">producción siguen igual</text> </g> <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t5e)"><path d="M170,98 L194,98"></path><path d="M356,98 L380,98"></path><path d="M542,98 L566,98"></path></g> <text x="380" y="200" font-size="12" fill="#12324f" text-anchor="middle">El número deja de informar justo cuando más se lo mira.</text> <text x="380" y="220" font-size="11" fill="#5b6876" text-anchor="middle">La defensa es medir el objetivo con más de una métrica y leer las cifras como diagnóstico.</text>
+</svg>
+</div>
+</section>
+<section id="un-caso-documentado-en-la-propia-fuente" class="level3">
+<h3 class="anchored" data-anchor-id="un-caso-documentado-en-la-propia-fuente">Un caso documentado en la propia fuente</h3>
+<p>La sección 2.5 de la publicación del NIST sobre pruebas estructuradas cuenta un caso de manipulación real. Como los módulos con una sola decisión de múltiples ramas (un <code>switch</code>) se eximían del límite de complejidad, un desarrollador empezó a reportar una complejidad “modificada”, que dividía la complejidad entre el número de ramas de esas decisiones. El resultado fue que podía tomar un módulo de complejidad 90 y reducirlo a una complejidad “modificada” de 10 con solo agregarle una decisión de diez ramas que no hacía nada.</p>
+<p>La métrica mejoró de 90 a 10 y el módulo siguió igual de difícil de probar. Es la ley de Goodhart en una sola anécdota.</p>
+</section>
+<section id="otras-formas-de-abuso-en-el-hilo-conductor" class="level3">
+<h3 class="anchored" data-anchor-id="otras-formas-de-abuso-en-el-hilo-conductor">Otras formas de abuso en el hilo conductor</h3>
+<ul>
+<li>Meta de cobertura. Si no se fusiona un cambio sin 90 % de cobertura, aparecen pruebas que recorren el código sin comprobar el resultado.</li>
+<li>Meta de densidad de defectos. Si se premia a un equipo por bajar los defectos reportados, tiene un incentivo para clasificar los reportes como “consulta de usuario” o para no registrarlos.</li>
+<li>Meta de frecuencia de despliegue. Si se exige 40 despliegues al mes, un equipo puede partir cambios en pasos triviales para llegar al número, sin mejorar el flujo de valor.</li>
+<li>Meta de resolución rápida. Si se mide el MTTR y se premia bajarlo, es más barato cerrar un incidente con un parche provisional que corregir su causa, y el incidente reaparece.</li>
+</ul>
+</section>
+<section id="salvaguardas" class="level3">
+<h3 class="anchored" data-anchor-id="salvaguardas">Salvaguardas</h3>
+<ul>
+<li>Medir cada objetivo con un par de métricas que se contrapesen, como velocidad y estabilidad. DORA agrupa sus cinco métricas con ese criterio.</li>
+<li>Usar las métricas para diagnosticar y conversar, y no para premiar ni castigar a personas.</li>
+<li>Revisar de vez en cuando si el número sigue correspondiendo a lo que se creía, con una muestra cualitativa. Por ejemplo, leer 10 pruebas de un módulo con cobertura alta.</li>
+<li>Cambiar las métricas cuando dejan de informar, en lugar de defenderlas por costumbre.</li>
+<li>Declarar para qué sirve cada métrica y quién decide con ella, que es el principio de GQM.</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reto 8. Anticipa el abuso
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La dirección de la clínica propone dos metas para el equipo de la app. La primera exige un 90 % de cobertura en cada módulo, bajo pena de no fusionar el cambio. La segunda exige 40 despliegues al mes. Describe una conducta dañina que cada meta podría producir y propone una métrica acompañante o una salvaguarda para cada una.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-21-contents" aria-controls="callout-21" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solución del Reto 8
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-21" class="callout-21-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li>Meta de cobertura. Conducta dañina, pruebas sin comprobaciones o enfocadas en líneas triviales para subir el número. Salvaguarda, acompañar la cobertura con una revisión de las pruebas en cada solicitud de cambio y, si las herramientas lo permiten, con pruebas de mutación en los módulos críticos. También conviene medir los defectos que escapan a producción, que es lo que la cobertura debería reducir.</li>
+<li>Meta de despliegues. Conducta dañina, partir los cambios en despliegues triviales o desplegar cambios vacíos para llegar a 40. Salvaguarda, acompañar la frecuencia con la tasa de fallo de cambios y el tiempo de entrega del cambio, de modo que subir el número sin mejorar el flujo no se note como éxito.</li>
+</ul>
+<p>Tu respuesta puede ser distinta si cada conducta es creíble y cada salvaguarda mide el objetivo de fondo, que es la confianza en los cambios y la rapidez del flujo, y no solo el número.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="parte-10.-tablero-de-la-versión-2.0" class="level2" data-number="13">
+<h2 data-number="13" class="anchored" data-anchor-id="parte-10.-tablero-de-la-versión-2.0"><span class="header-section-number">13</span> Parte 10. Tablero de la versión 2.0</h2>
+<p>Las métricas anteriores se leen juntas. Este tablero reúne los resultados de la app de turnos.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 35%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Aspecto</th>
+<th>Métrica</th>
+<th style="text-align: center;">Valor</th>
+<th>Lectura</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Defectos</td>
+<td>Densidad en producción, total</td>
+<td style="text-align: center;">0,875 por kLOC</td>
+<td>Referencia para comparar versiones</td>
+</tr>
+<tr class="even">
+<td>Defectos</td>
+<td>DRE global</td>
+<td style="text-align: center;">80,0 %</td>
+<td>Cuatro de cada cinco defectos se hallaron antes de entregar</td>
+</tr>
+<tr class="odd">
+<td>Defectos</td>
+<td>DRE de defectos críticos</td>
+<td style="text-align: center;">75,0 %</td>
+<td>El proceso halla peor los defectos más graves</td>
+</tr>
+<tr class="even">
+<td>Defectos</td>
+<td>Módulo con mayor densidad</td>
+<td style="text-align: center;">Facturación, 1,20</td>
+<td>Supera el umbral de 1,0</td>
+</tr>
+<tr class="odd">
+<td>Defectos</td>
+<td>Módulo con menor DRE</td>
+<td style="text-align: center;">Facturación, 76,9 %</td>
+<td>Coincide con el de mayor densidad</td>
+</tr>
+<tr class="even">
+<td>Entrega</td>
+<td>Frecuencia de despliegue</td>
+<td style="text-align: center;">0,8 por día</td>
+<td>Rendimiento</td>
+</tr>
+<tr class="odd">
+<td>Entrega</td>
+<td>Tiempo de entrega (mediana)</td>
+<td style="text-align: center;">14 h</td>
+<td>Rendimiento</td>
+</tr>
+<tr class="even">
+<td>Entrega</td>
+<td>Tiempo de recuperación de un fallo</td>
+<td style="text-align: center;">60 min</td>
+<td>Rendimiento</td>
+</tr>
+<tr class="odd">
+<td>Entrega</td>
+<td>Tasa de fallo de cambios</td>
+<td style="text-align: center;">12,5 %</td>
+<td>Inestabilidad</td>
+</tr>
+<tr class="even">
+<td>Entrega</td>
+<td>Tasa de retrabajo</td>
+<td style="text-align: center;">16,7 %</td>
+<td>Inestabilidad</td>
+</tr>
+<tr class="odd">
+<td>Código</td>
+<td>Razón de deuda técnica</td>
+<td style="text-align: center;">9,5 % total, 18,0 % en Asignación</td>
+<td>Calificación B en total, C en Asignación</td>
+</tr>
+</tbody>
+</table>
+<section id="ejemplo-resuelto-leer-el-tablero-y-decidir" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-resuelto-leer-el-tablero-y-decidir">Ejemplo resuelto: leer el tablero y decidir</h3>
+<p>Pregunta de análisis. Si el equipo solo pudiera hacer una intervención este trimestre, ¿cuál elegiría, y qué evidencia la sostiene?</p>
+<ol type="1">
+<li>Busca coincidencias entre métricas independientes. Facturación aparece primero en densidad y en DRE más baja, dos métricas calculadas con datos distintos.</li>
+<li>Descarta explicaciones que otras métricas contradicen. Facturación no tiene mucha deuda, razón de 8,0 %, así que el problema no parece ser de mantenibilidad.</li>
+<li>Elige la intervención. Reforzar la revisión de requisitos y de código en Facturación, y agregar pruebas de valor límite. No refactorizar primero.</li>
+<li>Define cómo se sabrá si funcionó. En la versión siguiente, la densidad de producción de Facturación debe bajar de 1,20 y su DRE subir de 76,9 %, medidas con la misma ventana de 90 días y la misma regla de conteo.</li>
+<li>Anota lo que el tablero no responde. Nada indica cuántos pacientes sufrieron cada defecto, ni cuánto costó cada uno. Eso exige otros datos.</li>
+</ol>
+<p>Esa decisión se apoya en cuatro métricas que apuntan al mismo lugar, no en una sola. Y lo que parecía la intervención obvia, pagar la deuda de Asignación de turnos, queda en segundo plano porque los defectos más densos están en otro lado.</p>
+</section>
+</section>
+<section id="errores-frecuentes" class="level2" data-number="14">
+<h2 data-number="14" class="anchored" data-anchor-id="errores-frecuentes"><span class="header-section-number">14</span> Errores frecuentes</h2>
+<ul>
+<li>Confundir una métrica con un indicador, y presentar un número sin umbral ni decisión como si ya dijera algo.</li>
+<li>Medir lo que la herramienta ya trae, sin partir de una meta.</li>
+<li>Comparar la densidad de dos módulos o equipos sin una regla común para el tamaño y para qué defectos se cuentan.</li>
+<li>Calcular la DRE con una ventana corta y celebrar una cifra que sube sola.</li>
+<li>Usar el número global y no mirar la DRE por módulo ni por severidad.</li>
+<li>Hablar de “las cuatro métricas DORA” o usar MTTR como una métrica DORA. La definición vigente tiene cinco.</li>
+<li>Dar por buenas las pruebas porque la cobertura es alta.</li>
+<li>Tomar una calificación de deuda técnica como dinero real gastado.</li>
+<li>Fijar una métrica como meta con premio o castigo, y sorprenderse cuando el número mejora y el producto no.</li>
+<li>Comparar equipos entre sí con métricas de entrega, en lugar de comparar un servicio consigo mismo en el tiempo.</li>
+<li>Usar una tabla de riesgo por complejidad o un umbral de cobertura copiados de un blog sin comprobar su fuente.</li>
+</ul>
+</section>
+<section id="autoevaluación" class="level2" data-number="15">
+<h2 data-number="15" class="anchored" data-anchor-id="autoevaluación"><span class="header-section-number">15</span> Autoevaluación</h2>
+<p>Responde sin mirar la guía. Marca tu opción y abre la clave para comprobarla. Es una práctica formativa y no tiene nota.</p>
+<p><strong>1.</strong> El tiempo medio de resolución de un defecto es de 6 días. Esa métrica pasa a ser un indicador cuando:</p>
+<p><label><input type="checkbox"> Se mide en horas en lugar de días</label> <label><input type="checkbox"> Se compara con un umbral o una meta y eso dispara una decisión</label> <label><input type="checkbox"> La calcula una herramienta automática</label></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-22-contents" aria-controls="callout-22" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Clave de la pregunta 1
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-22" class="callout-22-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La opción 2. Un indicador es una métrica interpretada frente a un criterio para tomar una decisión. La unidad y la herramienta no cambian la naturaleza del número.</p>
+</div>
+</div>
+</div>
+<p><strong>2.</strong> En el método GQM, ¿por dónde se empieza?</p>
+<p><label><input type="checkbox"> Por las métricas que ya trae la herramienta de análisis</label> <label><input type="checkbox"> Por el umbral de cada métrica</label> <label><input type="checkbox"> Por la meta que se quiere alcanzar</label></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-23-contents" aria-controls="callout-23" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Clave de la pregunta 2
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-23" class="callout-23-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La opción 3. GQM va de la meta a las preguntas y de las preguntas a las métricas. Empezar por las métricas disponibles produce un tablero sin decisiones.</p>
+</div>
+</div>
+</div>
+<p><strong>3.</strong> Un equipo halló 90 defectos antes de entregar y 30 en los 90 días posteriores. ¿Cuál es su DRE?</p>
+<p><label><input type="checkbox"> 75,0 %</label> <label><input type="checkbox"> 25,0 %</label> <label><input type="checkbox"> 33,3 %</label></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-24-contents" aria-controls="callout-24" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Clave de la pregunta 3
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-24" class="callout-24-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La opción 1. DRE = 90 / (90 + 30) = 90 / 120 = 0,75, es decir 75,0 %. El 25,0 % es la fuga, que es 30 / 120.</p>
+</div>
+</div>
+</div>
+<p><strong>4.</strong> Un módulo de 12 kLOC tuvo 18 defectos en producción. Su densidad de defectos es:</p>
+<p><label><input type="checkbox"> 0,67 defectos por kLOC</label> <label><input type="checkbox"> 216 defectos por kLOC</label> <label><input type="checkbox"> 1,5 defectos por kLOC</label></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-25-contents" aria-controls="callout-25" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Clave de la pregunta 4
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-25" class="callout-25-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La opción 3. 18 / 12 = 1,5. La opción 1 invierte el cociente, y la 2 multiplica en lugar de dividir.</p>
+</div>
+</div>
+</div>
+<p><strong>5.</strong> Según la guía actual de DORA, ¿cuál de estas NO es una de las cinco métricas de entrega?</p>
+<p><label><input type="checkbox"> Tasa de retrabajo de despliegues</label> <label><input type="checkbox"> Líneas de código escritas por desarrollador</label> <label><input type="checkbox"> Frecuencia de despliegue</label></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-26-contents" aria-controls="callout-26" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Clave de la pregunta 5
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-26" class="callout-26-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La opción 2. Las cinco son tiempo de entrega del cambio, frecuencia de despliegue, tiempo de recuperación de un despliegue fallido, tasa de fallo de cambios y tasa de retrabajo de despliegues.</p>
+</div>
+</div>
+</div>
+<p><strong>6.</strong> ¿Qué diferencia hay entre el tiempo de recuperación de un despliegue fallido y el MTTR general?</p>
+<p><label><input type="checkbox"> El primero solo cuenta las fallas causadas por un despliegue, y el MTTR general cuenta cualquier incidente</label> <label><input type="checkbox"> El primero usa la mediana y el segundo la media</label> <label><input type="checkbox"> Ninguna, son dos nombres de la misma métrica</label></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-27-contents" aria-controls="callout-27" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Clave de la pregunta 6
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-27" class="callout-27-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La opción 1. DORA renombró y redefinió el MTTR en 2023 para limitarlo a las fallas que causa un cambio en producción, y dejar fuera causas externas como la caída de un centro de datos.</p>
+</div>
+</div>
+</div>
+<p><strong>7.</strong> Un método tiene dos <code>if</code>, un <code>while</code> y un operador <code>&amp;&amp;</code> de cortocircuito. Con la regla de decisiones más uno, su complejidad ciclomática es:</p>
+<p><label><input type="checkbox"> 4</label> <label><input type="checkbox"> 6</label> <label><input type="checkbox"> 5</label></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-28-contents" aria-controls="callout-28" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Clave de la pregunta 7
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-28" class="callout-28-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La opción 3. Las decisiones son 2 + 1 + 1 = 4, y la complejidad es 4 + 1 = 5.</p>
+</div>
+</div>
+</div>
+<p><strong>8.</strong> Un módulo tiene 100 % de cobertura de líneas. ¿Qué se puede concluir con seguridad?</p>
+<p><label><input type="checkbox"> Que no tiene defectos</label> <label><input type="checkbox"> Que sus pruebas ejecutan todas las líneas, pero no que comprueben bien el resultado</label> <label><input type="checkbox"> Que sus pruebas cubren todos los requisitos</label></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-29-contents" aria-controls="callout-29" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Clave de la pregunta 8
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-29" class="callout-29-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La opción 2. La cobertura mide ejecución, no verificación. Pruebas sin comprobaciones, o casos de valor límite que faltan, no se ven en el número.</p>
+</div>
+</div>
+</div>
+<p><strong>9.</strong> Un módulo tiene 2.000 líneas y una deuda estimada de 120 horas, con el costo por defecto de 30 minutos por línea. Su razón de deuda y su calificación son:</p>
+<p><label><input type="checkbox"> 12,0 %, calificación C</label> <label><input type="checkbox"> 6,0 %, calificación B</label> <label><input type="checkbox"> 12,0 %, calificación B</label></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-30-contents" aria-controls="callout-30" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Clave de la pregunta 9
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-30" class="callout-30-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La opción 1. El costo de desarrollo es 2.000 x 30 min = 60.000 min = 1.000 h. La razón es 120 / 1.000 = 12,0 %, que cae entre 10 % y menos de 20 %, es decir calificación C.</p>
+</div>
+</div>
+</div>
+<p><strong>10.</strong> Una dirección exige que cada módulo tenga 90 % de cobertura y el equipo lo logra con pruebas que no comprueban nada. Este fenómeno se describe como:</p>
+<p><label><input type="checkbox"> Una falla de la herramienta de cobertura</label> <label><input type="checkbox"> Una prueba de mutación</label> <label><input type="checkbox"> La ley de Goodhart, cuando una medida se convierte en objetivo deja de ser una buena medida</label></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-31-contents" aria-controls="callout-31" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Clave de la pregunta 10
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-31" class="callout-31-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La opción 3. El equipo optimizó el número en lugar del objetivo que el número representaba, que era tener pruebas que detecten defectos.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="lo-que-te-llevas" class="level2" data-number="16">
+<h2 data-number="16" class="anchored" data-anchor-id="lo-que-te-llevas"><span class="header-section-number">16</span> Lo que te llevas</h2>
+<div class="checklist">
+<p><strong>Al salir de este tema deberías poder explicar, sin mirar la guía</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox">La diferencia entre dato, medida, métrica e indicador, con un ejemplo de la clínica</label></li>
+<li><label><input type="checkbox">Cómo se construye un árbol GQM desde una meta con cinco elementos</label></li>
+<li><label><input type="checkbox">Las tres categorías de métricas, proceso, producto y proyecto, y cuándo una métrica admite dos lecturas</label></li>
+<li><label><input type="checkbox">Cómo se calculan la densidad de defectos, la DRE y la fuga, y por qué dependen de reglas y de una ventana de tiempo</label></li>
+<li><label><input type="checkbox">Las cinco métricas DORA vigentes, cómo llegaron a ser cinco y en qué se diferencia el MTTR del tiempo de recuperación de un despliegue fallido</label></li>
+<li><label><input type="checkbox">Cómo se calcula la complejidad ciclomática de un método y cuántos casos de prueba sugiere</label></li>
+<li><label><input type="checkbox">Por qué una cobertura del 100 % no garantiza pruebas buenas, y qué agrega una prueba de mutación</label></li>
+<li><label><input type="checkbox">Cómo se calcula la razón de deuda técnica y qué dice y qué no dice</label></li>
+<li><label><input type="checkbox">Qué es la ley de Goodhart y qué salvaguardas reducen el abuso de métricas</label></li>
+</ul>
+</div>
+</section>
+<section id="glosario" class="level2" data-number="17">
+<h2 data-number="17" class="anchored" data-anchor-id="glosario"><span class="header-section-number">17</span> Glosario</h2>
+<ul>
+<li><strong>Dato.</strong> Hecho registrado, como un reporte de defecto con su fecha.</li>
+<li><strong>Medida.</strong> Valor obtenido al contar o medir algo con una regla definida.</li>
+<li><strong>Métrica.</strong> Medida, o cociente entre medidas, con definición, unidad y regla de cálculo.</li>
+<li><strong>Indicador.</strong> Métrica interpretada frente a un umbral, una meta o una tendencia, para tomar una decisión.</li>
+<li><strong>Umbral.</strong> Valor que separa una situación aceptable de una que exige acción.</li>
+<li><strong>GQM.</strong> Método <em>Goal, Question, Metric</em> que deriva las métricas de una meta, pasando por preguntas.</li>
+<li><strong>Métrica de proceso.</strong> Observa cómo trabaja el equipo, como el tiempo de resolución de un defecto.</li>
+<li><strong>Métrica de producto.</strong> Observa propiedades de lo construido, como la densidad de defectos.</li>
+<li><strong>Métrica de proyecto.</strong> Observa la salud del proyecto, como el esfuerzo real frente al planificado.</li>
+<li><strong>kLOC.</strong> Miles de líneas de código, una medida de tamaño.</li>
+<li><strong>Densidad de defectos.</strong> Defectos divididos entre el tamaño del software.</li>
+<li><strong>DRE.</strong> Eficiencia de eliminación de defectos: fracción de los defectos conocidos hallada antes de entregar.</li>
+<li><strong>Fuga de defectos.</strong> Fracción de los defectos conocidos que llegó a producción. Es 1 menos la DRE.</li>
+<li><strong>MTTR.</strong> Tiempo medio de reparación, recuperación, restauración o resolución, según el autor. Debe definirse antes de usarse.</li>
+<li><strong>Mediana.</strong> Valor central de una lista ordenada. Resiste mejor que la media a los valores extremos.</li>
+<li><strong>DORA.</strong> Programa de investigación de Google Cloud sobre qué prácticas llevan a entregar mejor software.</li>
+<li><strong>Tiempo de entrega del cambio.</strong> Tiempo desde que un cambio se registra en el control de versiones hasta que está en producción.</li>
+<li><strong>Frecuencia de despliegue.</strong> Número de despliegues en un periodo, o tiempo entre ellos.</li>
+<li><strong>Tiempo de recuperación de un despliegue fallido.</strong> Tiempo que tarda en recuperarse un despliegue que falla y exige intervención inmediata.</li>
+<li><strong>Tasa de fallo de cambios.</strong> Proporción de despliegues que exigen intervención inmediata.</li>
+<li><strong>Tasa de retrabajo de despliegues.</strong> Proporción de despliegues no planificados que resultan de un incidente en producción.</li>
+<li><strong>Complejidad ciclomática.</strong> Número de caminos linealmente independientes del flujo de control. Se calcula como decisiones más uno.</li>
+<li><strong>Cobertura de pruebas.</strong> Porción del código que las pruebas ejecutan, medida por líneas o por condiciones.</li>
+<li><strong>Prueba de mutación.</strong> Técnica que introduce cambios pequeños en el código y comprueba si alguna prueba falla.</li>
+<li><strong>Deuda técnica.</strong> Metáfora del costo futuro de soluciones imperfectas que se dejaron por rapidez.</li>
+<li><strong>Razón de deuda técnica.</strong> Deuda estimada dividida entre el costo hipotético de desarrollar el código.</li>
+<li><strong>Ley de Goodhart.</strong> Cuando una medida se convierte en objetivo, deja de ser una buena medida.</li>
+<li><strong>ISO/IEC 25010:2023.</strong> Modelo de calidad de producto de nueve características, desarrollado en el Tema 2 de la Unidad 1.</li>
+<li><strong>CMMI.</strong> Modelo de madurez de procesos, desarrollado en el Tema 4 de la Unidad 3.</li>
+</ul>
+</section>
+<section id="bibliografía" class="level2" data-number="18">
+<h2 data-number="18" class="anchored" data-anchor-id="bibliografía"><span class="header-section-number">18</span> Bibliografía</h2>
+<p>Sobre medición y GQM:</p>
+<ul>
+<li>Basili, V. R., Caldiera, G. y Rombach, H. D. (1994). The Goal Question Metric Approach. En <em>Encyclopedia of Software Engineering</em>, vol.&nbsp;1, pp.&nbsp;528-532. John Wiley &amp; Sons.</li>
+<li>Kan, S. H. (2003). <em>Metrics and Models in Software Quality Engineering</em> (2.a ed.). Addison-Wesley. Libro de pago, usado como referencia de las fórmulas de defectos.</li>
+<li>Jones, C. y Bonsignour, O. (2012). <em>The Economics of Software Quality.</em> Addison-Wesley. Libro de pago, usado como referencia de las fórmulas de defectos.</li>
+<li>Sommerville, I. (2016). <em>Software Engineering</em> (10.a ed.). Pearson.</li>
+</ul>
+<p>Sobre DORA:</p>
+<ul>
+<li>DORA. <a href="https://dora.dev/guides/dora-metrics/">Software delivery performance metrics</a>. Actualizada el 5 de enero de 2026, consultada el 3 de octubre de 2026.</li>
+<li>DORA. <a href="https://dora.dev/insights/dora-metrics-history/">A history of DORA’s software delivery metrics</a>. Actualizada el 2 de enero de 2026, consultada el 3 de octubre de 2026.</li>
+<li>DORA. <a href="https://dora.dev/insights/dora-2025-year-in-review/">DORA 2025: year in review</a>. Consultada el 3 de octubre de 2026.</li>
+<li>Google Cloud (23 de septiembre de 2025). <a href="https://cloud.google.com/blog/products/ai-machine-learning/announcing-the-2025-dora-report">Announcing the 2025 DORA Report</a>.</li>
+<li>Google Cloud (22 de octubre de 2024). <a href="https://cloud.google.com/blog/products/devops-sre/announcing-the-2024-dora-report">Announcing the 2024 DORA report</a>.</li>
+<li>Forsgren, N., Humble, J. y Kim, G. (2018). <em>Accelerate: The Science of Lean Software and DevOps.</em> IT Revolution Press.</li>
+</ul>
+<p>Sobre métricas de código y deuda técnica:</p>
+<ul>
+<li>McCabe, T. J. (1976). A Complexity Measure. <em>IEEE Transactions on Software Engineering</em>, 2(4), 308-320. <a href="https://doi.org/10.1109/tse.1976.233837">doi.org</a>.</li>
+<li>Watson, A. H. y McCabe, T. J. (1996). <em>Structured Testing: A Testing Methodology Using the Cyclomatic Complexity Metric.</em> NIST Special Publication 500-235, D. R. Wallace (ed.). <a href="https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication500-235.pdf">nvlpubs.nist.gov</a>.</li>
+<li>SonarSource. <a href="https://docs.sonarsource.com/sonarqube-server/user-guide/code-metrics/metrics-definition">Metrics definition</a>. Documentación de SonarQube Server, consultada el 3 de octubre de 2026.</li>
+<li>Ivankovic, M., Petrovic, G., Just, R. y Fraser, G. (2019). Code Coverage at Google. <em>Proceedings of the 2019 27th ACM Joint Meeting on ESEC/FSE.</em> <a href="https://research.google/pubs/code-coverage-at-google/">Ficha</a>.</li>
+<li>Inozemtseva, L. y Holmes, R. (2014). Coverage is not strongly correlated with test suite effectiveness. <em>International Conference on Software Engineering (ICSE).</em> <a href="https://doi.org/10.1145/2568225.2568271">doi.org</a>. Solo se verificaron el título y los datos de publicación. El texto no se pudo leer.</li>
+<li>Cunningham, W. (1992). The WyCash Portfolio Management System. Informe de experiencia, OOPSLA 1992. Dato verificado en una fuente secundaria.</li>
+<li>Fowler, M. (14 de octubre de 2009). <a href="https://martinfowler.com/bliki/TechnicalDebtQuadrant.html">Technical Debt Quadrant</a>.</li>
+</ul>
+<p>Sobre abuso de métricas:</p>
+<ul>
+<li>Goodhart, C. A. E. (1975). Problems of Monetary Management: The UK Experience. Cita verificada en una fuente secundaria.</li>
+<li>Strathern, M. (1997). ‘Improving ratings’: audit in the British University system. <em>European Review</em>, 5(3), desde la p.&nbsp;305. <a href="https://doi.org/10.1002/(SICI)1234-981X(199707)5:3%3C305::AID-EURO184%3E3.0.CO;2-4">doi.org</a>.</li>
+</ul>
+<p>Sobre los modelos de calidad, que se desarrollan en otros temas:</p>
+<ul>
+<li>ISO/IEC 25010:2023 e ISO/IEC 25023:2016. Véase el <a href="../../../calidad-del-software/unidad-01/tema-02-calidad-proceso-producto-iso-25010/index.html">Tema 2 de la Unidad 1</a>.</li>
+<li>CMMI. Véase la <a href="../../../calidad-del-software/unidad-03/tema-04-madurez-spice-cmmi/index.html">Unidad 3</a>, Tema 4.</li>
+</ul>
+<div class="pie-doc">
+<p>Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.</p>
+<p><strong>Transparencia.</strong> La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.</p>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/oscarleosanchez\.github\.io\/sitio-maria-cano-2026-02\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Oscar Leonel Sánchez Conde</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

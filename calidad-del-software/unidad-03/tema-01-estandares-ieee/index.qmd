@@ -1,367 +1,935 @@
 ---
-title: "Tema 1. Qué exige el IEEE para documentar la calidad del software"
+title: "Tema 1. Estándares IEEE para la calidad del software"
 author: "Oscar Leonel Sánchez Conde"
 date: last-modified
 date-format: "D [de] MMMM [de] YYYY"
 ---
 
 ::: {.ficha}
-|        |                                                                    |
-|--------|--------------------------------------------------------------------|
-| Unidad | Unidad 3. Estándares de calidad aplicados al software              |
-| Tema   | Tema 1. Qué exige el IEEE para documentar la calidad del software  |
+|        |                                                                |
+|--------|----------------------------------------------------------------|
+| Unidad | Unidad 3. Estándares de calidad aplicados al software          |
+| Tema   | Tema 1. Estándares IEEE para la calidad del software           |
 :::
 
-[Diapositivas de la sesión](presentacion.qmd)
+[Presentación interactiva de la unidad](../presentacion-interactiva.html){.btn-curso}
 
-La Unidad 2 cerró con un programa de SQA ya operativo, con revisiones e inspecciones formales según
-IEEE 1028, con auditorías que verifican desde afuera lo que el equipo dice que hace, con gestión de
-configuración según IEEE 828 para que ningún cambio se pierda, y con dos modelos, ISO/IEC 25010 y
-CMMI, que organizan la calidad de producto y la madurez de proceso respectivamente. Todo ese
-programa se apoya en documentos concretos que alguien tuvo que redactar siguiendo una plantilla
-acordada por la industria, y esos documentos no salen de la nada, los define una familia de
-estándares que publica el IEEE. Este tema muestra de dónde sale esa familia, quién la escribe y
-cómo se organiza, y desarrolla tres estándares que la Unidad 2 todavía no cubrió, IEEE 730 para
-planificar la calidad, IEEE 829 y su sucesor ISO/IEC/IEEE 29119 para documentar las pruebas, e
-IEEE/ISO/IEC 12207 para organizar el ciclo de vida completo del software, el estándar que conecta
-casi todos los demás que ha visto el curso hasta ahora.
+Introducción de la unidad: [Unidad 3. Estándares de calidad aplicados al software](../index.qmd).
+Tema anterior: [Unidad 2, Tema 6. Herramientas](../../unidad-02/tema-06-herramientas/index.qmd).
+Tema siguiente: [Tema 2. Normas ISO](../tema-02-normas-iso/index.qmd).
 
-## El IEEE y la familia de estándares de ingeniería de software
+## Objetivo y resultado de aprendizaje
 
-El IEEE, sigla en inglés del Instituto de Ingenieros Eléctricos y Electrónicos (*Institute of
-Electrical and Electronics Engineers*), es una asociación profesional internacional de ingeniería
-que agrupa distintas sociedades técnicas según la especialidad, y una de ellas, la IEEE Computer
-Society, reúne a los profesionales de la computación. Dentro de la IEEE Computer Society trabaja el
-S2ESC, sigla en inglés de comité de estándares de ingeniería de software y sistemas (*Software and
-Systems Engineering Standards Committee*), que es el grupo responsable de redactar y mantener los
-estándares que ya usaste en la Unidad 2, IEEE 1028 e IEEE 828, y los tres que desarrolla este tema.
+La Unidad 2 te enseñó qué hace el SQA. Esta unidad te enseña contra qué marcos externos se
+compara el trabajo. Este primer tema recorre los estándares que publica el IEEE, la mayoría en
+conjunto con ISO e IEC, y los que más se citan cuando una organización documenta su calidad de
+software: el plan de aseguramiento (IEEE 730), la documentación de pruebas (de IEEE 829 a
+ISO/IEC/IEEE 29119), el mapa del ciclo de vida (ISO/IEC/IEEE 12207), los requisitos (29148) y el
+vocabulario (24765).
 
-Conviene distinguir dos tipos de documento dentro de esta familia, porque el curso los va a nombrar
-todo el tiempo. Un *estándar IEEE puro* lo desarrolla y publica el IEEE por su cuenta, mientras que
-un *estándar conjunto ISO/IEC/IEEE* lo desarrollan y publican de forma coordinada el IEEE y la
-Organización Internacional de Normalización junto con la Comisión Electrotécnica Internacional
-(ISO/IEC), a través de un acuerdo de cooperación entre ambas organizaciones que permite adoptar y
-desarrollar estándares en conjunto para el subcomité de ingeniería de software y sistemas de
-ISO/IEC, conocido como JTC1/SC7. Un estándar conjunto lleva las tres siglas en su nombre, como
-ISO/IEC/IEEE 12207, y tiene reconocimiento internacional más amplio que uno solo IEEE, así que la
-tendencia de la industria en los últimos años ha sido convertir estándares que nacieron puramente
-IEEE en estándares conjuntos, o directamente reemplazarlos por uno nuevo publicado ya como conjunto
-desde el principio, que es justamente lo que le pasó a IEEE 829 con la norma que desarrolla la
-sección siguiente de esta guía.
+Al terminar puedes:
+
+- Distinguir una norma IEEE pura de una norma conjunta ISO/IEC/IEEE, y leer el estado de una norma (vigente, sustituida, inactiva) en la ficha del editor.
+- Explicar qué exige IEEE 730 y enumerar sus tres áreas y sus 16 actividades.
+- Redactar un plan de aseguramiento de calidad (SQAP) para un proyecto pequeño, con riesgos, esfuerzo, actividades y registros.
+- Decir qué documentos de prueba define ISO/IEC/IEEE 29119-3 y producirlos para un requisito concreto.
+- Ubicar un trabajo de calidad dentro de los cuatro grupos de procesos de ISO/IEC/IEEE 12207.
+- Usar 29148 para mejorar un requisito y 24765 para fijar el vocabulario de un equipo.
+- Citar con fecha de consulta qué edición de cada norma está vigente, sin repetir de memoria datos que cambian.
+
+Prerrequisitos: los temas de la Unidad 2, en especial actividades de SQA, revisiones y auditorías.
+Necesitas saber qué es un requisito, un caso de prueba y un defecto.
+
+## Ruta de estudio
+
+Son unas 5 horas de trabajo independiente. Puedes partirlas en dos o tres sesiones. La presentación
+interactiva de la unidad sigue las mismas partes y sirve como repaso.
+
+::: {.calendario}
+| Parte | Qué haces | Tiempo |
+|---|---|---|
+| 1. Quién escribe las normas | Lees la diferencia entre norma pura y conjunta, y aprendes a leer el estado de una norma | 25 min |
+| 2. El mapa de la familia | Lees la tabla de normas con su estado a octubre de 2026 y resuelves el Reto 1 | 30 min |
+| 3. IEEE 730 | Lees las tres áreas, las 16 actividades y la historia de sus ediciones | 50 min |
+| 4. Ejemplo resuelto: el SQAP de la clínica | Sigues el plan completo con números y resuelves los Retos 2 y 3 | 55 min |
+| 5. Documentar las pruebas | Lees de IEEE 829 a 29119, sigues el ejemplo resuelto y resuelves el Reto 4 | 50 min |
+| 6. ISO/IEC/IEEE 12207 | Lees los cuatro grupos de procesos y resuelves el Reto 5 | 35 min |
+| 7. Requisitos y vocabulario | Lees 29148 y 24765 y resuelves el Reto 6 | 30 min |
+| Cierre | Errores frecuentes, autoevaluación y glosario | 30 min |
+:::
+
+## El hilo conductor: la app de turnos de la Clínica Aurora
+
+El curso usa un producto ficticio, una app que asigna turnos médicos. Su requisito de partida es
+"la app asigna hasta 20 turnos por día a cada especialidad". En este tema la clínica contrata a un
+equipo para construir la versión 1.0 y el equipo debe decidir qué normas aplicar y cómo
+documentarlo. Ninguna cifra de la clínica es real. Cada número propio se marca como ilustrativo.
+
+## Parte 1. Quién escribe las normas
+
+El IEEE (Institute of Electrical and Electronics Engineers) es una asociación profesional
+internacional. Dentro de su Computer Society trabaja el comité C/S2ESC (Software & Systems
+Engineering Standards Committee), que según su propia página está encargado de convertir en
+normas las prácticas profesionales de la ingeniería de software y de sistemas, y de armonizar las
+normas nacionales e internacionales.
+
+Ese comité mantiene dos tipos de documento. La diferencia importa porque cambia el nombre, quién
+revisa el texto y dónde se consulta.
+
+- **Norma IEEE pura.** La desarrolla y publica solo el IEEE. Lleva el prefijo IEEE y el año, como IEEE 730-2026.
+- **Norma conjunta ISO/IEC/IEEE.** La desarrollan y publican el IEEE y ISO/IEC. Lleva las tres siglas, como ISO/IEC/IEEE 12207:2026. El IEEE la lista como IEEE/ISO/IEC 12207-2026 y ISO como ISO/IEC/IEEE 12207:2026. Es el mismo documento con el orden de siglas según el editor.
+
+Una norma conjunta tiene reconocimiento internacional más amplio y puede citarse en contratos entre
+países. Una norma pura sigue siendo válida, pero su alcance de adopción depende solo del IEEE.
+Algunas normas nacieron puras y después una conjunta las reemplazó, como le pasó a IEEE 829.
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El IEEE Computer Society organiza el trabajo de estandares de software a traves del S2ESC, que produce tanto estandares IEEE propios como estandares conjuntos ISO IEC IEEE gracias a la cooperacion con ISO IEC JTC1 SC7" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <defs><marker id="cds31a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
-  <text x="360" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Como se organizan los estandares IEEE de ingenieria de software</text>
-  <rect x="230" y="30" width="260" height="46" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
-  <text x="360" y="50" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">IEEE Computer Society</text>
-  <text x="360" y="67" font-size="10.5" fill="#3c7d7a" text-anchor="middle">sociedad tecnica de computacion del IEEE</text>
-  <rect x="215" y="102" width="290" height="50" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
-  <text x="360" y="122" font-size="12" font-weight="600" fill="#12324f" text-anchor="middle">S2ESC</text>
-  <text x="360" y="138" font-size="10.5" fill="#5b6876" text-anchor="middle">comite de estandares de software y sistemas</text>
-  <rect x="30" y="182" width="290" height="58" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
-  <text x="175" y="202" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Estandares IEEE propios</text>
-  <text x="175" y="218" font-size="10.5" fill="#5b6876" text-anchor="middle">ejemplo historico, IEEE 829</text>
-  <text x="175" y="233" font-size="10.5" fill="#5b6876" text-anchor="middle">antes de un cambio a estandar conjunto</text>
-  <rect x="400" y="182" width="290" height="58" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
-  <text x="545" y="202" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Estandares conjuntos ISO/IEC/IEEE</text>
-  <text x="545" y="218" font-size="10.5" fill="#5b6876" text-anchor="middle">ejemplo, 12207 y 29119</text>
-  <text x="545" y="233" font-size="10.5" fill="#5b6876" text-anchor="middle">cooperacion con ISO/IEC JTC1/SC7</text>
-  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds31a)"><path d="M360,76 L360,100"/><path d="M300,152 C260,164 220,172 190,180"/><path d="M420,152 C470,164 510,172 540,180"/></g>
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El comité C/S2ESC del IEEE produce normas IEEE puras, como IEEE 730-2026, y normas conjuntas ISO IEC IEEE, como 12207, 29119, 29148 y 24765" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u3t1a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Dos tipos de norma que produce el comité de software del IEEE</text>
+  <rect x="240" y="32" width="280" height="56" rx="12" fill="#eee8f7" stroke="#b9a6d6"/>
+  <text x="380" y="56" font-size="13" font-weight="700" fill="#4a2f7a" text-anchor="middle">C/S2ESC, IEEE Computer Society</text>
+  <text x="380" y="75" font-size="11" fill="#5b6876" text-anchor="middle">comité de normas de software y sistemas</text>
+  <rect x="30" y="160" width="320" height="92" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="190" y="184" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Norma IEEE pura</text>
+  <text x="190" y="204" font-size="11" fill="#5b6876" text-anchor="middle">IEEE 730-2026 (plan de SQA)</text>
+  <text x="190" y="221" font-size="11" fill="#5b6876" text-anchor="middle">IEEE 829-2008 (sustituida)</text>
+  <text x="190" y="238" font-size="11" fill="#5b6876" text-anchor="middle">solo la publica el IEEE</text>
+  <rect x="410" y="160" width="320" height="92" rx="10" fill="#eee8f7" stroke="#b9a6d6"/>
+  <text x="570" y="184" font-size="12.5" font-weight="700" fill="#4a2f7a" text-anchor="middle">Norma conjunta ISO/IEC/IEEE</text>
+  <text x="570" y="204" font-size="11" fill="#5b6876" text-anchor="middle">12207, 29119, 29148, 24765</text>
+  <text x="570" y="221" font-size="11" fill="#5b6876" text-anchor="middle">IEEE e ISO/IEC la publican juntos</text>
+  <text x="570" y="238" font-size="11" fill="#5b6876" text-anchor="middle">el IEEE la lista como IEEE/ISO/IEC</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u3t1a)"><path d="M320,88 C270,115 230,138 205,158"/><path d="M440,88 C490,115 530,138 555,158"/></g>
 </svg>
 
 :::
 
-Que la ingeniería de software necesite este tipo de estándares, de documentación y de proceso,
-además de estándares técnicos como las características de producto que definió la ISO/IEC 25010,
-tiene una razón concreta. Un defecto de software casi nunca se ve a simple vista, porque el software
-no se desgasta como una pieza física y puede fallar solo bajo una combinación de condiciones muy
-específica, así que la única forma de tener confianza en que un producto se construyó y se verificó
-bien es dejar un rastro documentado de cómo se hizo cada paso, en qué plan quedó registrado, con qué
-casos se probó y en qué orden de actividades se ejecutó. Los estándares que desarrolla este tema
-estandarizan justamente ese rastro, el plan de calidad, la documentación de pruebas y el mapa
-completo del ciclo de vida, y por eso el propio IEEE Computer Society respalda además el SWEBOK,
-guía al conocimiento de la ingeniería de software (*Guide to the Software Engineering Body of
-Knowledge*), que reúne el consenso de la disciplina sobre estos temas y sirve de referencia para
-programas académicos como este curso.
+### Cómo leer el estado de una norma
 
-## IEEE 730: el plan de aseguramiento de calidad del software
+Una norma tiene edición y estado, y los dos cambian con los años. Antes de citarla, mira su ficha en
+el sitio del editor. El IEEE usa cuatro datos que debes saber leer.
 
-La Unidad 2 definió el SQA como el acompañamiento que audita el proceso a lo largo de todo el ciclo
-de vida, con actividades concretas de revisión, auditoría y gestión de configuración. Ese
-acompañamiento necesita un documento que lo planifique antes de ejecutarlo, y ese documento es el
-*plan de aseguramiento de calidad del software*, conocido por su sigla en inglés SQAP (*software
-quality assurance plan*), cuyo formato y contenido mínimo define el estándar IEEE 730.
+- **Estado.** *Active* (vigente), *Superseded* (sustituida por otra), *Inactive-Reserved* (inactiva, el IEEE ya no la mantiene al día).
+- **Fecha de aprobación y de publicación.** Pueden diferir meses.
+- **Supersedes y Superseded by.** Qué edición reemplaza y por cuál fue reemplazada.
+- **Armonizada con.** A qué otras normas se alinea su texto.
 
-El estándar tiene una historia de revisiones sucesivas, publicado primero en 1984 y revisado en
-1989, 1998 y 2002, siempre centrado en el formato del documento del plan. La revisión de 2014 marcó
-un cambio de enfoque más profundo que el de una simple actualización, porque el título pasó de
-*IEEE Standard for Software Quality Assurance Plans* a *IEEE Standard for Software Quality
-Assurance Processes*, lo que refleja que ya no solo exige un formato de documento sino que
-establece requisitos para iniciar, planificar, controlar y ejecutar los procesos de SQA de un
-proyecto de desarrollo o mantenimiento. Esa versión de 2014 organiza el trabajo de SQA en tres áreas
-de actividad y dieciséis actividades específicas repartidas entre ellas, la implementación del
-proceso de SQA, que organiza el propio programa, con su entrenamiento y sus registros, el
-aseguramiento de producto, que evalúa si lo que se construyó cumple lo que se pidió, y el
-aseguramiento de proceso, que evalúa si el proceso y el entorno de trabajo se siguieron como se
-había planeado, una distinción que conecta directamente con la que ya viste entre revisión de pares
-y auditoría en la Unidad 2.
+El texto completo de casi todas estas normas es de pago. Esta guía se apoya en las fichas públicas
+del IEEE y de catálogos de normas, y en el texto de la edición 2014 de IEEE 730. Cuando algo no se
+pudo leer en fuente primaria, el texto lo dice.
 
-::: {.diagrama}
+## Parte 2. El mapa de la familia
 
-<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="IEEE 730-2014 organiza el trabajo de SQA en tres areas de actividad, implementacion del proceso de SQA, aseguramiento de producto y aseguramiento de proceso, que juntas alimentan el plan de aseguramiento de calidad del software o SQAP" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <defs><marker id="cds31b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Las tres areas de actividad de IEEE 730-2014</text>
-  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="40" width="220" height="70" rx="10"/><rect x="270" y="40" width="220" height="70" rx="10"/><rect x="520" y="40" width="220" height="70" rx="10"/></g>
-  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="130" y="64">Implementacion del</text><text x="130" y="80">proceso de SQA</text><text x="380" y="72">Aseguramiento de producto</text><text x="630" y="72">Aseguramiento de proceso</text></g>
-  <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="130" y="98">entrenamiento y registros</text><text x="380" y="90">evalua si el producto cumple</text><text x="630" y="90">evalua si el proceso se siguio</text></g>
-  <rect x="260" y="170" width="240" height="60" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
-  <text x="380" y="194" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Plan de aseguramiento de</text>
-  <text x="380" y="211" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">calidad del software (SQAP)</text>
-  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds31b)"><path d="M130,110 C220,140 300,152 320,168"/><path d="M380,110 L380,168"/><path d="M630,110 C540,140 460,152 440,168"/></g>
-  <text x="380" y="248" font-size="11.5" fill="#5b6876" text-anchor="middle">Dieciseis actividades especificas se reparten entre las tres areas</text>
-</svg>
+Antes de entrar a cada norma, esta tabla da el panorama. Los estados corresponden a la consulta de
+octubre de 2026 en las fichas del IEEE y en catálogos de ISO.
 
+| Norma | Para qué sirve | Edición vigente | Qué pasó con las anteriores |
+|---|---|---|---|
+| IEEE 730 | Procesos de aseguramiento de calidad del software (SQA) y su plan | IEEE 730-2026, publicada el 21 de agosto de 2026 | Sustituye a IEEE 730-2014, que el IEEE marcó inactiva el 27 de marzo de 2025 |
+| ISO/IEC/IEEE 29119 (partes 1 a 5) | Pruebas de software: conceptos, procesos, documentación, técnicas, pruebas por palabras clave | Parte 1: 2022. Partes 2, 3 y 4: 2021. Parte 5: 2024 | IEEE 829-2008 quedó sustituida por la familia 29119 |
+| ISO/IEC/IEEE 12207 | Procesos del ciclo de vida del software | ISO/IEC/IEEE 12207:2026, publicada el 15 de abril de 2026 | Sustituye a la edición de 2017 |
+| ISO/IEC/IEEE 29148 | Ingeniería de requisitos | Edición de 2018, publicada el 30 de noviembre de 2018 | Sustituyó a la edición de 2011 |
+| ISO/IEC/IEEE 24765 | Vocabulario de ingeniería de sistemas y software | Edición de 2017, publicada el 28 de agosto de 2017 | Sustituyó a la edición de 2010 |
+
+::: {.callout-warning}
+## Una edición vigente hoy puede no serlo mañana
+
+La guía anterior de este tema daba por buena la edición 2014 de IEEE 730 y no mencionaba la 2026.
+Dos normas de esta tabla cambiaron de edición en 2026, y otra, la 29148, aparece en un catálogo
+comercial como pendiente de revisión. En las fuentes consultadas no consta una edición posterior de
+29148, pero la ausencia de ese dato no prueba que no exista. Revisa la ficha del editor cada vez que
+cites una edición en un documento formal.
 :::
-
-El plan que resulta de aplicar este estándar suele cubrir un conjunto de contenidos que se repite en
-la literatura de la disciplina y en la propia norma, los documentos de referencia que el plan usa
-como base, la organización del equipo de SQA con sus roles y responsabilidades, la documentación que
-el proyecto debe producir, los estándares, prácticas, convenciones y métricas que va a aplicar, las
-revisiones y auditorías planificadas, el enfoque de pruebas, el reporte de problemas y sus acciones
-correctivas, las herramientas y metodologías que va a usar, el control de medios y de proveedores, y
-la manera en que se recolectan, mantienen y conservan los registros de SQA, además de una sección
-que declara qué riesgos amenazan la ejecución del propio programa de SQA y cómo se comunica su
-avance. El estándar deja claro que el orden y el nombre exacto de cada sección son informativos, lo
-que importa es que el plan cubra todos esos temas, y si alguno no aplica al proyecto, el plan debe
-decirlo explícitamente y justificar por qué, en vez de omitirlo en silencio.
-
-El alcance original del estándar apunta sobre todo al software crítico, aquel cuya falla podría
-comprometer la seguridad de las personas o causar pérdidas financieras o sociales grandes, aunque
-para software no crítico permite aplicar solo un subconjunto de sus requisitos. Esa distinción
-conecta con los tres casos que viste en la Unidad 1, el Therac-25, el Ariane 5 y Knight Capital,
-porque son exactamente el tipo de software para el que un plan formal de SQA, bien ejecutado y no
-solo archivado, existe para reducir el riesgo de que se repitan.
-
-## Documentar las pruebas: de IEEE 829 a ISO/IEC/IEEE 29119
-
-Probar el software y documentar cómo se probó son dos actividades distintas, y la segunda no es un
-trámite que sobra sobre la primera, porque sin un registro escrito de qué se probó, con qué datos y
-con qué resultado, nadie más que la persona que ejecutó la prueba puede confiar en que de verdad se
-hizo, ni repetirla más adelante para confirmar que un defecto corregido sigue corregido. El primer
-estándar que formalizó esa documentación fue IEEE 829, cuyo desarrollo empezó en 1979 y que tuvo
-revisiones en 1998 y en 2008, y que definía el formato de un conjunto de documentos para ocho etapas
-de pruebas de software y de sistema.
-
-Entre los documentos que exigía, conviene distinguir los que planifican de los que registran lo que
-pasó durante la ejecución. El *plan maestro de pruebas* cubre la estrategia general del proyecto, y
-cada *plan de nivel* la detalla para un nivel concreto, unitario, de integración o de sistema. El
-*diseño de pruebas* y los *casos de prueba* especifican qué se va a probar y con qué datos, y el
-*procedimiento de prueba* explica paso a paso cómo ejecutarlo. Ya durante la ejecución, el *registro
-de pruebas* deja constancia cronológica de lo que pasó, y el *reporte de incidencia*, también
-llamado reporte de anomalía, documenta cualquier resultado que no coincidió con lo esperado y que
-hay que investigar. Al cerrar cada nivel o el proyecto completo, el *reporte de pruebas* resume los
-resultados y dice si el software cumple los criterios de aceptación.
-
-::: {.diagrama}
-
-<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flujo de los documentos de pruebas de IEEE 829, desde el plan de pruebas y el diseno y casos de prueba, pasando por los procedimientos de ejecucion, hasta los registros de ejecucion y reportes de incidencia, que terminan en el reporte de pruebas" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <defs><marker id="cds31c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Flujo de los documentos de pruebas de IEEE 829</text>
-  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="40" width="220" height="60" rx="10"/><rect x="270" y="40" width="220" height="60" rx="10"/><rect x="520" y="40" width="220" height="60" rx="10"/></g>
-  <g text-anchor="middle" font-size="11.5" font-weight="600" fill="#12324f"><text x="130" y="66">Plan maestro y de nivel</text><text x="380" y="66">Diseno y casos de prueba</text><text x="630" y="66">Procedimiento de prueba</text></g>
-  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds31c)"><path d="M240,70 L268,70"/><path d="M490,70 L518,70"/></g>
-  <rect x="170" y="150" width="420" height="60" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
-  <text x="380" y="174" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Registro de ejecucion (log)</text>
-  <text x="380" y="192" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">y reporte de incidencia (anomalia)</text>
-  <path d="M630,100 C630,130 450,130 380,148" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds31c)"/>
-  <rect x="230" y="250" width="300" height="46" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
-  <text x="380" y="278" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Reporte de pruebas (nivel y maestro)</text>
-  <path d="M380,210 L380,248" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds31c)"/>
-  <text x="380" y="315" font-size="11" fill="#5b6876" text-anchor="middle">Hoy estos formatos los cubre ISO/IEC/IEEE 29119-3, sucesora de IEEE 829</text>
-</svg>
-
-:::
-
-IEEE 829 quedó reemplazado por la norma conjunta ISO/IEC/IEEE 29119-3:2013, parte de una familia de
-cinco documentos que empezó a desarrollarse en 2007 a partir del propio 829 y de otro estándar sobre
-pruebas unitarias, IEEE 1008. La familia completa reparte el tema en conceptos y definiciones, en
-procesos de pruebas, en la documentación de pruebas que hereda directamente el papel de IEEE 829, en
-técnicas de pruebas agrupadas en tres categorías, de especificación, de estructura y de experiencia,
-y en pruebas dirigidas por palabras clave, esta última añadida más adelante como una quinta parte.
-Vale la pena decir que la norma no llegó sin discusión, porque desde 2014 una parte de la comunidad
-profesional de pruebas, agrupada alrededor de organizaciones como la Association for Software
-Testing, se opuso públicamente a ella, con el argumento de que no reflejaba un consenso real de
-quienes prueban software en el día a día y de que ponía demasiado peso en la documentación formal
-por encima de la práctica efectiva de pruebas. Esa discusión es un recordatorio útil de algo que ya
-viste en la Unidad 2 con el caso de la certificación convertida en teatro de cumplimiento, documentar
-una prueba le da valor real al proceso solo cuando el documento sirve para encontrar y corregir
-defectos, no cuando se llena por llenarlo.
-
-## IEEE/ISO/IEC 12207: el paraguas del ciclo de vida completo
-
-Los estándares anteriores, IEEE 730, IEEE 829, IEEE 828 e IEEE 1028, cubren cada uno una pieza
-concreta del trabajo de calidad, pero ninguno dice por sí solo cuándo dentro del ciclo de vida
-completo de un proyecto ocurre cada pieza ni cómo encajan entre ellas. Ese mapa completo lo da
-IEEE/ISO/IEC 12207, publicado originalmente en 1995 como estándar propio del IEEE y convertido
-después en estándar conjunto con ISO/IEC, con una revisión importante en 2017 que lo alineó con su
-estándar hermano para sistemas, ISO/IEC/IEEE 15288, y con una edición más reciente publicada en
-2026, la más actual al momento de escribir esta guía. El estándar no impone un modelo de ciclo de
-vida concreto, ni cascada, ni iterativo, ni ágil, sino que define procesos, actividades y tareas que
-aplican durante la adquisición, el desarrollo, la operación, el mantenimiento y la disposición final
-del software, sin importar qué modelo concreto elija cada organización para organizarlos en el
-tiempo.
-
-La versión de 2017 organiza esos procesos en cuatro grupos. Los *procesos de acuerdo* formalizan la
-relación entre quien adquiere el software y quien lo suministra, con actividades de adquisición y de
-suministro. Los *procesos habilitadores de la organización* cubren la infraestructura, la gestión de
-las personas y la política de calidad que la organización mantiene para todos sus proyectos, no solo
-para uno. Los *procesos de gestión técnica* dirigen y controlan un proyecto concreto, con la
-planificación, el control de riesgos y la medición, y es justamente aquí donde encajan los
-estándares que ya conoces, la gestión de configuración de IEEE 828, el aseguramiento de calidad de
-IEEE 730 y las revisiones y auditorías de IEEE 1028. Los *procesos técnicos*, finalmente, son los que
-construyen el producto en sí, desde levantar las necesidades de quienes van a usar el sistema hasta
-definir requisitos, arquitectura y diseño, implementar, integrar, verificar, validar, poner en
-operación, mantener y por último disponer del software al final de su vida útil, con la
-verificación y la validación apoyadas justamente en la documentación de pruebas que define
-ISO/IEC/IEEE 29119.
-
-::: {.diagrama}
-
-<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="El estandar IEEE ISO IEC 12207 organiza el ciclo de vida del software en cuatro grupos de procesos, de acuerdo, habilitadores de la organizacion, de gestion tecnica y tecnicos, y dentro de gestion tecnica ya viste IEEE 730, IEEE 828 e IEEE 1028" font-family="Segoe UI, Inter, system-ui, sans-serif">
-  <defs><marker id="cds31d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
-  <text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">IEEE/ISO/IEC 12207, el mapa de procesos del ciclo de vida completo</text>
-  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="14" y="40" width="240" height="70" rx="10"/><rect x="506" y="40" width="240" height="70" rx="10"/><rect x="14" y="210" width="240" height="86" rx="10"/><rect x="506" y="210" width="240" height="86" rx="10"/></g>
-  <rect x="290" y="128" width="180" height="64" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
-  <text x="380" y="152" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">IEEE/ISO/IEC</text>
-  <text x="380" y="170" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">12207</text>
-  <g text-anchor="middle">
-    <text x="134" y="62" font-size="12" font-weight="600" fill="#12324f">Procesos de acuerdo</text>
-    <text x="134" y="80" font-size="10.5" fill="#5b6876">adquisicion y suministro</text>
-    <text x="134" y="95" font-size="10.5" fill="#5b6876">entre quien pide y quien construye</text>
-    <text x="626" y="62" font-size="12" font-weight="600" fill="#12324f">Procesos habilitadores</text>
-    <text x="626" y="80" font-size="10.5" fill="#5b6876">infraestructura, personas</text>
-    <text x="626" y="95" font-size="10.5" fill="#5b6876">y calidad de toda la organizacion</text>
-    <text x="134" y="234" font-size="12" font-weight="600" fill="#12324f">Procesos de gestion tecnica</text>
-    <text x="134" y="252" font-size="10.5" fill="#5b6876">aqui viven IEEE 730,</text>
-    <text x="134" y="267" font-size="10.5" fill="#5b6876">IEEE 828 e IEEE 1028</text>
-    <text x="134" y="282" font-size="10.5" fill="#5b6876">que ya viste antes</text>
-    <text x="626" y="234" font-size="12" font-weight="600" fill="#12324f">Procesos tecnicos</text>
-    <text x="626" y="252" font-size="10.5" fill="#5b6876">de los requisitos a la</text>
-    <text x="626" y="267" font-size="10.5" fill="#5b6876">disposicion final, con pruebas</text>
-    <text x="626" y="282" font-size="10.5" fill="#5b6876">apoyadas en IEEE 829/29119</text>
-  </g>
-  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds31d)"><path d="M310,130 C270,108 220,86 190,78"/><path d="M450,130 C500,108 550,86 580,78"/><path d="M310,190 C270,206 220,222 190,224"/><path d="M450,190 C500,206 550,222 580,224"/></g>
-</svg>
-
-:::
-
-Este es el motivo por el que 12207 funciona como un estándar paraguas, porque casi cualquier otro
-estándar de ingeniería de software que el curso mencione, ya sea de esta unidad o de otra, describe
-en detalle una pieza que 12207 ya había ubicado dentro de uno de sus cuatro grupos, sin que ese
-estándar más específico necesite repetir el mapa completo cada vez.
-
-## Lo que sigue: la familia ISO
-
-El Tema 2 de esta unidad desarrolla la familia ISO de calidad de producto y de proceso, con la
-familia SQuaRE, ISO/IEC 25000, e ISO 9001, y ambas se apoyan en el mismo 12207 que acabas de ver
-aquí, porque los procesos técnicos que 12207 define son justamente los que producen el software cuya
-calidad mide SQuaRE, y la gestión de calidad organizacional que ISO 9001 audita es la misma que 12207
-ubica entre sus procesos habilitadores de la organización. No es una coincidencia que compartan la
-base, es la razón por la que un equipo puede combinar estándares IEEE e ISO en el mismo proyecto sin
-que se contradigan entre sí.
 
 ::: {.callout-tip}
-## Reto 1. Encuentra el documento correcto
+## Reto 1. Lee el estado de una norma
 
-Lee la situación con calma antes de responder. Un equipo de pruebas termina de ejecutar los casos de
-prueba de la versión 2.3 de un sistema de pagos y encuentra que el módulo de pagos rechaza compras
-válidas por encima de cierto monto, un comportamiento que nadie esperaba.
+El equipo de la clínica propone tres frases para su documento de calidad. Decide si son correctas a
+octubre de 2026.
 
-Según la familia de documentos que originó IEEE 829, ¿cuál es el primer documento donde debería
-quedar registrado este hallazgo, antes de que nadie lo investigue a fondo?
+1. "El plan de calidad sigue IEEE 730-2014, que está vigente."
+2. "La documentación de pruebas sigue IEEE 829-2008, que es el estándar actual."
+3. "El ciclo de vida se describe con ISO/IEC/IEEE 12207:2017, la edición más reciente."
 
-<label><input type="checkbox"> El plan maestro de pruebas</label><br>
-<label><input type="checkbox"> El diseño de pruebas</label><br>
-<label><input type="checkbox"> El reporte de incidencia (anomalía)</label><br>
-<label><input type="checkbox"> El reporte de pruebas de nivel</label>
+<label><input type="checkbox"> Las tres son correctas</label>
+<label><input type="checkbox"> Solo la 1 es correcta</label>
+<label><input type="checkbox"> Las tres son incorrectas</label>
 :::
 
 ::: {.callout-note collapse="true"}
 ## Solución del Reto 1
 
-La opción correcta es el reporte de incidencia, también llamado reporte de anomalía. El plan maestro
-de pruebas se escribe antes de ejecutar nada, así que no puede contener un hallazgo de ejecución. El
-diseño de pruebas tampoco, porque define qué se va a probar, no lo que pasó al probarlo. El reporte
-de pruebas de nivel sí resume resultados, pero se escribe al cerrar el nivel completo, después de
-investigar y de cerrar las incidencias encontradas, no en el momento en que una de ellas aparece.
+Las tres son incorrectas. La 1: IEEE 730-2014 pasó a inactiva el 27 de marzo de 2025 y la sustituye
+IEEE 730-2026, publicada el 21 de agosto de 2026. La 2: IEEE 829-2008 figura como sustituida por la
+familia ISO/IEC/IEEE 29119, y la parte de documentación es 29119-3:2021. La 3: la edición más
+reciente es ISO/IEC/IEEE 12207:2026, publicada el 15 de abril de 2026.
 
-El reporte de incidencia es el documento que existe para capturar un hallazgo apenas ocurre, sin
-esperar a que alguien confirme si es un defecto real o un malentendido de la prueba, y ese registro
-inmediato es lo que después permite construir el reporte de pruebas con datos completos.
+Las ediciones anteriores no se vuelven falsas, pero un documento nuevo no debería citarlas como la
+referencia actual sin explicar por qué.
 :::
 
+## Parte 3. IEEE 730: aseguramiento de calidad del software
+
+La Unidad 2 definió el SQA como el conjunto de actividades que da confianza en que el software
+cumple sus requisitos. IEEE 730 es la norma que dice qué procesos de SQA debe tener un proyecto de
+desarrollo o de mantenimiento y qué debe contener el plan que los organiza. El propósito declarado
+en la edición 2014 es producir y reunir la evidencia que sustenta una declaración justificada de
+confianza en que el producto cumple sus requisitos.
+
+### Historia en pocas líneas
+
+- **Hasta 2002.** La norma se centraba en el formato del documento del plan.
+- **IEEE 730-2002.** Edición que la de 2014 sustituyó.
+- **IEEE 730-2014.** Cambia el título a "Software Quality Assurance Processes" y pasa de describir un documento a exigir procesos. Aprobada el 27 de marzo de 2014 y publicada el 13 de junio de 2014.
+- **IEEE 730-2026.** Aprobada por la junta del IEEE el 12 de febrero de 2026 y publicada el 21 de agosto de 2026. Su ficha indica que sustituye a la de 2014 y que se armoniza con ISO/IEC/IEEE 12207:2017, IEEE 2675-2021 e ISO/IEC/IEEE 15289:2019.
+
+::: {.callout-important}
+## Lo que no se pudo verificar de la edición 2026
+
+El texto de IEEE 730-2026 es de pago y no se pudo leer. La ficha pública confirma su vigencia, sus
+fechas y su armonización, pero no su lista de actividades. Todo el detalle de las partes siguientes
+(áreas, 16 actividades, esquema del plan) corresponde a la edición 2014. Antes de afirmar
+conformidad con la edición 2026, contrasta cada punto con el texto de esa edición.
+:::
+
+### A quién aplica
+
+La edición 2014 declara que no se restringe por tamaño, complejidad, criticidad ni aplicación del
+software. Se aplica a productos nuevos, a mantenimiento y a integración, y a software que forma
+parte de un sistema o que se vende solo. Quien dice que "IEEE 730 es solo para software crítico"
+repite una idea que el texto de 2014 no sostiene. Lo que sí hace la norma es pedir que el esfuerzo
+de SQA sea proporcional al riesgo del producto.
+
+### Tres áreas y 16 actividades
+
+La norma organiza el trabajo en tres áreas. Las actividades de cada área llevan un propósito,
+resultados esperados y tareas.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="IEEE 730-2014 organiza el SQA en tres areas: implementacion del proceso con seis actividades, aseguramiento de producto con cinco y aseguramiento de proceso con cinco. Las tres producen evidencia en los registros de SQA" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u3t1b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Las tres areas de IEEE 730-2014: 6 + 5 + 5 = 16 actividades</text>
+  <rect x="20" y="40" width="220" height="100" rx="10" fill="#fdf3d0" stroke="#e3c768"/>
+  <text x="130" y="64" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Implementacion del proceso</text>
+  <text x="130" y="84" font-size="11" fill="#5b6876" text-anchor="middle">6 actividades</text>
+  <text x="130" y="102" font-size="11" fill="#5b6876" text-anchor="middle">organizar el SQA, planificar,</text>
+  <text x="130" y="118" font-size="11" fill="#5b6876" text-anchor="middle">ejecutar, guardar registros</text>
+  <rect x="270" y="40" width="220" height="100" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="64" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Aseguramiento de producto</text>
+  <text x="380" y="84" font-size="11" fill="#5b6876" text-anchor="middle">5 actividades</text>
+  <text x="380" y="102" font-size="11" fill="#5b6876" text-anchor="middle">evalua si el producto y su</text>
+  <text x="380" y="118" font-size="11" fill="#5b6876" text-anchor="middle">documentacion cumplen</text>
+  <rect x="520" y="40" width="220" height="100" rx="10" fill="#fdf3d0" stroke="#e3c768"/>
+  <text x="630" y="64" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Aseguramiento de proceso</text>
+  <text x="630" y="84" font-size="11" fill="#5b6876" text-anchor="middle">5 actividades</text>
+  <text x="630" y="102" font-size="11" fill="#5b6876" text-anchor="middle">evalua si el proceso, el entorno,</text>
+  <text x="630" y="118" font-size="11" fill="#5b6876" text-anchor="middle">el proveedor y el personal cumplen</text>
+  <rect x="250" y="196" width="260" height="62" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="222" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Evidencia: plan y registros de SQA</text>
+  <text x="380" y="241" font-size="11" fill="#3c7d7a" text-anchor="middle">base de la confianza en la conformidad</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u3t1b)"><path d="M130,140 C190,168 290,184 330,194"/><path d="M380,140 L380,194"/><path d="M630,140 C570,168 470,184 430,194"/></g>
+</svg>
+
+:::
+
+La tabla siguiente lista las 16 actividades de la edición 2014 con el propósito de cada una,
+resumido con palabras propias.
+
+| Cláusula | Actividad | Para qué sirve |
+|---|---|---|
+| 5.3.1 | Establecer los procesos de SQA | La organización define, antes del proyecto, el papel del SQA y una política de calidad que lo gobierna |
+| 5.3.2 | Coordinar con procesos relacionados | El SQA acuerda con la gerencia cuáles procesos del ciclo de vida (verificación, validación, revisión, auditoría) se coordinan con él |
+| 5.3.3 | Documentar la planificación del SQA | Se escribe el plan (SQAP) adaptado al riesgo del producto |
+| 5.3.4 | Ejecutar el plan de SQA | Se hace lo planificado, se levantan no conformidades y se revisa el plan cuando el proyecto cambia |
+| 5.3.5 | Gestionar los registros de SQA | Se crean, protegen y entregan los registros que prueban que el SQA se hizo |
+| 5.3.6 | Evaluar independencia y objetividad | Se confirma que quien hace SQA tiene libertad y autoridad para evaluar sin presiones |
+| 5.4.2 | Evaluar planes frente a contratos, normas y regulaciones | Los planes existen, cumplen el contrato y las leyes, y son coherentes entre sí |
+| 5.4.3 | Evaluar el producto frente a los requisitos | Se mide cuánto cumplen el software y su documentación los requisitos establecidos |
+| 5.4.4 | Evaluar la aceptabilidad del producto | Antes de entregar, se mide la confianza del proveedor en que el cliente lo aceptará |
+| 5.4.5 | Evaluar el soporte del ciclo de vida del producto | El soporte prometido coincide con el contrato y fija responsabilidades |
+| 5.4.6 | Medir los productos | Las mediciones del producto demuestran su calidad y siguen los procedimientos del proyecto |
+| 5.5.2 | Evaluar procesos y planes del ciclo de vida | El trabajo real sigue el proceso y los planes definidos |
+| 5.5.3 | Evaluar los entornos | Los entornos de ingeniería y de prueba son los que el plan indica |
+| 5.5.4 | Evaluar los procesos de subcontratistas | Los proveedores cumplen los requisitos de proceso que se les trasladaron |
+| 5.5.5 | Medir los procesos | Las mediciones de proceso apoyan una gestión efectiva |
+| 5.5.6 | Evaluar habilidades y conocimientos del personal | Se detectan brechas de formación frente a lo que cada rol necesita |
+
+### Independencia: tres parámetros
+
+La actividad 5.3.6 define la independencia del SQA con tres parámetros. La independencia técnica
+pide personas que no participaron en el desarrollo. La independencia gerencial pide que el SQA
+pertenezca a una organización distinta de la que desarrolla y de la dirección del programa. La
+independencia financiera pide que el presupuesto del SQA lo controle una organización ajena al
+desarrollo. En un equipo pequeño es difícil cumplir los tres, y por eso la norma permite declarar
+con claridad lo que no se cumple, como verás en la Parte 4.
+
+### Conformidad completa o ajustada
+
+La norma admite dos formas de declarar conformidad. La completa exige demostrar todos los requisitos
+del capítulo 5 con sus resultados como evidencia. La ajustada permite limitar el alcance de las
+actividades de producto y de proceso a lo que el proyecto hace. En ese caso, cada actividad que no
+se ejecuta se registra en el plan como "no aplica" con su justificación. Callar una actividad no
+cuenta como ajuste.
+
+### Qué lleva el plan (SQAP)
+
+La edición 2014 pide que el plan cubra todos los temas de un esquema, pero deja el nombre y el
+orden de las secciones como informativos. El esquema tiene siete bloques.
+
+1. Propósito y alcance.
+2. Definiciones y siglas.
+3. Documentos de referencia.
+4. Visión general del plan: organización e independencia, riesgo del producto, herramientas, normas, prácticas y convenciones, y esfuerzo, recursos y cronograma.
+5. Actividades, resultados y tareas: aseguramiento de producto y aseguramiento de proceso.
+6. Consideraciones adicionales: revisión de contratos, medición de calidad, excepciones y desviaciones, repetición de tareas, riesgo de ejecutar el SQA, estrategia de comunicación y proceso de no conformidades.
+7. Registros de SQA: cómo se recogen, guardan y se ponen a disposición.
+
+Si una sección no aplica, el plan incluye un marcador con la justificación.
+
+## Parte 4. Ejemplo resuelto: el SQAP de la clínica
+
+El equipo de la clínica tiene cinco desarrolladores y 12 semanas para entregar la versión 1.0. El
+plan siguiente es una muestra didáctica, escrita con el esquema de la edición 2014. Todos los
+números son ilustrativos y la norma no fija porcentajes de esfuerzo.
+
+### Paso 1. Alcance y riesgo del producto
+
+Primero se decide qué cubre el plan y cuánto riesgo tiene cada módulo, porque la norma pide que el
+esfuerzo de SQA sea proporcional al riesgo.
+
+| Módulo | Qué pasa si falla | Riesgo | Esfuerzo de SQA |
+|---|---|---|---|
+| Asignación de turnos | Turnos duplicados o sobrecupo, pacientes sin atención | Alto | Evaluación en cada entrega |
+| Historia y datos del paciente | Fuga de datos de salud, que la Ley 1581 de 2012 trata como sensibles | Alto | Evaluación en cada entrega |
+| Recordatorios por mensaje | Paciente no se entera de su cita | Medio | Evaluación quincenal |
+| Reportes administrativos | Cifras equivocadas para la gerencia | Bajo | Evaluación al cierre |
+
+### Paso 2. Esfuerzo
+
+El proyecto suma 5 personas x 12 semanas x 40 horas = 2.400 horas. El equipo decide reservar el 8 %
+para SQA: 2.400 x 0,08 = 192 horas. Reparte esas horas por áreas de la norma.
+
+| Área | Horas | Qué cubre |
+|---|---|---|
+| Implementación del proceso | 48 | Plan, coordinación, registros, informe semanal |
+| Aseguramiento de producto | 80 | Revisión de requisitos, de casos de prueba y del producto antes de cada entrega |
+| Aseguramiento de proceso | 64 | Auditorías de proceso, del entorno de pruebas y del proveedor de mensajería |
+| Total | 192 | 48 + 80 + 64 = 192 |
+
+### Paso 3. Independencia
+
+Con cinco desarrolladores no hay un área de SQA propia. El plan asigna el rol a una persona de otro
+equipo de la clínica (independencia técnica), que informa a la Dirección de Calidad y no al líder del
+proyecto (independencia gerencial). El presupuesto de esas horas lo maneja la Dirección de Calidad
+(independencia financiera). Si la clínica no pudiera dar esa persona, el plan debería escribir qué
+parámetro queda sin cumplir y qué riesgo trae.
+
+### Paso 4. El plan, sección por sección
+
+::: {.callout-note}
+## Plan de aseguramiento de calidad del software, Turnos Aurora v1.0
+
+**1. Propósito y alcance.** Este plan organiza el SQA de la versión 1.0 de la app de turnos: aplicación web, servicio de asignación y módulo de recordatorios. Queda fuera la integración con el sistema hospitalario, prevista para la versión 2.0.
+
+**2. Definiciones y siglas.** SQA, SQAP, no conformidad (NC) y criticidad A, B y C se definen en el glosario del proyecto.
+
+**3. Documentos de referencia.** IEEE 730 (guía del plan), ISO/IEC/IEEE 12207 (mapa de procesos), ISO/IEC/IEEE 29148 (formato de requisitos), ISO/IEC/IEEE 29119-3 (documentos de prueba), Ley 1581 de 2012 y el contrato con el proveedor de mensajería.
+
+**4. Visión general.**
+
+- Organización e independencia: la responsable de SQA es una analista de la Dirección de Calidad, ajena al equipo. Informa semanalmente a la gerencia de la clínica.
+- Riesgo del producto: tabla del Paso 1.
+- Herramientas: gestor de incidencias, repositorio con revisión de cambios y servidor de integración continua.
+- Normas y convenciones: requisitos en la forma de 29148, documentos de prueba con las plantillas de 29119-3 y lista de chequeo de revisión de código de la clínica.
+- Esfuerzo y cronograma: 192 horas, repartidas según el Paso 2. Hitos de evaluación al final de las semanas 4, 8 y 12.
+
+**5. Actividades, resultados y tareas.**
+
+- Aseguramiento de producto: revisar los 34 requisitos con el formato de 29148 antes de la semana 2. Verificar que cada requisito de criticidad A tenga al menos un caso de prueba. Evaluar el producto contra los requisitos antes de cada entrega.
+- Aseguramiento de proceso: auditar una vez por hito que las revisiones de código ocurran, que el entorno de pruebas coincida con el plan y que el proveedor de mensajería cumpla lo pactado.
+
+**6. Consideraciones adicionales.**
+
+- Revisión de contratos: el SQA lee el contrato del proveedor de mensajería antes de integrarlo.
+- Medición de calidad: porcentaje de requisitos con caso de prueba (meta 100 % en criticidad A) e incidencias críticas abiertas (meta 0 para entregar).
+- Excepciones: se aceptan solo por escrito, con firma de la gerencia y fecha de cierre.
+- Riesgo de ejecutar el SQA: si la analista se ausenta más de una semana, la Dirección de Calidad nombra reemplazo en 2 días hábiles.
+- Comunicación: informe semanal de una página a la gerencia y al líder del proyecto.
+- No conformidades: se registran en el gestor con criticidad. Las críticas se atienden antes de la siguiente entrega.
+
+**7. Registros de SQA.** Informes semanales, listas de chequeo diligenciadas, actas de auditoría y reportes de no conformidad se guardan en la carpeta del proyecto de la Dirección de Calidad, de solo lectura para el equipo, durante 2 años después de la entrega.
+:::
+
+### Paso 5. Una medición de ejemplo
+
+A la semana 4 el SQA cuenta 34 requisitos, de los cuales 31 tienen al menos un caso de prueba.
+La cobertura es 31 / 34 = 0,912, es decir 91,2 %. Para los de criticidad A, 12 en total, hay 11 con caso
+de prueba, 11 / 12 = 91,7 %. La meta de la sección 6 es 100 % en criticidad A, así que el SQA
+levanta una no conformidad por el requisito sin caso y la registra con fecha de cierre.
+
 ::: {.callout-tip}
-## Reto 2. Ubica cada actividad en su grupo de procesos
+## Reto 2. Ajusta el plan a un proyecto más pequeño
 
-Lee el caso completo antes de responder. Una empresa que desarrolla software para un banco firma un
-contrato de outsourcing con otra compañía para construir un módulo de reportes. El equipo interno de
-la empresa define, una sola vez y para todos sus proyectos, la política de calidad que deben seguir.
-Un ingeniero de SQA prepara un plan de aseguramiento de calidad para este proyecto en particular,
-siguiendo IEEE 730. El equipo técnico levanta los requisitos del módulo de reportes, lo diseña, lo
-construye y lo verifica antes de entregarlo al banco.
-
-Identifica a cuál de los cuatro grupos de procesos de IEEE/ISO/IEC 12207 pertenece cada una de estas
-cuatro actividades, procesos de acuerdo, procesos habilitadores de la organización, procesos de
-gestión técnica o procesos técnicos.
+La clínica pide un módulo adicional: un tablero de reportes. Lo construyen 3 personas durante 8
+semanas de 40 horas. Reservan el 10 % para SQA. Calcula el total de horas de SQA y reparte esas horas
+así: 25 % en implementación del proceso, 40 % en producto y el resto en proceso. Después decide qué
+parámetros de independencia puede cumplir si solo hay una analista de calidad que trabaja en otro
+proyecto de la clínica.
 :::
 
 ::: {.callout-note collapse="true"}
 ## Solución del Reto 2
 
-- **El contrato de outsourcing pertenece a los procesos de acuerdo**, porque formaliza la relación
-  entre la empresa que adquiere el trabajo y la compañía que lo suministra.
-- **La política de calidad para todos los proyectos pertenece a los procesos habilitadores de la
-  organización**, porque no describe un proyecto concreto sino una decisión que aplica a la
-  organización completa, sin importar qué proyecto esté en marcha.
-- **El plan de aseguramiento de calidad según IEEE 730 pertenece a los procesos de gestión técnica**,
-  porque dirige y controla ese proyecto en particular, igual que la gestión de configuración o las
-  revisiones que ya viste en la Unidad 2.
-- **Levantar requisitos, diseñar, construir y verificar el módulo pertenecen a los procesos
-  técnicos**, porque son las actividades que efectivamente construyen el producto de software que el
-  banco recibe al final.
+Horas del proyecto: 3 x 8 x 40 = 960. Horas de SQA: 960 x 0,10 = 96.
+
+Reparto: implementación 96 x 0,25 = 24 horas, producto 96 x 0,40 = 38,4 horas, y proceso el
+35 % restante, 96 x 0,35 = 33,6 horas. La suma es 24 + 38,4 + 33,6 = 96 horas. Si prefieres números
+enteros, redondea a 24, 38 y 34.
+
+Independencia: la analista pertenece a otro proyecto, así que cumple la técnica. Si informa a la
+Dirección de Calidad cumple la gerencial. Si la Dirección de Calidad maneja su presupuesto cumple la
+financiera. Si el presupuesto lo controla el líder del tablero, no se cumple la financiera y el plan
+debe declararlo, con el riesgo que implica.
 :::
 
-## Lo que te llevas de hoy
+::: {.callout-tip}
+## Reto 3. Detecta lo que falta en un fragmento de plan
+
+Este es el borrador del plan de otro equipo de la clínica: "El plan se aplicará al sistema de
+laboratorio. La calidad la revisa el líder del proyecto cuando termina. Si algo falla, se corrige."
+Escribe, usando las siete secciones de la norma, tres secciones que faltan y qué contendría cada una.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+Respuestas posibles, mientras conecten la sección con su contenido:
+
+- Organización e independencia: el líder del proyecto no puede ser quien evalúa su propio trabajo. Falta nombrar a una persona o un área independiente.
+- Riesgo del producto: falta identificar qué módulos del laboratorio pueden dañar al paciente si fallan y proporcionar el esfuerzo de SQA a ese riesgo.
+- Proceso de no conformidades y registros: "se corrige" no deja evidencia. Falta definir cómo se registra, quién la cierra y cuánto tiempo se guarda el registro.
+
+También faltan las actividades de producto y de proceso con su frecuencia y las mediciones que
+demuestren calidad.
+:::
+
+## Parte 5. Documentar las pruebas: de IEEE 829 a ISO/IEC/IEEE 29119
+
+Probar y documentar la prueba son dos tareas distintas. Sin un registro de qué se probó, con qué
+datos y con qué resultado, nadie más que quien ejecutó la prueba puede confiar en ella, ni repetirla
+cuando un defecto se corrige.
+
+### Qué fue IEEE 829 y qué le pasó
+
+IEEE 829 fue la norma de documentación de pruebas. La ficha del IEEE muestra que la edición 2008 se
+aprobó el 27 de marzo de 2008 y sustituyó a la de 1998. Hoy figura como *Superseded* (sustituida)
+por las partes 1, 2 y 3 de ISO/IEC/IEEE 29119 en su edición de 2013 y por la parte 4 de 2015. Esas
+ediciones fueron a su vez reemplazadas por las de 2021 y 2022 que muestra la Parte 2.
+
+La familia 29119 empezó a desarrollarse en 2007 a partir de IEEE 829, de IEEE 1008 (pruebas
+unitarias) y de las normas británicas BS 7925-1 y BS 7925-2, según la referencia consultada. La
+primera edición se publicó en 2013.
+
+### Las partes de ISO/IEC/IEEE 29119
+
+| Parte | Tema | Edición | Nota |
+|---|---|---|---|
+| 29119-1 | Conceptos y definiciones | 2022 | Vocabulario base |
+| 29119-2 | Procesos de prueba | 2021 | Procesos organizacionales y de gestión de pruebas |
+| 29119-3 | Documentación de pruebas | 2021 | Reemplaza a 29119-3:2013 y hereda el papel de IEEE 829 |
+| 29119-4 | Técnicas de prueba | 2021 | De especificación, de estructura y de experiencia |
+| 29119-5 | Pruebas por palabras clave | 2024 | Segunda edición, diciembre de 2024. La edición de 2016 se retiró |
+| 29119-6 | Uso de la norma en contextos ágiles | 2021 | Informe técnico, según un sitio secundario |
+| 29119-11 | Pruebas de sistemas basados en IA | 2020 | Informe técnico, según un sitio secundario |
+
+Las filas de las partes 6 y 11 se apoyan en un sitio de referencia secundario, no en una ficha de ISO.
+Verifica en iso.org antes de citarlas. Las demás filas se apoyan en catálogos nacionales de normas y en
+la ficha del IEEE.
+
+### Los documentos de la parte 3
+
+29119-3 define plantillas para tres niveles. El texto de pago no se pudo leer, así que la lista
+siguiente se basa en la estructura conocida de la parte 3 y debe contrastarse con la edición 2021.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Los documentos de prueba de ISO IEC IEEE 29119-3 en tres niveles: organizacional con politica y estrategia, gestion de pruebas con plan, informe de estado e informe de cierre, y pruebas dinamicas con diseno, casos, procedimiento, datos, ambiente, resultados, registro e incidencias" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u3t1c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Tres niveles de documentos de prueba en 29119-3</text>
+  <rect x="40" y="34" width="680" height="62" rx="10" fill="#eee8f7" stroke="#b9a6d6"/>
+  <text x="380" y="58" font-size="12.5" font-weight="700" fill="#4a2f7a" text-anchor="middle">Nivel organizacional</text>
+  <text x="380" y="78" font-size="11.5" fill="#5b6876" text-anchor="middle">politica de pruebas y estrategia de pruebas de la organizacion</text>
+  <rect x="40" y="120" width="680" height="62" rx="10" fill="#fdf3d0" stroke="#e3c768"/>
+  <text x="380" y="144" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Gestion de pruebas del proyecto</text>
+  <text x="380" y="164" font-size="11.5" fill="#5b6876" text-anchor="middle">plan de pruebas, informe de estado, informe de cierre</text>
+  <rect x="40" y="206" width="680" height="96" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="230" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Pruebas dinamicas</text>
+  <text x="380" y="252" font-size="11.5" fill="#5b6876" text-anchor="middle">diseno de pruebas, casos, procedimiento, requisitos y estado de datos y de ambiente</text>
+  <text x="380" y="272" font-size="11.5" fill="#5b6876" text-anchor="middle">resultado real, registro de ejecucion, informe de incidencia</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u3t1c)"><path d="M380,96 L380,118"/><path d="M380,182 L380,204"/></g>
+  <text x="380" y="322" font-size="11" fill="#5b6876" text-anchor="middle">de lo general a lo concreto: cada nivel se apoya en el de arriba</text>
+</svg>
+
+:::
+
+Cada documento responde una pregunta.
+
+- **Política y estrategia de pruebas.** Cómo prueba la organización en general.
+- **Plan de pruebas.** Qué, cuándo, quién y con qué criterios se prueba en este proyecto.
+- **Informe de estado.** Cómo va la prueba en una fecha.
+- **Informe de cierre.** Qué se logró y qué quedó pendiente al terminar.
+- **Diseño y casos de prueba.** Qué se prueba y con qué entradas y resultados esperados.
+- **Procedimiento de prueba.** Pasos para ejecutarlos.
+- **Datos y ambiente.** Qué necesita la prueba y si está listo.
+- **Resultado real y registro de ejecución.** Lo que ocurrió.
+- **Informe de incidencia.** Un resultado inesperado que hay que investigar.
+
+### Ejemplo resuelto: documentos de prueba para el límite de 20 turnos
+
+El requisito de la clínica es "la app asigna hasta 20 turnos por día a cada especialidad". Un
+requisito con un límite numérico pide probar los valores del borde.
+
+**Diseño.** Técnica de análisis de valores límite, del grupo de técnicas de especificación de la
+parte 4. Valores: 0 turnos, 19 turnos y 20 turnos ya asignados, más un caso de concurrencia.
+
+**Casos de prueba.**
+
+| Caso | Estado de partida | Acción | Resultado esperado |
+|---|---|---|---|
+| TC-01 | Cardiología con 0 turnos | Una paciente pide turno | Se asigna, total 1 |
+| TC-02 | Cardiología con 19 turnos | Una paciente pide turno | Se asigna, total 20 |
+| TC-03 | Cardiología con 20 turnos | Una paciente pide turno | Se rechaza con mensaje de cupo agotado, total 20 |
+| TC-04 | Cardiología con 19 turnos | Dos pacientes piden turno al mismo tiempo | Se asigna exactamente uno, total 20 |
+
+**Ejecución y resultado real.** TC-01, TC-02 y TC-03 pasan. En TC-04 las dos solicitudes quedan
+asignadas y el total llega a 21. El probador abre la incidencia INC-014, de severidad alta, con los
+pasos y el resultado real.
+
+**Informe de cierre del nivel.** Se planearon y ejecutaron 4 casos. Pasaron 3 y falló 1, con 1
+incidencia abierta de severidad alta. El criterio de salida decía "ninguna incidencia alta abierta",
+así que el informe concluye que el módulo todavía no está listo.
+
+Fíjate en lo que aportan los documentos. El informe de incidencia permite reproducir el defecto, y el
+informe de cierre conecta ese defecto con la decisión de no entregar.
+
+### Una discusión sobre 29119
+
+Desde 2014, parte de la comunidad de pruebas, agrupada en torno a la Association for Software
+Testing y la International Society for Software Testing, impulsó una petición contra 29119. Alegaban
+que no reflejaba un consenso real de quienes prueban software y que su peso en la documentación
+restaría tiempo a probar. La discusión sirve para recordar que un documento vale por lo que ayuda a
+encontrar y corregir defectos, no por haberse llenado.
+
+::: {.callout-tip}
+## Reto 4. Qué documento falta
+
+Un equipo ejecuta sus pruebas y al final del nivel solo conserva un informe que dice "todo bien".
+Nadie sabe qué datos se usaron, qué entorno se probó ni qué pasó con un fallo intermitente que alguien
+mencionó en el chat. Nombra tres documentos de 29119-3 que habrían evitado el problema y di qué
+pregunta contesta cada uno.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+- Registro de ejecución y resultado real: dice qué se ejecutó, en qué orden y qué ocurrió, y evita que "todo bien" sea la única evidencia.
+- Informe de incidencia: el fallo intermitente debió quedar registrado con sus pasos y su frecuencia, y no solo mencionado en un chat.
+- Requisitos y estado del ambiente de prueba, y de los datos: responden con qué entorno y con qué datos se probó, para repetir la prueba.
+
+También sirve el informe de cierre, que obliga a declarar lo pendiente y no solo lo aprobado.
+:::
+
+## Parte 6. ISO/IEC/IEEE 12207: el mapa del ciclo de vida
+
+IEEE 730, la documentación de pruebas y la gestión de configuración son piezas concretas. Ninguna
+dice por sí sola cuándo ocurre cada una dentro de un proyecto. Ese mapa lo da ISO/IEC/IEEE 12207,
+la norma de procesos del ciclo de vida del software.
+
+### Historia en pocas líneas
+
+- **1995.** Primera edición como norma ISO/IEC.
+- **2008.** Edición armonizada con el IEEE, ya como norma conjunta.
+- **2017.** Edición alineada con la norma de sistemas ISO/IEC/IEEE 15288.
+- **2026.** ISO/IEC/IEEE 12207:2026, publicada el 15 de abril de 2026 según la ficha del IEEE, que indica que sustituye a la de 2017 y que se alinea con ISO/IEC/IEEE 15288:2023.
+
+La ficha del IEEE indica que el marco soporta la aplicación concurrente, iterativa y recursiva de los
+procesos. Un resumen de un distribuidor de normas señala como cambios la descripción más precisa de
+iteración y recursión, contenido nuevo sobre definición del concepto y del sistema, y más contenido
+sobre métodos ágiles. Ese resumen no es fuente primaria, así que el detalle debe confirmarse en la
+norma.
+
+### Qué hace y qué no hace
+
+12207 define procesos, actividades y tareas que se aplican al adquirir, suministrar, desarrollar,
+operar, mantener y retirar software. No impone un modelo de ciclo de vida. Una organización puede
+usar cascada, iterativo o ágil y seguir aplicando los mismos procesos. Su propósito es dar un
+vocabulario y un marco común, no prescribir cómo se organiza el trabajo en el tiempo.
+
+### Los cuatro grupos de procesos
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="12207 organiza los procesos del ciclo de vida en cuatro grupos: acuerdo, habilitadores de proyecto de la organizacion, gestion tecnica y tecnicos. Se ubican IEEE 730 en gestion tecnica, 29119 en verificacion y validacion y 29148 en requisitos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u3t1d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Los cuatro grupos de procesos de 12207 y las normas que los detallan</text>
+  <rect x="290" y="130" width="180" height="62" rx="12" fill="#eee8f7" stroke="#b9a6d6"/>
+  <text x="380" y="158" font-size="13" font-weight="700" fill="#4a2f7a" text-anchor="middle">ISO/IEC/IEEE</text>
+  <text x="380" y="176" font-size="13" font-weight="700" fill="#4a2f7a" text-anchor="middle">12207:2026</text>
+  <rect x="14" y="40" width="250" height="80" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="139" y="64" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Procesos de acuerdo</text>
+  <text x="139" y="84" font-size="11" fill="#5b6876" text-anchor="middle">adquisicion y suministro</text>
+  <text x="139" y="101" font-size="11" fill="#5b6876" text-anchor="middle">entre quien pide y quien construye</text>
+  <rect x="496" y="40" width="250" height="80" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="621" y="64" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Habilitadores de la organizacion</text>
+  <text x="621" y="84" font-size="11" fill="#5b6876" text-anchor="middle">calidad, personas, infraestructura</text>
+  <text x="621" y="101" font-size="11" fill="#5b6876" text-anchor="middle">y conocimiento para todos los proyectos</text>
+  <rect x="14" y="214" width="250" height="100" rx="10" fill="#fdf3d0" stroke="#e3c768"/>
+  <text x="139" y="238" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Gestion tecnica</text>
+  <text x="139" y="258" font-size="11" fill="#5b6876" text-anchor="middle">planificacion, riesgos, configuracion,</text>
+  <text x="139" y="275" font-size="11" fill="#5b6876" text-anchor="middle">medicion y aseguramiento de calidad</text>
+  <text x="139" y="296" font-size="11" font-weight="600" fill="#4a2f7a" text-anchor="middle">aqui encaja IEEE 730</text>
+  <rect x="496" y="214" width="250" height="100" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="621" y="238" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Procesos tecnicos</text>
+  <text x="621" y="258" font-size="11" fill="#5b6876" text-anchor="middle">requisitos, arquitectura, diseno, construccion,</text>
+  <text x="621" y="275" font-size="11" fill="#5b6876" text-anchor="middle">verificacion, validacion, operacion, retiro</text>
+  <text x="621" y="296" font-size="11" font-weight="600" fill="#4a2f7a" text-anchor="middle">aqui 29148 y 29119</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u3t1d)"><path d="M310,132 C270,112 230,100 200,96"/><path d="M450,132 C490,112 530,100 560,96"/><path d="M310,190 C270,206 235,218 205,222"/><path d="M450,190 C490,206 525,218 555,222"/></g>
+</svg>
+
+:::
+
+- **Procesos de acuerdo.** Formalizan la relación entre quien adquiere el software y quien lo suministra: contratos, entregas y aceptación.
+- **Procesos habilitadores de la organización.** Aplican a toda la organización y no a un proyecto: política de calidad, gestión de personas, infraestructura y conocimiento.
+- **Procesos de gestión técnica.** Dirigen y controlan un proyecto concreto: planificación, evaluación y control, riesgos, configuración, información, medición y aseguramiento de calidad.
+- **Procesos técnicos.** Construyen el producto: definir necesidades y requisitos, arquitectura, diseño, implementación, integración, verificación, transición, validación, operación, mantenimiento y disposición final.
+
+El detalle de los nombres de procesos por grupo corresponde a la estructura de 12207 y 15288, que
+es texto de pago. La edición 2014 de IEEE 730 se armonizaba con la edición 2008 de 12207, y la 2026
+declara armonía con la de 2017. Esa diferencia muestra que dos normas pueden estar un paso fuera de
+fase y conviene mirar la edición de cada una.
+
+### Cómo usar el mapa
+
+Cuando alguien propone una práctica de calidad, 12207 permite preguntar en qué grupo vive. Si es una
+auditoría del proceso, vive en gestión técnica y la detalla IEEE 730. Si es probar, vive en procesos
+técnicos (verificación y validación) y la documenta 29119. Si es escribir requisitos, vive en
+procesos técnicos y la detalla 29148.
+
+::: {.callout-tip}
+## Reto 5. Ubica cada actividad en su grupo
+
+Una empresa que desarrolla para la clínica firma un contrato de outsourcing con otra para construir
+el módulo de recordatorios. Define una política de calidad para todos sus proyectos. Una analista
+prepara el plan de SQA de este proyecto. El equipo levanta los requisitos del módulo, lo diseña, lo
+construye y lo verifica. Asigna cada actividad a uno de los cuatro grupos de 12207.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+- El contrato de outsourcing es un proceso de acuerdo, porque formaliza la relación entre quien adquiere y quien suministra.
+- La política de calidad para todos los proyectos es un proceso habilitador de la organización, porque no pertenece a un proyecto concreto.
+- El plan de SQA del proyecto es gestión técnica, porque dirige y controla ese proyecto, igual que la gestión de configuración.
+- Levantar requisitos, diseñar, construir y verificar son procesos técnicos, porque construyen el producto que se entrega.
+:::
+
+## Parte 7. Requisitos y vocabulario: 29148 y 24765
+
+### ISO/IEC/IEEE 29148: ingeniería de requisitos
+
+La ficha del IEEE describe 29148 como la norma con las disposiciones para los procesos y productos de
+la ingeniería de requisitos de sistemas y software durante el ciclo de vida. Define las características
+de calidad de un requisito y sus atributos, y muestra cómo aplicar el proceso de requisitos de forma
+iterativa. Puede incorporarse a un marco de ciclo de vida de 12207 y 15288 o usarse por separado.
+
+Fue publicada el 30 de noviembre de 2018 y sustituyó a la edición de 2011. Aparece como vigente en
+el IEEE. Un catálogo comercial la marca como pendiente de revisión, y en las fuentes consultadas no
+consta una edición posterior.
+
+::: {.callout-important}
+## Lista de características de un buen requisito
+
+La lista siguiente es la que se enseña habitualmente de 29148:2018: necesario, independiente de la
+implementación, no ambiguo, completo, singular, factible, verificable, correcto y conforme. El texto
+de la norma es de pago y no se pudo contrastar en esta consulta. Verifica la lista y sus
+definiciones en el texto de 2018 antes de citarla como literal.
+:::
+
+### Ejemplo resuelto: mejorar un requisito de la clínica
+
+Requisito original: "La app permite sacar turnos de forma rápida y sin problemas."
+
+Se revisa contra las características.
+
+1. No ambiguo: "rápida" y "sin problemas" no tienen medida. Falla.
+2. Verificable: no se puede diseñar una prueba para "sin problemas". Falla.
+3. Singular: mezcla velocidad y ausencia de errores. Falla.
+
+Se divide y se concreta.
+
+- "Cuando una paciente autenticada solicita un turno y la especialidad tiene menos de 20 turnos asignados ese día, el sistema debe asignarlo y mostrar la confirmación en un máximo de 3 segundos."
+- "Cuando una paciente autenticada solicita un turno y la especialidad ya tiene 20 turnos asignados ese día, el sistema debe rechazar la solicitud y mostrar el mensaje de cupo agotado."
+
+Cada versión nueva dice una sola cosa, se puede probar y no depende de cómo se construya. El límite
+de 3 segundos es ilustrativo, y la clínica debe fijarlo con sus usuarios.
+
+### ISO/IEC/IEEE 24765: vocabulario
+
+24765 reúne el vocabulario común de la ingeniería de sistemas y de software. La ficha del IEEE dice que
+busca terminología común para los profesionales y fomentar la adopción de las normas del IEEE
+Computer Society, ISO y el PMI. Se publicó el 28 de agosto de 2017 y sustituyó a la de 2010. Figura
+como vigente.
+
+Sirve de árbitro cuando dos personas usan una palabra con sentidos distintos, como "falla", "defecto"
+o "verificación". Un equipo puede acordar al inicio que, ante una duda de significado, manda el
+vocabulario de 24765, y escribirlo en la sección de definiciones del plan de SQA.
+
+### Cómo se conectan las cinco normas
+
+| Norma | Pregunta que responde | Grupo de 12207 |
+|---|---|---|
+| IEEE 730 | Cómo se organiza y se planifica el SQA | Gestión técnica |
+| 29119 | Cómo se prueba y se documenta la prueba | Procesos técnicos (verificación y validación) |
+| 29148 | Cómo se escribe y gestiona un requisito | Procesos técnicos (requisitos) |
+| 24765 | Qué significa cada término | Transversal |
+| 12207 | Qué procesos existen y cómo se agrupan | Marco general |
+
+::: {.callout-tip}
+## Reto 6. Reescribe y ubica
+
+Reescribe el siguiente requisito de la clínica para que cumpla las características de 29148, y di en
+qué norma de la tabla anterior buscarías cómo documentar su prueba: "El sistema debe enviar
+recordatorios a tiempo y no fallar".
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+Una versión posible: "Cuando falten 24 horas para un turno confirmado, el sistema debe enviar un
+recordatorio por mensaje al número registrado de la paciente." Y otra: "Si el envío del recordatorio
+falla, el sistema debe reintentarlo una vez y registrar el fallo." Cada una es singular, medible y
+verificable. El valor de 24 horas es ilustrativo y lo fija la clínica.
+
+La prueba se documenta con 29119-3: caso de prueba, resultado real e informe de incidencia si el
+mensaje no sale. Los términos "falla" y "reintento" se definen con 24765.
+:::
+
+## Errores frecuentes
+
+- Citar IEEE 730-2014 como la edición vigente, cuando la 2026 la sustituyó y la de 2014 está inactiva.
+- Dar por buena una "edición 2026" de una norma sin verificarla en la ficha del editor. La de 12207 sí existe, publicada el 15 de abril de 2026, pero no se aplica a otras normas por analogía.
+- Afirmar que IEEE 730 es solo para software crítico, cuando el texto de 2014 declara que no se restringe por tamaño, complejidad ni criticidad.
+- Seguir usando IEEE 829 como estándar actual de documentación de pruebas.
+- Confundir la lista de partes de 29119: la parte 3 es la de documentación, la 4 la de técnicas.
+- Llenar los documentos de prueba para tener una carpeta y no para encontrar defectos.
+- Escribir un plan de SQA que omite en silencio las actividades que no hace, en lugar de declararlas "no aplica" con justificación.
+- Asignar el SQA al líder del proyecto, que evaluaría su propio trabajo.
+- Creer que una norma conjunta y una pura se citan igual. La conjunta lleva ISO/IEC/IEEE y su edición puede diferir de la pura equivalente.
+- Citar de memoria listas o nombres de procesos de normas de pago sin contrastarlos con el texto.
+
+## Autoevaluación
+
+Responde sin mirar la guía. Marca tu opción y abre la clave para comprobarla. Es una práctica
+formativa y no tiene nota.
+
+**1.** ¿Qué distingue a una norma conjunta ISO/IEC/IEEE de una norma IEEE pura?
+
+<label><input type="checkbox"> La conjunta la publican el IEEE e ISO/IEC, y la pura solo el IEEE</label>
+<label><input type="checkbox"> La pura es más reciente que la conjunta</label>
+<label><input type="checkbox"> La conjunta solo aplica a software crítico</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 1
+
+La opción 1. Lo que cambia es quién publica la norma y su alcance de adopción. La antigüedad y la
+criticidad no definen el tipo.
+:::
+
+**2.** En la ficha del IEEE de IEEE 730-2014, el estado que aparece es:
+
+<label><input type="checkbox"> Active, sin cambios</label>
+<label><input type="checkbox"> Inactive-Reserved, sustituida por IEEE 730-2026</label>
+<label><input type="checkbox"> Superseded por ISO/IEC/IEEE 29119</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 2
+
+La opción 2. La ficha indica que se inactivó el 27 de marzo de 2025 y que la sustituye IEEE 730-2026.
+:::
+
+**3.** ¿Cuántas actividades específicas organiza IEEE 730-2014 y en cuántas áreas?
+
+<label><input type="checkbox"> 16 actividades en tres áreas</label>
+<label><input type="checkbox"> 12 actividades en dos áreas</label>
+<label><input type="checkbox"> 9 actividades en cuatro áreas</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 3
+
+La opción 1. Son seis de implementación del proceso, cinco de aseguramiento de producto y cinco de
+aseguramiento de proceso, que suman 16.
+:::
+
+**4.** Un proyecto no hace auditoría de proveedores porque no tiene subcontratistas. Según la
+conformidad ajustada de 730, ¿qué debe hacer el plan?
+
+<label><input type="checkbox"> Omitir la actividad sin decir nada</label>
+<label><input type="checkbox"> Declararla "no aplica" con su justificación</label>
+<label><input type="checkbox"> Cumplirla de todas formas con un proveedor ficticio</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 4
+
+La opción 2. La norma exige identificar en el plan toda actividad no realizada y justificar por qué.
+:::
+
+**5.** ¿Qué parámetro de independencia se cumple si el presupuesto de SQA lo controla una
+organización ajena al desarrollo?
+
+<label><input type="checkbox"> Técnica</label>
+<label><input type="checkbox"> Gerencial</label>
+<label><input type="checkbox"> Financiera</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 5
+
+La opción 3. La técnica se refiere a las personas, la gerencial a la organización a la que pertenece
+el SQA, y la financiera al control del presupuesto.
+:::
+
+**6.** ¿Qué norma reemplazó a IEEE 829 para la documentación de pruebas?
+
+<label><input type="checkbox"> ISO/IEC/IEEE 29119, con la parte 3 como la de documentación</label>
+<label><input type="checkbox"> ISO 9001</label>
+<label><input type="checkbox"> IEEE 730</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 6
+
+La opción 1. La ficha del IEEE muestra 829-2008 como sustituida por la familia 29119, y la edición
+vigente de la parte 3 es la de 2021.
+:::
+
+**7.** En el ejemplo de la clínica, con 19 turnos asignados, dos pacientes piden el último turno al
+mismo tiempo y ambos reciben turno. ¿Qué documento de 29119-3 registra el hallazgo apenas ocurre?
+
+<label><input type="checkbox"> El informe de incidencia</label>
+<label><input type="checkbox"> La política de pruebas</label>
+<label><input type="checkbox"> El plan de pruebas</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 7
+
+La opción 1. La política y el plan se escriben antes de ejecutar, y el informe de incidencia captura
+el resultado inesperado en el momento.
+:::
+
+**8.** ¿Qué dice 12207 sobre el modelo de ciclo de vida que debe usar un proyecto?
+
+<label><input type="checkbox"> Obliga a la cascada</label>
+<label><input type="checkbox"> No impone ninguno, define procesos aplicables a cualquier modelo</label>
+<label><input type="checkbox"> Obliga a un modelo ágil</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 8
+
+La opción 2. La norma define procesos, actividades y tareas, y deja al proyecto la elección del
+modelo y del orden en el tiempo.
+:::
+
+**9.** El plan de SQA de un proyecto pertenece a qué grupo de procesos de 12207:
+
+<label><input type="checkbox"> Procesos de acuerdo</label>
+<label><input type="checkbox"> Procesos de gestión técnica</label>
+<label><input type="checkbox"> Procesos técnicos</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 9
+
+La opción 2. Dirige y controla un proyecto concreto, igual que la planificación y la gestión de
+configuración.
+:::
+
+**10.** Del requisito "el sistema debe ser rápido", ¿qué falla según los criterios de 29148?
+
+<label><input type="checkbox"> Es ambiguo y no verificable, porque no tiene una medida</label>
+<label><input type="checkbox"> Es singular y verificable</label>
+<label><input type="checkbox"> Solo falla porque está en español</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 10
+
+La opción 1. Sin una medida ("en menos de 3 segundos") no se puede diseñar una prueba.
+:::
+
+## Lo que te llevas
 
 ::: {.checklist}
-Al salir de este tema deberías poder explicar, sin mirar la guía
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
 
-- [ ] Qué diferencia a un estándar IEEE propio de un estándar conjunto ISO/IEC/IEEE, y por qué
-      importa esa diferencia en la práctica
-- [ ] Qué exige IEEE 730 de un plan de aseguramiento de calidad del software y en qué tres áreas de
-      actividad organiza la versión de 2014
-- [ ] Qué documentos definía IEEE 829 para las pruebas de software y por qué ISO/IEC/IEEE 29119 lo
-      reemplazó
-- [ ] Los cuatro grupos de procesos de IEEE/ISO/IEC 12207 y en cuál de ellos encajan IEEE 730,
-      IEEE 828 e IEEE 1028
-- [ ] Por qué 12207 funciona como estándar paraguas para casi todos los demás estándares de
-      ingeniería de software que ha visto el curso
+- [ ] La diferencia entre norma IEEE pura y conjunta ISO/IEC/IEEE, y cómo leer el estado de una norma
+- [ ] Qué ediciones están vigentes a octubre de 2026 de 730, 12207, 29119, 29148 y 24765
+- [ ] Las tres áreas y las 16 actividades de IEEE 730, y qué cambió entre 2014 y 2026
+- [ ] Cómo se escribe un SQAP con riesgo, esfuerzo, independencia, actividades y registros
+- [ ] Qué reemplazó a IEEE 829 y qué documentos define 29119-3
+- [ ] Los cuatro grupos de procesos de 12207 y dónde cae cada norma
+- [ ] Cómo se mejora un requisito con 29148 y para qué sirve 24765
 :::
 
-## Recursos
+## Glosario
 
-- IEEE Standards Association. [IEEE Standard for Software Quality Assurance Processes (730-2014)](https://standards.ieee.org/ieee/730/5284/) y [su registro en IEEE Xplore](https://ieeexplore.ieee.org/document/6835311/). El texto completo es de pago, esta guía se apoya en el catálogo público del estándar y en fuentes secundarias que lo explican, no en el documento original.
-- An Introduction to the New IEEE 730 Standard on Software Quality Assurance. American Society for Quality (ASQ). [asq.org, an-introduction-to-the-new-ieee-730-standard-on-software-quality-assurance](https://asq.org/quality-resources/articles/an-introduction-to-the-new-ieee-730-standard-on-software-quality-assurance)
-- IEEE Standards Association. [IEEE Standard for Software and System Test Documentation (829-2008), estandar sustituido](https://standards.ieee.org/ieee/829/3787/)
-- [Wikipedia: Software test documentation](https://en.wikipedia.org/wiki/Software_test_documentation). Resume los documentos de IEEE 829 con referencia al estándar primario.
-- [Wikipedia: ISO/IEC 29119](https://en.wikipedia.org/wiki/ISO/IEC_29119)
-- IEEE Standards Association. [ISO/IEC/IEEE International Standard, Systems and software engineering, Software life cycle processes (12207)](https://standards.ieee.org/ieee/12207/11416/)
-- [Wikipedia: ISO/IEC 12207](https://en.wikipedia.org/wiki/ISO/IEC_12207)
-- ISO. [ISO and IEEE strengthen partnership for development of international standards, 2008](https://www.iso.org/news/2008/04/Ref1125.html)
-- IEEE Computer Society. [Software and Systems Engineering Standards Committee (S2ESC)](https://www.computer.org/volunteering/boards-and-committees/standards-activities/committees/s2esc)
-- IEEE Computer Society. [Guide to the Software Engineering Body of Knowledge (SWEBOK)](https://www.computer.org/education/bodies-of-knowledge/software-engineering)
+- **IEEE.** Instituto de Ingenieros Eléctricos y Electrónicos, asociación profesional internacional.
+- **C/S2ESC.** Comité de normas de ingeniería de software y de sistemas de la IEEE Computer Society.
+- **Norma IEEE pura.** Norma que desarrolla y publica solo el IEEE.
+- **Norma conjunta ISO/IEC/IEEE.** Norma que desarrollan y publican el IEEE e ISO/IEC.
+- **Active.** Estado de una norma vigente en el IEEE.
+- **Superseded.** Estado de una norma sustituida por otra.
+- **Inactive-Reserved.** Estado de una norma que el IEEE ya no mantiene al día.
+- **SQA.** Aseguramiento de calidad del software: actividades que dan confianza en que el producto cumple sus requisitos.
+- **SQAP.** Plan de aseguramiento de calidad del software.
+- **Aseguramiento de producto.** Actividades que evalúan si el producto y su documentación cumplen los requisitos.
+- **Aseguramiento de proceso.** Actividades que evalúan si el proceso, el entorno, los proveedores y el personal cumplen lo planificado.
+- **Conformidad completa y ajustada.** Dos formas de declarar que se cumple IEEE 730: todas las actividades, o un subconjunto con justificación.
+- **Independencia del SQA.** Técnica, gerencial y financiera: separación del equipo que desarrolla.
+- **No conformidad.** Resultado que no coincide con lo esperado según el plan o el requisito.
+- **IEEE 829.** Norma de documentación de pruebas, sustituida por la familia 29119.
+- **ISO/IEC/IEEE 29119.** Familia de normas de pruebas de software.
+- **Informe de incidencia.** Documento que registra un resultado inesperado en una prueba.
+- **Criterio de salida.** Condición que debe cumplirse para dar por terminado un nivel de prueba.
+- **Análisis de valores límite.** Técnica que prueba los valores en el borde de un rango.
+- **ISO/IEC/IEEE 12207.** Norma de procesos del ciclo de vida del software.
+- **Proceso de acuerdo.** Proceso que regula la relación entre quien adquiere y quien suministra.
+- **Proceso habilitador de la organización.** Proceso que aplica a toda la organización.
+- **Proceso de gestión técnica.** Proceso que dirige y controla un proyecto.
+- **Proceso técnico.** Proceso que construye el producto.
+- **ISO/IEC/IEEE 29148.** Norma de ingeniería de requisitos.
+- **Requisito singular.** Requisito que dice una sola cosa.
+- **ISO/IEC/IEEE 24765.** Vocabulario de ingeniería de sistemas y de software.
+- **Armonización.** Alineación del texto de una norma con otra para que no se contradigan.
+
+## Bibliografía
+
+Normas del IEEE (fichas públicas, consultadas en octubre de 2026):
+
+- IEEE (2026). *IEEE Standard for Software Quality Assurance Processes*, IEEE Std 730-2026. [Ficha](https://standards.ieee.org/ieee/730/10854/).
+- IEEE (2014). *IEEE Standard for Software Quality Assurance Processes*, IEEE Std 730-2014. [Ficha](https://standards.ieee.org/ieee/730/5284/).
+- IEEE (2008). *IEEE Standard for Software and System Test Documentation*, IEEE Std 829-2008, sustituida. [Ficha](https://standards.ieee.org/ieee/829/3787/).
+- ISO/IEC/IEEE (2026). *Systems and software engineering, Software life cycle processes*, 12207:2026. [Ficha del IEEE](https://standards.ieee.org/ieee/12207/11416/).
+- ISO/IEC/IEEE (2018). *Systems and software engineering, Life cycle processes, Requirements engineering*, 29148:2018. [Ficha](https://standards.ieee.org/ieee/29148/6937/).
+- ISO/IEC/IEEE (2017). *Systems and software engineering, Vocabulary*, 24765:2017. [Ficha](https://standards.ieee.org/ieee/24765/6800/).
+- ISO/IEC/IEEE (2021 a 2024). *Software and systems engineering, Software testing*, 29119, partes 1 a 5. Ediciones: parte 1, 2022; partes 2, 3 y 4, 2021; parte 5, 2024. Texto de pago, consultado en catálogos de normas. Referencia secundaria: [arc42 Quality](https://quality.arc42.org/standards/iso-iec-ieee-29119).
+
+Otras fuentes:
+
+- IEEE Computer Society. [Software and Systems Engineering Standards Committee (S2ESC)](https://www.computer.org/volunteering/boards-and-committees/standards-activities/committees/s2esc).
+- Wikipedia. [ISO/IEC 29119](https://en.wikipedia.org/wiki/ISO/IEC_29119). Fuente secundaria sobre la historia de la familia y la petición de 2014.
+- Wikipedia. [ISO/IEC 12207](https://en.wikipedia.org/wiki/ISO/IEC_12207). Fuente secundaria sobre las ediciones históricas.
+
+Parte del contenido de IEEE 730-2026, de 29119-3, de 29148 y de 12207 es de pago y no se pudo leer. Los
+puntos que dependen de esos textos están marcados en cada parte.
 
 ::: {.pie-doc}
 Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.

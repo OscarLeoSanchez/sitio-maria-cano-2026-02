@@ -1,0 +1,1212 @@
+---
+title: "Tema 4. Actividades del SQA: revisiones, auditorías y gestión de configuración"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                          |
+|--------|--------------------------------------------------------------------------|
+| Unidad | Unidad 2. Procesos de calidad del software. Modelos y métricas           |
+| Tema   | Tema 4. Actividades del SQA: revisiones, auditorías y gestión de configuración |
+:::
+
+[Presentación interactiva de la unidad](../presentacion-interactiva.html){.btn-curso}
+
+Tema anterior: [Tema 3. Roles y habilidades del SQA](../tema-03-roles-habilidades/index.qmd).
+Tema siguiente: [Tema 5. Modelos y métricas de calidad](../tema-05-modelos-metricas/index.qmd).
+
+## Objetivo y resultado de aprendizaje
+
+Los temas anteriores explicaron qué es el aseguramiento de la calidad del software (SQA, por *software
+quality assurance*), en qué momentos del ciclo de vida actúa y quién lo hace. Este tema describe lo que
+el SQA hace día a día: revisa productos de trabajo, audita procesos, controla los cambios, sigue los
+defectos y mantiene la trazabilidad entre lo que se pidió y lo que se construyó.
+
+Al terminar puedes:
+
+- Distinguir una revisión informal, un walkthrough, una revisión técnica y una inspección, y elegir la que conviene a cada producto de trabajo.
+- Ejecutar una inspección con lista de verificación sobre un fragmento de código y registrar sus hallazgos.
+- Explicar cómo funciona una revisión de código moderna con *pull requests*, y fijar reglas para usar la inteligencia artificial (IA) como apoyo sin perder el criterio humano.
+- Diferenciar auditorías de proceso y de producto, internas y externas, y redactar un hallazgo con evidencia.
+- Aplicar la gestión de configuración: identificar elementos, fijar una línea base y llevar un cambio por su flujo de control.
+- Seguir un defecto por su ciclo de vida y calcular la eficacia de eliminación de defectos.
+- Construir una matriz de trazabilidad y encontrar sus huecos.
+- Decir en qué estado está cada norma citada (vigente, inactiva o reemplazada) a octubre de 2026.
+
+Prerrequisitos: los Temas 1 a 3 de esta unidad. Necesitas distinguir *defecto* de *falla*, y saber qué es
+un requisito y qué es una prueba. No se exige experiencia con Git, aunque ayuda: los ejemplos explican
+cada paso.
+
+## Ruta de estudio
+
+Son unas 7 horas de trabajo independiente. Puedes partirlas en tres o cuatro sesiones. La presentación
+interactiva de la unidad sigue estas mismas partes y en el mismo orden, así que sirve de repaso.
+
+::: {.calendario}
+| Parte | Qué haces | Tiempo |
+|---|---|---|
+| 1. Las actividades del SQA y cómo se apoyan | Lees el mapa de las seis actividades | 20 min |
+| 2. Revisiones | Lees los cuatro tipos y la norma, sigues la inspección resuelta y haces los Retos 1 y 2 | 80 min |
+| 3. Revisión de código moderna e IA | Lees el flujo de *pull request*, sigues el ejemplo de triaje y haces el Reto 3 | 60 min |
+| 4. Auditorías | Lees los tipos, sigues la auditoría resuelta y haces el Reto 4 | 50 min |
+| 5. Gestión de configuración | Lees las actividades, sigues el flujo de cambio con línea base y haces el Reto 5 | 70 min |
+| 6. Gestión de defectos | Lees el ciclo de vida, calculas la eficacia de eliminación y haces el Reto 6 | 50 min |
+| 7. Trazabilidad | Armas una matriz, encuentras sus huecos y haces el Reto 7 | 40 min |
+| 8. Cómo se conectan y cuándo se vuelven teatro | Lees el cierre y los errores frecuentes | 20 min |
+| Cierre | Autoevaluación y glosario | 30 min |
+:::
+
+## El hilo conductor: la app de turnos de la Clínica Aurora
+
+El curso usa una app ficticia que asigna turnos médicos. Su primer requisito dice que la app asigna hasta
+20 turnos por día a cada especialidad. En este tema la app pasa por todas las actividades del SQA: se
+inspecciona su código, se revisa un *pull request*, se audita su proceso, se fija su línea base, se
+siguen sus defectos y se traza cada requisito hasta su prueba. Ninguna cifra de la clínica es real.
+Cada número propio se marca como ilustrativo.
+
+Los requisitos que se usan en los ejemplos son estos.
+
+| Código | Requisito |
+|---|---|
+| R1 | La app asigna hasta 20 turnos por día a cada especialidad. |
+| R2 | Un paciente no puede tener dos turnos el mismo día en la misma especialidad. |
+| R3 | El paciente puede cancelar su turno. |
+| R4 | La app envía un recordatorio 24 horas antes del turno. |
+| R5 | Los datos del paciente se almacenan cifrados. |
+
+## Parte 1. Las actividades del SQA y cómo se apoyan
+
+En el Tema 1 viste que el SQA actúa sobre el proceso, y que el control de calidad verifica el producto.
+Esa vigilancia del proceso se concreta en seis actividades que se repiten en todo proyecto.
+
+- **Revisiones.** Un grupo examina un producto de trabajo antes de que avance a la fase siguiente.
+- **Revisión de código con *pull requests*.** Es la revisión de pares adaptada al trabajo diario con control de versiones.
+- **Auditorías.** Una persona ajena al equipo verifica que el proceso se cumple.
+- **Gestión de configuración.** Controla qué cambia, quién lo aprueba y qué versión se entregó.
+- **Gestión de defectos.** Registra cada defecto y lo sigue hasta que se corrige y se comprueba.
+- **Trazabilidad.** Conecta cada requisito con su diseño, su código y sus pruebas.
+
+Ninguna funciona sola. Una auditoría necesita los registros que deja la gestión de configuración. Una
+revisión que no se documenta no sirve como evidencia. Un defecto sin trazabilidad no dice qué requisito
+incumplió.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las seis actividades del SQA agrupadas en tres columnas, examinar, controlar y conectar, que producen evidencia registrada para las auditorias y para las metricas" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds24a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Seis actividades del SQA y la evidencia que dejan</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="36" width="220" height="86" rx="10"/><rect x="270" y="36" width="220" height="86" rx="10"/><rect x="520" y="36" width="220" height="86" rx="10"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="700" fill="#12324f"><text x="130" y="60">Examinar</text><text x="380" y="60">Controlar</text><text x="630" y="60">Conectar</text></g>
+  <g text-anchor="middle" font-size="11.5" fill="#5b6876"><text x="130" y="82">Revisiones</text><text x="130" y="98">Revisión de código</text><text x="130" y="114">Auditorías</text><text x="380" y="82">Gestión de configuración</text><text x="380" y="98">Gestión de defectos</text><text x="630" y="90">Trazabilidad</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds24a)"><path d="M130,122 C140,150 280,170 330,188"/><path d="M380,122 L380,186"/><path d="M630,122 C620,150 480,170 430,188"/></g>
+  <rect x="230" y="190" width="300" height="56" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="214" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Evidencia registrada</text>
+  <text x="380" y="232" font-size="11" fill="#3c7d7a" text-anchor="middle">actas, historial de cambios, defectos, matrices</text>
+</svg>
+
+:::
+
+## Parte 2. Revisiones
+
+### Qué es una revisión
+
+Una *revisión* es un examen estructurado de un producto de trabajo (un requisito, un diseño, un fragmento
+de código, un plan de pruebas) hecho por personas distintas de quien lo produjo. Busca defectos y
+discrepancias antes de que el producto avance. Tiene un segundo efecto que a veces pesa más que el
+primero: reparte conocimiento del sistema entre varias personas.
+
+Bacchelli y Bird (2013) estudiaron la revisión de código en Microsoft con observación, entrevistas y
+una encuesta. Encontraron que los desarrolladores esperan sobre todo hallar defectos, pero que las
+revisiones producen más beneficios de transferencia de conocimiento, conciencia del equipo y
+soluciones alternativas de lo que se esperaba. Ese resultado explica por qué el SQA no mide la
+revisión solo por el número de defectos que halla.
+
+### Los cuatro tipos que debes distinguir
+
+La literatura distingue cuatro niveles de formalidad. Se ordenan de menor a mayor número de roles, de
+reglas y de registro.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro tipos de revision ordenados por formalidad creciente, revision informal sin roles ni acta, walkthrough guiado por el autor, revision tecnica de pares expertos que evaluan idoneidad, e inspeccion con roles fijos, lista de verificacion y metricas" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds24b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cuatro tipos de revisión según su formalidad</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="40" width="165" height="96" rx="10"/><rect x="210" y="40" width="165" height="96" rx="10"/><rect x="400" y="40" width="165" height="96" rx="10"/></g>
+  <rect x="590" y="40" width="150" height="96" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="12.5" font-weight="700" fill="#12324f"><text x="102" y="64">Informal</text><text x="292" y="64">Walkthrough</text><text x="482" y="64">Revisión técnica</text></g>
+  <text x="665" y="64" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Inspección</text>
+  <g text-anchor="middle" font-size="10.8" fill="#5b6876"><text x="102" y="88">sin roles</text><text x="102" y="104">sin acta</text><text x="102" y="120">un colega mira</text><text x="292" y="88">lo guía el autor</text><text x="292" y="104">explica paso a paso</text><text x="292" y="120">los demás preguntan</text><text x="482" y="88">pares con criterio</text><text x="482" y="104">evalúan si el producto</text><text x="482" y="120">sirve para su uso</text><text x="665" y="88">roles fijos</text><text x="665" y="104">lista de verificación</text><text x="665" y="120">métricas y salida</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds24b)"><path d="M185,88 L208,88"/><path d="M375,88 L398,88"/><path d="M565,88 L588,88"/></g>
+  <line x1="20" y1="168" x2="740" y2="168" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds24b)"/>
+  <text x="380" y="192" font-size="11.5" fill="#5b6876" text-anchor="middle">más formalidad, más roles, más registro, más costo por revisión</text>
+</svg>
+
+:::
+
+- **Revisión informal.** Un colega mira tu trabajo cuando se lo pides, sin roles ni acta. Es barata y rápida, y por eso se usa mucho, pero no deja evidencia que una auditoría pueda leer.
+- **Walkthrough.** El autor presenta el producto paso a paso y los participantes preguntan y señalan problemas. Sirve para compartir comprensión y para detectar errores de entendimiento. Lo conduce quien lo escribió, así que el autor puede pasar por alto sus propios supuestos.
+- **Revisión técnica.** Un grupo de pares con la competencia necesaria evalúa si el producto es adecuado para su uso previsto y si respeta sus especificaciones y estándares. Suele producir un informe con decisiones.
+- **Inspección.** Es la técnica más formal. Tiene roles fijos, criterios de entrada y de salida, una lista de verificación y datos medidos. Su objetivo único es encontrar defectos de forma sistemática.
+
+### Qué dice la norma, y en qué estado está
+
+La norma clásica es IEEE Std 1028-2008, *IEEE Standard for Software Reviews and Audits*. Define cinco
+tipos: revisiones de gestión, revisiones técnicas, inspecciones, walkthroughs y auditorías. El IEEE
+publicó esa edición el 15 de agosto de 2008, y hoy la clasifica como *Inactive-Reserved* desde el 7 de
+noviembre de 2019. Eso significa que no se mantiene activamente, pero sigue siendo una referencia
+histórica válida de cómo se definen los tipos.
+
+La referencia internacional en vigor es ISO/IEC/IEEE 20246:2017, *Software and systems engineering,
+Work product reviews*. El catálogo de ISO la lista como confirmada en 2022. Establece un marco
+genérico de revisión de productos de trabajo, con proceso, actividades, tareas, técnicas y plantillas
+de documentación, aplicable a gestión, desarrollo, pruebas y mantenimiento.
+
+::: {.callout-note}
+## Sobre el acceso a las normas
+
+Las normas de IEEE e ISO son de pago, y este material no reproduce su texto. Las descripciones de esta
+guía parafrasean las fichas oficiales y la literatura académica. Para citar un requisito exacto de una
+norma, consulta su edición completa. El estado de cada norma se consultó el 3 de octubre de 2026.
+:::
+
+### El origen de la inspección y su proceso
+
+Michael Fagan formalizó la inspección en IBM y la publicó en 1976 en el *IBM Systems Journal*. Su
+proceso tiene seis pasos, que las normas posteriores conservan con matices.
+
+1. Planificación: el moderador verifica que el producto cumple los criterios de entrada, arma el equipo y fija la fecha.
+2. Introducción general (*overview*): el autor presenta el contexto, sin discutir defectos.
+3. Preparación individual: cada inspector estudia el producto por su cuenta con la lista de verificación.
+4. Reunión de inspección: se leen los puntos uno a uno y se registran los defectos sin discutir soluciones.
+5. Retrabajo: el autor corrige los defectos registrados.
+6. Seguimiento: el moderador confirma que cada defecto quedó corregido y decide si se cumple el criterio de salida.
+
+La IEEE 1028-2008 agrega a ese esquema la preparación de gestión, que asegura tiempo y recursos para
+la inspección, y las verificaciones explícitas de entrada y de salida.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Los seis pasos de la inspeccion de Fagan en secuencia, planificacion, introduccion general, preparacion individual, reunion de inspeccion, retrabajo y seguimiento, con la lista de defectos que pasa de la reunion al retrabajo y un criterio de salida al final" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds24c" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Los seis pasos de una inspección (Fagan, 1976)</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="50" width="108" height="64" rx="8"/><rect x="135" y="50" width="108" height="64" rx="8"/><rect x="260" y="50" width="108" height="64" rx="8"/><rect x="510" y="50" width="108" height="64" rx="8"/><rect x="635" y="50" width="108" height="64" rx="8"/></g>
+  <rect x="385" y="50" width="108" height="64" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="11" font-weight="600" fill="#12324f"><text x="64" y="76">1. Planificación</text><text x="189" y="76">2. Introducción</text><text x="314" y="76">3. Preparación</text><text x="314" y="92">individual</text><text x="564" y="76">5. Retrabajo</text><text x="689" y="76">6. Seguimiento</text></g>
+  <g text-anchor="middle" font-size="11" font-weight="700" fill="#0e6f6c"><text x="439" y="76">4. Reunión de</text><text x="439" y="92">inspección</text></g>
+  <g text-anchor="middle" font-size="10" fill="#5b6876"><text x="64" y="104">entrada y equipo</text><text x="189" y="92">el autor</text><text x="189" y="104">da contexto</text><text x="314" y="106">con checklist</text><text x="564" y="92">el autor</text><text x="564" y="104">corrige</text><text x="689" y="92">se verifica</text><text x="689" y="104">la salida</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds24c)"><path d="M118,82 L133,82"/><path d="M243,82 L258,82"/><path d="M368,82 L383,82"/><path d="M493,82 L508,82"/><path d="M618,82 L633,82"/></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="439" y="146">roles: moderador, lector, autor,</text><text x="439" y="162">registrador e inspectores</text><text x="564" y="146">la reunión entrega una</text><text x="564" y="162">lista de defectos, no soluciones</text></g>
+  <text x="380" y="206" font-size="11.5" fill="#5b6876" text-anchor="middle">sin preparación individual, la reunión se vuelve una lectura pasiva</text>
+</svg>
+
+:::
+
+La nota al pie del diagrama resume por qué conviene no saltar la preparación individual: sin ella, los
+inspectores llegan a la reunión sin haber leído el producto y la reunión no aporta defectos nuevos.
+
+### Los roles de una inspección
+
+- **Moderador.** Dirige el proceso, verifica entrada y salida, y vela por que la reunión no se vuelva una discusión de diseño.
+- **Autor.** Produjo el producto. Responde dudas y corrige después, y no defiende su trabajo durante la reunión.
+- **Lector.** Parafrasea el producto en voz alta, punto por punto, para fijar el ritmo.
+- **Registrador.** Anota cada defecto con su ubicación, su tipo y su gravedad.
+- **Inspectores.** Estudian el producto con la lista de verificación y señalan defectos.
+
+En un equipo pequeño una persona puede asumir dos roles, siempre que no sea el autor quien modere.
+
+### Qué se mide en una inspección
+
+El registrador deja datos con los que el SQA calcula tres números.
+
+- La tasa de inspección: cuántas líneas (o páginas) se revisan por hora.
+- La densidad de defectos hallados: defectos por cada mil líneas inspeccionadas.
+- El esfuerzo en horas-persona: preparación más reunión de todos los participantes.
+
+Los tres sirven para comparar inspecciones del mismo equipo entre sí, y se vuelven más útiles con la
+cantidad de inspecciones acumuladas. Con una sola inspección son un dato anecdótico.
+
+### Ejemplo resuelto 1. Inspección con lista de verificación de la app de turnos
+
+Un autor entrega para inspección el siguiente módulo de la Clínica Aurora. El requisito de referencia
+son R1, R2 y R3. El código se muestra con su número de línea en el comentario final para poder citarlo.
+
+```python
+LIMITE_TURNOS = 20                                        # L1
+
+def asignar_turno(agenda, especialidad, paciente):        # L3
+    turnos = agenda[especialidad]                         # L4
+    if len(turnos) > LIMITE_TURNOS:                       # L5
+        return None                                       # L6
+    turnos.append(paciente)                               # L7
+    return len(turnos)                                    # L8
+
+def cancelar_turno(agenda, especialidad, paciente):       # L10
+    agenda[especialidad].remove(paciente)                 # L11
+```
+
+El inspector usa esta lista de verificación, corta a propósito para que se pueda aplicar de memoria.
+
+| Código | Pregunta de la lista |
+|---|---|
+| C1 | ¿Cada requisito del producto está implementado? |
+| C2 | ¿Los límites y las comparaciones (`>`, `>=`, `<`) respetan el valor del requisito? |
+| C3 | ¿Qué pasa con las entradas que no existen o que están repetidas? |
+| C4 | ¿La función comunica por qué falló, o devuelve un valor ambiguo? |
+| C5 | ¿Hay una prueba para cada camino de la función? |
+
+**Paso 1. Planificación.** El moderador confirma que el código corre y que existe el requisito escrito.
+Reúne a tres personas: el autor, un inspector y el moderador, que también hace de registrador.
+
+**Paso 2. Preparación individual.** El inspector recorre las líneas con la lista y anota qué
+encuentra. Dedica 20 minutos.
+
+**Paso 3. Reunión.** El lector parafrasea el código y el registrador anota. Dura 30 minutos. El
+resultado es esta tabla.
+
+| Id | Línea | Lista | Hallazgo | Tipo | Gravedad |
+|---|---|---|---|---|---|
+| H1 | L5 | C2 | Con `>` la función acepta el turno 21: con 20 turnos, `20 > 20` es falso. Viola R1. | Lógica | Mayor |
+| H2 | L4 | C3 | Si la especialidad no existe en la agenda, `agenda[especialidad]` lanza `KeyError` sin control. | Entrada inválida | Mayor |
+| H3 | L7 | C1 | No hay verificación de paciente repetido. R2 no está implementado. | Omisión | Mayor |
+| H4 | L6 | C4 | Devolver `None` no dice si falló por cupo lleno o por otra causa. | Diseño | Menor |
+| H5 | L11 | C3 | Si el paciente no tiene turno, `remove` lanza `ValueError` sin control. | Entrada inválida | Mayor |
+
+**Paso 4. Cálculos.** El código inspeccionado tiene 9 líneas no vacías. Se hallaron 5 defectos, 4
+mayores y 1 menor.
+
+- Esfuerzo: preparación 1 inspector x 20 min = 20 min. Reunión 3 personas x 30 min = 90 min. Total 110 min = 1,83 horas-persona.
+- Defectos por hora-persona: 5 / 1,83 = 2,7.
+- Tasa de inspección: 9 líneas en 30 min de reunión = 18 líneas por hora. Es una cifra baja a propósito, porque el código es muy denso en reglas de negocio.
+
+Los números sirven solo como ejemplo. Con 9 líneas la densidad por cada mil líneas (5 / 9 x 1000 = 555)
+no significa nada, porque la muestra es minúscula. Una inspección real cubre cientos de líneas.
+
+**Paso 5. Retrabajo y seguimiento.** El autor corrige. La versión nueva queda así.
+
+```python
+def asignar_turno(agenda, especialidad, paciente):
+    if especialidad not in agenda:
+        raise ValueError("especialidad desconocida: " + especialidad)
+    turnos = agenda[especialidad]
+    if paciente in turnos:
+        raise ValueError("el paciente ya tiene turno en " + especialidad)
+    if len(turnos) >= LIMITE_TURNOS:
+        raise ValueError("sin cupo en " + especialidad)
+    turnos.append(paciente)
+    return len(turnos)
+```
+
+El moderador comprueba cada hallazgo contra el código nuevo. Con 20 turnos ya asignados, un paciente
+nuevo recibe "sin cupo en Pediatria", como pide R1. H1, H2, H3 y H4 quedan cerrados. H5 sigue abierto
+porque `cancelar_turno` no se modificó, y pasa al registro de defectos de la Parte 6.
+
+Lo que esta inspección habría tardado más en encontrar con pruebas es H3, porque nadie había
+escrito una prueba para R2. La lista de verificación la hizo aparecer al preguntar si cada requisito
+estaba implementado.
+
+::: {.callout-tip}
+## Reto 1. Clasifica el tipo de revisión
+
+Para cada situación de la clínica, elige el tipo de revisión que mejor encaja entre informal,
+walkthrough, revisión técnica e inspección, y justifica en una línea.
+
+1. Una desarrolladora duda de un nombre de variable y le pide a un colega que mire la función 5 minutos.
+2. El equipo necesita que todos entiendan el diseño del módulo de recordatorios (R4), y el arquitecto lo explica pantalla por pantalla mientras los demás preguntan.
+3. Antes de integrar el módulo de cifrado (R5) hace falta decidir si el diseño es adecuado para datos de salud, y se reúnen tres personas con experiencia en seguridad.
+4. El módulo de asignación de turnos es crítico para la clínica y el equipo quiere hallar la mayor cantidad posible de defectos, con registro de métricas.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+1. Revisión informal. Es una consulta puntual, sin roles ni registro.
+2. Walkthrough. Lo conduce el autor y el propósito es compartir comprensión, no certificar nada.
+3. Revisión técnica. Pares con la competencia evalúan si el diseño sirve para su uso previsto.
+4. Inspección. Hay un producto crítico, se busca hallar defectos de forma sistemática y se necesitan métricas.
+
+Si alguna respuesta difiere, revisa qué se pedía: compartir comprensión (walkthrough), evaluar
+idoneidad (revisión técnica) o hallar defectos con método (inspección).
+:::
+
+::: {.callout-tip}
+## Reto 2. Inspecciona una función propia
+
+Usa la lista C1 a C5 sobre esta función de la clínica, que cuenta los turnos libres de una especialidad.
+Anota al menos tres hallazgos con línea, código de la lista y gravedad, antes de abrir la solución.
+
+```python
+def turnos_libres(agenda, especialidad):
+    return LIMITE_TURNOS - len(agenda[especialidad]) + 1
+```
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+| Línea | Lista | Hallazgo | Gravedad |
+|---|---|---|---|
+| L2 | C2 | El `+ 1` hace que con 20 turnos asignados la función devuelva 1 turno libre cuando debería devolver 0. Contradice R1. | Mayor |
+| L2 | C3 | Si la especialidad no existe, `agenda[especialidad]` lanza `KeyError` sin control. | Mayor |
+| L2 | C2 | Si por el defecto de la asignación original hubiera 21 turnos, la función devolvería 0 y ocultaría el sobrecupo, cuando lo correcto sería señalarlo. | Menor |
+| Toda | C5 | No hay prueba que cubra el caso de agenda llena. | Menor |
+
+Con una agenda vacía la función devuelve 21 en lugar de 20, que es la evidencia más simple del
+`+ 1` sobrante. Cualquier combinación de al menos tres hallazgos válidos con su evidencia sirve.
+:::
+
+## Parte 3. Revisión de código moderna con *pull requests* e IA como apoyo
+
+### Qué es y por qué desplazó a la inspección
+
+Casi ningún equipo actual reúne a cinco personas durante dos horas para inspeccionar código. La
+práctica dominante es la *revisión de código moderna* (en inglés *modern code review*): un cambio
+pequeño se propone, otra persona lo lee en su propio tiempo, comenta, y el cambio se integra cuando la
+persona aprueba. En plataformas como GitHub, ese cambio propuesto se llama *pull request* (PR).
+
+La revisión de pares sigue siendo la misma actividad de la Parte 2. Cambia el medio: es asíncrona,
+ocurre sobre la diferencia entre dos versiones y puede apoyarse en comprobaciones automáticas.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flujo de un pull request, rama de trabajo, apertura del pull request, verificaciones automaticas, revision humana con apoyo opcional de IA, y fusion a la rama principal con etiqueta de version" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds24d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Flujo de un pull request</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="44" width="125" height="70" rx="10"/><rect x="160" y="44" width="125" height="70" rx="10"/><rect x="310" y="44" width="125" height="70" rx="10"/><rect x="610" y="44" width="125" height="70" rx="10"/></g>
+  <rect x="460" y="44" width="125" height="70" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#12324f"><text x="72" y="68">1. Rama</text><text x="222" y="68">2. Pull request</text><text x="372" y="68">3. Verificaciones</text><text x="672" y="68">5. Fusión</text></g>
+  <text x="522" y="68" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">4. Revisión</text>
+  <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="72" y="88">un cambio</text><text x="72" y="102">pequeño</text><text x="222" y="88">descripción y</text><text x="222" y="102">enlace al requisito</text><text x="372" y="88">pruebas y análisis</text><text x="372" y="102">estático automáticos</text><text x="522" y="88">una persona decide;</text><text x="522" y="102">la IA solo apoya</text><text x="672" y="88">a la rama principal</text><text x="672" y="102">con trazabilidad</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cds24d)"><path d="M135,79 L158,79"/><path d="M285,79 L308,79"/><path d="M435,79 L458,79"/><path d="M585,79 L608,79"/></g>
+  <path d="M522,114 C522,160 222,160 222,116" fill="none" stroke="#8fb3d1" stroke-width="1.5" stroke-dasharray="5 5" marker-end="url(#cds24d)"/>
+  <text x="372" y="182" font-size="11" fill="#5b6876" text-anchor="middle">si hay comentarios, el autor corrige y el ciclo se repite</text>
+</svg>
+
+:::
+
+### Qué controla la plataforma
+
+Las plataformas permiten convertir las reglas de revisión en condiciones técnicas de la rama principal.
+La documentación de GitHub sobre ramas protegidas describe estas reglas.
+
+- Exigir un número de aprobaciones antes de fusionar un PR.
+- Invalidar las aprobaciones cuando se suben commits que cambian la diferencia, para que lo aprobado sea lo que se fusiona.
+- Exigir la aprobación del dueño del código (*code owner*) cuando el PR toca archivos que tienen uno asignado.
+- Exigir que las verificaciones de estado requeridas terminen con éxito antes de fusionar.
+- Bloquear por defecto los empujes forzados (*force push*) a las ramas protegidas.
+
+Esas reglas son la forma moderna de aplicar el control de configuración de la Parte 5: nadie modifica
+la rama principal sin pasar por una revisión que deja registro.
+
+### Qué hace buena a una revisión
+
+La guía de revisión de código de Google parte de un principio: el revisor debe aprobar un cambio en
+cuanto mejora de forma definida la salud general del código, aunque no sea perfecto. La perfección
+no existe, y exigirla frena al equipo. Los comentarios de estilo menor se marcan como tales y no
+bloquean la aprobación.
+
+De ahí salen prácticas concretas.
+
+- Cambios pequeños. Un estudio de SmartBear sobre un equipo de Cisco, que informa de unas 2500 revisiones, recomienda no revisar más de 200 a 400 líneas por vez. Es un estudio de un proveedor de herramientas sobre un solo equipo, así que se toma como regla práctica, no como ley.
+- Descripción clara. El PR dice qué cambia, por qué y a qué requisito responde.
+- Revisión con sentido. El revisor busca el comportamiento incorrecto, no solo el estilo, que debe quedar en manos de un formateador automático.
+- Respuesta oportuna. Un PR olvidado bloquea a quien lo escribió.
+
+### La IA como apoyo en la revisión
+
+Los asistentes de IA pueden leer un PR y proponer comentarios. La documentación de GitHub sobre su
+revisión de código con Copilot dice que la herramienta no garantiza detectar todos los problemas, que a
+veces se equivoca, que se debe validar su retroalimentación y que conviene complementarla con revisión
+humana. Esa misma documentación indica que, por defecto, sus revisiones no cuentan como aprobaciones
+requeridas, y que si se habilita que cuenten, la aprobación se descarta al subir nuevos commits.
+
+La investigación va en la misma dirección. Jin y Chen (2026) midieron la confiabilidad de modelos de
+lenguaje al juzgar si un código cumple un requisito en lenguaje natural. Encontraron que los modelos
+con frecuencia clasifican como defectuoso un código correcto, y que los prompts más detallados, que
+piden explicaciones y correcciones, producen más errores de juicio. Los autores proponen validar las
+correcciones sugeridas con pruebas antes de confiar en ellas.
+
+Los riesgos de usar IA como revisora se agrupan así.
+
+- Falsos positivos: comentarios que parecen razonables sobre código que está bien, y que consumen tiempo o introducen cambios innecesarios.
+- Falsos negativos: defectos que la herramienta no ve y que el equipo da por revisados.
+- Confianza excesiva: aceptar el comentario porque está bien redactado, aunque no se haya comprobado.
+- Datos: enviar a un servicio externo código o datos de pacientes. En la clínica, los datos de salud son datos sensibles según la Ley 1581 de 2012, así que no se pegan en una herramienta externa sin una decisión explícita de la organización.
+- Responsabilidad difusa: si nadie humano aprobó, nadie respondió por el cambio.
+
+### Reglas para usar la IA en una revisión
+
+1. La IA hace una primera pasada. Una persona revisa siempre y es quien aprueba.
+2. Cada comentario de la IA se comprueba con una prueba, con la ejecución del código o con la lectura del requisito, antes de aceptarlo o descartarlo.
+3. La aprobación de una herramienta no sustituye la aprobación requerida por la rama protegida.
+4. No se envían datos reales de pacientes ni secretos (claves, contraseñas) a ningún servicio externo.
+5. El PR indica si hubo apoyo de IA, para que quien audite sepa qué se revisó y cómo.
+
+### Ejemplo resuelto 2. Triaje de comentarios de IA en un PR de la clínica
+
+El PR corrige el hallazgo H1 de la inspección: cambia `>` por `>=` y agrega una prueba. Un asistente de
+IA deja cuatro comentarios. El revisor humano los trata uno a uno.
+
+| Comentario de la IA | Comprobación | Decisión |
+|---|---|---|
+| 1. "Usa `>=` en lugar de `>` en la línea del límite." | Con 20 turnos, `20 >= 20` es verdadero y rechaza el 21. La prueba nueva lo confirma. | Aceptar. Ya está en el PR. |
+| 2. "Cambia `LIMITE_TURNOS` a 21 para permitir un turno de reserva." | R1 dice 20. No hay requisito de reserva. | Rechazar. Contradice el requisito. |
+| 3. "La función puede lanzar `KeyError` si la especialidad no existe." | Es correcto: es el hallazgo H2 de la inspección, y se corrigió con la validación. | Aceptar y enlazar al hallazgo. |
+| 4. "Se debería registrar cada asignación en un log." | R1 a R5 no lo piden. Podría ser útil, pero amplía el alcance. | Diferir. Se abre una solicitud de cambio separada. |
+
+Resultado: 2 comentarios aceptados, 1 rechazado, 1 diferido. El revisor humano aprueba el PR y deja
+anotado que el comentario 2 contradecía R1. Si el equipo hubiera aceptado todo, el sistema habría
+quedado con 21 turnos de límite, que es precisamente el defecto que el PR corregía.
+
+::: {.callout-tip}
+## Reto 3. Decide sobre los comentarios de una IA
+
+Otro PR de la clínica agrega el recordatorio de R4. La IA deja estos tres comentarios. Para cada uno
+decide aceptar, rechazar o diferir, y di qué comprobación harías.
+
+1. "El recordatorio se envía 24 horas antes, pero tu código usa `timedelta(hours=24)`. Cámbialo a 48."
+2. "Usa una consulta parametrizada en lugar de armar el SQL con una cadena de texto."
+3. "Sube un archivo de ejemplo con 50 pacientes reales para que el asistente pruebe mejor."
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+1. Rechazar. R4 pide 24 horas y el código ya cumple. Se comprueba leyendo el requisito.
+2. Aceptar tras comprobar. Armar SQL por concatenación abre la puerta a inyección SQL. Se verifica leyendo la consulta y se agrega una prueba con una entrada maliciosa.
+3. Rechazar sin discusión. Son datos reales de salud, sensibles según la Ley 1581 de 2012. Se usan datos ficticios.
+
+El tercer comentario muestra por qué la regla 4 existe: una sugerencia útil en apariencia puede
+proponer una acción que viola una obligación legal.
+:::
+
+## Parte 4. Auditorías
+
+### Qué es una auditoría
+
+Una *auditoría* es una evaluación independiente de productos o procesos para verificar que cumplen
+estándares, procedimientos o contratos. La palabra clave es independiente: el auditor no pertenece al
+equipo que se audita, y por eso no depende de su autoevaluación. La IEEE 1028-2008 la incluye como uno
+de sus cinco tipos, y la ISO 19011 ofrece las directrices generales de auditoría de sistemas de gestión.
+
+La diferencia con una revisión de pares está en quién actúa y con qué autoridad. Un compañero que
+inspecciona busca defectos técnicos y discute su criterio con el autor. Un auditor compara lo que se
+hace contra lo que se dijo que se haría, y su hallazgo se apoya en evidencia objetiva.
+
+### Tipos de auditoría
+
+La clasificación se cruza en dos ejes: qué se audita y quién audita.
+
+| Eje | Tipo | Qué significa | Ejemplo en la clínica |
+|---|---|---|---|
+| Qué se audita | De proceso | Verifica que el equipo sigue el procedimiento definido. | Revisar si los PR se aprobaron antes de fusionar. |
+| Qué se audita | De producto | Verifica que el producto entregado cumple sus requisitos y su documentación. | Comparar la versión entregada con los requisitos R1 a R5. |
+| Quién audita | Interna | La hace la propia organización con personal independiente del equipo auditado. | El área de calidad audita al equipo de desarrollo. |
+| Quién audita | Externa | La hace una parte ajena: el cliente, o una entidad certificadora. | La clínica audita al proveedor de software, o una certificadora audita al proveedor. |
+
+En el lenguaje de las normas de sistemas de gestión es común hablar de auditorías de primera parte (la
+organización a sí misma), de segunda parte (un cliente a su proveedor) y de tercera parte (un
+organismo independiente, como en una certificación).
+
+### Estado de ISO 19011
+
+La referencia general para auditar sistemas de gestión es ISO 19011. La edición de 2018, la tercera,
+fue la vigente durante años. La cuarta edición, ISO 19011:2026, publicada en mayo de 2026 según la
+ficha de ISO, reemplaza a la de 2018 y amplía la guía sobre auditoría remota y evidencia digital.
+
+### Cómo se hace una auditoría
+
+1. Programa y alcance. Se define qué se audita, contra qué criterio (norma, procedimiento o contrato) y en qué periodo.
+2. Planificación. Se asigna el auditor, se avisa al auditado y se prepara la lista de verificación de la auditoría.
+3. Reunión de apertura. Se confirma el alcance y el calendario con el auditado.
+4. Recolección de evidencia. Se obtiene por entrevistas, observación y revisión de documentos y registros, y se toma una muestra, no todo.
+5. Hallazgos. Cada hallazgo declara el criterio, la evidencia y si hay conformidad o no conformidad.
+6. Informe y reunión de cierre. Se presentan los hallazgos al auditado.
+7. Seguimiento. El auditado define acciones correctivas, y se verifica después que se cumplieron.
+
+Una buena redacción de hallazgo tiene tres partes: el criterio que se esperaba, la evidencia observada
+y la conclusión. Sin la evidencia, el hallazgo es una opinión.
+
+Muchas entidades certificadoras clasifican las no conformidades en mayores y menores, según afecten
+la capacidad del sistema de lograr sus resultados. Esa clasificación es una práctica habitual de la
+certificación, y cada organismo define su criterio.
+
+### Ejemplo resuelto 3. Auditoría de proceso de los PR de la clínica
+
+La Clínica Aurora tiene un procedimiento con tres reglas: (a) todo PR se aprueba por al menos una
+persona distinta del autor antes de fusionar, (b) todo PR enlaza al requisito o a la solicitud de
+cambio que lo origina, (c) todo PR pasa las pruebas automáticas antes de fusionar. El área de calidad
+audita una muestra de 10 PR fusionados en el último mes. Todos los datos son ilustrativos.
+
+| PR | (a) Aprobado por otra persona | (b) Enlaza al requisito | (c) Pruebas en verde |
+|---|---|---|---|
+| 101 | Sí | Sí | Sí |
+| 102 | Sí | Sí | Sí |
+| 103 | Sí | No | Sí |
+| 104 | No | Sí | Sí |
+| 105 | Sí | Sí | Sí |
+| 106 | Sí | No | Sí |
+| 107 | Sí | Sí | Sí |
+| 108 | Sí | Sí | No |
+| 109 | Sí | Sí | Sí |
+| 110 | Sí | No | Sí |
+
+Conformidad por regla: (a) 9 de 10 = 90 %, (b) 7 de 10 = 70 %, (c) 9 de 10 = 90 %.
+
+Conformidad total, es decir, los PR que cumplen las tres reglas a la vez: 101, 102, 105, 107 y 109,
+son 5 de 10 = 50 %.
+
+Hallazgos redactados.
+
+- H-A1. Criterio: la regla (b) exige enlace al requisito. Evidencia: los PR 103, 106 y 110 no tienen enlace. Conclusión: no conformidad en 3 de 10 PR. Es la regla más incumplida, y afecta la trazabilidad de la Parte 7.
+- H-A2. Criterio: la regla (a) exige aprobación de otra persona. Evidencia: el PR 104 lo fusionó su propio autor. Conclusión: no conformidad aislada, pero grave porque anula el control.
+- H-A3. Criterio: la regla (c) exige pruebas en verde. Evidencia: el PR 108 se fusionó con pruebas fallidas. Conclusión: no conformidad aislada. Conviene revisar si la rama protegida exige esa verificación, porque si lo hiciera, el PR 108 no habría podido fusionarse.
+
+El hallazgo H-A3 muestra el valor de la auditoría de proceso: no solo detecta el incumplimiento, apunta
+a una falla del control técnico. La acción correctiva razonable es configurar la rama protegida para
+exigir las verificaciones, en vez de pedir al equipo que "se acuerde".
+
+La muestra de 10 PR no permite afirmar el nivel de conformidad de todo el proyecto con precisión. Una
+auditoría real elige la muestra con un criterio definido y declara su tamaño y su método.
+
+::: {.callout-tip}
+## Reto 4. Redacta un hallazgo
+
+Un auditor revisa los registros de la inspección de la Parte 2. El procedimiento exige que toda
+inspección deje una lista de defectos con gravedad y un registro de seguimiento. El auditor encuentra
+que de 6 inspecciones del trimestre, 4 tienen lista de defectos con gravedad y registro de seguimiento,
+1 tiene lista sin gravedad, y 1 no tiene acta. Calcula el porcentaje de conformidad y redacta un
+hallazgo con sus tres partes.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+Conformidad: 4 de 6 = 66,7 %. Las 2 inspecciones restantes no cumplen el procedimiento.
+
+Hallazgo posible. Criterio: el procedimiento exige que toda inspección deje una lista de defectos con
+gravedad y un registro de seguimiento. Evidencia: de 6 inspecciones del trimestre, una tiene lista sin
+gravedad y otra no tiene acta. Conclusión: no conformidad en 2 de 6 inspecciones (33,3 %), con riesgo de
+que defectos hallados no se sigan hasta su cierre.
+
+Una redacción correcta nombra el criterio, cuenta la evidencia y no atribuye culpa a una persona.
+:::
+
+## Parte 5. Gestión de configuración
+
+### Qué es y para qué sirve
+
+La *gestión de configuración del software* (SCM, por *software configuration management*) controla
+cómo cambia un sistema a lo largo de su vida. Responde cuatro preguntas en cualquier momento. Qué piezas
+componen este sistema. Qué versión de cada pieza se entregó. Quién aprobó cada cambio. Y si lo que se
+entregó coincide con lo que se aprobó.
+
+### Qué dicen las normas, y en qué estado están
+
+Tres documentos dan el marco, y conviene no confundirlos.
+
+- IEEE Std 828-2012, *IEEE Standard for Configuration Management in Systems and Software Engineering*. El IEEE la publicó el 16 de marzo de 2012 y la clasifica como *Inactive-Reserved* desde el 30 de marzo de 2023. Su página indica que reemplazó a la IEEE 828-2005 y que apoya a las normas ISO/IEC/IEEE 12207:2008 y 15288:2008. Hay un grupo de trabajo (P828) que desarrolla una nueva edición, y a octubre de 2026 no se verificó que se haya publicado.
+- ISO 10007:2017, *Quality management, Guidelines for configuration management*. ISO la publicó el 6 de abril de 2017, reemplaza a la edición de 2003 y es una guía, no una norma certificable. Describe el proceso en cinco partes: planificación de la gestión de configuración, identificación, control de cambios, contabilidad del estado y auditoría de configuración.
+- Los procesos de ciclo de vida ISO/IEC/IEEE 12207 (software) e ISO/IEC/IEEE 15288 (sistemas) incluyen un proceso de gestión de configuración. La 15288 tiene edición de 2023. Para la 12207, la ficha de IEEE registra una segunda edición, ISO/IEC/IEEE 12207:2026, publicada el 15 de abril de 2026.
+
+Como la IEEE 828-2012 está inactiva y su sucesora no se verificó, esta guía usa las cinco actividades de
+ISO 10007 como esquema principal, que coinciden en esencia con las que la IEEE 828 y la literatura
+clásica nombran.
+
+### Las cinco actividades
+
+- **Planificación.** Define qué se gestionará, con qué herramientas, con qué roles y con qué reglas de nombre y versión. Se documenta en un plan de gestión de configuración.
+- **Identificación.** Decide qué piezas son *elementos de configuración* (EC), les da un identificador único y fija las *líneas base*.
+- **Control de cambios.** Todo cambio a un elemento bajo línea base pasa por una solicitud, un análisis de impacto, una decisión y una implementación controlada.
+- **Contabilidad del estado.** Registra y reporta el estado de cada elemento: su versión actual, su estado y qué cambios están pendientes.
+- **Auditoría de configuración.** Verifica que el conjunto de elementos coincide con lo que dicen los requisitos, la documentación y los cambios aprobados.
+
+### Elementos, versiones y líneas base
+
+- **Elemento de configuración (EC).** Una pieza que se controla como unidad: un documento de requisitos, un módulo de código, un script de despliegue, un manual, un conjunto de pruebas.
+- **Versión.** El estado de un EC en un momento, con identificador (por ejemplo `v1.0.0`).
+- **Línea base (*baseline*).** Un conjunto de EC en versiones acordadas y revisadas, que sirve de punto de partida estable. Tras fijarla, un cambio solo se hace por el control de cambios.
+- **Rama (*branch*).** Una línea de trabajo paralela, usada para desarrollar un cambio sin tocar la línea base.
+- **Etiqueta (*tag*).** Un nombre fijo para un punto de la historia. En Git, una etiqueta es la forma habitual de marcar una línea base.
+- **Solicitud de cambio (SC).** El registro formal de que alguien pide modificar un EC.
+- **Comité de control de cambios (CCB, por *change control board*).** Quien decide si una SC se aprueba, se rechaza o se difiere. En un equipo pequeño puede ser una sola persona con ese rol.
+
+### El flujo de un cambio
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flujo de un cambio sobre una linea base, linea base inicial, solicitud de cambio, analisis de impacto, decision del comite, implementacion en rama con pull request, y nueva linea base, con la contabilidad del estado registrando cada paso y la auditoria de configuracion comparando la nueva linea base con lo aprobado" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds24e" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Un cambio recorre la línea base</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="44" width="108" height="70" rx="8"/><rect x="135" y="44" width="108" height="70" rx="8"/><rect x="260" y="44" width="108" height="70" rx="8"/><rect x="385" y="44" width="108" height="70" rx="8"/><rect x="510" y="44" width="108" height="70" rx="8"/></g>
+  <rect x="635" y="44" width="108" height="70" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="11" font-weight="700" fill="#12324f"><text x="64" y="68">Línea base</text><text x="64" y="84">BL-1</text><text x="189" y="68">Solicitud</text><text x="189" y="84">de cambio</text><text x="314" y="68">Análisis</text><text x="314" y="84">de impacto</text><text x="439" y="68">Decisión</text><text x="439" y="84">del CCB</text><text x="564" y="68">Rama, PR</text><text x="564" y="84">y pruebas</text></g>
+  <g text-anchor="middle" font-size="11" font-weight="700" fill="#0e6f6c"><text x="689" y="68">Línea base</text><text x="689" y="84">BL-2</text></g>
+  <g text-anchor="middle" font-size="10" fill="#5b6876"><text x="64" y="102">v1.0.0</text><text x="189" y="102">SC-014</text><text x="314" y="102">qué cambia</text><text x="439" y="102">aprueba o no</text><text x="564" y="102">cambio controlado</text><text x="689" y="102">v1.1.0</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds24e)"><path d="M118,79 L133,79"/><path d="M243,79 L258,79"/><path d="M368,79 L383,79"/><path d="M493,79 L508,79"/><path d="M618,79 L633,79"/></g>
+  <rect x="10" y="150" width="480" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="250" y="174" font-size="11.5" fill="#12324f" text-anchor="middle">Contabilidad del estado: registra cada paso, quién y cuándo</text>
+  <rect x="510" y="150" width="233" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="626" y="174" font-size="11.5" fill="#12324f" text-anchor="middle">Auditoría: BL-2 contra lo aprobado</text>
+  <text x="380" y="226" font-size="11.5" fill="#5b6876" text-anchor="middle">nadie modifica un elemento bajo línea base sin pasar por la solicitud y la decisión</text>
+</svg>
+
+:::
+
+### Ejemplo resuelto 4. Un flujo de cambio con línea base en la app de turnos
+
+La Clínica Aurora tiene la versión `v1.0.0` en producción. Todos los datos son ilustrativos.
+
+**Paso 1. Identificar y fijar la línea base BL-1.** El plan de gestión de configuración decide que
+estos cinco son los elementos de configuración.
+
+| EC | Elemento | Versión en BL-1 |
+|---|---|---|
+| EC-1 | Documento de requisitos | 1.2 |
+| EC-2 | Módulo de asignación de turnos | 1.0.0 |
+| EC-3 | Pruebas automáticas | 1.0.0 |
+| EC-4 | Configuración de despliegue | 1.0.0 |
+| EC-5 | Manual de recepción | 1.1 |
+
+El equipo etiqueta el repositorio como `v1.0.0`. Esa etiqueta es BL-1.
+
+**Paso 2. Solicitud de cambio.** La coordinadora de Pediatría pide subir el límite de turnos diarios de
+Pediatría a 25. Queda registrada como SC-014, con quién la pide, por qué y a qué requisito afecta: R1.
+
+**Paso 3. Análisis de impacto.** El equipo revisa qué elementos de BL-1 se tocan.
+
+| EC | Cambia | Motivo |
+|---|---|---|
+| EC-1 | Sí | R1 debe distinguir Pediatría con 25 turnos. |
+| EC-2 | Sí | El límite pasa de una constante a un valor por especialidad. |
+| EC-3 | Sí | Las pruebas de límite necesitan el caso de Pediatría. |
+| EC-4 | No | Ninguna configuración cambia. |
+| EC-5 | Sí | El manual menciona el límite de 20. |
+
+Impacto: 4 de 5 elementos. Esfuerzo estimado: 6 horas. Riesgo: otros módulos que lean la constante
+`LIMITE_TURNOS` dejarían de funcionar, así que hay que buscarlos antes de implementar.
+
+**Paso 4. Decisión del CCB.** El comité aprueba la SC-014 con una condición: las pruebas existentes
+de las otras especialidades deben seguir en verde. Queda registrada la decisión, la fecha y la
+condición.
+
+**Paso 5. Implementación controlada.** Se crea una rama, se hace el cambio, se abre un PR que enlaza a la
+SC-014, y pasa por el flujo de la Parte 3: pruebas automáticas y revisión humana. La rama protegida
+impide fusionar sin esos pasos.
+
+**Paso 6. Nueva línea base BL-2.** Tras la fusión se etiqueta `v1.1.0`.
+
+| EC | Versión en BL-1 | Versión en BL-2 | Cambió |
+|---|---|---|---|
+| EC-1 | 1.2 | 1.3 | Sí |
+| EC-2 | 1.0.0 | 1.1.0 | Sí |
+| EC-3 | 1.0.0 | 1.1.0 | Sí |
+| EC-4 | 1.0.0 | 1.1.0 | Sí |
+| EC-5 | 1.1 | 1.2 | Sí |
+
+**Paso 7. Auditoría de configuración.** El auditor compara BL-2 con la SC-014 aprobada. El análisis de
+impacto aprobó el cambio de 4 elementos, y BL-2 muestra 5 elementos cambiados. EC-4, la configuración
+de despliegue, cambió sin estar en la solicitud.
+
+Esto es un hallazgo de auditoría de configuración: hay un cambio no autorizado en un elemento bajo
+línea base. Puede ser inocente, por ejemplo un ajuste que alguien hizo en la misma rama, pero sin
+registro nadie sabe qué cambió ni por qué. La acción correctiva es revisar la diferencia de EC-4,
+decidir si se aprueba retroactivamente con una SC propia o se revierte, y reforzar la regla de que un PR
+solo toca los elementos de su solicitud.
+
+**Paso 8. Contabilidad del estado.** Al cierre, el registro puede responder: SC-014 aprobada por el CCB,
+implementada en el PR correspondiente, entregada en `v1.1.0`, con un hallazgo abierto sobre EC-4.
+
+::: {.callout-tip}
+## Reto 5. Analiza un cambio
+
+El equipo recibe la SC-015: "agregar la especialidad Dermatología con límite de 15 turnos". Usa los
+cinco elementos de configuración del ejemplo. Indica cuáles se afectan, estima el impacto como
+fracción de elementos, y escribe la condición que pondrías al aprobarla.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+- EC-1, requisitos: sí, R1 debe listar Dermatología con 15.
+- EC-2, módulo de asignación: sí, hay que agregar la especialidad y su límite.
+- EC-3, pruebas: sí, se necesita una prueba del límite de 15.
+- EC-4, configuración de despliegue: depende. Si las especialidades viven en un archivo de configuración, sí. Si están en el código, no. Ese dato se verifica antes de decidir.
+- EC-5, manual de recepción: sí, la recepción debe saber que existe una especialidad nueva.
+
+Impacto: 4 de 5 elementos si la configuración no cambia, o 5 de 5 si cambia. Una condición razonable:
+las pruebas de todas las especialidades anteriores deben seguir en verde, y el manual debe
+actualizarse en la misma versión.
+:::
+
+## Parte 6. Gestión de defectos
+
+### Error, defecto y falla
+
+Tres palabras se usan como si fueran una sola, y el SQA las separa.
+
+- **Error.** Una equivocación humana, por ejemplo escribir `>` donde el requisito pedía `>=`.
+- **Defecto.** El resultado del error en un producto de trabajo: la línea de código con el `>` incorrecto.
+- **Falla.** El comportamiento incorrecto que aparece al ejecutar el producto: el paciente 21 recibe turno.
+
+Un defecto puede existir sin producir una falla, mientras nadie ejecute el camino que lo activa. La
+gestión de defectos registra los defectos y las fallas observadas, y los sigue hasta cerrarlos.
+
+### Qué lleva un reporte de defecto
+
+Un reporte útil permite que otra persona lo reproduzca sin preguntar. Lleva estos campos.
+
+- Identificador y título corto.
+- Pasos para reproducir, resultado esperado y resultado obtenido.
+- Entorno y versión donde apareció.
+- Gravedad (*severity*): cuánto daña al sistema o al usuario.
+- Prioridad: qué tan pronto debe corregirse. Es una decisión de gestión, y puede diferir de la gravedad.
+- Estado y responsable.
+- Requisito afectado, que conecta el defecto con la trazabilidad de la Parte 7.
+- Versión en que se corrigió.
+- Causa raíz, cuando ya se conoce.
+
+Gravedad y prioridad no son lo mismo. Un defecto de gravedad alta en una función que nadie usa puede tener
+prioridad baja. Un defecto menor en la pantalla de inicio, justo antes de una demostración al cliente,
+puede tener prioridad alta.
+
+### Ciclo de vida de un defecto
+
+Cada herramienta nombra los estados a su manera, y cada equipo adapta el flujo. El modelo siguiente es
+el típico, y sirve para entender cualquier variante.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ciclo de vida de un defecto, nuevo, confirmado, en correccion, corregido, verificado y cerrado, con salidas laterales rechazado o duplicado, diferido, y reabierto que vuelve a en correccion" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="cds24f" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Ciclo de vida típico de un defecto</text>
+  <g fill="#fbeae5" stroke="#e0a595"><rect x="10" y="44" width="108" height="50" rx="8"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="135" y="44" width="108" height="50" rx="8"/><rect x="260" y="44" width="108" height="50" rx="8"/><rect x="385" y="44" width="108" height="50" rx="8"/><rect x="510" y="44" width="108" height="50" rx="8"/></g>
+  <rect x="635" y="44" width="108" height="50" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="11.5" font-weight="700" fill="#12324f"><text x="64" y="74">Nuevo</text><text x="189" y="74">Confirmado</text><text x="314" y="74">En corrección</text><text x="439" y="74">Corregido</text><text x="564" y="74">Verificado</text></g>
+  <text x="689" y="74" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Cerrado</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cds24f)"><path d="M118,69 L133,69"/><path d="M243,69 L258,69"/><path d="M368,69 L383,69"/><path d="M493,69 L508,69"/><path d="M618,69 L633,69"/></g>
+  <g fill="#f5f7fa" stroke="#cfd8e3"><rect x="40" y="150" width="150" height="46" rx="8"/><rect x="215" y="150" width="130" height="46" rx="8"/><rect x="500" y="150" width="130" height="46" rx="8"/></g>
+  <g text-anchor="middle" font-size="11" font-weight="600" fill="#12324f"><text x="115" y="170">Rechazado</text><text x="115" y="186">o duplicado</text><text x="280" y="170">Diferido</text><text x="280" y="186">a otra versión</text><text x="565" y="170">Reabierto</text><text x="565" y="186">la prueba falla</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#cds24f)"><path d="M110,94 C100,120 110,130 112,148"/><path d="M200,94 C240,120 270,130 278,148"/><path d="M564,94 L564,148"/><path d="M500,172 C420,190 330,150 322,96"/></g>
+  <text x="380" y="226" font-size="11" fill="#5b6876" text-anchor="middle">un defecto se cierra solo después de que alguien distinto de quien lo corrigió lo verifica</text>
+</svg>
+
+:::
+
+Las reglas que conviene respetar son pocas. Alguien confirma el defecto antes de corregirlo, para evitar
+trabajar sobre un reporte erróneo. El estado "rechazado o duplicado" exige anotar el motivo o el
+reporte original. Quien verifica no es quien corrigió. Y un defecto reabierto vuelve a corrección con su
+historial intacto.
+
+### Clasificar para aprender
+
+Registrar los defectos sirve para corregirlos, y clasificarlos sirve para prevenirlos. La IEEE
+1044-2009, *Standard Classification for Software Anomalies*, propone un esquema uniforme para clasificar
+anomalías sin importar en qué fase aparecen, con el fin de analizar causas y mejorar el proceso. El
+IEEE la clasifica hoy como *Inactive-Reserved*, así que su valor es de referencia. Cualquier equipo puede
+usar una clasificación propia, siempre que sea consistente: por ejemplo fase de origen, tipo (lógica,
+entrada inválida, omisión, interfaz) y causa raíz.
+
+### Métricas de defectos
+
+La *eficacia de eliminación de defectos* (DRE, por *defect removal efficiency*) mide qué fracción de los
+defectos se halló antes de entregar.
+
+`DRE = defectos hallados antes de entregar / (defectos hallados antes + defectos hallados después)`
+
+Otras tres métricas sencillas completan el tablero.
+
+- Defectos abiertos por gravedad: cuántos quedan sin cerrar y qué tan graves son.
+- Tiempo de ciclo: días entre que un defecto se reporta y se cierra.
+- Tasa de reapertura: defectos reabiertos entre defectos cerrados. Una tasa alta indica correcciones mal verificadas.
+
+### Ejemplo resuelto 5. Ciclo de vida de un defecto y cálculo de DRE
+
+El defecto H5 de la inspección (cancelar un turno que no existe) pasa al registro como D-031. Sigue este
+camino. Las fechas son ilustrativas.
+
+| Fecha | Estado | Quién | Nota |
+|---|---|---|---|
+| 1 de marzo | Nuevo | Registrador de la inspección | `cancelar_turno` lanza `ValueError` si el paciente no tiene turno. Gravedad mayor, requisito R3. |
+| 2 de marzo | Confirmado | Líder técnico | Se reproduce con una agenda vacía. Prioridad alta. |
+| 3 de marzo | En corrección | Autora | Rama de trabajo creada. |
+| 4 de marzo | Corregido | Autora | PR fusionado con prueba nueva. |
+| 5 de marzo | Verificado | Probadora | La prueba pasa y el flujo de la app muestra un mensaje claro. |
+| 5 de marzo | Cerrado | Líder técnico | Corregido en `v1.1.0`. |
+
+Tiempo de ciclo: del 1 al 5 de marzo, 4 días.
+
+Ahora el cálculo de DRE para el lanzamiento de `v1.1.0`. Antes de entregar se hallaron 30 defectos, 12
+en revisiones e inspecciones y 18 en pruebas. En las primeras semanas de producción los usuarios
+reportaron 6 más.
+
+- DRE = 30 / (30 + 6) = 30 / 36 = 0,833, es decir 83,3 %.
+
+Se puede ver también por etapa. Las revisiones hallaron 12 de los 36 defectos totales, el 33,3 %. Las
+pruebas hallaron 18, el 50 %. Los 6 restantes, el 16,7 %, llegaron al usuario. Con estos datos el equipo
+puede preguntar qué tipo de defectos escaparon y qué actividad habría podido encontrarlos antes.
+
+Un DRE alto no garantiza un producto bueno: depende de cuántos defectos existían de verdad, y eso
+nunca se sabe con exactitud. Solo se conocen los que se encontraron.
+
+::: {.callout-tip}
+## Reto 6. Calcula la eficacia de eliminación
+
+Una versión de la app tuvo 42 defectos hallados antes de entregar y 8 hallados en producción durante el
+primer mes. En la versión siguiente, tras agregar inspecciones de los módulos críticos, hubo 55
+defectos hallados antes de entregar y 5 en producción. Calcula el DRE de cada versión y di qué
+concluyes, con una advertencia.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+- Versión 1: DRE = 42 / (42 + 8) = 42 / 50 = 0,84, es decir 84 %.
+- Versión 2: DRE = 55 / (55 + 5) = 55 / 60 = 0,917, es decir 91,7 %.
+
+El DRE subió 7,7 puntos porcentuales y la cantidad de defectos que llegó al usuario bajó de 8 a 5.
+Es coherente con que las inspecciones hallaron más defectos antes de entregar.
+
+La advertencia es que son dos versiones distintas, con tamaño y riesgo distintos, y un mes de
+producción puede dejar defectos sin descubrir. La cifra del mes 1 puede crecer después y bajar el DRE
+real. Conviene comparar con ventanas de producción iguales y no atribuir la mejora a una sola causa.
+:::
+
+## Parte 7. Trazabilidad
+
+### Qué es
+
+La *trazabilidad* es la capacidad de seguir un requisito hacia adelante, hasta su diseño, su código y
+sus pruebas, y hacia atrás, desde una prueba o un defecto hasta el requisito que lo originó. Se registra
+en una *matriz de trazabilidad*, que puede ser una tabla o los enlaces entre elementos de una
+herramienta.
+
+La norma ISO/IEC/IEEE 29148:2018, sobre ingeniería de requisitos, trata cada requisito con atributos
+de metadatos que lo organizan y lo conectan con otros elementos. Es la referencia internacional para
+gestionar requisitos en sistemas y software. No se pudo abrir el texto completo, por ser de pago, así que
+esta guía no cita sus cláusulas exactas.
+
+### Para qué sirve
+
+- Análisis de impacto: ante un cambio, saber qué pruebas, diseños y código se afectan.
+- Cobertura de requisitos: detectar requisitos sin prueba, que nadie está verificando.
+- Detección de alcance extra: encontrar código o pruebas que no responden a ningún requisito.
+- Evidencia de auditoría: demostrar que lo pedido es lo que se construyó y se probó.
+
+### Cómo se construye
+
+1. Cada requisito tiene un identificador estable (R1, R2) que no cambia aunque cambie su texto.
+2. Cada prueba, módulo y PR cita los identificadores de los requisitos que toca.
+3. La matriz se genera o se revisa en cada línea base, no al final del proyecto.
+4. Se miran los huecos: filas sin pruebas y pruebas sin requisito.
+
+Una herramienta puede ayudar, pero la disciplina es de personas. Un enlace en un PR a una solicitud
+de cambio es trazabilidad, aunque no haya ninguna herramienta especializada.
+
+### Ejemplo resuelto 6. Matriz de trazabilidad de la clínica y sus huecos
+
+Tras la versión `v1.1.0`, el equipo arma esta matriz con los requisitos de la guía y siete pruebas.
+
+| Prueba | Descripción | Requisito |
+|---|---|---|
+| T1 | Asigna 20 turnos en una especialidad | R1 |
+| T2 | Rechaza el turno 21 | R1 |
+| T3 | Rechaza paciente repetido el mismo día | R2 |
+| T4 | Cancela un turno existente | R3 |
+| T5 | Cancelar un turno inexistente muestra mensaje claro | R3 |
+| T6 | Los datos se guardan cifrados | R5 |
+| T7 | El logo aparece en la pantalla de inicio | ninguno |
+
+Al cruzarla con la lista de requisitos sale esta tabla.
+
+| Requisito | Pruebas | Estado |
+|---|---|---|
+| R1 | T1, T2 | Cubierto |
+| R2 | T3 | Cubierto |
+| R3 | T4, T5 | Cubierto |
+| R4 | ninguna | Hueco: sin prueba |
+| R5 | T6 | Cubierto |
+
+Cobertura de requisitos: 4 de 5 = 80 %. El hueco es R4, el recordatorio 24 horas antes: nadie
+verifica que funcione. Es un riesgo concreto, porque un requisito sin prueba puede romperse en
+cualquier cambio sin que nada avise.
+
+Hacia atrás, T7 no responde a ningún requisito. Hay dos lecturas posibles. O falta un requisito de
+identidad visual que nadie escribió, o la prueba sobra. El equipo decide con el cliente, y no la borra sin
+preguntar.
+
+Un uso más de la matriz es el análisis de impacto. Si la SC-014 cambia R1, la matriz dice que hay que
+revisar T1 y T2, y nada más, en lugar de las siete.
+
+::: {.callout-tip}
+## Reto 7. Encuentra los huecos de trazabilidad
+
+El equipo agrega el requisito R6, "el sistema avisa al paciente si se cancela su turno por ausencia del
+médico", y las pruebas T8, "el aviso llega por correo" y T9, "el aviso llega por mensaje de texto".
+T8 se escribió citando R6. T9 no cita ningún requisito. Un defecto D-040 reporta que el aviso no llega
+por mensaje de texto. Indica el estado de R6, el problema con T9 y qué requisito debería citar D-040.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 7
+
+- R6 está cubierto por T8 (correo), pero la cobertura es parcial si el requisito pide también mensaje de texto. Solo se sabe leyendo R6 con cuidado.
+- T9 es una prueba sin enlace. Si prueba el mensaje de texto, debería citar R6. Hacia atrás, la matriz no puede decir hoy a qué requisito responde.
+- D-040 debería citar R6, el requisito que incumple. Con ese enlace el defecto aparece en la matriz y el análisis de impacto lo incluye.
+
+El caso muestra que la trazabilidad se rompe en los enlaces que faltan, y que tapar el hueco cuesta una línea
+si se hace al escribir la prueba, y mucho más si se reconstruye después.
+:::
+
+## Parte 8. Cómo se conectan y cuándo se vuelven teatro
+
+### Un cambio recorre todas las actividades
+
+Las seis actividades no son pasos separados. Un solo cambio las atraviesa. En la clínica, la solicitud
+SC-014 nace en la gestión de configuración, se traza hasta R1 y sus pruebas, se implementa en un PR que
+se revisa, produce defectos que se registran, se verifica con pruebas y queda en una línea base que
+después se audita. Cada actividad deja evidencia que la siguiente consume. Si una falla, la siguiente
+trabaja con datos incompletos, como pasó con la auditoría de BL-2.
+
+### Cuando el programa se vuelve teatro
+
+Un programa de SQA se vuelve teatro cuando produce documentos en lugar de calidad. Actas de revisión que
+nadie lee, formularios de cambio llenados después del cambio, matrices de trazabilidad armadas la
+semana de la auditoría. La señal más clara es que los defectos que llegan al usuario no bajan aunque la
+documentación crezca.
+
+Para evitarlo, mide el resultado y no solo la actividad. Una inspección vale por los defectos que halla
+y por el conocimiento que reparte, no por el acta. Un registro de cambios vale si responde qué se entregó,
+y no si está lleno. Si una métrica se convierte en meta, se empieza a optimizar la métrica y no aquello
+que representa. El Tema 5 retoma esta idea al hablar de métricas.
+
+## Errores frecuentes
+
+- **Confundir revisión con prueba.** La revisión examina el producto sin ejecutarlo. La prueba lo ejecuta. Una halla lo que la otra no.
+- **Inspeccionar sin lista de verificación.** Sin ella, cada inspector busca lo que se le ocurre, y los hallazgos dependen de la suerte.
+- **Discutir soluciones en la reunión.** La reunión registra defectos. Las soluciones las decide el autor después.
+- **Aprobar un PR gigante.** Con miles de líneas nadie revisa de verdad. Se divide.
+- **Aceptar un comentario de IA sin comprobarlo.** Un comentario bien redactado puede ser falso. Se comprueba antes de aceptarlo.
+- **Pegar datos reales en una herramienta externa.** Los datos de salud son sensibles, y su tratamiento tiene reglas legales.
+- **Auditar sin evidencia.** Un hallazgo sin evidencia es una opinión. Siempre cita el criterio, la evidencia y la conclusión.
+- **Confundir auditoría con revisión técnica.** La auditoría verifica cumplimiento, y la revisión técnica evalúa si el producto sirve.
+- **Cambiar un elemento bajo línea base sin solicitud.** Rompe la contabilidad del estado y la auditoría de configuración.
+- **Cerrar un defecto sin verificarlo.** Debe verificarlo alguien distinto de quien lo corrigió.
+- **Confundir gravedad con prioridad.** Una describe el daño y la otra, la urgencia de corregirlo.
+- **Armar la matriz de trazabilidad al final.** Se reconstruye de memoria y se llena de huecos. Se actualiza en cada cambio.
+- **Citar una norma sin revisar su estado.** La IEEE 1028-2008 y la IEEE 828-2012 son referencias válidas, pero están marcadas como inactivas.
+
+## Autoevaluación
+
+Responde cada pregunta antes de abrir su clave.
+
+**1.** ¿Qué distingue a una inspección de un walkthrough?
+
+<label><input type="checkbox"> La inspección tiene roles fijos, lista de verificación y métricas, y el walkthrough lo conduce el autor de forma más informal</label>
+<label><input type="checkbox"> La inspección la hace una persona externa y el walkthrough la hace el cliente</label>
+<label><input type="checkbox"> No hay diferencia, son dos nombres de lo mismo</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 1
+
+La opción 1. Fagan formalizó la inspección con roles y pasos definidos, y el walkthrough se apoya en
+que el autor explique mientras los demás preguntan.
+:::
+
+**2.** ¿Cuál es el estado de la IEEE 1028-2008 a octubre de 2026?
+
+<label><input type="checkbox"> Inactive-Reserved desde el 7 de noviembre de 2019, y ISO/IEC/IEEE 20246:2017 es la referencia internacional en vigor sobre revisión de productos de trabajo</label>
+<label><input type="checkbox"> Vigente y sin sucesora</label>
+<label><input type="checkbox"> Retirada y sustituida por ISO 9001</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 2
+
+La opción 1, según la ficha del IEEE y el catálogo de ISO. ISO 9001 es otra norma, de sistemas de gestión de la calidad.
+:::
+
+**3.** En una inspección, el autor del código hace de moderador. ¿Es correcto?
+
+<label><input type="checkbox"> Sí, porque es quien mejor conoce el producto</label>
+<label><input type="checkbox"> No, el moderador debe ser alguien distinto del autor para dirigir el proceso con independencia</label>
+<label><input type="checkbox"> Es indiferente</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 3
+
+La opción 2. El autor puede asumir otro rol si el equipo es pequeño, pero no el de moderador.
+:::
+
+**4.** Una IA comenta en un PR que debes cambiar un límite que el requisito fija en otro valor. ¿Qué haces?
+
+<label><input type="checkbox"> Aceptar, porque la IA no se equivoca</label>
+<label><input type="checkbox"> Comprobar contra el requisito, y rechazar el comentario si lo contradice</label>
+<label><input type="checkbox"> Ignorar todos los comentarios de la IA a partir de ese momento</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 4
+
+La opción 2. Los comentarios de la IA se comprueban uno a uno. Rechazar uno no obliga a descartar los demás.
+:::
+
+**5.** ¿Qué rasgo define a una auditoría frente a una revisión de pares?
+
+<label><input type="checkbox"> Que la hace una persona independiente del equipo y compara lo hecho contra un criterio con evidencia objetiva</label>
+<label><input type="checkbox"> Que dura más días</label>
+<label><input type="checkbox"> Que solo se aplica al código</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 5
+
+La opción 1. La independencia y la evidencia objetiva son lo que la caracteriza, no su duración ni su objeto.
+:::
+
+**6.** En el Ejemplo resuelto 3, ¿cuántos PR cumplían las tres reglas a la vez?
+
+<label><input type="checkbox"> 5 de 10</label>
+<label><input type="checkbox"> 7 de 10</label>
+<label><input type="checkbox"> 9 de 10</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 6
+
+La opción 1. Cumplen las tres reglas los PR 101, 102, 105, 107 y 109. Las cifras de 90 %, 70 % y 90 % son por regla, no la conformidad total.
+:::
+
+**7.** ¿Qué es una línea base?
+
+<label><input type="checkbox"> Un conjunto de elementos de configuración en versiones acordadas y revisadas, desde el cual todo cambio pasa por control de cambios</label>
+<label><input type="checkbox"> La primera versión que escribió el equipo, aunque no funcione</label>
+<label><input type="checkbox"> El presupuesto inicial del proyecto</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 7
+
+La opción 1. En Git se suele marcar con una etiqueta, por ejemplo `v1.0.0`.
+:::
+
+**8.** En el Ejemplo resuelto 4, BL-2 muestra 5 elementos cambiados y la SC-014 aprobó 4. ¿Qué hallazgo corresponde?
+
+<label><input type="checkbox"> Un cambio no autorizado en EC-4, que la auditoría de configuración detecta</label>
+<label><input type="checkbox"> Ninguno, porque 5 es mayor que 4</label>
+<label><input type="checkbox"> Un defecto de rendimiento</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 8
+
+La opción 1. La configuración de despliegue cambió sin figurar en el análisis de impacto aprobado.
+:::
+
+**9.** Un equipo halla 30 defectos antes de entregar y los usuarios reportan 6 después. ¿Cuál es el DRE?
+
+<label><input type="checkbox"> 83,3 %</label>
+<label><input type="checkbox"> 80 %</label>
+<label><input type="checkbox"> 16,7 %</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 9
+
+La opción 1: 30 / (30 + 6) = 0,833. El 16,7 % es la fracción que escapó, no la eficacia.
+:::
+
+**10.** Una matriz muestra el requisito R4 sin ninguna prueba enlazada. ¿Qué indica?
+
+<label><input type="checkbox"> Un hueco de cobertura: nadie verifica ese requisito, y puede romperse sin aviso</label>
+<label><input type="checkbox"> Que R4 es el requisito más importante</label>
+<label><input type="checkbox"> Que R4 se puede borrar</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 10
+
+La opción 1. La matriz sirve justamente para encontrar requisitos sin prueba y pruebas sin requisito.
+:::
+
+## Lo que te llevas
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Las diferencias entre revisión informal, walkthrough, revisión técnica e inspección, y los seis pasos de Fagan
+- [ ] En qué estado están IEEE 1028-2008, IEEE 828-2012, ISO 10007:2017, ISO/IEC/IEEE 20246:2017 y IEEE 1044-2009
+- [ ] Cómo funciona un PR, qué reglas puede imponer la rama protegida y cómo se usa la IA en la revisión con sus riesgos
+- [ ] Qué distingue a una auditoría y cómo se redacta un hallazgo con criterio, evidencia y conclusión
+- [ ] Las cinco actividades de la gestión de configuración y el flujo de un cambio sobre una línea base
+- [ ] El ciclo de vida de un defecto, la diferencia entre gravedad y prioridad, y cómo se calcula el DRE
+- [ ] Cómo se arma una matriz de trazabilidad y qué huecos busca
+:::
+
+## Glosario
+
+- **SQA.** Aseguramiento de la calidad del software (*software quality assurance*). Vigila el proceso con el que se produce el software.
+- **Revisión.** Examen estructurado de un producto de trabajo por personas distintas de su autor.
+- **Revisión informal.** Revisión sin roles ni acta, por ejemplo un colega que mira una función.
+- **Walkthrough.** Revisión en la que el autor presenta el producto y los participantes preguntan.
+- **Revisión técnica.** Evaluación por pares competentes de la idoneidad de un producto para su uso previsto.
+- **Inspección.** Revisión formal con roles fijos, lista de verificación, criterios de entrada y salida, y métricas.
+- **Lista de verificación (checklist).** Conjunto de preguntas que guía la búsqueda de defectos.
+- **Moderador.** Quien dirige una inspección y verifica su entrada y su salida.
+- **Revisión de código moderna.** Revisión asíncrona de cambios pequeños, normalmente mediante *pull requests*.
+- **Pull request (PR).** Propuesta de integrar un cambio a una rama, que otra persona revisa.
+- **Rama protegida.** Rama cuyas reglas técnicas obligan a revisar y comprobar antes de fusionar.
+- **Code owner.** Persona o equipo asignado a ciertos archivos, cuya aprobación se puede exigir.
+- **Auditoría.** Evaluación independiente que compara lo hecho contra un criterio con evidencia objetiva.
+- **Auditoría de proceso.** Verifica que el equipo sigue el procedimiento definido.
+- **Auditoría de producto.** Verifica que el producto cumple sus requisitos y su documentación.
+- **Auditoría interna y externa.** La primera la hace la propia organización con personal independiente. La segunda, un cliente o una entidad certificadora.
+- **Hallazgo.** Resultado de una auditoría, con criterio, evidencia y conclusión.
+- **No conformidad.** Incumplimiento de un requisito del criterio auditado.
+- **Gestión de configuración (SCM).** Disciplina que controla cómo cambia un sistema a lo largo de su vida.
+- **Elemento de configuración (EC).** Pieza que se controla como unidad.
+- **Línea base (baseline).** Conjunto de elementos en versiones acordadas, punto de partida estable para los cambios.
+- **Solicitud de cambio (SC).** Registro formal de que alguien pide modificar un elemento.
+- **Comité de control de cambios (CCB).** Quien aprueba, rechaza o difiere las solicitudes de cambio.
+- **Contabilidad del estado.** Registro del estado y de la historia de cada elemento de configuración.
+- **Auditoría de configuración.** Verificación de que lo entregado coincide con lo aprobado.
+- **Etiqueta (tag).** Nombre fijo para un punto de la historia de un repositorio, usado para marcar versiones y líneas base.
+- **Error, defecto y falla.** La equivocación humana, su huella en un producto y el comportamiento incorrecto que se observa al ejecutarlo.
+- **Gravedad.** Cuánto daño causa un defecto.
+- **Prioridad.** Qué tan pronto debe corregirse un defecto.
+- **Causa raíz.** El origen más profundo de un defecto, útil para prevenir otros.
+- **DRE.** Eficacia de eliminación de defectos: fracción de defectos hallada antes de entregar.
+- **Trazabilidad.** Capacidad de seguir un requisito hacia su diseño, código y pruebas, y de regreso.
+- **Matriz de trazabilidad.** Tabla o conjunto de enlaces que registra esas conexiones.
+- **Inactive-Reserved.** Estado del IEEE para una norma que ya no se mantiene activamente y se conserva como referencia.
+
+## Bibliografía
+
+Normas y su estado (consultado el 3 de octubre de 2026):
+
+- IEEE Std 1028-2008. *IEEE Standard for Software Reviews and Audits.* Publicada el 15 de agosto de 2008. Estado: Inactive-Reserved desde el 7 de noviembre de 2019. [Ficha en IEEE Xplore](https://ieeexplore.ieee.org/document/4601584). [Estado en IEEE SA](https://standards.ieee.org/ieee/1028/4402/).
+- ISO/IEC/IEEE 20246:2017. *Software and systems engineering, Work product reviews.* Edición 1, confirmada en 2022. [Ficha en ISO](https://www.iso.org/standard/67407.html).
+- IEEE Std 828-2012. *IEEE Standard for Configuration Management in Systems and Software Engineering.* Publicada el 16 de marzo de 2012. Estado: Inactive-Reserved desde el 30 de marzo de 2023. [Estado en IEEE SA](https://standards.ieee.org/ieee/828/5367/). [Ficha en IEEE Xplore](https://ieeexplore.ieee.org/document/6170935/).
+- ISO 10007:2017. *Quality management, Guidelines for configuration management.* Publicada el 6 de abril de 2017. [Ficha del comité técnico de ISO](https://committee.iso.org/sites/tc176/home/projects/published/iso-10007-2017.html).
+- ISO/IEC/IEEE 15288:2023. *Systems and software engineering, System life cycle processes.* [Reseña de ANSI](https://blog.ansi.org/ansi/iso-iec-ieee-15288-2023-system-life-cycle-processes/).
+- ISO/IEC/IEEE 12207:2026. *Systems and software engineering, Software life cycle processes.* Segunda edición, publicada el 15 de abril de 2026 según la ficha de IEEE. [Ficha en IEEE](https://standards.ieee.org/ieee/12207/11416/).
+- ISO 19011:2018, *Guidelines for auditing management systems*, y su cuarta edición ISO 19011:2026, publicada en mayo de 2026 según la ficha de ISO. [Ficha en ISO](https://www.iso.org/standard/19011).
+- IEEE Std 1044-2009. *IEEE Standard Classification for Software Anomalies.* Estado: Inactive-Reserved. [Estado en IEEE SA](https://standards.ieee.org/ieee/1044/4607).
+- ISO/IEC/IEEE 29148:2018. *Systems and software engineering, Life cycle processes, Requirements engineering.* Texto de pago, no consultado. Enlace a la ficha no verificado.
+
+Revisiones y revisión de código:
+
+- Fagan, M. E. (1976). Design and code inspections to reduce errors in program development. *IBM Systems Journal*, 15(3), 182 a 211. [IEEE Xplore](https://ieeexplore.ieee.org/document/5388086).
+- Bacchelli, A. y Bird, C. (2013). Expectations, outcomes, and challenges of modern code review. *Proceedings of the 35th International Conference on Software Engineering (ICSE)*. [Ficha de ICSE 2013](https://2013.icse-conferences.org/content/expectations-outcomes-and-challenges-modern-code-review.html).
+- Google. *The Standard of Code Review*, en Google Engineering Practices. [Documento](https://google.github.io/eng-practices/review/reviewer/standard.html).
+- GitHub. *About protected branches.* Documentación oficial. [Documento](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
+- GitHub. *About GitHub Copilot code review*, limitaciones y buenas prácticas. Documentación oficial. [Documento](https://docs.github.com/en/copilot/concepts/agents/code-review).
+- Jin, H. y Chen, H. (2026). *Are LLMs Reliable Code Reviewers? Systematic Overcorrection in Requirement Conformance Judgement.* Preprint, arXiv 2603.00539, 28 de febrero de 2026. Sin revisión por pares verificada. [Ficha](https://arxiv.org/abs/2603.00539).
+- SmartBear. *Best Practices for Peer Code Review.* Informe de un proveedor sobre un estudio en Cisco. Se cita como regla práctica. [Documento](https://smartbear.com/learn/code-review/best-practices-for-peer-code-review/).
+
+Obras generales:
+
+- Sommerville, I. (2016). *Software Engineering* (10.a ed.). Pearson.
+- Congreso de Colombia (2012). *Ley Estatutaria 1581 de 2012*, sobre protección de datos personales. [Texto](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981).
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

@@ -1,0 +1,1165 @@
+---
+title: "Tema 3. Marcos para evaluar la usabilidad del software"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                  |
+|--------|------------------------------------------------------------------|
+| Unidad | Unidad 3. Estándares de calidad aplicados al software            |
+| Tema   | Tema 3. Marcos para evaluar la usabilidad del software           |
+:::
+
+[Presentación interactiva de la unidad](../presentacion-interactiva.html){.btn-curso}
+
+Tema anterior: [Tema 2. La familia ISO para software: SQuaRE, calidad de datos, gestión e IA](../tema-02-normas-iso/index.qmd).
+Tema siguiente: [Tema 4. Madurez de procesos: SPICE y CMMI](../tema-04-madurez-spice-cmmi/index.qmd).
+
+## Objetivo y resultado de aprendizaje
+
+La carta descriptiva de la asignatura pide que el estudiante reconozca los marcos de referencia para la
+evaluación de la usabilidad del software. Este tema cubre ese resultado de punta a punta. Recorre las
+normas que definen la usabilidad, los métodos con los que se mide y los marcos de accesibilidad que la
+complementan, y aplica todo a un caso concreto: el formulario de pedir turno de la app de la clínica,
+usado por un adulto mayor.
+
+Al terminar puedes:
+
+- Definir usabilidad con la ISO 9241-11:2018 y descomponerla en efectividad, eficiencia, satisfacción y contexto de uso.
+- Describir el proceso de diseño centrado en las personas de la ISO 9241-210:2019, con sus seis principios y cuatro actividades.
+- Ubicar la usabilidad dentro de la ISO/IEC 25010:2023 (capacidad de interacción) y de la ISO/IEC 25019:2023 (calidad en uso).
+- Evaluar una interfaz con las diez heurísticas de Nielsen y priorizar los hallazgos con una escala de severidad.
+- Planear una prueba de usabilidad, calcular sus medidas y decir con honestidad qué permite concluir un tamaño de muestra pequeño.
+- Calcular la puntuación SUS paso a paso e interpretarla sin tomar la referencia de 68 como un umbral universal.
+- Revisar un formulario contra criterios concretos de WCAG 2.2 y ubicar WCAG 3.0, ISO/IEC 40500, la Resolución 1519 de 2020, la NTC 5854 y el European Accessibility Act en el panorama normativo.
+- Armar un plan de evaluación que combine varios marcos y justifique cada uno.
+
+Prerrequisitos: los Temas 1 y 2 de la Unidad 1 (calidad de producto y calidad en uso) y el Tema 2 de esta
+unidad (la familia SQuaRE). Necesitas distinguir característica, subcaracterística y medida.
+
+## Ruta de estudio
+
+Son unas 8 horas de trabajo independiente. Puedes partirlas en tres o cuatro sesiones. La presentación
+interactiva de la unidad tiene una sección por tema y sirve como repaso. Esta guía es la fuente completa.
+
+::: {.calendario}
+| Parte | Qué haces | Tiempo |
+|---|---|---|
+| 1. Qué es la usabilidad | Lees la ISO 9241-11, defines el contexto de uso y resuelves el Reto 1 | 50 min |
+| 2. Diseño centrado en las personas | Lees la ISO 9241-210 y resuelves el Reto 2 | 35 min |
+| 3. Capacidad de interacción y calidad en uso | Conectas ISO 25010:2023 e ISO 25019:2023 con la ISO 9241-11 | 35 min |
+| 4. Evaluación por heurísticas | Aplicas las diez heurísticas y resuelves el Reto 3 | 55 min |
+| 5. Pruebas de usabilidad | Sigues el ejemplo, calculas intervalos y muestra, y resuelves el Reto 4 | 75 min |
+| 6. El cuestionario SUS | Calculas puntuaciones y resuelves el Reto 5 | 55 min |
+| 7. Accesibilidad con WCAG 2.2 | Revisas el formulario contra criterios y resuelves el Reto 6 | 70 min |
+| 8. Marco normativo de accesibilidad | Lees Colombia, la Unión Europea y los borradores, y resuelves el Reto 7 | 40 min |
+| 9. Un plan de evaluación integrado | Armas el plan para el formulario | 30 min |
+| Cierre | Errores frecuentes, autoevaluación y glosario | 35 min |
+:::
+
+## El hilo conductor: el formulario de pedir turno de la Clínica Aurora
+
+El curso usa una app ficticia que asigna turnos médicos. En este tema se evalúa una sola pantalla: el
+formulario de pedir turno. La usa Marta, una paciente de 72 años que pide turno de medicina general para
+el jueves. Marta usa un celular Android de gama baja, con la letra del sistema ampliada, y ve con
+dificultad cuando hay poca luz. Marta es un personaje inventado, igual que todas las cifras de la
+clínica de este tema. Cada número propio se marca como ilustrativo.
+
+El formulario tiene cuatro pasos: elegir especialidad, elegir fecha, escribir los datos del paciente y
+confirmar. Los defectos que se encuentran más adelante se diseñaron a propósito para practicar.
+
+::: {.callout-note}
+## Sobre las normas de pago
+
+Las normas ISO y la NTC colombiana se venden. Para esta guía se consultaron las fichas públicas de ISO
+(resumen, edición, estado y fecha de revisión), las especificaciones gratuitas de W3C y las fuentes
+oficiales que se citan en la bibliografía. Cuando un dato viene del texto completo de una norma de pago
+y no se pudo leer ahí, la guía lo dice. Las definiciones de la ISO 9241-11 y los principios de la
+ISO 9241-210 se presentan en paráfrasis.
+:::
+
+## Parte 1. Qué es la usabilidad: ISO 9241-11:2018
+
+### La definición vigente
+
+La ISO 9241-11:2018 (*Ergonomics of human-system interaction, Part 11: Usability: Definitions and
+concepts*) es la segunda edición, de marzo de 2018. Sustituyó a la de 1998. La ficha de ISO indica que
+fue revisada y confirmada en 2023, de modo que esa edición sigue vigente en octubre de 2026.
+
+Según la norma, la usabilidad es el grado en que usuarios específicos pueden usar un sistema, producto o
+servicio para lograr metas específicas con efectividad, eficiencia y satisfacción, en un contexto de uso
+específico. La palabra repetida es "específico". La usabilidad no es una propiedad que el producto tenga
+por sí solo. Depende de quién lo usa, para qué y dónde.
+
+La ficha de ISO agrega que la norma explica la usabilidad como un resultado del uso, define términos y
+fundamentos, y no describe procesos ni métodos concretos para tenerla en cuenta en el diseño o la
+evaluación. Para eso están la ISO 9241-210 y otras partes de la serie ISO 9241.
+
+### Las tres medidas y el contexto de uso
+
+La norma define tres resultados del uso. La paráfrasis que sigue resume sus definiciones.
+
+| Medida | Qué significa | Cómo suele medirse |
+|---|---|---|
+| Efectividad | Exactitud y completitud con que las personas logran sus metas | Porcentaje de tareas completadas, errores que impiden la meta |
+| Eficiencia | Recursos gastados en relación con los resultados logrados | Tiempo en tarea, número de pasos, esfuerzo percibido |
+| Satisfacción | Respuestas físicas, cognitivas y emocionales que cumplen necesidades y expectativas | Cuestionarios como SUS, comentarios, abandono |
+
+El contexto de uso es la combinación de usuarios, metas y tareas, recursos (equipo, software, información)
+y entorno físico y social. Cambiar uno de esos cuatro elementos cambia la usabilidad, aunque la pantalla
+sea idéntica. Un formulario cómodo para una persona joven con fibra óptica en casa puede fallar para
+Marta en una sala de espera con datos móviles lentos.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 272" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Modelo de la ISO 9241-11: un contexto de uso formado por usuarios, metas y tareas, recursos y entorno rodea el uso del producto, que produce tres resultados: efectividad, eficiencia y satisfacción" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u3t3a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">La usabilidad según la ISO 9241-11:2018</text>
+  <rect x="16" y="30" width="470" height="232" rx="14" fill="none" stroke="#8fb3d1" stroke-width="1.6" stroke-dasharray="6 5"/>
+  <text x="32" y="52" font-size="12.5" font-weight="700" fill="#5b6876">Contexto de uso</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="32" y="62" width="170" height="40" rx="8"/><rect x="32" y="110" width="170" height="40" rx="8"/><rect x="32" y="158" width="170" height="40" rx="8"/><rect x="32" y="206" width="170" height="40" rx="8"/></g>
+  <g font-size="12" font-weight="600" fill="#12324f" text-anchor="middle"><text x="117" y="87">Usuarios</text><text x="117" y="135">Metas y tareas</text><text x="117" y="183">Recursos</text><text x="117" y="231">Entorno</text></g>
+  <path d="M202,82 L232,82 L232,226 L202,226 M232,154 L282,154" fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#u3t3a)"/>
+  <rect x="290" y="120" width="180" height="68" rx="12" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="150" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Uso del producto</text>
+  <text x="380" y="170" font-size="11" fill="#5b6876" text-anchor="middle">el formulario de turnos</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#u3t3a)"><path d="M486,154 C510,154 520,80 546,80"/><path d="M486,154 L546,154"/><path d="M486,154 C510,154 520,228 546,228"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="548" y="50" width="196" height="60" rx="10"/><rect x="548" y="124" width="196" height="60" rx="10"/><rect x="548" y="198" width="196" height="60" rx="10"/></g>
+  <g text-anchor="middle"><g font-size="13" font-weight="700" fill="#0e6f6c"><text x="646" y="76">Efectividad</text><text x="646" y="150">Eficiencia</text><text x="646" y="224">Satisfacción</text></g><g font-size="11" fill="#3c7d7a"><text x="646" y="95">exactitud y completitud</text><text x="646" y="169">recursos frente a resultados</text><text x="646" y="243">respuestas del usuario</text></g></g>
+</svg>
+
+:::
+
+### Ejemplo resuelto: el contexto de uso y las metas medibles del formulario
+
+Antes de evaluar hay que escribir contra qué se evalúa. El equipo de la clínica describe el contexto de uso
+y fija metas medibles. Las metas de la tabla son ilustrativas, no vienen de ninguna norma.
+
+1. Usuarios. Adultos de 65 a 85 años, con uso ocasional del celular y, en algunos casos, vista cansada.
+2. Metas y tareas. Obtener un turno de medicina general sin llamar a la clínica. Tarea: elegir especialidad, fecha y confirmar.
+3. Recursos. Celular Android de gama baja, pantalla de unas 5,5 pulgadas, datos móviles lentos.
+4. Entorno. Casa o sala de espera, luz variable, interrupciones frecuentes.
+5. Se traduce cada medida de la norma en una meta.
+
+| Medida | Meta ilustrativa para el formulario |
+|---|---|
+| Efectividad | Al menos 8 de cada 10 adultos mayores completan la tarea sin ayuda |
+| Eficiencia | Las personas que completan la tarea tardan 120 segundos o menos |
+| Satisfacción | La puntuación SUS promedio llega al menos a 68 |
+
+Con esa tabla, "el formulario es usable" deja de ser una opinión. Se vuelve una afirmación que una prueba
+puede confirmar o refutar. Más adelante, en la Parte 5, se compara una prueba real (ficticia) contra estas
+tres metas.
+
+### Usabilidad no es lo mismo que "se ve bonito"
+
+La confusión más común es tratar la usabilidad como estética. Una pantalla atractiva puede tener
+usabilidad baja si la persona no logra su meta, y una pantalla sobria puede tener usabilidad alta. La
+norma mide resultados del uso (lograr, con qué esfuerzo, con qué respuesta), no apariencia.
+
+También se confunde con la facilidad de aprendizaje. Aprender rápido es una parte de la usabilidad, pero
+un sistema que se aprende en un minuto y luego obliga a hacer veinte pasos para una tarea diaria tiene mala
+eficiencia.
+
+::: {.callout-tip}
+## Reto 1. Contexto de uso y medidas de "cancelar un turno"
+
+La clínica agrega la tarea "cancelar un turno ya pedido". Escribe el contexto de uso para Marta (los
+cuatro elementos) y tres metas medibles, una por cada medida de la ISO 9241-11. Indica también qué
+cambiaría en el contexto si quien cancela es el hijo de Marta, de 40 años, desde el computador de la oficina.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+Contexto para Marta: usuaria de 72 años con uso ocasional del celular; meta de cancelar un turno que ya no
+puede cumplir, sin llamar; recursos de celular de gama baja y datos lentos; entorno de casa con interrupciones.
+
+Metas ilustrativas: efectividad, al menos 9 de cada 10 cancelaciones completadas sin ayuda (cancelar no
+debería ser más difícil que pedir); eficiencia, 60 segundos o menos desde abrir la app; satisfacción, SUS
+de al menos 68 después de la tarea.
+
+Si cancela el hijo, cambian los usuarios (adulto con experiencia digital), los recursos (computador con
+pantalla grande y teclado) y el entorno (oficina, con prisa). Las metas de eficiencia podrían endurecerse.
+La conclusión es que la misma pantalla se evalúa de nuevo para cada contexto. Tu redacción puede variar
+mientras los cuatro elementos y las tres medidas estén presentes.
+:::
+
+## Parte 2. Diseño centrado en las personas: ISO 9241-210:2019
+
+### Qué es y qué cubre
+
+La ISO 9241-210:2019 (*Human-centred design for interactive systems*) es la segunda edición, de julio de
+2019, y la ficha de ISO indica que fue revisada y confirmada en 2025. Está vigente. Da requisitos y
+recomendaciones sobre los principios y las actividades del diseño centrado en las personas durante el ciclo
+de vida de sistemas interactivos. Es una norma de gestión del proceso. No detalla técnicas de investigación
+ni de diseño, y tampoco entra en seguridad y salud en detalle.
+
+La relación con la ISO 9241-11 es de pregunta y respuesta. La ISO 9241-11 dice qué es usabilidad y qué medir. La
+ISO 9241-210 dice cómo organizar el trabajo de diseño para llegar a ella.
+
+### Los seis principios
+
+Los seis principios se tomaron de fuentes secundarias que los resumen (el texto completo de la norma es
+de pago). Se parafrasean aquí.
+
+1. El diseño parte de una comprensión explícita de las personas usuarias, sus tareas y sus entornos.
+2. Las personas usuarias participan durante todo el diseño y el desarrollo.
+3. El diseño se guía y se refina con evaluación centrada en las personas.
+4. El proceso es iterativo.
+5. El diseño atiende toda la experiencia de la persona usuaria.
+6. El equipo de diseño reúne habilidades y perspectivas multidisciplinarias.
+
+### Las cuatro actividades
+
+Las actividades se repiten en ciclo hasta que el diseño cumple los requisitos.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ciclo de la ISO 9241-210 en cuatro actividades: entender y especificar el contexto de uso, especificar los requisitos de las personas usuarias, producir soluciones de diseño y evaluar contra los requisitos, con una flecha que vuelve al inicio si el diseño no cumple" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u3t3b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Las cuatro actividades de diseño centrado en las personas</text>
+  <g fill="#fff3d6" stroke="#e6c46f"><rect x="14" y="44" width="170" height="96" rx="12"/><rect x="200" y="44" width="170" height="96" rx="12"/><rect x="386" y="44" width="170" height="96" rx="12"/><rect x="572" y="44" width="170" height="96" rx="12"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="700" fill="#12324f"><text x="99" y="68">1. Contexto de uso</text><text x="285" y="68">2. Requisitos</text><text x="471" y="68">3. Diseño</text><text x="657" y="68">4. Evaluación</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="99" y="90">Entender y especificar</text><text x="99" y="105">quién usa, para qué</text><text x="99" y="120">y dónde</text><text x="285" y="90">Especificar lo que</text><text x="285" y="105">las personas necesitan</text><text x="285" y="120">lograr, con medidas</text><text x="471" y="90">Producir soluciones:</text><text x="471" y="105">bocetos, prototipos,</text><text x="471" y="120">versiones</text><text x="657" y="90">Evaluar contra los</text><text x="657" y="105">requisitos, con personas</text><text x="657" y="120">reales</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u3t3b)"><path d="M184,92 L198,92"/><path d="M370,92 L384,92"/><path d="M556,92 L570,92"/><path d="M657,142 C657,226 99,226 99,144"/></g>
+  <text x="378" y="216" font-size="12" fill="#5b6876" text-anchor="middle">Si la evaluación muestra que el diseño no cumple, se vuelve a una actividad anterior</text>
+  <rect x="190" y="232" width="380" height="30" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="252" font-size="12" fill="#0e6f6c" text-anchor="middle" font-weight="600">Cuando cumple los requisitos, el ciclo termina</text>
+</svg>
+
+:::
+
+### Aplicado a la clínica
+
+En la clínica, el equipo hizo el formulario con una plantilla de otra app y nunca habló con pacientes mayores. La
+tabla dice qué principio y qué actividad faltaron.
+
+| Qué ocurrió | Principio que se incumple | Actividad que faltó |
+|---|---|---|
+| Nadie observó a un adulto mayor usando celular | 1. Comprensión explícita de personas, tareas y entornos | 1. Contexto de uso |
+| El diseño se aprobó entre desarrolladores | 2. Participación de las personas usuarias; 6. Equipo multidisciplinario | 2. Requisitos |
+| Se publicó la primera versión sin probarla con pacientes | 3. Guiado por evaluación; 4. Iterativo | 4. Evaluación |
+| Solo se pensó en la pantalla, no en llegar a la clínica con el turno | 5. Toda la experiencia | 1. Contexto de uso |
+
+::: {.callout-tip}
+## Reto 2. Qué principio falta
+
+Un equipo mide la usabilidad solo una vez, con 5 pacientes, al final del proyecto, y no corrige nada porque
+"ya no hay tiempo". Indica qué principios de la ISO 9241-210 se incumplen y cómo reorganizarías las cuatro
+actividades para el siguiente trimestre.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+Se incumplen el principio 3 (el diseño no se guía por la evaluación, porque sus resultados no se usan) y el
+principio 4 (no hay iteración). Si además la prueba llega al final, también se debilita el principio 2, ya
+que las personas usuarias no participaron durante el desarrollo.
+
+Reorganización posible: pruebas cortas con prototipos desde la actividad 3, evaluaciones al terminar cada
+iteración (actividad 4), y una reserva de tiempo para corregir lo hallado antes de la siguiente. La idea de
+fondo es que evaluar tarde cuesta lo mismo que evaluar temprano, pero corregir cuesta más (véase el costo
+de la calidad en la Unidad 1, Tema 3, con las advertencias que allí se hacen sobre esas cifras).
+:::
+
+## Parte 3. Capacidad de interacción y calidad en uso
+
+### Capacidad de interacción en la ISO/IEC 25010:2023
+
+La ISO/IEC 25010:2023 (edición 2, noviembre de 2023) define el modelo de calidad del producto con nueve
+características. Una de ellas es la capacidad de interacción (*interaction capability*). En la edición
+de 2011 esa característica se llamaba usabilidad. El Tema 2 de la Unidad 1 explica el modelo completo.
+Aquí se retoma solo lo que importa para evaluar usabilidad.
+
+La capacidad de interacción tiene ocho subcaracterísticas. Cada una se puede convertir en requisito y en
+prueba. La tabla las aplica al formulario de turnos. Las definiciones están en paráfrasis, porque el texto
+completo de la norma es de pago.
+
+| Subcaracterística | Pregunta para el formulario | Medida candidata |
+|---|---|---|
+| Reconocibilidad de la adecuación | ¿Marta entiende al abrir que es para pedir turnos? | Porcentaje que acierta la finalidad tras 5 segundos |
+| Capacidad de aprendizaje | ¿Pide su primer turno sin manual? | Tareas completadas en el primer uso |
+| Operabilidad | ¿Los controles se manejan con facilidad? | Errores de pulsación, tamaño de botones |
+| Protección frente a errores del usuario | ¿Evita y corrige equivocaciones? | Errores evitados o corregidos con un mensaje claro |
+| Participación del usuario | ¿Invita a seguir usándolo de forma agradable? | Porcentaje que vuelve a usar la app |
+| Inclusividad | ¿Pueden usarla personas con distintas capacidades? | Criterios de accesibilidad cumplidos |
+| Asistencia al usuario | ¿Recibe ayuda cuando la necesita? | Ayuda disponible en cada paso |
+| Autodescriptividad | ¿Muestra la información para entender qué hace? | Mensajes claros, sin códigos internos |
+
+### Calidad en uso en la ISO/IEC 25019:2023
+
+La ISO/IEC 25019:2023 (edición 1, noviembre de 2023) define el modelo de calidad en uso. Según su
+resumen público, el modelo tiene tres características y se aplica cuando un producto o sistema se usa en un
+contexto de uso específico. Hasta 2023 ese modelo estaba dentro de la ISO/IEC 25010. Hoy vive en su
+propia norma.
+
+Las tres características son beneficiosidad, libertad de riesgo y aceptabilidad, y la usabilidad y la
+accesibilidad aparecen como subcaracterísticas de la beneficiosidad. Ese detalle viene de la lectura que
+hace el Tema 2 de la Unidad 1. El resumen público de ISO no lo menciona, y el texto completo es de pago.
+
+### Cómo se conectan las tres normas
+
+La ISO 9241-11 define la usabilidad como resultado del uso. La ISO/IEC 25010:2023 describe propiedades del
+producto que hacen probable ese resultado, y la ISO/IEC 25019:2023 organiza el resultado como calidad en uso.
+Si el formulario cumple todos los requisitos de producto y Marta igual no logra su turno, la calidad de
+producto fue suficiente y la calidad en uso fue baja. La diferencia es la que se vio en el Tema 2 de la Unidad 1.
+
+| Norma | Qué aporta | Pregunta que responde |
+|---|---|---|
+| ISO 9241-11:2018 | Definición de usabilidad y sus tres medidas | ¿Qué es la usabilidad y qué se mide? |
+| ISO 9241-210:2019 | Proceso de diseño centrado en las personas | ¿Cómo se organiza el trabajo para lograrla? |
+| ISO/IEC 25010:2023 | Subcaracterísticas de capacidad de interacción | ¿Qué propiedades del producto la sostienen? |
+| ISO/IEC 25019:2023 | Modelo de calidad en uso | ¿Qué efecto tiene el uso en quien lo usa? |
+
+## Parte 4. Evaluación por heurísticas: las diez de Nielsen
+
+### Qué es una evaluación heurística
+
+Una evaluación heurística es un método de inspección. Algunas personas expertas recorren la interfaz y la
+juzgan contra una lista de principios, llamados heurísticas. No requiere usuarios, así que es barata y se
+puede hacer temprano, con un prototipo. Su límite es que muestra lo que los evaluadores creen que fallará,
+no lo que las personas reales hacen.
+
+Las diez heurísticas de Jakob Nielsen se publicaron en 1994 y Nielsen Norman Group revisó su texto por
+última vez el 30 de enero de 2024. Son las más usadas. Un procedimiento recomendado por NN/g (Moran y
+Gordon, 2023) pide que tres a cinco personas evalúen la misma interfaz de forma independiente, porque cada
+una pasa por alto problemas que otra ve.
+
+### Las diez heurísticas, aplicadas al formulario
+
+La segunda columna es una paráfrasis en español de cada una. La tercera aplica la heurística a un defecto
+posible del formulario de la clínica.
+
+| N.° | Heurística | Qué pide | Defecto posible en el formulario |
+|---|---|---|---|
+| 1 | Visibilidad del estado del sistema | Informar qué ocurre con retroalimentación a tiempo | Tras tocar Confirmar no pasa nada visible durante 4 segundos |
+| 2 | Correspondencia entre el sistema y el mundo real | Hablar el lenguaje de la persona, sin jerga | La lista de especialidades muestra códigos internos como MED-GEN-01 |
+| 3 | Control y libertad del usuario | Salida de emergencia clara de acciones por error | El botón Atrás del celular borra todo lo escrito |
+| 4 | Consistencia y estándares | Mismas palabras y acciones para lo mismo | El botón dice Aceptar, Continuar y Siguiente en tres pasos |
+| 5 | Prevención de errores | Evitar el problema antes de que ocurra | El campo fecha acepta días pasados |
+| 6 | Reconocer en lugar de recordar | Mostrar opciones y datos en vez de exigir memoria | Pide el número de afiliación sin mostrarlo en ningún lado |
+| 7 | Flexibilidad y eficiencia de uso | Atajos para quien ya sabe, sin estorbar al novato | No hay opción de repetir el último turno para quien pide siempre lo mismo |
+| 8 | Diseño estético y minimalista | No mostrar información irrelevante o rara vez necesaria | Un banner promocional ocupa la mitad de la pantalla |
+| 9 | Ayudar a reconocer, diagnosticar y recuperarse de errores | Mensajes en lenguaje claro que indican el problema y sugieren solución | Un fallo muestra Error 400 |
+| 10 | Ayuda y documentación | Ayuda breve, buscable y en el contexto de la tarea | El teléfono de la clínica está escondido en el pie de página |
+
+### Severidad: cómo priorizar los hallazgos
+
+Encontrar problemas no basta. Hay que decidir cuáles se arreglan primero. Nielsen propuso una escala de
+severidad de 0 a 4 en 1994, que NN/g mantiene publicada.
+
+| Valor | Significado |
+|:---:|---|
+| 0 | No se considera un problema de usabilidad |
+| 1 | Problema cosmético: no urge, se arregla si sobra tiempo |
+| 2 | Problema menor: prioridad baja |
+| 3 | Problema mayor: importante, prioridad alta |
+| 4 | Catástrofe de usabilidad: hay que arreglarlo antes de lanzar |
+
+Nielsen explica que la severidad combina tres factores: la frecuencia con que ocurre el problema, el
+impacto cuando ocurre y la persistencia, es decir, si la persona lo supera una vez o tropieza con él
+siempre. También advierte que es difícil obtener buenas estimaciones durante la propia evaluación, de modo
+que conviene promediar las valoraciones de varias personas.
+
+### Ejemplo resuelto: evaluación del formulario por tres evaluadores
+
+Tres evaluadores recorren el formulario por separado. Se encontraron diez hallazgos, uno por heurística.
+Los números son ilustrativos. La columna 25010 relaciona cada hallazgo con una subcaracterística de
+capacidad de interacción.
+
+| Hallazgo (heurística) | Subcaracterística 25010:2023 | Evaluador A | B | C | Promedio |
+|---|---|:---:|:---:|:---:|:---:|
+| 9. Error 400 sin explicación | Autodescriptividad | 4 | 4 | 3 | 3,67 |
+| 5. Fecha pasada aceptada | Protección frente a errores | 3 | 3 | 3 | 3,00 |
+| 3. Atrás borra lo escrito | Protección frente a errores | 3 | 4 | 3 | 3,33 |
+| 2. Códigos en vez de nombres | Autodescriptividad | 3 | 3 | 4 | 3,33 |
+| 1. Sin progreso al confirmar | Autodescriptividad | 3 | 3 | 3 | 3,00 |
+| 4. Tres nombres para el botón | Capacidad de aprendizaje | 2 | 2 | 2 | 2,00 |
+| 6. Número de afiliación de memoria | Capacidad de aprendizaje | 2 | 3 | 2 | 2,33 |
+| 8. Banner promocional | Operabilidad | 2 | 2 | 2 | 2,00 |
+| 10. Ayuda escondida | Asistencia al usuario | 2 | 2 | 3 | 2,33 |
+| 7. Sin repetir último turno | Operabilidad | 1 | 1 | 1 | 1,00 |
+
+1. Calcula el promedio de cada fila. Por ejemplo, el hallazgo 9: (4 + 4 + 3) / 3 = 3,67.
+2. Ordena de mayor a menor promedio: 9 (3,67), luego 3 y 2 (3,33), luego 5 y 1 (3,00), luego 6 y 10 (2,33), luego 4 y 8 (2,00), y al final 7 (1,00).
+3. Aplica la escala. Cinco hallazgos tienen promedio de 3 o más (9, 3, 2, 5 y 1). Son problemas mayores o catástrofes y se corrigen antes de salir.
+4. Decide. Si el equipo solo tiene tiempo para tres arreglos, elige los de los hallazgos 9, 3 y 2.
+5. Anota lo que la inspección no responde. No dice cuántos pacientes se perderán ni cuánto tardarán. Eso exige observar a personas.
+
+::: {.callout-tip}
+## Reto 3. Prioriza con las valoraciones
+
+Cuatro hallazgos nuevos, valorados por tres evaluadores (A, B, C). Hallazgo W: 4, 3, 3. Hallazgo X: 2, 2, 3. Hallazgo Y: 4, 4, 3. Hallazgo Z: 1, 2, 1. Calcula cada promedio, ordénalos y decide cuáles
+bloquean el lanzamiento según la escala de Nielsen. Explica por qué el promedio es más confiable que la
+valoración de una sola persona.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+Promedios: W = 10 / 3 = 3,33; X = 7 / 3 = 2,33; Y = 11 / 3 = 3,67; Z = 4 / 3 = 1,33. Orden: Y, W, X, Z.
+
+Con la escala, un 4 indica una catástrofe que hay que arreglar antes de lanzar. Y tiene dos valoraciones de 4 y
+una de 3, así que se trata como bloqueo. W tiene un 4 y dos 3: también conviene arreglarlo antes de salir, porque
+al menos un evaluador lo considera catástrofe y los otros dos lo ven como problema mayor. X y Z pueden esperar.
+
+El promedio reduce el sesgo de cada evaluador, porque Nielsen advierte que las estimaciones individuales
+durante la evaluación son poco fiables. Tu criterio sobre W puede variar si justificas por qué lo tratas
+como bloqueo o no.
+:::
+
+## Parte 5. Pruebas de usabilidad con personas
+
+### Qué es y cómo se planea
+
+En una prueba de usabilidad se observa a personas representativas intentando tareas reales con el producto.
+Se mide qué logran, cuánto tardan, dónde se equivocan y qué dicen. A diferencia de la inspección, muestra
+lo que ocurre de verdad. Su límite es el costo y el tamaño de la muestra.
+
+Un plan mínimo de prueba responde seis preguntas.
+
+1. Qué se quiere saber. Por ejemplo, si adultos mayores logran pedir un turno sin ayuda.
+2. Quiénes participan. Personas del contexto de uso de la Parte 1, no compañeros del equipo.
+3. Qué tareas hacen. Tareas con un resultado claro, escritas como una situación y no como instrucciones de pantalla.
+4. Qué se mide. Completitud, tiempo, errores y satisfacción.
+5. Cómo se registra. Notas, tiempos y, con permiso, grabación.
+6. Qué criterio decide el resultado. Las metas de la Parte 1.
+
+Una regla útil es no ayudar. Si la persona se atasca, el facilitador espera. Si pide ayuda y se le da,
+la tarea se anota como completada con ayuda, que es un resultado distinto de completada sin ayuda.
+
+### Ejemplo resuelto: cinco adultos mayores piden un turno
+
+El equipo de la clínica prueba el formulario con cinco adultos mayores. La tarea es la siguiente: "Pida un
+turno de medicina general para el próximo jueves". Los resultados de la tabla son ilustrativos. C significa
+completó sin ayuda, A completó con ayuda y F no completó.
+
+| Participante | Resultado | Tiempo (segundos) | Observación |
+|---|:---:|:---:|---|
+| P1 | C | 95 | Dudó en el campo fecha |
+| P2 | C | 148 | Escribió la fecha con el formato equivocado y rehízo el paso |
+| P3 | A | 210 | Pidió ayuda cuando apareció Error 400 |
+| P4 | F | 300 (se detuvo) | Se rindió en el paso de la fecha |
+| P5 | C | 120 | Tocó dos veces el botón Continuar |
+
+- Efectividad. Tres de cinco completaron sin ayuda, o sea 60 %. Cuatro de cinco lograron el turno si se cuenta la ayuda, 80 %. La meta era al menos 80 % sin ayuda, así que el resultado queda por debajo.
+- Eficiencia. Entre quienes completaron sin ayuda, el tiempo medio fue (95 + 148 + 120) / 3 = 121 segundos. La meta era 120 segundos o menos. El resultado la roza, pero con tres datos no hay base para afirmar que se cumple.
+- Satisfacción. Se mide con el cuestionario SUS de la Parte 6.
+
+### Cuánta confianza da un 60 % con cinco personas
+
+Un porcentaje con muestras pequeñas viene con una incertidumbre grande. Un método sencillo para una
+proporción es el intervalo de Agresti y Coull (1998), también llamado Wald ajustado. Con un nivel de confianza de 95 % (z = 1,96, z al cuadrado = 3,8416) se calcula así.
+
+1. Datos: x = 3 éxitos, n = 5 intentos.
+2. Proporción ajustada: p = (x + 1,9208) / (n + 3,8416) = 4,9208 / 8,8416 = 0,5566.
+3. Error estándar: raíz de p (1 - p) / (n + 3,8416) = raíz de (0,5566 x 0,4434 / 8,8416) = 0,1671.
+4. Intervalo: p mas o menos 1,96 x 0,1671 = 0,5566 mas o menos 0,3275, es decir, de 22,9 % a 88,4 %.
+
+El intervalo va de 22,9 % a 88,4 %. La meta de 80 % cae dentro. La prueba no confirma que la meta se
+cumpla ni que falle. Lo que sí entrega es otra cosa: los problemas que explican los resultados (formato de
+fecha, error 400, botón repetido). Una prueba con cinco personas sirve para encontrar problemas, no para
+estimar porcentajes con precisión.
+
+### Cuántas personas hacen falta
+
+Nielsen y Landauer propusieron en 1993 un modelo matemático. Si N es el total de problemas de la
+interfaz y L la proporción que descubre una sola persona, con n personas se encuentra una proporción de
+1 - (1 - L) elevado a n. Nielsen indica que el valor típico de L, promediado sobre los proyectos que
+estudiaron, fue de 31 %.
+
+Con L = 0,31, la proporción descubierta es 1 - 0,69 elevado a n.
+
+| Personas (n) | Problemas hallados |
+|:---:|:---:|
+| 1 | 31,0 % |
+| 2 | 52,4 % |
+| 3 | 67,1 % |
+| 4 | 77,3 % |
+| 5 | 84,4 % |
+| 7 | 92,6 % |
+| 10 | 97,6 % |
+| 15 | 99,6 % |
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 302" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diez barras del modelo de descubrimiento de problemas con L igual a 31 por ciento: de 31 por ciento con una persona a 97,6 por ciento con diez; con cinco personas se llega a 84,4 por ciento" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Problemas descubiertos según el número de personas (modelo con L = 31 %)</text>
+  <line x1="60" y1="240" x2="700" y2="240" stroke="#cfd8e3" stroke-width="1.4"/>
+  <rect x="80" y="181.1" width="44" height="58.9" rx="3" fill="#eef4fa" stroke="#c7d6e6"/><rect x="140" y="140.4" width="44" height="99.6" rx="3" fill="#eef4fa" stroke="#c7d6e6"/><rect x="200" y="112.5" width="44" height="127.5" rx="3" fill="#eef4fa" stroke="#c7d6e6"/><rect x="260" y="93.1" width="44" height="146.9" rx="3" fill="#eef4fa" stroke="#c7d6e6"/><rect x="320" y="79.6" width="44" height="160.4" rx="3" fill="#fff3d6" stroke="#e6c46f"/><rect x="380" y="70.5" width="44" height="169.5" rx="3" fill="#eef4fa" stroke="#c7d6e6"/><rect x="440" y="64.1" width="44" height="175.9" rx="3" fill="#eef4fa" stroke="#c7d6e6"/><rect x="500" y="59.7" width="44" height="180.3" rx="3" fill="#eef4fa" stroke="#c7d6e6"/><rect x="560" y="56.7" width="44" height="183.3" rx="3" fill="#eef4fa" stroke="#c7d6e6"/><rect x="620" y="54.6" width="44" height="185.4" rx="3" fill="#eef4fa" stroke="#c7d6e6"/>
+  <g font-size="11" fill="#12324f" text-anchor="middle"><text x="102" y="175.1">31,0</text><text x="162" y="134.4">52,4</text><text x="222" y="106.5">67,1</text><text x="282" y="87.1">77,3</text><text x="342" y="73.6" font-weight="700">84,4</text><text x="402" y="64.5">89,2</text><text x="462" y="58.1">92,6</text><text x="522" y="53.7">94,9</text><text x="582" y="50.7">96,5</text><text x="642" y="48.6">97,6</text></g>
+  <g font-size="11.5" fill="#5b6876" text-anchor="middle"><text x="102" y="258">1</text><text x="162" y="258">2</text><text x="222" y="258">3</text><text x="282" y="258">4</text><text x="342" y="258" font-weight="700" fill="#12324f">5</text><text x="402" y="258">6</text><text x="462" y="258">7</text><text x="522" y="258">8</text><text x="582" y="258">9</text><text x="642" y="258">10</text></g>
+  <text x="380" y="276" font-size="11.5" fill="#5b6876" text-anchor="middle">Personas que prueban (n). Porcentaje de problemas descubiertos sobre el eje vertical.</text>
+  <text x="380" y="293" font-size="11.5" fill="#855400" text-anchor="middle">Es un promedio. En conjuntos reales de cinco personas se observaron valores entre 55 % y 99 % (Faulkner, 2003).</text>
+</svg>
+
+:::
+
+### Los límites de la regla de las cinco personas
+
+El resultado se sostiene para estudios cualitativos, donde el objetivo es encontrar problemas, pero tiene límites que hay que conocer.
+
+1. Es un promedio. Faulkner (2003) probó 60 personas y sacó conjuntos aleatorios de cinco. Algunos conjuntos de cinco hallaron 99 % de los problemas y otros solo 55 %. Con diez personas el peor conjunto subió a 80 %, y con veinte a 95 %.
+2. L cambia según el proyecto. Si los problemas son difíciles de ver, L es menor. Con L = 0,10, cinco personas descubren 1 - 0,9 elevado a 5 = 41 %.
+3. Hay grupos distintos. Nielsen recomienda 3 o 4 personas por cada categoría si son dos grupos, y 3 por categoría si son tres o más.
+4. Hay estudios que no son de problemas. Nielsen (2012) indica al menos 20 personas para estudios cuantitativos de usabilidad y 15 por grupo para ordenamiento de tarjetas.
+5. Probar más veces rinde más que probar más personas. Nielsen prefiere varios estudios pequeños, con correcciones entre uno y otro, a un estudio grande.
+
+Para la clínica, esto significa una prueba con cinco personas mayores, arreglar lo hallado y repetir con otros cinco.
+Si además hay pacientes con baja visión que usan lector de pantalla, constituyen un segundo grupo con sus propias personas.
+
+### Ejemplo resuelto: cuántas personas para encontrar al menos 90 % de los problemas
+
+El equipo quiere un 90 % de descubrimiento con L = 0,31. Se resuelve 1 - 0,69 elevado a n mayor o igual a 0,90.
+
+1. Despeja: 0,69 elevado a n menor o igual a 0,10.
+2. Toma logaritmos: n mayor o igual a ln(0,10) / ln(0,69) = (-2,3026) / (-0,3711) = 6,2.
+3. Redondea hacia arriba: n = 7. Con 7 personas se descubre 92,6 %. Con 6 se queda en 89,2 %, por debajo de la meta.
+4. Ajusta por grupos. Si la clínica prueba con dos grupos (adultos mayores y personas con baja visión), aplica 3 o 4 por grupo, es decir, de 6 a 8 en total.
+
+::: {.callout-tip}
+## Reto 4. Muestra e intervalo
+
+a) De 8 personas, 7 completan una tarea sin ayuda. Calcula el intervalo de Agresti y Coull con 95 % de
+confianza. b) Con L = 0,31, ¿cuántas personas se necesitan para descubrir al menos 95 % de los problemas?
+c) ¿Qué conclusión sobre una meta de 90 % de efectividad permite el resultado del punto a?
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+a) p = (7 + 1,9208) / (8 + 3,8416) = 8,9208 / 11,8416 = 0,7533. Error estándar: raíz de (0,7533 x 0,2467 / 11,8416) = 0,1253. Intervalo: 0,7533 mas o menos 1,96 x 0,1253 = 0,7533 mas o menos 0,2456, es decir, de 50,8 % a 99,9 %.
+
+b) 0,69 elevado a n menor o igual a 0,05: n mayor o igual a ln(0,05) / ln(0,69) = (-2,9957) / (-0,3711) = 8,07. Se necesitan 9 personas (con 8 se llega a 94,9 %).
+
+c) El intervalo va de 50,8 % a unos 99,9 % y contiene el 90 %. Con 8 personas no se puede afirmar ni que la meta se cumple ni que se incumple. Para decidirlo hace falta una muestra mayor.
+:::
+
+## Parte 6. El cuestionario SUS
+
+### Qué es y de dónde viene
+
+La *System Usability Scale* (SUS) es un cuestionario de diez ítems que mide la usabilidad percibida con una
+puntuación de 0 a 100. John Brooke la desarrolló en Digital Equipment Co. Ltd. (Reino Unido), con aviso de derechos de 1986, como una
+medida "rápida y sencilla", y la describió en un capítulo de 1996. Brooke la puso a disposición gratuita, con la
+condición de citar la fuente. La publicación original aclara que la puntuación es global y que los ítems por
+separado no significan nada por sí solos.
+
+Se usa después de que la persona haya usado el sistema y antes de cualquier conversación sobre él. Se pide la
+reacción inmediata y se responden todos los ítems. Si una persona no puede responder uno, marca el punto
+medio.
+
+### Los diez ítems
+
+Cada ítem se responde en una escala de 1 (muy en desacuerdo) a 5 (muy de acuerdo). Los ítems alternan
+afirmaciones positivas (impares) y negativas (pares). Esa alternancia obliga a leer cada frase. La
+traducción siguiente es propia de esta guía. Para un estudio formal conviene usar una versión en español
+con validación publicada.
+
+| N.° | Ítem (traducción de esta guía del original de Brooke) |
+|:---:|---|
+| 1 | Creo que me gustaría usar este sistema con frecuencia |
+| 2 | Encontré el sistema innecesariamente complejo |
+| 3 | Pensé que el sistema era fácil de usar |
+| 4 | Creo que necesitaría el apoyo de una persona técnica para poder usar este sistema |
+| 5 | Encontré que las diversas funciones del sistema estaban bien integradas |
+| 6 | Pensé que había demasiada inconsistencia en este sistema |
+| 7 | Imagino que la mayoría de las personas aprendería a usar este sistema muy rápido |
+| 8 | Encontré el sistema muy incómodo de usar |
+| 9 | Me sentí muy seguro usando el sistema |
+| 10 | Necesité aprender muchas cosas antes de poder empezar con este sistema |
+
+### Cómo se calcula
+
+La regla de Brooke tiene tres pasos.
+
+1. En los ítems impares (1, 3, 5, 7, 9), la contribución es la respuesta menos 1.
+2. En los ítems pares (2, 4, 6, 8, 10), la contribución es 5 menos la respuesta.
+3. Se suman las diez contribuciones (cada una va de 0 a 4) y la suma se multiplica por 2,5. El resultado va de 0 a 100.
+
+El multiplicador 2,5 aparece porque la suma máxima es 40 y 40 x 2,5 = 100. La puntuación no es un
+porcentaje. Un 70 no significa 70 % de usabilidad.
+
+### Ejemplo resuelto: participante P1
+
+P1 respondió los diez ítems en este orden: 4, 2, 4, 2, 4, 2, 3, 2, 4, 2.
+
+1. Ítems impares: 1 (respuesta 4), 3 (respuesta 4), 5 (respuesta 4), 7 (respuesta 3), 9 (respuesta 4). Contribuciones: 3, 3, 3, 2, 3. Suma: 14.
+2. Ítems pares: 2 (respuesta 2), 4 (respuesta 2), 6 (respuesta 2), 8 (respuesta 2), 10 (respuesta 2). Contribuciones: 3, 3, 3, 3, 3. Suma: 15.
+3. Total: 14 + 15 = 29.
+4. Puntuación SUS: 29 x 2,5 = 72,5.
+
+### Resultados de los cinco participantes
+
+Los otros cuatro participantes de la prueba de la Parte 5 también respondieron el SUS. Los números son
+ilustrativos.
+
+| Participante | Respuestas (ítems 1 a 10) | Suma impares | Suma pares | Total | SUS |
+|---|---|:---:|:---:|:---:|:---:|
+| P1 | 4, 2, 4, 2, 4, 2, 3, 2, 4, 2 | 14 | 15 | 29 | 72,5 |
+| P2 | 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 | 10 | 10 | 20 | 50,0 |
+| P3 | 3, 3, 3, 3, 3, 2, 3, 3, 3, 3 | 10 | 11 | 21 | 52,5 |
+| P4 | 2, 4, 3, 4, 3, 4, 2, 4, 3, 3 | 8 | 6 | 14 | 35,0 |
+| P5 | 4, 2, 3, 2, 4, 2, 4, 2, 3, 2 | 13 | 15 | 28 | 70,0 |
+
+La media es (72,5 + 50,0 + 52,5 + 35,0 + 70,0) / 5 = 280 / 5 = 56,0. La desviación estándar de la muestra es 15,5.
+Con t de Student para 4 grados de libertad (2,776), el intervalo de 95 % es 56,0 mas o menos 2,776 x 15,5 / raíz de 5, es decir, 56,0
+mas o menos 19,2, de 36,8 a 75,2.
+
+### Cómo interpretar la puntuación: la referencia de 68
+
+Para dar sentido a un número, MeasuringU (Jeff Sauro) compara la puntuación con una base de datos acumulada. La
+página consultada habla de unas tres décadas de uso y más de 10.000 respuestas de cientos de productos, y
+ubica el promedio, en el percentil 50, en 68. Esa cifra es una referencia de esa base de datos, no un umbral
+que defina la norma ni el propio Brooke.
+
+La misma fuente da una escala de notas por rangos. Los rangos de abajo vienen de su tabla.
+
+| Rango SUS | Nota | Adjetivo | Aceptabilidad (según la tabla de MeasuringU) |
+|---|:---:|---|---|
+| 84,1 a 100 | A+ | Mejor imaginable | Aceptable |
+| 80,8 a 84,0 | A | Excelente | Aceptable |
+| 71,1 a 80,7 | C+ a A- | Bueno (solo de 71,1 a 72,5) | Aceptable |
+| 62,7 a 71,0 | C- y C | (sin adjetivo propio) | Marginal |
+| 51,7 a 62,6 | D | OK | Marginal |
+| 25,1 a 51,6 | F | Pobre | No aceptable |
+| 0 a 25,0 | F | Peor imaginable | No aceptable |
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 252" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Escala SUS de 0 a 100 con bandas de nota: F hasta 51,6; D de 51,7 a 62,6; C- y C de 62,7 a 71,0; C+ a A- de 71,1 a 80,7; A y A+ de 80,8 a 100. Marcas: promedio de referencia 68, media del ejemplo 56,0 con intervalo de 36,8 a 75,2" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Escala SUS y el resultado del formulario</text>
+  <g stroke-width="1"><rect x="60" y="70" width="330.2" height="34" fill="#fbeae5" stroke="#e0a595"/><rect x="390.9" y="70" width="70.1" height="34" fill="#fff3d6" stroke="#e6c46f"/><rect x="461" y="70" width="53.7" height="34" fill="#eef4fa" stroke="#c7d6e6"/><rect x="514.7" y="70" width="62.1" height="34" fill="#e4f2f1" stroke="#8fc9c5"/><rect x="576.8" y="70" width="123.2" height="34" fill="#cfe9e6" stroke="#8fc9c5"/></g>
+  <g font-size="12" font-weight="700" fill="#12324f" text-anchor="middle"><text x="225" y="92">F</text><text x="426" y="92">D</text><text x="488" y="92">C</text><text x="546" y="92">C+ a A-</text><text x="638" y="92">A y A+</text></g>
+  <g font-size="11" fill="#5b6876" text-anchor="middle"><text x="60" y="120">0</text><text x="124" y="120">10</text><text x="188" y="120">20</text><text x="252" y="120">30</text><text x="316" y="120">40</text><text x="380" y="120">50</text><text x="444" y="120">60</text><text x="508" y="120">70</text><text x="572" y="120">80</text><text x="636" y="120">90</text><text x="700" y="120">100</text></g>
+  <line x1="295.5" y1="150" x2="541.3" y2="150" stroke="#12324f" stroke-width="2"/>
+  <line x1="295.5" y1="142" x2="295.5" y2="158" stroke="#12324f" stroke-width="2"/><line x1="541.3" y1="142" x2="541.3" y2="158" stroke="#12324f" stroke-width="2"/>
+  <circle cx="418.4" cy="150" r="7" fill="#fff3d6" stroke="#855400" stroke-width="2"/>
+  <line x1="495.2" y1="40" x2="495.2" y2="196" stroke="#0e6f6c" stroke-width="1.8" stroke-dasharray="5 4"/>
+  <text x="495" y="36" font-size="11.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Referencia de MeasuringU: 68</text>
+  <text x="418" y="178" font-size="12" font-weight="700" fill="#855400" text-anchor="middle">Media del ejemplo: 56,0</text>
+  <text x="418" y="196" font-size="11" fill="#12324f" text-anchor="middle">Intervalo de 95 %: de 36,8 a 75,2</text>
+  <rect x="60" y="212" width="640" height="30" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="232" font-size="11.5" fill="#12324f" text-anchor="middle">El intervalo cruza el 68: con cinco personas no se puede decir que el formulario esté por debajo del promedio</text>
+</svg>
+
+:::
+
+### Qué concluye el equipo
+
+1. La media de 56,0 cae en la nota D, en el rango marginal.
+2. La meta de la Parte 1 era una media de al menos 68. El resultado está por debajo, pero el intervalo (36,8 a 75,2) incluye el 68.
+3. Con cinco personas, la conclusión honesta es "indicios de usabilidad marginal, a confirmar". Se debe repetir con más personas después de corregir los problemas.
+4. La dispersión es grande: P1 y P5 puntúan 72,5 y 70,0 y P4 solo 35,0. Esa diferencia es una pista. Hay que mirar quién es P4 y qué le pasó en la prueba.
+5. El SUS dice cuánto, no por qué. El porqué sale de las observaciones de la Parte 5 y de la inspección de la Parte 4.
+
+::: {.callout-tip}
+## Reto 5. Calcula y piensa
+
+a) Un participante respondió: 5, 1, 4, 2, 5, 1, 5, 1, 4, 1. Calcula su puntuación SUS y ubícala en la tabla de
+notas. b) Otro participante marcó 5 en los diez ítems. Calcula su puntuación y explica qué muestra sobre la
+alternancia de ítems positivos y negativos. c) ¿Qué dos advertencias harías antes de comparar la media de la
+clínica contra 68?
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+a) Impares: 5, 4, 5, 5, 4 menos 1 cada uno: 4, 3, 4, 4, 3, suma 18. Pares: 1, 2, 1, 1, 1; cinco menos la respuesta: 4, 3, 4, 4, 4, suma 19. Total 37, por 2,5 da 92,5. Está en el rango de 84,1 a 100, nota A+.
+
+b) Impares: 5 menos 1 son 4 por cinco ítems, suma 20. Pares: 5 menos 5 son 0, suma 0. Total 20, por 2,5 da 50,0. Una persona que marca todo 5 sin leer no obtiene un resultado extremo, porque las frases negativas contrarrestan a las positivas. Esa es la función de la alternancia.
+
+c) Primera, que 68 es el promedio de la base de datos de MeasuringU, no un umbral normativo, y que la clínica debería compararse con su versión anterior y con productos parecidos. Segunda, que con pocas personas el intervalo es amplio y puede incluir el 68, de modo que la comparación no es concluyente.
+:::
+
+### Errores frecuentes con el SUS
+
+- Interpretar un ítem aislado. Brooke advierte que los ítems por separado no tienen significado.
+- Leer la puntuación como porcentaje.
+- Cambiar o quitar ítems sin avisar y seguir comparando con 68.
+- Pasar el cuestionario antes de que la persona termine las tareas.
+- Concluir con 5 personas como si fueran 50.
+
+## Parte 7. Accesibilidad con WCAG 2.2
+
+### Qué es WCAG y qué versión rige
+
+Las Pautas de Accesibilidad para el Contenido Web (*Web Content Accessibility Guidelines*, WCAG) las publica el
+W3C. La versión 2.2 es Recomendación del W3C. Se publicó el 5 de octubre de 2023 y la versión consultada es
+la republicación del 12 de diciembre de 2024. WCAG 2.2 extiende a la 2.1 (junio de 2018) y el W3C indica que
+el contenido que cumple WCAG 2.2 también cumple WCAG 2.0 y 2.1.
+
+Hay un cambio de versión que conviene conocer. WCAG 2.2 agrega nueve criterios de éxito nuevos y elimina el
+4.1.1 (Análisis sintáctico), que el W3C considera siempre cumplido para HTML y XML. Según fuentes secundarias, la versión 2.2 queda con 86
+criterios (los 78 de WCAG 2.1, más 9, menos 1). WCAG 2.2 no invalida a 2.0 ni a 2.1.
+
+### Principios y niveles de conformidad
+
+WCAG se organiza en cuatro principios: perceptible, operable, comprensible y robusto. Cada criterio de éxito
+tiene un nivel de conformidad: A, AA o AAA. Cumplir el nivel AA exige satisfacer todos los criterios A y AA.
+El nivel AA es el que exige la Resolución 1519 de 2020 de Colombia, con WCAG 2.1.
+
+Los nueve criterios nuevos de WCAG 2.2 son los siguientes.
+
+| Criterio | Nivel | Qué pide |
+|---|:---:|---|
+| 2.4.11 Foco no oculto (mínimo) | AA | Al recibir foco del teclado, el elemento queda al menos parcialmente visible |
+| 2.4.12 Foco no oculto (mejorado) | AAA | El elemento con foco queda totalmente visible |
+| 2.4.13 Apariencia del foco | AAA | El indicador de foco tiene tamaño y contraste mínimos |
+| 2.5.7 Movimientos de arrastre | AA | Todo lo que se hace arrastrando tiene una alternativa con un solo puntero |
+| 2.5.8 Tamaño del objetivo (mínimo) | AA | Los objetivos táctiles miden al menos 24 por 24 píxeles CSS, o tienen espacio suficiente |
+| 3.2.6 Ayuda consistente | A | Los mecanismos de ayuda aparecen en el mismo lugar entre páginas |
+| 3.3.7 Entrada redundante | A | No se pide dos veces lo ya escrito en el mismo proceso |
+| 3.3.8 Autenticación accesible (mínimo) | AA | No se exige una prueba de función cognitiva sin alternativa o ayuda |
+| 3.3.9 Autenticación accesible (mejorado) | AAA | Ni siquiera con reconocimiento de objetos o contenido personal |
+
+### Ejemplo resuelto: contraste del texto del formulario
+
+El criterio 1.4.3 Contraste (mínimo, AA) pide una relación de contraste de al menos 4,5 a 1 para el texto,
+y de 3 a 1 para texto grande (18 puntos, o 14 puntos en negrita). La relación se calcula con
+(L1 + 0,05) / (L2 + 0,05), donde L1 es la luminancia relativa del color más claro y L2 la del más oscuro. La luminancia de un color
+sRGB es 0,2126 R + 0,7152 G + 0,0722 B, con cada canal convertido primero.
+
+La etiqueta del formulario usa gris #999999 sobre fondo blanco.
+
+1. Canal: 153 / 255 = 0,6. Conversión: ((0,6 + 0,055) / 1,055) elevado a 2,4 = 0,3185.
+2. Los tres canales valen lo mismo, así que la luminancia del gris es 0,3185. La del blanco es 1.
+3. Contraste: (1 + 0,05) / (0,3185 + 0,05) = 1,05 / 0,3685 = 2,85 a 1.
+4. Conclusión: 2,85 es menor que 4,5, así que el criterio falla. Tampoco llega a 3 a 1.
+5. Corrección: gris #595959. Canal 89 / 255 = 0,349, conversión 0,0999. Contraste: 1,05 / 0,1499 = 7,0 a 1. Pasa, con holgura.
+
+El gris más claro que todavía pasa el criterio 1.4.3 sobre blanco es #767676, con 4,54 a 1.
+
+### Ejemplo resuelto: revisión del formulario contra diez criterios
+
+Una persona revisa el formulario contra diez criterios de WCAG 2.2. Los resultados son ilustrativos y
+se diseñaron para el ejercicio.
+
+| Criterio | Resultado | Hallazgo en el formulario |
+|---|:---:|---|
+| 1.3.5 Identificar el propósito de los campos (AA) | Falla | Los campos de nombre y cédula no declaran su propósito para el autocompletado |
+| 1.4.3 Contraste mínimo (AA) | Falla | Etiquetas en gris #999999, contraste 2,85 a 1 |
+| 1.4.4 Cambio de tamaño del texto (AA) | Pasa | El texto se amplía al 200 % sin perder contenido |
+| 1.4.10 Reflujo (AA) | Falla | A 320 píxeles de ancho el botón Continuar queda fuera de pantalla y exige desplazarse en horizontal |
+| 2.1.1 Teclado (A) | Falla | El selector de fecha personalizado no se puede operar con teclado |
+| 2.5.8 Tamaño del objetivo, mínimo (AA) | Falla | Cancelar mide 18 por 18 píxeles y está pegado a Continuar |
+| 3.3.1 Identificación de errores (A) | Falla | El mensaje Error 400 no dice qué campo falló ni por qué |
+| 3.3.2 Etiquetas o instrucciones (A) | Pasa | Cada campo tiene su etiqueta visible |
+| 3.3.7 Entrada redundante (A) | Falla | La cédula se pide en el paso 1 y de nuevo en el paso 3 |
+| 3.3.8 Autenticación accesible, mínimo (AA) | Falla | El campo de clave bloquea pegar y no ofrece otra forma de ingresar |
+
+Resultado: 2 criterios pasan y 8 fallan, así que el formulario no alcanza el nivel AA. Se corrige empezando por los
+que bloquean la tarea (teclado, errores, reflujo) y se vuelve a revisar con los diez criterios.
+
+::: {.callout-note}
+## Lo que una revisión así no cubre
+
+Los diez criterios de la tabla son una muestra. Una evaluación completa de WCAG 2.2 AA revisa todos los
+criterios A y AA aplicables. Además, ninguna herramienta automática sustituye la revisión manual ni la prueba con personas que
+usan tecnologías de apoyo, como lectores de pantalla. Cumplir WCAG tampoco garantiza buena usabilidad: un formulario
+puede cumplir todos los criterios y seguir confundiendo a Marta.
+:::
+
+### WCAG 2.2 como norma ISO y el borrador de WCAG 3.0
+
+WCAG 2.2 también es norma ISO. La ficha de ISO muestra la ISO/IEC 40500:2025 (edición 2, septiembre de 2025), titulada
+*Information technology, W3C Web Content Accessibility Guidelines (WCAG) 2.2*, de descarga gratuita. En esa misma
+ficha, ISO indica que se espera que sea reemplazada por una versión en borrador (ISO/IEC DIS 40500) en los
+próximos meses. Por eso conviene volver a consultar la ficha antes de citarla en un documento formal.
+
+WCAG 3.0 es un borrador. La versión consultada es un *Working Draft* del 10 de septiembre de 2026. El propio documento
+dice que puede ser actualizado, reemplazado u obsoleto en cualquier momento y que es inapropiado citarlo como
+algo distinto de un trabajo en progreso. Además dice que es sucesor de WCAG 2.2 y que no reemplaza a WCAG 2. Usa un
+modelo distinto, con resultados, requisitos y métodos, en lugar de criterios de éxito. Hoy no hay base para exigirlo
+a un producto: los requisitos vigentes se escriben contra WCAG 2.x.
+
+::: {.callout-tip}
+## Reto 6. Contraste y objetivo táctil
+
+a) El texto de ayuda del formulario es gris #8A8A8A sobre fondo blanco, a 16 píxeles. Con la luminancia 0,2542
+calcula el contraste y decide si cumple 1.4.3. b) ¿Cambiaría la respuesta si el texto fuera de 24 píxeles
+en negrita? c) El botón Cancelar mide 18 por 18 píxeles y el vecino está a 4 píxeles. ¿Se cumple 2.5.8? ¿Qué
+cambio mínimo lo arregla?
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+a) Contraste: (1 + 0,05) / (0,2542 + 0,05) = 1,05 / 0,3042 = 3,45 a 1. Es menor que 4,5, así que no cumple 1.4.3 para texto normal.
+
+b) Sí podría cambiar. Texto grande es de al menos 18 puntos, o 14 puntos en negrita. Un texto de 24 píxeles en negrita equivale a 18 puntos en negrita, así que cuenta como texto grande, que solo exige 3 a 1, y 3,45 cumple. Con 16 píxeles no se acerca a ser texto grande.
+
+c) No se cumple: el objetivo es menor de 24 por 24 píxeles y el espacio de 4 píxeles no basta para la excepción, en la que los círculos de 24 píxeles de diámetro centrados en cada objetivo no deben cruzarse con otros. El cambio mínimo es llevar el objetivo a 24 por 24 píxeles. Un tamaño mayor resulta más cómodo para Marta.
+:::
+
+## Parte 8. Marco normativo de accesibilidad
+
+### Colombia
+
+En Colombia, el marco legal parte de la Ley 1618 de 2013, que exige definir estándares de accesibilidad web
+(su artículo 16, numeral 11, según se cita en los considerandos de la resolución). La Resolución 1519 de 2020 del
+Ministerio de Tecnologías de la Información y las Comunicaciones (MinTIC), del 24 de agosto de 2020, define las
+directrices de accesibilidad web.
+
+Lo que dice la resolución, en su artículo 3 y en el Anexo 1, es lo siguiente.
+
+- Desde el 1 de enero de 2022, los sujetos obligados deben cumplir los estándares AA de WCAG en su versión 2.1.
+- Los sujetos obligados son los del artículo 5 de la Ley 1712 de 2014, la ley de transparencia.
+- La resolución deroga la Resolución MinTIC 3564 de 2015.
+- El Anexo 1 define alcance, definiciones y criterios para sitios web y contenidos a cargo de los sujetos obligados.
+
+Se verificó el texto de la resolución y de su Anexo 1 en el sitio de MinTIC. El estándar exigido es WCAG 2.1 nivel
+AA, no WCAG 2.2. No se verificó si una norma posterior lo actualizó.
+
+### La NTC 5854
+
+La NTC 5854 es una norma técnica colombiana de ICONTEC titulada "Accesibilidad a páginas web". El catálogo de la tienda de ICONTEC la lista
+con la edición 2011 (NTC 5854:2011). Eso es lo que se pudo verificar en fuente primaria.
+
+Lo que no se verificó, porque el texto es de pago y no se leyó, es su alcance exacto, su relación técnica con las versiones de WCAG y si el
+organismo la confirmó o la actualizó después de 2011. Lo que sí se verificó es que ni el cuerpo de la Resolución 1519 de 2020 ni su Anexo 1 mencionan la
+NTC 5854: la exigencia vigente del Estado para sus portales se escribe contra WCAG 2.1 AA. Quien la cite debe
+decir la edición (2011) y consultar su estado con ICONTEC.
+
+Para la Clínica Aurora, el análisis jurídico es otro. La Resolución 1519 aplica a los sujetos del artículo 5 de la
+Ley 1712. Una clínica privada sin función pública no figura, en principio, entre ellos, pero esa conclusión depende del texto del
+artículo y de la naturaleza de la entidad, y la debe confirmar un asesor jurídico. Aun sin obligación legal, usar
+WCAG 2.2 AA como criterio interno es una decisión razonable de calidad.
+
+### Unión Europea
+
+Para productos y servicios que se ofrecen en la UE hay dos instrumentos relevantes. La Directiva (UE) 2016/2102
+cubre sitios web y aplicaciones móviles del sector público, y la lista de políticas del W3C indica que usa WCAG
+2.1 mediante la norma europea EN 301 549. El Acta Europea de Accesibilidad (*European Accessibility Act*, Directiva (UE) 2019/882)
+cubre además al sector privado.
+
+Sobre el Acta Europea de Accesibilidad, las fuentes consultadas indican que sus requisitos aplican desde el 28 de junio
+de 2025 para los productos y servicios cubiertos (por ejemplo, comercio electrónico, servicios bancarios, libros electrónicos,
+cajeros automáticos y expendedores de boletos), y que los Estados miembros debían adoptar las normas de transposición
+antes del 28 de junio de 2022.
+
+La Wikipedia, que cita a la Comisión Europea, también menciona una excepción para
+microempresas de servicios (menos de 10 personas y facturación o balance de hasta 2 millones de euros). 
+
+Los portales de la Unión Europea
+no se pudieron abrir para esta guía, de modo que la fecha de aplicación y la excepción provienen de fuentes secundarias.
+Consulta el texto oficial en EUR-Lex antes de usarlas en un documento formal.
+
+Una clínica colombiana que no ofrece servicios en la UE no queda cubierta. El Acta sirve aquí como ejemplo de hacia dónde
+va la regulación: exigencias para productos y servicios privados, y no solo para el Estado.
+
+### Mapa de marcos de accesibilidad
+
+| Marco | Qué es | A quién aplica | Estado verificado (3 de octubre de 2026) |
+|---|---|---|---|
+| WCAG 2.2 | Recomendación del W3C | Voluntaria, y base técnica de normas | Vigente, 12 de diciembre de 2024 |
+| ISO/IEC 40500:2025 | WCAG 2.2 como norma ISO | Voluntaria | Publicada, con aviso de reemplazo próximo |
+| WCAG 3.0 | Borrador del W3C | Ninguno | *Working Draft* del 10 de septiembre de 2026 |
+| Resolución MinTIC 1519 de 2020 | Directrices de accesibilidad web de Colombia | Sujetos del artículo 5 de la Ley 1712 de 2014 | Verificada en el sitio de MinTIC. Exige WCAG 2.1 AA desde 2022 |
+| NTC 5854:2011 | Norma colombiana "Accesibilidad a páginas web" | Voluntaria | Edición 2011 en el catálogo de ICONTEC. Alcance y vigencia no verificados (de pago) |
+| Directiva (UE) 2016/2102 | Accesibilidad de sitios y apps del sector público de la UE | Entes públicos de la UE | Usa WCAG 2.1 por EN 301 549, según W3C |
+| European Accessibility Act | Accesibilidad de productos y servicios en la UE | Sector privado y público de la UE | Aplica desde el 28 de junio de 2025, según fuentes secundarias |
+
+::: {.callout-tip}
+## Reto 7. Qué norma citar
+
+La clínica quiere declarar en su sitio qué estándar de accesibilidad sigue. Un compañero propone citar "la
+NTC 5854 vigente". Otro propone "WCAG 3.0, que es la más nueva". Un tercero propone "WCAG 2.2 nivel AA". Evalúa
+cada propuesta con la evidencia de esta guía y redacta una frase que la clínica pueda publicar.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 7
+
+La primera propuesta es débil: la NTC 5854 que consta en el catálogo es de 2011, su alcance y su estado actual no se pudieron
+verificar en la fuente, y la norma que el Estado exige a sus portales (Resolución 1519) no la menciona. Si se cita, hay que decir la edición y comprobar su estado con ICONTEC.
+
+La segunda es incorrecta: WCAG 3.0 es un borrador del 10 de septiembre de 2026, el W3C advierte que no se debe citar como algo distinto de un trabajo en progreso y no reemplaza a WCAG 2.
+
+La tercera es la más defendible: WCAG 2.2 es Recomendación vigente, cubre a 2.1 (que es lo que exige la Resolución 1519 a las entidades públicas) y existe como ISO/IEC 40500:2025.
+
+Frase posible: "Nuestra aplicación toma como referencia las Pautas de Accesibilidad para el Contenido Web (WCAG) 2.2, nivel AA. Algunos puntos están en revisión. Puedes
+reportar un problema de accesibilidad al correo de contacto". Como no hay una evaluación completa, la frase no debe afirmar conformidad plena. Tu redacción puede variar mientras no declare más de lo que se verificó.
+:::
+
+## Parte 9. Un plan de evaluación integrado
+
+### Qué marco usar y cuándo
+
+Ningún marco resuelve todo. Cada uno responde una pregunta distinta, y un plan serio combina varios.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 292" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapa de marcos: tres columnas, normas que definen (ISO 9241-11, 9241-210, 25010, 25019), métodos que miden (heurísticas, pruebas con personas, SUS) y accesibilidad (WCAG 2.2, Resolución 1519, NTC 5854, Acta Europea), con flechas hacia un plan de evaluación del formulario" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u3t3c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Tres familias de marcos que se combinan</text>
+  <g fill="#f1ecf8" stroke="#b9a6d8"><rect x="20" y="34" width="220" height="150" rx="12"/></g>
+  <g fill="#fff3d6" stroke="#e6c46f"><rect x="270" y="34" width="220" height="150" rx="12"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="520" y="34" width="220" height="150" rx="12"/></g>
+  <g text-anchor="middle" font-size="13" font-weight="700"><text x="130" y="58" fill="#5b3f8c">Normas que definen</text><text x="380" y="58" fill="#855400">Métodos que miden</text><text x="630" y="58" fill="#0e6f6c">Accesibilidad</text></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="130" y="86">ISO 9241-11: qué es</text><text x="130" y="106">ISO 9241-210: proceso</text><text x="130" y="126">ISO/IEC 25010: producto</text><text x="130" y="146">ISO/IEC 25019: calidad en uso</text><text x="380" y="86">Heurísticas de Nielsen</text><text x="380" y="106">Pruebas con personas</text><text x="380" y="126">Cuestionario SUS</text><text x="380" y="146">Intervalos y muestra</text><text x="630" y="86">WCAG 2.2 y ISO/IEC 40500</text><text x="630" y="106">Resolución 1519 de 2020</text><text x="630" y="126">NTC 5854</text><text x="630" y="146">European Accessibility Act</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u3t3c)"><path d="M130,186 C130,206 330,206 360,226"/><path d="M380,186 L380,224"/><path d="M630,186 C630,206 430,206 400,226"/></g>
+  <rect x="210" y="228" width="340" height="50" rx="12" fill="#eef4fa" stroke="#c7d6e6"/>
+  <text x="380" y="250" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Plan de evaluación del formulario</text>
+  <text x="380" y="267" font-size="11" fill="#5b6876" text-anchor="middle">una pregunta, un método y una evidencia por marco</text>
+</svg>
+
+:::
+
+| Pregunta | Marco o método | Cuándo | Evidencia que produce |
+|---|---|---|---|
+| ¿Qué significa que el formulario sea usable aquí? | ISO 9241-11 | Antes de diseñar | Contexto de uso y metas medibles |
+| ¿Cómo organizamos el trabajo? | ISO 9241-210 | Todo el proyecto | Ciclo de cuatro actividades |
+| ¿Qué propiedades debe tener el producto? | ISO/IEC 25010:2023 | Requisitos | Requisitos de capacidad de interacción |
+| ¿Dónde fallará según expertos? | Heurísticas de Nielsen | Prototipo | Hallazgos con severidad |
+| ¿Qué hacen personas reales? | Prueba de usabilidad | Cada iteración | Tareas, tiempos, observaciones |
+| ¿Qué tan satisfechas quedan? | SUS | Tras las tareas | Puntuación con intervalo |
+| ¿Es accesible técnicamente? | WCAG 2.2 AA | Antes de lanzar y en cada cambio | Tabla de criterios cumplidos |
+| ¿Qué efecto tiene el uso en la persona? | ISO/IEC 25019:2023 | Tras el lanzamiento | Indicadores de calidad en uso |
+
+### Ejemplo resuelto: plan de una iteración para el formulario
+
+El equipo dispone de tres semanas. Este es el plan.
+
+1. Semana 1. Se escribe el contexto de uso y las metas (Parte 1) y tres evaluadores hacen la inspección heurística (Parte 4). Se corrigen los hallazgos de severidad 3 y 4.
+2. Semana 1, en paralelo. Una persona revisa los diez criterios de WCAG 2.2 y se corrigen los que bloquean (teclado, errores, reflujo, contraste).
+3. Semana 2. Se prueba la versión corregida con 5 adultos mayores y se aplica el SUS. Se reportan intervalos, no solo medias.
+4. Semana 3. Se corrige lo hallado y se prueba con otros 5. Si además hay pacientes con baja visión que usan lector de pantalla, se agregan 3 a 4 personas de ese grupo.
+5. Decisión. La versión sale si se cumplen las metas de la Parte 1 con la evidencia disponible, y se declara lo que no se pudo confirmar.
+
+::: {.callout-note}
+## Una advertencia sobre el orden
+
+La inspección va antes de la prueba para no gastar el tiempo de los participantes en problemas que un experto detecta en una hora. La prueba va antes del SUS dentro de cada sesión, porque el SUS mide la percepción tras usar el producto.
+:::
+
+## Errores frecuentes
+
+- Confundir usabilidad con diseño visual, o con facilidad de aprendizaje a secas.
+- Evaluar sin escribir antes el contexto de uso ni las metas medibles.
+- Probar con compañeros del equipo y no con personas del contexto de uso.
+- Citar la regla de las cinco personas como ley, sin los límites de la Parte 5.
+- Presentar un porcentaje de cinco personas sin su intervalo.
+- Tratar el 68 del SUS como un umbral oficial.
+- Citar WCAG 3.0 como requisito, o la NTC 5854 sin decir la edición ni verificar su estado.
+- Creer que cumplir WCAG garantiza usabilidad, o que una herramienta automática basta para declarar conformidad.
+- Evaluar una sola vez al final, en lugar de iterar.
+
+## Autoevaluación
+
+Marca tu respuesta y compárala con la clave. Cada clave explica la respuesta.
+
+**1.** Según la ISO 9241-11:2018, ¿cuáles son las tres medidas de la usabilidad?
+
+<label><input type="checkbox"> Rapidez, belleza y bajo costo</label><br>
+<label><input type="checkbox"> Efectividad, eficiencia y satisfacción</label><br>
+<label><input type="checkbox"> Seguridad, desempeño y mantenibilidad</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 1
+
+La opción 2. La norma las define para usuarios específicos, metas específicas y un contexto de uso específico.
+:::
+
+**2.** El contexto de uso de la ISO 9241-11 está formado por:
+
+<label><input type="checkbox"> Usuarios, metas y tareas, recursos y entorno</label><br>
+<label><input type="checkbox"> Requisitos, diseño, código y pruebas</label><br>
+<label><input type="checkbox"> Cliente, proveedor, contrato y precio</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 2
+
+La opción 1. Cambiar cualquiera de los cuatro cambia la usabilidad, aunque la pantalla sea la misma.
+:::
+
+**3.** La ISO 9241-210:2019 se ocupa de:
+
+<label><input type="checkbox"> Definir cómo se calcula el SUS</label><br>
+<label><input type="checkbox"> Los principios y las actividades del diseño centrado en las personas, en ciclo iterativo</label><br>
+<label><input type="checkbox"> Los criterios de accesibilidad de las páginas web</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 3
+
+La opción 2. Sus cuatro actividades son contexto de uso, requisitos, diseño y evaluación, y se repiten hasta que el diseño cumple.
+:::
+
+**4.** En la ISO/IEC 25010:2023, la característica que antes se llamaba usabilidad se llama:
+
+<label><input type="checkbox"> Flexibilidad</label><br>
+<label><input type="checkbox"> Seguridad frente a daños</label><br>
+<label><input type="checkbox"> Capacidad de interacción</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 4
+
+La opción 3. El modelo de calidad en uso salió de la ISO/IEC 25010 y quedó en la ISO/IEC 25019:2023.
+:::
+
+**5.** Una evaluación heurística de Nielsen:
+
+<label><input type="checkbox"> Requiere cientos de usuarios</label><br>
+<label><input type="checkbox"> Es un método de inspección en el que expertos juzgan la interfaz contra principios, sin necesidad de usuarios</label><br>
+<label><input type="checkbox"> Mide la satisfacción con un cuestionario de diez ítems</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 5
+
+La opción 2. Se recomienda que tres a cinco personas evalúen de forma independiente.
+:::
+
+**6.** Con L = 0,31, cinco personas en una prueba descubren aproximadamente:
+
+<label><input type="checkbox"> 31 % de los problemas</label><br>
+<label><input type="checkbox"> 100 % de los problemas</label><br>
+<label><input type="checkbox"> 84 % de los problemas, como promedio y con variación entre grupos reales</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 6
+
+La opción 3. Es 1 - 0,69 elevado a 5, igual a 84,4 %. Faulkner (2003) halló conjuntos de cinco personas que encontraron entre 55 % y 99 %.
+:::
+
+**7.** Un participante responde un SUS así: 5, 1, 4, 2, 5, 1, 5, 1, 4, 1. Su puntuación es:
+
+<label><input type="checkbox"> 92,5</label><br>
+<label><input type="checkbox"> 37</label><br>
+<label><input type="checkbox"> 74</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 7
+
+La opción 1. La suma de contribuciones es 37 y 37 x 2,5 = 92,5. La opción 2 olvida el multiplicador.
+:::
+
+**8.** La referencia de 68 para el SUS es:
+
+<label><input type="checkbox"> Un umbral obligatorio de la ISO 9241-11</label><br>
+<label><input type="checkbox"> El promedio de la base de datos de MeasuringU, una referencia útil pero no un umbral normativo</label><br>
+<label><input type="checkbox"> El puntaje mínimo que fija Brooke para aprobar</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 8
+
+La opción 2. Ni la ISO 9241-11 ni Brooke fijan umbral alguno. Es el percentil 50 de una base de datos acumulada.
+:::
+
+**9.** WCAG 3.0, en octubre de 2026, es:
+
+<label><input type="checkbox"> Una Recomendación del W3C que reemplazó a WCAG 2.2</label><br>
+<label><input type="checkbox"> Una norma ISO obligatoria en la Unión Europea</label><br>
+<label><input type="checkbox"> Un borrador de trabajo (Working Draft) que no reemplaza a WCAG 2</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 9
+
+La opción 3. El borrador consultado es del 10 de septiembre de 2026, y el documento dice que no debe citarse como algo distinto de un trabajo en progreso.
+:::
+
+**10.** La Resolución 1519 de 2020 de MinTIC exige a los sujetos obligados, desde el 1 de enero de 2022:
+
+<label><input type="checkbox"> WCAG 2.2 nivel AAA</label><br>
+<label><input type="checkbox"> WCAG 2.1 nivel AA</label><br>
+<label><input type="checkbox"> La NTC 5854 nivel A</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 10
+
+La opción 2, según el artículo 3 y el Anexo 1. La resolución no menciona la NTC 5854 y deroga la Resolución 3564 de 2015.
+:::
+
+## Lo que te llevas
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] La definición de usabilidad de la ISO 9241-11 y sus tres medidas y el contexto de uso
+- [ ] Los seis principios y las cuatro actividades de la ISO 9241-210
+- [ ] Qué es la capacidad de interacción en la ISO/IEC 25010:2023 y qué es la calidad en uso de la ISO/IEC 25019:2023
+- [ ] Las diez heurísticas de Nielsen y cómo se prioriza con la escala de severidad
+- [ ] Cómo se planea una prueba de usabilidad, qué calcula y qué límites tiene una muestra de cinco personas
+- [ ] Cómo se calcula el SUS y por qué 68 es una referencia y no un umbral
+- [ ] Qué piden varios criterios de WCAG 2.2 y cómo se calcula un contraste
+- [ ] Qué estado tienen WCAG 3.0, ISO/IEC 40500, la Resolución 1519, la NTC 5854 y el European Accessibility Act
+:::
+
+## Glosario
+
+- **Usabilidad.** Grado en que usuarios específicos pueden usar un sistema, producto o servicio para lograr metas específicas con efectividad, eficiencia y satisfacción en un contexto de uso específico (ISO 9241-11:2018).
+- **Efectividad.** Exactitud y completitud con que las personas logran sus metas.
+- **Eficiencia.** Recursos gastados en relación con los resultados logrados.
+- **Satisfacción.** Respuestas de la persona (físicas, cognitivas y emocionales) frente al uso del producto.
+- **Contexto de uso.** Combinación de usuarios, metas y tareas, recursos y entorno en que se usa un producto.
+- **Diseño centrado en las personas.** Enfoque de desarrollo que busca sistemas usables y útiles centrándose en las personas usuarias y sus necesidades (ISO 9241-210).
+- **Capacidad de interacción.** Característica de la ISO/IEC 25010:2023 que antes se llamaba usabilidad, con ocho subcaracterísticas.
+- **Calidad en uso.** Efecto del uso de un producto en quienes lo usan, en un contexto específico (ISO/IEC 25019:2023).
+- **Evaluación heurística.** Método de inspección en que evaluadores juzgan una interfaz contra principios de usabilidad.
+- **Heurística.** Principio general de diseño usado como criterio de evaluación, como las diez de Nielsen.
+- **Severidad.** Gravedad de un problema de usabilidad, combinación de frecuencia, impacto y persistencia, en una escala de 0 a 4.
+- **Prueba de usabilidad.** Observación de personas representativas realizando tareas reales con el producto.
+- **Completada sin ayuda.** Resultado de una tarea en que la persona llegó a la meta sin intervención del facilitador.
+- **Intervalo de Agresti y Coull (Wald ajustado).** Intervalo de confianza para una proporción, recomendado para muestras pequeñas.
+- **L.** En el modelo de Nielsen y Landauer, proporción de problemas que descubre una sola persona.
+- **SUS.** *System Usability Scale*, cuestionario de diez ítems con puntuación de 0 a 100.
+- **Percentil 50.** Valor que supera a la mitad de las observaciones de una base de datos, que en el SUS de MeasuringU es 68.
+- **WCAG.** *Web Content Accessibility Guidelines*, pautas de accesibilidad del W3C.
+- **Criterio de éxito.** Requisito comprobable de WCAG, con nivel A, AA o AAA.
+- **Relación de contraste.** Cociente (L1 + 0,05) / (L2 + 0,05) entre las luminancias del color más claro y el más oscuro.
+- **ISO/IEC 40500.** Norma que publica WCAG como norma ISO; la edición 2025 corresponde a WCAG 2.2.
+- **NTC 5854.** Norma técnica colombiana de ICONTEC sobre accesibilidad a páginas web, edición 2011 en el catálogo consultado.
+- **Resolución 1519 de 2020.** Resolución de MinTIC con directrices de accesibilidad web para los sujetos obligados.
+- **European Accessibility Act.** Directiva (UE) 2019/882 sobre requisitos de accesibilidad de productos y servicios.
+- **EN 301 549.** Norma europea de requisitos de accesibilidad para productos y servicios TIC.
+
+## Bibliografía
+
+Normas y fichas oficiales (consultadas el 3 de octubre de 2026):
+
+- ISO 9241-11:2018. *Ergonomics of human-system interaction, Part 11: Usability: Definitions and concepts.* Edición 2, marzo de 2018, revisada y confirmada en 2023. [Ficha](https://www.iso.org/standard/63500.html).
+- ISO 9241-210:2019. *Ergonomics of human-system interaction, Part 210: Human-centred design for interactive systems.* Edición 2, julio de 2019, revisada y confirmada en 2025. [Ficha](https://www.iso.org/standard/77520.html).
+- ISO/IEC 25010:2023. *Systems and software engineering, SQuaRE, Product quality model.* Edición 2, noviembre de 2023. [Ficha](https://www.iso.org/standard/78176.html).
+- ISO/IEC 25019:2023. *Systems and software engineering, SQuaRE, Quality-in-use model.* Edición 1, noviembre de 2023. [Ficha](https://www.iso.org/standard/78177.html).
+- ISO/IEC 40500:2025. *Information technology, W3C Web Content Accessibility Guidelines (WCAG) 2.2.* Edición 2, septiembre de 2025. [Ficha](https://www.iso.org/standard/91029.html).
+- ICONTEC. NTC 5854:2011, *Accesibilidad a páginas web.* [Tienda de ICONTEC](https://tienda.icontec.org/tienda-icontec/buscar/?q=5854).
+
+Accesibilidad:
+
+- W3C (2024). *Web Content Accessibility Guidelines (WCAG) 2.2.* Recomendación del W3C, 12 de diciembre de 2024. [Especificación](https://www.w3.org/TR/WCAG22/).
+- W3C. *What's New in WCAG 2.2.* [Página](https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/).
+- W3C (2026). *W3C Accessibility Guidelines (WCAG) 3.0.* Working Draft, 10 de septiembre de 2026. [Borrador](https://www.w3.org/TR/wcag-3.0/).
+- W3C WAI. *Web Accessibility Laws and Policies: Colombia* y *European Union.* [Colombia](https://www.w3.org/WAI/policies/colombia/), [Unión Europea](https://www.w3.org/WAI/policies/european-union/).
+- MinTIC (2020). *Resolución 1519 del 24 de agosto de 2020*, con su Anexo 1, *Directrices de accesibilidad web.* [Resolución](https://gobiernodigital.mintic.gov.co/692/articles-178657_resolucion_1519_2020.pdf), [Anexo 1](https://gobiernodigital.mintic.gov.co/692/articles-160770_Directrices_Accesibilidad_web.pdf).
+- Congreso de Colombia (2013). *Ley Estatutaria 1618 de 2013.* Y (2014). *Ley 1712 de 2014*, de transparencia y acceso a la información pública. Se citan según los considerandos de la Resolución 1519.
+- Parlamento Europeo y Consejo (2019). *Directiva (UE) 2019/882 sobre los requisitos de accesibilidad de los productos y servicios.* [EUR-Lex](https://eur-lex.europa.eu/eli/dir/2019/882/oj/eng). La fecha de aplicación y la excepción para microempresas se tomaron de fuentes secundarias, como [Wikipedia, European Accessibility Act](https://en.wikipedia.org/wiki/European_Accessibility_Act), que cita a la Comisión Europea.
+- Parlamento Europeo y Consejo (2016). *Directiva (UE) 2016/2102 sobre la accesibilidad de los sitios web y aplicaciones móviles de los organismos del sector público.*
+
+Heurísticas, pruebas y muestra:
+
+- Nielsen, J. (1994). *10 Usability Heuristics for User Interface Design.* Texto actualizado el 30 de enero de 2024. [Nielsen Norman Group](https://www.nngroup.com/articles/ten-usability-heuristics/).
+- Nielsen, J. (1994). *Severity Ratings for Usability Problems.* [Nielsen Norman Group](https://www.nngroup.com/articles/how-to-rate-the-severity-of-usability-problems/).
+- Moran, K. y Gordon, K. (2023). *How to Conduct a Heuristic Evaluation.* [Nielsen Norman Group](https://www.nngroup.com/articles/how-to-conduct-a-heuristic-evaluation/).
+- Nielsen, J. y Landauer, T. K. (1993). A mathematical model of the finding of usability problems. *Proceedings of ACM INTERCHI'93*, 206 a 213.
+- Nielsen, J. (2000). *Why You Only Need to Test with 5 Users.* [Nielsen Norman Group](https://www.nngroup.com/articles/why-you-only-need-to-test-with-5-users/).
+- Nielsen, J. (2012). *How Many Test Users in a Usability Study?* [Nielsen Norman Group](https://www.nngroup.com/articles/how-many-test-users/).
+- Faulkner, L. (2003). Beyond the five-user assumption: Benefits of increased sample sizes in usability testing. *Behavior Research Methods, Instruments, & Computers*, 35, 379 a 383. [Ficha](https://link.springer.com/article/10.3758/BF03195514).
+- Agresti, A. y Coull, B. A. (1998). Approximate is better than "exact" for interval estimation of binomial proportions. *The American Statistician*, 52(2), 119 a 126.
+
+Cuestionario SUS:
+
+- Brooke, J. (1996). SUS: A quick and dirty usability scale. En P. W. Jordan et al. (Eds.), *Usability Evaluation in Industry.* Taylor & Francis. [Texto](https://hell.meiert.org/core/pdf/sus.pdf).
+- Sauro, J. *5 Ways to Interpret a SUS Score.* MeasuringU. [Artículo](https://measuringu.com/interpret-sus-score/).
+- Bangor, A., Kortum, P. T. y Miller, J. T. (2008). An empirical evaluation of the System Usability Scale. *International Journal of Human-Computer Interaction*, 24(6). Citado según MeasuringU.
+
+Cómo se usó cada fuente: las normas ISO, solo en su ficha pública. Agresti y Coull (1998) y Bangor et al. (2008) no se abrieron en esta consulta: la primera aporta la fórmula estándar del intervalo y la segunda se cita según MeasuringU.
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

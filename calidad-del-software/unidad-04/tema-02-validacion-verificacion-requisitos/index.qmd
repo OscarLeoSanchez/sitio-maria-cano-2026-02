@@ -1,0 +1,1217 @@
+---
+title: "Tema 2. Validación de requisitos y verificación de requisitos"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                      |
+|--------|----------------------------------------------------------------------|
+| Unidad | Unidad 4. Validación y verificación                                  |
+| Tema   | Tema 2. Validación de requisitos y verificación de requisitos        |
+:::
+
+[Presentación interactiva de la unidad](../presentacion-interactiva.html){.btn-curso}
+
+Tema anterior: [Tema 1. Métodos y estándares de verificación y validación](../tema-01-metodos-estandares-vv/index.qmd).
+Tema siguiente: [Tema 3. Control y costo de la calidad](../tema-03-control-costo-calidad/index.qmd).
+
+## Objetivo y resultado de aprendizaje
+
+El resultado de aprendizaje de la Unidad 4 pide reconocer los diferentes usos de los procesos de validación de
+requerimientos y de verificación de requisitos. Este tema lo cubre de punta a punta. El Tema 1 separó
+verificar de validar sobre el producto terminado. Aquí esa separación se aplica antes de escribir una sola
+línea de código, cuando el producto todavía es un documento de requisitos.
+
+Al terminar puedes:
+
+- Explicar qué es un requisito y qué establece la norma ISO/IEC/IEEE 29148:2018 sobre los procesos y las características de los requisitos.
+- Distinguir la verificación de requisitos (¿están bien escritos?) de la validación de requisitos (¿son los que los interesados necesitan?), con el uso y el momento de cada una.
+- Detectar en un requisito la ambigüedad, la falta de verificabilidad, la falta de completitud, la mezcla de varias exigencias y la contradicción con otro requisito.
+- Reescribir un requisito vago como un requisito verificable, con plantillas como EARS y con reglas como las de INCOSE.
+- Redactar requisitos no funcionales medibles y criterios de aceptación en Gherkin.
+- Construir y leer una matriz de trazabilidad de requisitos (RTM), calcular su cobertura y usarla para analizar el impacto de un cambio.
+- Gestionar un cambio de requisitos con control de versiones y revalidación.
+- Usar la inteligencia artificial para redactar o revisar requisitos, con las reglas que evitan sus riesgos principales.
+
+Prerrequisitos: el Tema 1 de esta unidad (verificación y validación del producto) y los Temas 1 a 3 de la
+Unidad 1. Necesitas distinguir *requisito*, *defecto* y *falla*.
+
+## Ruta de estudio
+
+Son unas 7 horas de trabajo independiente. Puedes partirlas en tres o cuatro sesiones. La presentación
+interactiva de la unidad usa los mismos conceptos y títulos de esta guía, así que sirve como repaso.
+
+::: {.calendario}
+| Parte | Qué haces | Tiempo |
+|---|---|---|
+| 1. Qué es un requisito y qué dice la ISO/IEC/IEEE 29148 | Lees los tipos de requisito y la vigencia de la norma | 30 min |
+| 2. Cómo es un buen requisito | Aprendes las características, las reglas de INCOSE y la plantilla EARS | 50 min |
+| 3. Verificación y validación de requisitos | Distingues las dos actividades, sus métodos y sus momentos | 45 min |
+| 4. Ejemplo resuelto: seis requisitos mal escritos | Sigues los cuatro pasos completos sobre la app de la clínica y resuelves los Retos 1 y 2 | 80 min |
+| 5. Criterios de aceptación con BDD y Gherkin | Escribes escenarios con ejemplos y resuelves el Reto 3 | 45 min |
+| 6. Requisitos no funcionales medibles | Conviertes atributos vagos en cifras verificables y resuelves el Reto 4 | 40 min |
+| 7. Matriz de trazabilidad (RTM) | Construyes la matriz del ejemplo, calculas su cobertura y resuelves el Reto 5 | 50 min |
+| 8. Gestión de cambios de requisitos | Analizas el impacto de un cambio con la RTM y resuelves el Reto 6 | 40 min |
+| 9. Inteligencia artificial y requisitos | Aplicas las reglas de uso seguro y resuelves el Reto 7 | 35 min |
+| Cierre | Errores frecuentes, autoevaluación y glosario | 40 min |
+:::
+
+## El hilo conductor: los requisitos de la app de turnos de la Clínica Aurora
+
+El curso entero usa una app ficticia de turnos médicos. En este tema se vuelve al principio de su historia,
+cuando el equipo recoge lo que la app debe hacer. Los seis requisitos de partida salieron de notas de
+reuniones con recepción, pacientes y coordinación médica, y están mal escritos a propósito. Ninguna cifra de
+la clínica es real. Cada número propio se marca como ilustrativo.
+
+El tema no cuenta un caso real obligatorio. Los casos reales de falla de la unidad están en el Tema 1
+(verificación y validación del producto) y en el Tema 3 (control y costo de la calidad). Aquí el material es
+el proceso de trabajar con los requisitos y el ejemplo resuelto.
+
+## Parte 1. Qué es un requisito y qué dice la ISO/IEC/IEEE 29148
+
+### Qué es un requisito
+
+Un *requisito* es una declaración que identifica una capacidad, una característica o una restricción que el
+producto debe cumplir, y que se puede usar para decidir si el producto es aceptable. La frase importante es
+la última. Un requisito sirve cuando alguien puede decir, con evidencia, que se cumplió o que no se cumplió.
+
+Los requisitos se agrupan en tres familias que conviene separar desde el principio.
+
+| Familia | Qué describe | Ejemplo en la clínica |
+|---|---|---|
+| Funcional | Lo que el sistema hace | "El sistema debe asignar el turno que el paciente confirme" |
+| No funcional (de calidad) | Cómo de bien lo hace: desempeño, seguridad, usabilidad, disponibilidad | "El sistema debe mostrar los turnos libres en 2 segundos o menos" |
+| Restricción | Una condición impuesta que limita la solución | "Los datos personales del paciente se tratan conforme a la Ley 1581 de 2012" |
+
+En la Unidad 1 viste que la calidad de un producto se descompone en características de la ISO/IEC 25010:2023.
+Los requisitos no funcionales son la forma de decir cuánto se exige de cada una. Esa norma se desarrolla
+en el Tema 2 de la Unidad 1, y aquí solo se usa como lista de atributos para completar requisitos.
+
+### La norma ISO/IEC/IEEE 29148
+
+La norma que ordena el trabajo con requisitos es la ISO/IEC/IEEE 29148, *Systems and software engineering,
+Life cycle processes, Requirements engineering*. Su edición vigente es la segunda, de noviembre de 2018.
+Especifica los procesos que producen los requisitos de sistemas y de productos de software, incluidos los
+servicios, a lo largo del ciclo de vida. Da pautas para aplicar los procesos de requisitos de las normas
+ISO/IEC/IEEE 15288 y 12207 y define el contenido de los documentos que esos procesos producen.
+
+::: {.callout-note}
+## Sobre la vigencia de la norma
+
+En la consulta de octubre de 2026 la ficha de la norma en el catálogo de BSI la lista como vigente y "en
+revisión", y la ficha de ISO, según su resumen en buscador (la página de ISO bloqueó la lectura directa),
+indica una revisión confirmada en 2024. Eso significa que la edición de 2018 sigue en uso. No se verificó
+si hay una tercera edición en preparación. Antes de citar la edición en un documento, confírmala en iso.org.
+
+La norma es de pago y no se leyó completa. Lo que esta guía dice sobre su contenido viene de su descripción
+oficial, de resúmenes de fuentes técnicas y de la guía de INCOSE, que la toma como base. Donde una afirmación
+depende de esas fuentes secundarias, el texto lo indica.
+:::
+
+Según fuentes técnicas secundarias, la norma de 2018 sustituyó a tres estándares IEEE anteriores sobre
+requisitos, entre ellos el IEEE 830-1998, que durante años fue la referencia para escribir una especificación
+de requisitos de software. Esa es la razón por la que en libros y plantillas antiguos aún aparece el 830.
+
+### Las tres capas de requisitos que reconoce el proceso
+
+La práctica que la norma organiza distingue de dónde viene un requisito. Esa distinción es la que hace
+posible validar y verificar después.
+
+1. Necesidades de los interesados. Lo que quieren o necesitan las personas afectadas por el producto, dicho en su lenguaje.
+2. Requisitos de los interesados. Las necesidades ya redactadas como exigencias para la solución, sin entrar en el diseño.
+3. Requisitos del sistema o del software. Lo que el producto debe hacer y con qué calidad, redactado de forma verificable.
+
+Entre una capa y la siguiente hay trazabilidad (Parte 7). Cada requisito del software debe poder explicarse con
+una necesidad, y cada necesidad importante debe quedar cubierta por algún requisito.
+
+## Parte 2. Cómo es un buen requisito
+
+### Características de un requisito individual
+
+Las fuentes secundarias que resumen la ISO/IEC/IEEE 29148 y la guía de INCOSE describen nueve características
+que debe tener cada requisito por separado. Las fuentes difieren en un nombre: una lista de INCOSE de 2016
+trae "independiente de la implementación" donde otras traen "apropiado". La tabla usa la segunda forma.
+
+| Característica | Pregunta que se hace sobre el requisito |
+|---|---|
+| Necesario | ¿Qué se pierde si se quita? Si nada, sobra |
+| Apropiado | ¿Está en el nivel correcto de abstracción y para este producto? |
+| No ambiguo | ¿Admite una sola lectura, la misma para todos? |
+| Completo | ¿Se entiende sin consultar otro texto? ¿Dice condiciones, valores y unidades? |
+| Singular | ¿Exige una sola cosa? |
+| Factible | ¿Se puede lograr con el tiempo, el presupuesto y la tecnología disponibles? |
+| Verificable | ¿Existe un método con el que alguien comprobará que se cumple? |
+| Correcto | ¿Describe bien la necesidad de la que sale? |
+| Conforme | ¿Sigue la plantilla y el estilo acordados en el proyecto? |
+
+### Características de un conjunto de requisitos
+
+Un requisito puede estar bien escrito y aun así fallar junto a los demás. Por eso las mismas fuentes agregan
+características del conjunto.
+
+| Característica | Pregunta sobre el conjunto |
+|---|---|
+| Completo | ¿Cubre todas las necesidades y todos los casos relevantes? |
+| Consistente | ¿Ningún requisito contradice a otro ni usa un término con dos sentidos? |
+| Factible | ¿Se pueden cumplir todos a la vez, dentro de las restricciones? |
+| Comprensible | ¿Los interesados lo entienden, en lo posible sin ayuda? |
+| Validable | ¿Se puede comprobar con los interesados que es el conjunto correcto? |
+
+La última característica conecta con el tema: un conjunto "validable" es uno que se puede someter a la
+validación de requisitos de la Parte 3. La versión 4 de la guía de INCOSE agregó una característica más, la
+corrección del conjunto.
+
+### Las reglas de INCOSE
+
+El *INCOSE Guide to Writing Requirements* (GtWR), versión 4, de julio de 2023, es la guía más usada para
+redactar requisitos en lenguaje natural. Según los resúmenes de INCOSE y de otras fuentes que la describen, esa
+versión define 42 reglas y 15 características de calidad. Cada regla responde a un defecto frecuente de
+redacción.
+
+::: {.callout-note}
+## Lo que se pudo y no se pudo verificar sobre INCOSE
+
+El documento oficial de la versión 4 está en la tienda de INCOSE y su lectura directa devolvió acceso denegado
+en la consulta de octubre de 2026. El número de reglas, las características y los nombres de las reglas R1 a
+R9 citados abajo vienen de resúmenes y de índices publicados por INCOSE y otras fuentes que describen la
+guía. Los números exactos de las demás reglas no se citan. Quien necesite aplicarlas debe consultar el
+documento completo.
+:::
+
+Las primeras reglas ya bastan para corregir la mayor parte de los requisitos malos de un proyecto de curso.
+
+| Regla | Qué pide | Cómo falla un requisito |
+|---|---|---|
+| R1 | Frase estructurada y completa | "Turnos rápidos" no es una frase |
+| R2 | Voz activa | "Los recordatorios serán enviados" no dice quién los envía |
+| R3 | Sujeto y verbo apropiados | El sujeto debe ser el sistema o la entidad que cumple |
+| R4 | Términos definidos | "Turno" y "cita" se usan con sentidos distintos |
+| R5 | Artículos definidos | "Un paciente" donde se quiso decir "el paciente" |
+| R6 | Unidades apropiadas | "2" sin decir si son segundos o minutos |
+| R7 | Evitar términos vagos | "Rápido", "fácil", "adecuado", "amigable" |
+| R8 | Evitar cláusulas de escape | "Si es posible", "cuando convenga" |
+| R9 | Evitar cláusulas abiertas | "Etcétera", "y otros", "incluyendo, pero sin limitarse a" |
+
+### La plantilla EARS
+
+EARS (*Easy Approach to Requirements Syntax*) es una plantilla de redacción creada por Alistair Mavin y
+colegas en Rolls-Royce y presentada en la conferencia IEEE de ingeniería de requisitos de 2009. Fuerza una
+frase con una estructura fija que casi elimina la ambigüedad. Hay cinco patrones básicos que se combinan.
+
+| Patrón | Forma | Ejemplo en la clínica |
+|---|---|---|
+| Ubicuo | El sistema debe respuesta | El sistema debe cerrar la sesión de un funcionario tras 10 minutos sin actividad |
+| Por evento | Cuando evento, el sistema debe respuesta | Cuando el paciente confirme un horario libre, el sistema debe asignarle el turno |
+| Por estado | Mientras estado, el sistema debe respuesta | Mientras falten 12 horas o más para el turno, el sistema debe permitir cancelarlo |
+| Característica opcional | Donde característica, el sistema debe respuesta | Donde la sede tenga pantalla de turnos, el sistema debe mostrar el código del paciente |
+| Comportamiento no deseado | Si condición, entonces el sistema debe respuesta | Si el paciente no tiene turno libre, entonces el sistema debe ofrecer la fecha libre más próxima |
+
+El patrón por evento y el patrón por estado son los más útiles al empezar. Obligan a decir cuándo se
+activa el requisito, que es justo lo que suele faltar.
+
+### Dos palabras que cambian el requisito: debe y debería
+
+Muchos equipos escriben "debe" para lo obligatorio y "debería" para lo deseable. El problema aparece cuando
+nadie lo acordó y los dos verbos se usan al azar. Un requisito con "debería" no se puede verificar como
+obligatorio, así que el proyecto debe fijar una convención por escrito. En esta guía "debe" marca lo
+obligatorio y lo deseable se anota aparte con su prioridad.
+
+## Parte 3. Verificación y validación de requisitos
+
+### Dos preguntas sobre el mismo documento
+
+El Tema 1 explicó que verificar pregunta si se construyó bien el producto frente a su especificación, y que
+validar pregunta si se construyó el producto correcto frente al uso previsto. Aplicadas a los requisitos
+cambia el objeto del que se pregunta, que ahora es el documento de requisitos mismo.
+
+La ISO 9000:2015 define los dos conceptos de forma general. La verificación es la confirmación, mediante
+evidencia objetiva, de que se cumplieron los requisitos especificados. La validación es la confirmación,
+mediante evidencia objetiva, de que se cumplieron los requisitos para un uso o aplicación específicos
+previstos. (Paráfrasis de la norma de pago, que no se leyó directamente; la edición vigente debe confirmarse
+en iso.org.)
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Las necesidades de los interesados se redactan como requisitos. La validación de requisitos pregunta con los interesados si los requisitos expresan lo que se necesita. La verificación de requisitos pregunta si cada requisito y el conjunto están bien escritos según criterios de calidad. Después los requisitos sirven de referencia para verificar y validar el sistema, tema anterior" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t2a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Dos controles sobre los requisitos antes de construir</text>
+  <rect x="20" y="60" width="170" height="70" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="295" y="60" width="170" height="70" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="570" y="60" width="170" height="70" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <g text-anchor="middle" font-size="13" font-weight="700" fill="#12324f"><text x="105" y="90">Necesidades</text><text x="380" y="90">Requisitos escritos</text><text x="655" y="90">Sistema construido</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="105" y="108">dichas por los interesados</text><text x="380" y="108">el documento de la clínica</text><text x="655" y="108">se verifica contra ellos</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u4t2a)"><path d="M192,100 L292,100"/><path d="M467,100 L567,100"/><path d="M380,132 L380,196"/></g>
+  <g text-anchor="middle" font-size="11.5" font-weight="600" fill="#0e6f6c"><text x="242" y="82">Validación</text><text x="242" y="94">de requisitos</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="242" y="120">la responden</text><text x="242" y="132">las personas</text><text x="517" y="82">Tema 1</text><text x="517" y="94">de la unidad</text></g>
+  <rect x="245" y="198" width="270" height="76" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="224" font-size="13" font-weight="700" fill="#0e6f6c" text-anchor="middle">Verificación de requisitos</text>
+  <text x="380" y="243" font-size="11" fill="#3c7d7a" text-anchor="middle">¿Está bien escrito cada requisito?</text>
+  <text x="380" y="259" font-size="11" fill="#3c7d7a" text-anchor="middle">¿El conjunto es consistente y completo?</text>
+</svg>
+
+:::
+
+### La tabla que se debe tener a mano
+
+| | Verificación de requisitos | Validación de requisitos |
+|---|---|---|
+| Pregunta | ¿Los requisitos están bien escritos? | ¿Son los requisitos que los interesados necesitan? |
+| Referencia | Características de calidad (29148, INCOSE) y el conjunto | La necesidad real de las personas |
+| Quién decide | El equipo, con una lista de chequeo | Los interesados, con evidencia que ven |
+| Técnicas | Revisión por pares, lista de chequeo, análisis automático de calidad, análisis de consistencia | Revisión con interesados, prototipos, escenarios, criterios de aceptación, BDD |
+| Detecta | Ambigüedad, falta de verificabilidad, mezcla de exigencias, contradicciones, vacíos | Requisitos que nadie necesita, requisitos que faltan, valores que no son los reales |
+| No detecta | Que un requisito perfectamente escrito sea el equivocado | Que un requisito acertado esté mal redactado |
+| Cuándo | Cada vez que se redacta o cambia un requisito | En las revisiones con interesados y antes de cada línea base |
+
+### Verificar tiene tres sentidos que se confunden
+
+La palabra "verificación" aparece en tres contextos distintos en este tema y conviene no mezclarlos.
+
+1. Verificación de requisitos. Comprobar que los requisitos están bien escritos. Es una actividad sobre el documento y se hace antes de construir.
+2. Verificabilidad de un requisito. Una característica del requisito, que indica que existe un método para comprobar su cumplimiento.
+3. Verificación del sistema. Comprobar que el software construido cumple los requisitos. Es la verificación del Tema 1, y se hace después.
+
+Un requisito verificable es un requisito que el punto 3 podrá comprobar. Por eso el punto 1 revisa que lo sea,
+antes de que exista el sistema.
+
+### Los cuatro métodos con que se verifica un requisito
+
+Cuando se dice que un requisito es verificable, se piensa en uno de cuatro métodos, que se anotan en la
+matriz de trazabilidad.
+
+| Método | En qué consiste | Ejemplo en la clínica |
+|---|---|---|
+| Inspección | Examinar el producto o su documentación | Revisar la configuración del cupo diario |
+| Demostración | Operar el sistema y observar su comportamiento | Cancelar un turno desde la app y ver el cupo liberado |
+| Prueba | Ejecutar con datos controlados y medir | Prueba de carga con 300 usuarios y medición del tiempo |
+| Análisis | Razonar o calcular a partir de modelos o datos | Calcular que 30 consultas de 12 minutos caben en una jornada |
+
+### Cómo se valida un conjunto de requisitos
+
+Sommerville (*Software Engineering*, 10.a ed., capítulo 4) describe la validación de requisitos como el
+proceso de comprobar que los requisitos definen el sistema que el cliente quiere. Propone revisar cinco
+cosas: validez, consistencia, completitud, realismo y verificabilidad. Y propone tres técnicas: revisiones de
+requisitos, prototipos y generación de casos de prueba.
+
+La tercera técnica une las dos actividades. Escribir un caso de prueba para cada requisito obliga a que el
+requisito sea verificable, y si resulta difícil escribirlo, el requisito suele estar mal redactado. La Parte 5
+la lleva a la práctica con BDD.
+
+::: {.callout-note}
+## Validar requisitos no es lo mismo que validar el sistema
+
+La validación de requisitos ocurre antes de construir y comprueba el documento con los interesados. La
+validación del sistema, con pruebas de aceptación, ocurre al final y comprueba el producto. Las dos responden
+a la pregunta "¿es lo correcto?", pero sobre objetos distintos y en momentos distintos. La primera es barata
+de corregir y la segunda no.
+:::
+
+## Parte 4. Ejemplo resuelto: seis requisitos mal escritos de la app de turnos
+
+Este ejemplo recorre cuatro pasos sobre los mismos seis requisitos: leerlos, verificarlos, reescribirlos y
+validarlos. Todos los números son ilustrativos y se inventaron para practicar.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro pasos sobre los requisitos de la clínica: seis requisitos mal escritos, verificación que cumple 11 de 30 criterios, reescritura que produce 10 requisitos y validación que cambia 3 y agrega 1 para quedar en 11 requisitos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t2b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">De seis requisitos mal escritos a once requisitos validados</text>
+  <rect x="10" y="40" width="160" height="80" rx="10" fill="#fbeae5" stroke="#e0a595"/>
+  <rect x="205" y="40" width="160" height="80" rx="10" fill="#fdf3d6" stroke="#e6cf8f"/>
+  <rect x="400" y="40" width="160" height="80" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="595" y="40" width="155" height="80" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="13" font-weight="700" fill="#12324f"><text x="90" y="68">1. Los seis</text><text x="285" y="68">2. Verificar</text><text x="480" y="68">3. Reescribir</text><text x="672" y="68">4. Validar</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="90" y="88">requisitos de partida</text><text x="90" y="104">salen de las notas</text><text x="285" y="88">se aplican cinco</text><text x="285" y="104">criterios a cada uno</text><text x="480" y="88">se corrigen con EARS</text><text x="480" y="104">y reglas de INCOSE</text><text x="672" y="88">se revisan con los</text><text x="672" y="104">interesados</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u4t2b)"><path d="M172,80 L202,80"/><path d="M367,80 L397,80"/><path d="M562,80 L592,80"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="90" y="160">6 requisitos</text><text x="285" y="160">11 de 30 criterios</text><text x="480" y="160">10 requisitos</text><text x="672" y="160">11 requisitos</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="90" y="178">escritos en lenguaje</text><text x="90" y="192">cotidiano</text><text x="285" y="178">cumplidos, 19 fallas</text><text x="285" y="192">halladas sin código</text><text x="480" y="178">uno por exigencia,</text><text x="480" y="192">con valores y método</text><text x="672" y="178">tres cambiaron y</text><text x="672" y="192">uno nuevo apareció</text></g>
+  <line x1="40" y1="215" x2="720" y2="215" stroke="#cfd8e3" stroke-width="1.2" stroke-dasharray="5 5"/>
+  <text x="380" y="236" font-size="11" fill="#5b6876" text-anchor="middle">Los pasos 2 y 3 los hace el equipo. El paso 4 lo deciden las personas que usarán la app.</text>
+</svg>
+
+:::
+
+### Paso 1. Los seis requisitos de partida
+
+Las notas de las reuniones se transcribieron tal cual en seis requisitos. Se numeran con el prefijo RO
+(requisito original).
+
+| Id | Texto original |
+|---|---|
+| RO-1 | El sistema debe ser rápido al buscar turnos. |
+| RO-2 | La app debe asignar turnos, enviar recordatorios y permitir cancelar o reprogramar. |
+| RO-3 | La app debería asignar el turno más cercano, si es posible. |
+| RO-4 | La app asigna hasta 20 turnos por día a cada especialidad. |
+| RO-5 | Medicina general debe atender 30 turnos por día. |
+| RO-6 | La app debe ser fácil de usar para todos los pacientes. |
+
+### Paso 2. Verificación de requisitos
+
+Se aplican cinco criterios a cada requisito: singular, no ambiguo, verificable, completo y consistente
+con el conjunto. La tabla marca con "Sí" lo que cumple y con "No" lo que falla, y la columna final dice por qué.
+
+| Id | Singular | No ambiguo | Verificable | Completo | Consistente | Qué se encontró |
+|---|:---:|:---:|:---:|:---:|:---:|---|
+| RO-1 | Sí | No | No | No | Sí | "Rápido" no tiene medida, ni condiciones de carga, ni punto de medición |
+| RO-2 | No | No | No | No | Sí | Cuatro exigencias en una frase. "Recordatorios" no dice cuándo ni por qué canal. No dice qué pasa si no hay turno al reprogramar |
+| RO-3 | Sí | No | No | No | Sí | "Debería" y "si es posible" dejan el requisito sin obligación. "Más cercano" no dice a partir de cuándo |
+| RO-4 | Sí | No | Sí | No | No | "Cada especialidad" no dice si es por sede o por profesional. No dice qué pasa en el turno 21. Choca con RO-5 |
+| RO-5 | Sí | No | Sí | No | No | "Atender" y "asignar" no son lo mismo. No dice sede ni profesional. Para Medicina general dice 30 y RO-4 dice 20 |
+| RO-6 | Sí | No | No | No | Sí | "Fácil" y "todos" no se pueden medir. No dice quién es "todos" |
+
+El conteo es el siguiente. Cada fila tiene cinco criterios, así que son 6 x 5 = 30 casillas. Cumplen
+2 + 1 + 2 + 2 + 2 + 2 = 11, y fallan 30 - 11 = 19. El requisito RO-2 es el peor, con un solo criterio
+cumplido. Y todo esto se encontró leyendo texto, sin escribir ni ejecutar una línea de código.
+
+Observa que RO-4 y RO-5 son verificables cada uno por separado, porque se pueden contar turnos. La falla
+aparece al ponerlos juntos. Es el caso típico de un defecto de conjunto, que solo se ve con el criterio de consistencia.
+
+### Paso 3. Reescritura
+
+Cada requisito se reescribe con patrones EARS y con las reglas R1 a R9. Donde un número no se puede
+inventar, se propone un valor inicial que el paso 4 deberá validar. Se usa el prefijo RQ.
+
+| Id nuevo | Viene de | Requisito reescrito | Método |
+|---|---|---|---|
+| RQ-01 | RO-1 | Cuando el paciente busque turnos de una especialidad, el sistema debe mostrar la lista de turnos libres en 2 segundos o menos en el percentil 95, con 200 usuarios simultáneos y 50.000 turnos registrados. | Prueba |
+| RQ-02 | RO-2 | Cuando el paciente confirme un horario libre, el sistema debe asignarle el turno y mostrarle un código de confirmación. | Prueba |
+| RQ-03 | RO-2 | El sistema debe enviar al paciente un recordatorio por mensaje de texto 24 horas antes de la hora del turno. | Prueba |
+| RQ-04 | RO-2 | Mientras falten 12 horas o más para el turno, el sistema debe permitir al paciente cancelarlo y debe liberar el cupo. | Prueba |
+| RQ-05 | RO-2 | Cuando el paciente reprograme un turno, el sistema debe asignar el turno nuevo antes de liberar el anterior, y si no hay turno nuevo debe conservar el original. | Prueba |
+| RQ-06 | RO-3 | Cuando el paciente solicite turno de una especialidad, el sistema debe ofrecer primero el turno libre con fecha y hora más próximas a partir del momento de la solicitud. | Prueba |
+| RQ-08 | RO-4 | El sistema debe permitir configurar, por especialidad, el cupo diario de turnos por profesional. | Demostración |
+| RQ-09 | RO-4 y RO-5 | El valor inicial del cupo diario por profesional debe ser 30 en Medicina general y 20 en las demás especialidades. | Inspección |
+| RQ-10 | RO-4 | Cuando un profesional alcance su cupo diario, el sistema debe mostrar ese día como no disponible para ese profesional. | Prueba |
+| RQ-11 | RO-6 | Un paciente que use la app por primera vez debe poder solicitar un turno en 3 minutos o menos, sin ayuda, en al menos 9 de 10 sesiones de prueba. | Prueba con usuarios |
+
+La numeración salta de RQ-06 a RQ-08. El número RQ-07 queda reservado para un requisito que el paso 4 va a
+descubrir, y se reserva ahora para que la numeración final no cambie de un paso a otro.
+
+Cuenta lo que pasó. De 6 requisitos se pasó a 10. RO-2 se partió en cuatro (RQ-02 a RQ-05), RO-4 y RO-5
+se resolvieron en tres (RQ-08 a RQ-10) y los otros tres quedaron en uno cada uno. Que el número crezca no
+indica trabajo extra. Indica que las exigencias que estaban mezcladas ahora se ven.
+
+Un detalle de RQ-09 merece lectura. Los dos valores, 30 y 20, ya no se contradicen porque el requisito
+declara que uno es la excepción del otro. Esa es la forma de resolver una inconsistencia que sí es real.
+El equipo no decide cuál de los dos valores es el correcto. Lo decide el paso siguiente, con quien conoce la clínica.
+
+### Paso 4. Validación con los interesados
+
+El equipo llevó los diez requisitos a tres personas y a un prototipo. Cada una validó lo que conoce. Los
+hallazgos son ilustrativos.
+
+| Interesado | Cómo se validó | Hallazgo | Efecto sobre los requisitos |
+|---|---|---|---|
+| Recepción | Revisión del texto y del registro de llamadas de la clínica | A las 7:00, cuando se abre la agenda, intentan entrar unos 300 pacientes, no 200 | RQ-01 pasa de 200 a 300 usuarios simultáneos |
+| Pacientes | Entrevista con el prototipo en papel | Un recordatorio 24 horas antes llega tarde para quien debe organizar transporte. Quieren uno a las 48 horas y otro a las 2 horas | RQ-03 cambia a dos recordatorios, uno a 48 horas y otro a 2 horas |
+| Coordinación médica | Revisión del texto con el cuadro de consultas | El cupo de 30 de Medicina general sale de consultas de 12 minutos. El de 20 sale de consultas de 20 minutos | Se confirma RQ-09. Se verifica por análisis: 30 x 12 = 360 minutos y 20 x 20 = 400 minutos, ambos caben en una jornada de 8 horas |
+| Coordinación médica | Escenario: paciente crónico | Los pacientes crónicos quieren seguir con el mismo médico, aunque el turno sea más lejano | Aparece un requisito nuevo: RQ-07 |
+| Pacientes | Prueba del prototipo con 10 personas | Cuatro de los diez tenían más de 60 años y fueron los que más tardaron. "Todos los pacientes" ocultaba esta población | RQ-11 declara explícitamente que la muestra de prueba incluye personas de 18 a 80 años y al menos tres mayores de 60 |
+
+El requisito nuevo, escrito con la misma disciplina, queda así.
+
+| Id | Requisito | Método |
+|---|---|---|
+| RQ-07 | Cuando el paciente solicite turno de una especialidad y haya sido atendido por un profesional de ella en los últimos 6 meses, el sistema debe ofrecer primero los turnos libres de ese profesional. | Prueba |
+
+Este hallazgo es el motivo de ser de la validación. Ninguna lista de chequeo sobre el texto de RO-3 habría
+descubierto que faltaba RQ-07, porque el texto no tenía nada mal escrito en ese aspecto. Hizo falta una
+persona que conoce a los pacientes crónicos. La verificación revisa lo que está escrito. La validación
+encuentra lo que falta o lo que está mal calibrado.
+
+Después de la validación, tres requisitos cambian de redacción. Esta es su versión final, la que entra a la línea base.
+
+| Id | Requisito final | Qué cambió |
+|---|---|---|
+| RQ-01 | Cuando el paciente busque turnos de una especialidad, el sistema debe mostrar la lista de turnos libres en 2 segundos o menos en el percentil 95, con 300 usuarios simultáneos y 50.000 turnos registrados. | De 200 a 300 usuarios |
+| RQ-03 | El sistema debe enviar al paciente un recordatorio por mensaje de texto 48 horas antes de la hora del turno y otro 2 horas antes. | De un aviso a las 24 horas a dos avisos |
+| RQ-11 | Un paciente que use la app por primera vez debe poder solicitar un turno en 3 minutos o menos, sin ayuda, en al menos 9 de 10 sesiones de prueba, con participantes de 18 a 80 años entre los que haya al menos tres mayores de 60. | Se define quién es "todos" |
+
+El conjunto final tiene 11 requisitos. Tres cambiaron por la validación (RQ-01, RQ-03 y RQ-11), uno se agregó
+(RQ-07) y siete quedaron como estaban. Antes de congelar este conjunto como línea base conviene volver a pasar
+la verificación sobre los cambios, porque una corrección hecha para validar también puede introducir un defecto.
+
+::: {.callout-tip}
+## Reto 1. Verifica y reescribe un requisito nuevo
+
+Un interesado agrega este requisito a la app: "La app debe guardar el historial de turnos de forma segura y
+por mucho tiempo." Aplica los cinco criterios de la tabla del paso 2, indica cuántos cumple, y reescríbelo.
+Si para completarlo falta un dato que nadie puede inventar, señala cómo se maneja.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+Singular: sí, aunque "segura" y "mucho tiempo" son dos atributos que conviene separar. No ambiguo: no,
+porque "segura" y "mucho tiempo" no se definen. Verificable: no. Completo: no, porque no dice quién guarda,
+qué se guarda ni por cuánto. Consistente: se asume que sí, porque ningún otro requisito del ejemplo lo contradice.
+Cumple 2 de 5.
+
+Una reescritura posible separa en dos. Primero, "El sistema debe conservar el historial de turnos de cada
+paciente durante [plazo por definir] años desde el último turno." Segundo, un requisito de seguridad
+medible, por ejemplo "El sistema debe exigir autenticación para consultar el historial de turnos y debe cerrar
+la sesión tras 10 minutos sin actividad."
+
+El plazo de conservación no se inventa. Lo fija la normativa que aplique a la clínica y la política de la
+institución. Se deja marcado entre corchetes como dato pendiente, con responsable, y el requisito no se
+congela hasta tenerlo. Un requisito con un dato pendiente es honesto. Uno con un número inventado es un riesgo.
+:::
+
+::: {.callout-tip}
+## Reto 2. Detecta el defecto de conjunto
+
+Estos dos requisitos son individualmente claros: "El sistema debe enviar un recordatorio por mensaje de texto
+48 horas antes del turno" y "El sistema debe enviar un único mensaje por paciente cada 72 horas, como máximo."
+Escribe en qué caso se contradicen y cómo lo resolverías antes de consultar a nadie.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+Se contradicen cuando un paciente tiene dos turnos con menos de 72 horas entre sí. El segundo recordatorio
+rompería el límite del segundo requisito, o el límite impediría el recordatorio exigido por el primero.
+
+Antes de consultar a nadie, el equipo no debe elegir cuál requisito gana. Debe registrar el conflicto,
+describir el caso en que ocurre y llevarlo a quien tiene la autoridad para decidir. Las salidas razonables son
+declarar una prioridad entre los dos, o acotar el segundo requisito a mensajes que no sean recordatorios de
+turno. Esa decisión es de validación, no de redacción.
+:::
+
+## Parte 5. Criterios de aceptación con BDD y Gherkin
+
+### Qué es el desarrollo guiado por comportamiento
+
+El desarrollo guiado por comportamiento (*Behavior-Driven Development*, BDD) lo describió Dan North en el
+artículo *Introducing BDD*, publicado en la revista Better Software en marzo de 2006. Propone expresar el
+comportamiento esperado con ejemplos concretos, en una plantilla de tres partes: dado un contexto inicial,
+cuando ocurre un evento, entonces se espera un resultado. Esos ejemplos son criterios de aceptación y a la
+vez pruebas posibles.
+
+La documentación de Cucumber, la herramienta más difundida de BDD, resume el método en tres prácticas.
+El descubrimiento, que reúne a negocio, desarrollo y pruebas para conversar con ejemplos reales. La
+formulación, que escribe esos ejemplos en un formato que leen personas y máquinas. Y la automatización, que
+convierte cada ejemplo en una prueba. Para este tema interesan las dos primeras, porque son las que validan
+y verifican requisitos. La tercera es de pruebas de software.
+
+### Descubrir: el mapa de ejemplos
+
+El mapa de ejemplos (*Example Mapping*), propuesto por Matt Wynne en diciembre de 2015, estructura una
+conversación de unos 25 minutos con tarjetas de cuatro colores.
+
+| Color | Contenido | Ejemplo con RQ-04 (cancelar un turno) |
+|---|---|---|
+| Amarillo | La historia o requisito que se discute | Cancelar un turno |
+| Azul | Reglas que lo restringen | Solo se puede cancelar con 12 horas o más de anticipación |
+| Verde | Ejemplos concretos de cada regla | Turno el lunes a las 9:00. Cancelar el domingo a las 21:00 (12 h) sí. A las 21:01 (11 h 59 min) no |
+| Rojo | Preguntas o supuestos sin respuesta | ¿Qué hace la app si el paciente cancela tarde por una emergencia? |
+
+Cada tarjeta roja es un hueco que la verificación no habría encontrado, porque el texto del requisito no
+lo mencionaba. Cada regla azul sin tarjeta verde es una regla aún sin ejemplo y, por tanto, sin prueba.
+
+### Formular: Gherkin
+
+Gherkin es el lenguaje de texto en que se escriben los ejemplos. Sus palabras clave, según la referencia
+oficial de Cucumber, son estas.
+
+| Palabra | Para qué sirve |
+|---|---|
+| Feature (Característica) | Agrupa los escenarios de una funcionalidad |
+| Rule (Regla) | Agrupa los escenarios que ilustran una regla de negocio |
+| Scenario o Example (Escenario o Ejemplo) | Un caso concreto |
+| Given (Dado) | El contexto inicial, el sistema en un estado conocido |
+| When (Cuando) | El evento o la acción |
+| Then (Entonces) | El resultado esperado, que se podrá comprobar |
+| And y But (Y y Pero) | Encadenan pasos del mismo tipo |
+| Background (Antecedentes) | Pasos comunes a todos los escenarios |
+| Scenario Outline y Examples (Esquema del escenario y Ejemplos) | Una plantilla que se ejecuta con una tabla de datos |
+
+Gherkin admite varios idiomas, y el español se activa con una primera línea de comentario. A continuación va
+la regla de cupo diario, RQ-10, con los valores del requisito RQ-09. Los ejemplos eligen los valores
+fronterizos, 19 y 20 en el caso general y 29 y 30 en Medicina general.
+
+```gherkin
+# language: es
+Característica: Cupo diario por profesional
+
+  Regla: Un profesional no recibe más turnos que su cupo diario
+
+    Esquema del escenario: Disponibilidad del día según los turnos asignados
+      Dado un profesional de "<especialidad>" con <asignados> turnos asignados para el lunes
+      Cuando el paciente busca turnos para el lunes
+      Entonces el sistema muestra el lunes como "<estado>" para ese profesional
+
+      Ejemplos:
+        | especialidad     | asignados | estado        |
+        | Pediatría        | 19        | disponible    |
+        | Pediatría        | 20        | no disponible |
+        | Medicina general | 29        | disponible    |
+        | Medicina general | 30        | no disponible |
+```
+
+Esos cuatro ejemplos reproducen el defecto que el Tema 1 de la Unidad 1 usó como ejemplo, el que aparece
+en el turno 20 por comparar con menor en lugar de menor o igual. Con el ejemplo del turno 20 escrito antes de
+programar, ese defecto no sobrevive a la primera ejecución.
+
+### Criterios de aceptación bien formados
+
+Un criterio de aceptación sirve cuando cumple cuatro condiciones.
+
+- Es concreto: usa valores, no adjetivos.
+- Es observable: dice qué se ve o se mide al final.
+- Es independiente: se puede comprobar sin ejecutar antes otro escenario.
+- Es breve: un escenario ilustra una sola regla.
+
+Si un escenario necesita diez pasos, probablemente mezcla varias reglas y el requisito del que sale no era singular.
+
+### Cómo el BDD une las dos actividades
+
+Escribir un escenario es verificar, porque obliga a que el requisito tenga valores y resultados observables.
+Conversar el escenario con los interesados es validar, porque ellos reconocen o corrigen el ejemplo. La
+práctica llamada "los tres amigos", en que negocio, desarrollo y pruebas revisan juntos el escenario antes de
+construir, junta las dos actividades en una sola sesión.
+
+::: {.callout-note}
+## Un límite del BDD
+
+El BDD no sustituye una buena especificación. Una colección de escenarios dice cómo se comporta el sistema en
+los casos que alguien pensó, y no dice nada de los casos que nadie imaginó. Los criterios de aceptación
+completan los requisitos y no los reemplazan, sobre todo en los requisitos no funcionales, que a menudo se
+verifican con mediciones y no con escenarios.
+:::
+
+::: {.callout-tip}
+## Reto 3. Escribe los escenarios de RQ-04
+
+Para el requisito "Mientras falten 12 horas o más para el turno, el sistema debe permitir al paciente cancelarlo
+y debe liberar el cupo", escribe en una tabla de ejemplos tres casos de frontera con la hora del turno y la
+hora de la cancelación: justo en el límite, un minuto antes del límite y bien dentro del permitido. Indica el
+resultado esperado de cada uno.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+Se toma un turno fijo, el lunes a las 9:00.
+
+| Caso | Hora de la cancelación | Anticipación | Resultado esperado |
+|---|---|---|---|
+| Justo en el límite | Domingo 21:00 | 12 h 0 min | El sistema permite cancelar y libera el cupo |
+| Un minuto después del límite | Domingo 21:01 | 11 h 59 min | El sistema no permite cancelar |
+| Bien dentro | Viernes 9:00 | 72 h | El sistema permite cancelar y libera el cupo |
+
+El caso del límite exacto es el que decide si se programó "mayor o igual" o "mayor", así que es el más
+valioso de los tres. Además, el escenario de las 21:01 hace aparecer una pregunta que el requisito no
+respondía: qué mensaje ve el paciente cuando no puede cancelar. Ese es un requisito nuevo por escribir.
+:::
+
+## Parte 6. Requisitos no funcionales medibles
+
+### Por qué fallan los requisitos de calidad
+
+Los requisitos funcionales suelen ser verificables de forma natural, porque describen un comportamiento que
+se observa. Los no funcionales fallan con más frecuencia porque se escriben con adjetivos: rápido, seguro,
+fácil, estable, escalable. Un adjetivo no se puede probar. Un número con sus condiciones, sí.
+
+### La plantilla de seis elementos
+
+Un requisito no funcional medible dice seis cosas.
+
+| Elemento | Qué dice | En RQ-01 |
+|---|---|---|
+| Atributo | Qué característica de calidad se exige | Eficiencia de desempeño |
+| Métrica | Qué se mide | Tiempo de respuesta de la búsqueda |
+| Valor objetivo | Cuánto se exige, con unidad | 2 segundos o menos |
+| Estadístico | Sobre qué parte de las mediciones | En el percentil 95 |
+| Condiciones | Bajo qué carga o contexto | 300 usuarios simultáneos, 50.000 turnos registrados |
+| Método | Cómo se comprobará | Prueba de carga en el ambiente de pruebas |
+
+El estadístico importa. Un promedio de 1 segundo puede ocultar que uno de cada diez pacientes espera 8 segundos.
+El percentil 95 dice que el 95 % de las búsquedas debe estar dentro del valor. Y las condiciones evitan que
+el requisito se cumpla en el laboratorio y falle a las 7:00 de la mañana.
+
+### Del adjetivo al número en la clínica
+
+La lista de atributos sale de la ISO/IEC 25010:2023, que se desarrolla en el Tema 2 de la Unidad 1. Aquí se
+usa solo como lista para no olvidar ninguno.
+
+| Atributo (ISO/IEC 25010:2023) | Requisito vago | Requisito medible | Método |
+|---|---|---|---|
+| Eficiencia de desempeño | El sistema debe ser rápido | La búsqueda de turnos responde en 2 s o menos en el percentil 95 con 300 usuarios simultáneos | Prueba de carga |
+| Capacidad de interacción | La app debe ser fácil de usar | Un paciente nuevo solicita un turno en 3 min o menos, sin ayuda, en 9 de 10 sesiones de prueba | Prueba con usuarios |
+| Fiabilidad | La app debe estar siempre disponible | La app está disponible el 99,5 % del tiempo de cada mes, medido en el punto de entrada, sin contar mantenimientos avisados con 48 h de anticipación | Monitoreo |
+| Seguridad informática | La app debe ser segura | El sistema cierra la sesión de un funcionario tras 10 min sin actividad | Prueba |
+| Mantenibilidad | Debe ser fácil de modificar | Cambiar el cupo diario de una especialidad toma menos de 5 minutos y no exige cambiar código | Demostración |
+| Compatibilidad | Debe funcionar en cualquier teléfono | La app funciona en los sistemas y navegadores que usa al menos el 95 % de los pacientes según las estadísticas de la clínica | Prueba y análisis |
+
+### Cuánto vale una cifra de disponibilidad
+
+La disponibilidad se expresa en porcentaje, y cada nueve extra reduce mucho el tiempo de caída permitido.
+Para un mes de 30 días, que tiene 30 x 24 = 720 horas, el cálculo es sencillo.
+
+| Disponibilidad | Caída permitida por mes | Cálculo |
+|---|---|---|
+| 99 % | 7,2 horas | 720 x 0,01 |
+| 99,5 % | 3,6 horas, es decir 3 h 36 min | 720 x 0,005 |
+| 99,9 % | 43,2 minutos | 720 x 0,001 = 0,72 h x 60 |
+| 99,99 % | 4,32 minutos | 720 x 0,0001 = 0,072 h x 60 |
+
+Pedir 99,99 % para una app de turnos de una clínica pequeña seguramente cuesta mucho más de lo que vale. El
+número lo decide la validación con quien conoce el costo de una caída, y no un deseo del equipo. Esta guía
+no da un valor "correcto" de disponibilidad porque depende del contexto.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un requisito no funcional vago se convierte en uno medible con tres pasos: elegir el atributo y la métrica, fijar el valor objetivo con el estadístico y las condiciones, y definir el método de verificación" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t2c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">De un adjetivo a un requisito que se puede probar</text>
+  <rect x="10" y="40" width="150" height="90" rx="10" fill="#fbeae5" stroke="#e0a595"/>
+  <rect x="200" y="40" width="165" height="90" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="405" y="40" width="165" height="90" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="610" y="40" width="140" height="90" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="12.5" font-weight="700" fill="#12324f"><text x="85" y="66">Adjetivo</text><text x="282" y="66">1. Qué se mide</text><text x="487" y="66">2. Cuánto y cuándo</text><text x="680" y="66">3. Cómo se prueba</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="85" y="88">"rápido"</text><text x="85" y="104">"fácil"</text><text x="282" y="88">atributo y métrica:</text><text x="282" y="104">tiempo de respuesta</text><text x="487" y="88">valor, estadístico y</text><text x="487" y="104">condiciones de carga</text><text x="680" y="88">prueba, medición</text><text x="680" y="104">o inspección</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u4t2c)"><path d="M162,85 L197,85"/><path d="M367,85 L402,85"/><path d="M572,85 L607,85"/></g>
+  <rect x="150" y="160" width="460" height="50" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <text x="380" y="182" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Resultado: 2 s o menos en el percentil 95, con 300 usuarios,</text>
+  <text x="380" y="199" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">medido con una prueba de carga</text>
+</svg>
+
+:::
+
+::: {.callout-tip}
+## Reto 4. Vuelve medible un requisito de disponibilidad
+
+La clínica pide: "La app debe estar siempre disponible." Escribe una versión medible con un porcentaje mensual,
+calcula cuántas horas de caída permite en un mes de 30 días y di qué método comprobaría el requisito. Explica
+también por qué la palabra "siempre" es un problema.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+Una versión medible es "La app debe estar disponible al menos el 99,5 % del tiempo de cada mes de calendario,
+medido en el punto de entrada de la app, sin contar los mantenimientos avisados con 48 horas de anticipación."
+
+Con 720 horas al mes, el 0,5 % restante es 720 x 0,005 = 3,6 horas, o 3 horas y 36 minutos de caída permitida.
+El método es el monitoreo continuo del punto de entrada, con un informe mensual.
+
+"Siempre" es un problema porque exige cero caídas, algo que ningún sistema real puede garantizar ni
+verificar, ya que habría que observarlo durante un tiempo infinito. El porcentaje convierte un deseo en un
+umbral que se puede comprobar. El valor exacto, 99,5 %, es ilustrativo y debe fijarse con la clínica.
+:::
+
+## Parte 7. La matriz de trazabilidad de requisitos (RTM)
+
+### Qué es y para qué sirve
+
+La *trazabilidad de requisitos* es, según la definición clásica de Gotel y Finkelstein (1994), la capacidad
+de describir y seguir la vida de un requisito en las dos direcciones, hacia adelante y hacia atrás. La
+*matriz de trazabilidad de requisitos* (RTM, *Requirements Traceability Matrix*) es la tabla que registra esos
+vínculos entre los requisitos y los demás elementos del proyecto.
+
+- Hacia atrás: de un requisito a su origen. Responde "¿quién lo pidió y por qué?".
+- Hacia adelante: de un requisito a su diseño, su código y sus pruebas. Responde "¿dónde se construyó y cómo se comprobó?".
+
+Según una fuente secundaria que recoge el estado del arte, la trazabilidad es obligatoria en estándares de
+sistemas críticos como DO-178C (aviación), ISO 26262 (automoción) e IEC 61508 (seguridad funcional). En
+un proyecto sin esa obligación sigue sirviendo para cuatro usos.
+
+1. Cobertura. Detecta requisitos sin prueba y sin diseño.
+2. Impacto. Muestra qué se afecta si un requisito cambia.
+3. Alcance. Detecta trabajo que ningún requisito pidió, el llamado *gold plating*, y pruebas huérfanas.
+4. Evidencia. Demuestra a un cliente o auditor que cada exigencia se construyó y se comprobó.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cadena de trazabilidad de un requisito de la clínica: la necesidad de la coordinación médica origina el requisito RQ-10, que se implementa en el componente de reglas de cupo y se comprueba con la prueba PR-03. Las flechas hacia adelante van de la necesidad a la prueba y las flechas hacia atrás van de la prueba a la necesidad" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t2d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker><marker id="u4t2e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#0e6f6c"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Trazabilidad de un requisito en las dos direcciones</text>
+  <rect x="10" y="80" width="160" height="80" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="205" y="80" width="160" height="80" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="400" y="80" width="160" height="80" rx="10" fill="#f5f7fa" stroke="#cfd8e3"/>
+  <rect x="595" y="80" width="155" height="80" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="12.5" font-weight="700" fill="#12324f"><text x="90" y="106">Necesidad</text><text x="285" y="106">Requisito</text><text x="480" y="106">Diseño</text><text x="672" y="106">Prueba</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="90" y="126">Coordinación médica:</text><text x="90" y="142">cupo por profesional</text><text x="285" y="126">RQ-10: mostrar el día</text><text x="285" y="142">como no disponible</text><text x="480" y="126">Componente</text><text x="480" y="142">reglas de cupo</text><text x="672" y="126">PR-03: cuatro</text><text x="672" y="142">ejemplos de frontera</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u4t2d)"><path d="M172,110 L202,110"/><path d="M367,110 L397,110"/><path d="M562,110 L592,110"/></g>
+  <text x="380" y="62" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Hacia adelante: de la necesidad a la evidencia</text>
+  <g fill="none" stroke="#0e6f6c" stroke-width="1.8" marker-end="url(#u4t2e)"><path d="M672,170 C672,215 90,215 90,172"/></g>
+  <text x="380" y="235" font-size="11.5" font-weight="600" fill="#0e6f6c" text-anchor="middle">Hacia atrás: de la prueba a quién lo pidió</text>
+</svg>
+
+:::
+
+### Ejemplo resuelto: la RTM de los once requisitos
+
+Con los once requisitos del paso 4 se arma la matriz. Las fuentes son REC (recepción), PAC (pacientes), COO
+(coordinación médica) y GER (gerencia). Los componentes son el buscador, la agenda, las notificaciones, las
+reglas de cupo y la interfaz del paciente. Todo el contenido es ilustrativo.
+
+| Req | Fuente | Componente | Prueba | Método | Verificación | Validación |
+|---|---|---|---|---|---|---|
+| RQ-01 | REC | Buscador | PC-01 | Prueba | Pasó | Aprobado |
+| RQ-02 | PAC | Agenda | PA-01 y PA-02 | Prueba | Pasó | Aprobado |
+| RQ-03 | PAC | Notificaciones | PN-01 | Prueba | Pendiente | Aprobado |
+| RQ-04 | PAC | Agenda | PA-03 | Prueba | Pasó | Aprobado |
+| RQ-05 | REC | Agenda | PA-04 | Prueba | Pasó | Aprobado |
+| RQ-06 | PAC | Buscador | PB-01 | Prueba | Pasó | Aprobado |
+| RQ-07 | COO | Buscador | Sin prueba | Prueba | Sin ejecutar | Aprobado |
+| RQ-08 | COO | Reglas de cupo | PR-01 | Demostración | Pasó | Aprobado |
+| RQ-09 | COO | Reglas de cupo | PR-02 | Inspección | Pasó | Aprobado |
+| RQ-10 | COO | Reglas de cupo y buscador | PR-03 | Prueba | Pasó | Aprobado |
+| RQ-11 | PAC | Interfaz del paciente | PU-01 | Prueba con usuarios | Pendiente | Pendiente |
+
+Además hay dos elementos que no aparecen en ninguna fila: la prueba PX-09, "el logotipo se muestra en la
+pantalla de inicio", y el componente "módulo de encuestas", que alguien construyó por iniciativa propia.
+
+### Cómo se lee la matriz
+
+Se calculan cuatro indicadores contando filas.
+
+1. Cobertura de pruebas. Los requisitos con al menos una prueba definida son 10 de 11 (todos menos RQ-07), es decir 10 / 11 = 90,9 %.
+2. Verificación aprobada. Pasaron la verificación 8 de 11 (RQ-01, 02, 04, 05, 06, 08, 09 y 10), es decir 8 / 11 = 72,7 %.
+3. Validación aprobada. Están aprobados 10 de 11 (todos menos RQ-11), es decir 10 / 11 = 90,9 %.
+4. Elementos huérfanos. Una prueba (PX-09) y un componente (módulo de encuestas) que no responden a ningún requisito.
+
+Con eso se toman decisiones concretas. RQ-07 necesita una prueba, y el escenario de pacientes crónicos del paso 4
+ya la describe. RQ-03 y RQ-11 tienen pruebas definidas pero sin ejecutar. PX-09 se elimina o se justifica
+con un requisito. Y el módulo de encuestas se detiene hasta que alguien lo respalde con una necesidad, porque es
+trabajo que nadie pidió y que hay que mantener.
+
+### Costos y buenas prácticas
+
+Mantener una RTM cuesta trabajo, y una RTM desactualizada es peor que ninguna porque da una falsa seguridad.
+Estas prácticas la mantienen útil.
+
+- Dar a cada requisito un identificador único que nunca se reutilice, aunque el requisito se elimine.
+- Registrar la fuente al crear el requisito, no después.
+- Actualizar la matriz en el mismo momento en que se cambia un requisito, una prueba o un componente.
+- Empezar con una hoja de cálculo en un proyecto pequeño, y pasar a una herramienta de gestión de requisitos cuando los vínculos sean tantos que no se puedan mantener a mano.
+
+::: {.callout-tip}
+## Reto 5. Calcula la cobertura de esta matriz
+
+Un proyecto tiene seis requisitos (R1 a R6) y siete pruebas con estos vínculos: PT-1 y PT-2 prueban R1, PT-3
+prueba R2, PT-4 prueba R4, PT-5 no tiene requisito, PT-6 prueba R5 y PT-7 prueba R6. Calcula la cobertura de
+pruebas, nombra el requisito sin prueba y la prueba huérfana, y di qué harías con cada uno.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+Los requisitos con prueba son R1, R2, R4, R5 y R6, es decir 5 de 6. La cobertura es 5 / 6 = 83,3 %.
+
+El requisito sin prueba es R3. Hay que definir su método de verificación y escribir la prueba, o decidir
+con quien lo pidió si el requisito sigue siendo necesario. La prueba huérfana es PT-5. O prueba algo que sí
+importa y falta el requisito que lo respalde, o es una prueba innecesaria que se elimina. En el primer caso,
+el hallazgo es un requisito que faltaba y que la matriz acaba de revelar.
+:::
+
+## Parte 8. Gestión de cambios de requisitos
+
+### Por qué cambian los requisitos
+
+Los requisitos cambian porque el negocio cambia, porque el equipo entiende mejor el problema con el tiempo y
+porque la validación descubre cosas. Un cambio no es una falla del proceso. Lo que sí es una falla es
+aceptarlo sin saber qué afecta, sin que nadie lo apruebe y sin que quede registrado.
+
+### El proceso de seis pasos
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Seis pasos para gestionar un cambio de requisitos: registrar la solicitud, analizar el impacto con la matriz de trazabilidad, decidir con quien tiene autoridad, implementar el cambio, reverificar y revalidar lo afectado, y actualizar la matriz y la versión" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u4t2f" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cómo entra un cambio a la línea base</text>
+  <g fill="#fdf3d6" stroke="#e6cf8f"><rect x="2" y="50" width="106" height="80" rx="10"/><rect x="133" y="50" width="106" height="80" rx="10"/><rect x="264" y="50" width="106" height="80" rx="10"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="390" y="50" width="106" height="80" rx="10"/><rect x="521" y="50" width="106" height="80" rx="10"/><rect x="652" y="50" width="106" height="80" rx="10"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#12324f"><text x="55" y="76">1. Registrar</text><text x="186" y="76">2. Analizar</text><text x="317" y="76">3. Decidir</text><text x="443" y="76">4. Hacer</text><text x="574" y="76">5. Comprobar</text><text x="705" y="76">6. Actualizar</text></g>
+  <g text-anchor="middle" font-size="10.5" fill="#5b6876"><text x="55" y="96">solicitud con</text><text x="55" y="110">quién y por qué</text><text x="186" y="96">impacto con la</text><text x="186" y="110">matriz RTM</text><text x="317" y="96">quien tiene la</text><text x="317" y="110">autoridad</text><text x="443" y="96">cambia el texto</text><text x="443" y="110">y lo construido</text><text x="574" y="96">verificar y</text><text x="574" y="110">revalidar lo afectado</text><text x="705" y="96">matriz, versión</text><text x="705" y="110">y registro</text></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u4t2f)"><path d="M110,90 L131,90"/><path d="M241,90 L262,90"/><path d="M372,90 L388,90"/><path d="M498,90 L519,90"/><path d="M629,90 L650,90"/></g>
+  <text x="380" y="170" font-size="11.5" fill="#5b6876" text-anchor="middle">Los tres primeros pasos son decisiones, y los tres últimos son evidencia.</text>
+</svg>
+
+:::
+
+1. Registrar la solicitud. Quién pide el cambio, qué cambia y por qué. Sin solicitud escrita no hay cambio.
+2. Analizar el impacto. Usar la RTM para listar los requisitos, el diseño y las pruebas afectados.
+3. Decidir. Una persona o un comité con autoridad acepta, rechaza o aplaza. En proyectos grandes se llama comité de control de cambios.
+4. Implementar. Cambiar el texto del requisito y lo construido.
+5. Comprobar. Volver a verificar y a validar solo lo afectado.
+6. Actualizar. Matriz, versión de la línea base y registro de cambios.
+
+La *línea base* de requisitos es el conjunto aprobado en un momento dado. Todo cambio posterior se hace sobre
+ella y deja versión. La gestión de configuración, que se estudió entre las actividades de SQA en la Unidad 2,
+es la disciplina que mantiene esas versiones.
+
+### Ejemplo resuelto: el cupo de Pediatría sube de 20 a 24
+
+Gerencia (GER) pide que el cupo diario de Pediatría suba de 20 a 24 turnos por profesional, porque las
+consultas de Pediatría pasaron a durar 15 minutos. Se sigue el proceso.
+
+1. Registrar. Solicitud CR-01. Origen: GER. Motivo: consultas de 15 minutos.
+2. Analizar el impacto con la RTM. Se busca el requisito del cupo inicial, que es RQ-09. Hacia adelante: componente reglas de cupo, pruebas PR-02 (valores iniciales) y PR-03 (los ejemplos de frontera). Hacia atrás: la fuente de RQ-09 es COO, así que COO debe validar el cambio.
+3. Verificar la viabilidad con un cálculo. Con 24 turnos de 15 minutos, 24 x 15 = 360 minutos, 6 horas, dentro de una jornada de 8 horas. El cambio es factible.
+4. Decidir. COO acepta.
+5. Implementar y comprobar. Como RQ-08 hizo configurable el cupo por especialidad, el cambio es de configuración y no de código. Se actualiza el texto de RQ-09 y los datos de PR-02. En PR-03, los ejemplos de Pediatría pasan de 19 y 20 a 23 y 24.
+6. Actualizar. La línea base pasa de la versión 1.0 a la 1.1.
+
+| Elemento | Cantidad | Detalle |
+|---|---|---|
+| Requisitos que cambian de texto | 1 | RQ-09 |
+| Requisitos con datos de prueba nuevos | 1 | RQ-10, por PR-03 |
+| Componentes afectados | 1 | Reglas de cupo |
+| Pruebas afectadas | 2 | PR-02 y PR-03 |
+| Requisitos sin cambio | 9 | Los demás |
+
+Sin la RTM, el equipo habría tenido que adivinar el alcance y probablemente habría repasado los once
+requisitos. Con ella revisa dos pruebas. Y fíjate en el efecto de una decisión anterior: RQ-08, escrito para
+resolver la contradicción de RO-4 y RO-5, es la razón por la que este cambio no toca el código.
+
+Un registro de cambios mínimo tiene estas columnas.
+
+| Versión | Cambio | Solicitud | Origen | Aprobó |
+|---|---|---|---|---|
+| 1.0 | Línea base inicial, once requisitos | Sin solicitud | Pasos 1 a 4 | Equipo y COO |
+| 1.1 | RQ-09: el cupo de Pediatría pasa de 20 a 24 | CR-01 | GER | COO |
+
+### La volatilidad como indicador
+
+La *volatilidad* de los requisitos es la proporción de ellos que cambia en un periodo. En el ejemplo, 1 de 11
+requisitos cambió de texto, es decir 1 / 11 = 9,1 %. Un porcentaje alto y sostenido es una señal de que la
+elicitación y la validación fueron insuficientes. Aun así, no existe un valor "normal": hay que medirlo en el
+propio proyecto y mirar la tendencia, como se hace con cualquier métrica.
+
+::: {.callout-tip}
+## Reto 6. Analiza un cambio con la RTM
+
+Los pacientes piden que el primer recordatorio llegue 72 horas antes del turno, y no 48. Con la matriz de la
+Parte 7, indica qué requisito, componente, prueba y fuente se afectan, y quién debe validar. Revisa después
+si el cambio deja un vacío en otro caso, pensando en los turnos que se asignan con poca anticipación.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+El requisito afectado es RQ-03. El componente es notificaciones, la prueba es PN-01 y la fuente es PAC, así
+que son los pacientes quienes deben validar. Los otros diez requisitos no cambian de texto.
+
+El vacío aparece con un turno que se asigna con menos de 72 horas de anticipación. Con la nueva regla, el
+primer recordatorio ya habría vencido y ese paciente solo recibiría el segundo, el de 2 horas antes. Hay que
+agregar o aclarar un requisito, por ejemplo que el sistema envíe el primer recordatorio en el momento de asignar
+un turno con menos de 72 horas de anticipación. Es un defecto de completitud que el cambio provocó. Por
+eso se vuelve a verificar lo afectado antes de congelar la nueva versión.
+:::
+
+## Parte 9. Inteligencia artificial para redactar y revisar requisitos
+
+### Para qué sirve y para qué no
+
+Los modelos de lenguaje pueden ayudar a escribir y a revisar requisitos, porque trabajan con texto. Las
+tareas donde más ayudan son proponer una primera redacción a partir de notas, señalar términos vagos y
+cláusulas de escape, convertir un requisito a una plantilla EARS, sugerir escenarios Gherkin y
+detectar posibles contradicciones entre dos requisitos. Para cada una de esas tareas el criterio es el mismo:
+la salida es un borrador, y la verificación y la validación siguen siendo humanas.
+
+### Los riesgos
+
+El perfil de IA generativa del NIST (NIST AI 600-1, julio de 2024) describe riesgos propios de estos sistemas.
+Tres de ellos pesan en el trabajo con requisitos.
+
+| Riesgo | Qué dice el NIST | Cómo aparece en los requisitos |
+|---|---|---|
+| Confabulación | El sistema genera y presenta con seguridad contenido falso o erróneo, y el riesgo crece cuando quien lo lee lo cree por el tono seguro | Un requisito inventado que parece razonable, o una cláusula de una norma que no existe |
+| Privacidad de datos | Los sistemas de IA generativa plantean riesgos de privacidad, y los modelos pueden filtrar, generar o inferir información sensible sobre personas | Pegar en un servicio externo notas con datos de pacientes o documentos confidenciales de la clínica, o recibir datos personales inferidos que nadie debería tener |
+| Integridad de la información | La IA facilita producir y propagar contenido sin verificar | Un documento de requisitos largo y pulido, con vacíos que nadie notó porque se ve completo |
+
+Hay un cuarto riesgo propio de este tema. Si la misma herramienta escribe el requisito y luego escribe sus
+pruebas a partir de ese texto, las dos salidas comparten la misma lectura equivocada, y una prueba que
+confirma un requisito mal entendido no encuentra nada. No es una cita de ninguna fuente. Es una consecuencia
+directa de que la verificación necesita una referencia independiente.
+
+::: {.callout-note}
+## Lo que no se afirma en esta guía
+
+No se citan porcentajes de acierto de los modelos al redactar requisitos. En la consulta de octubre de 2026 no
+se pudo localizar y leer en fuente primaria un estudio que respalde una cifra concreta, y esos valores
+cambian con cada versión de los modelos. Quien quiera una cifra debe buscar el estudio, leer su método y
+mirar con qué modelo y con qué datos se midió.
+:::
+
+### Las reglas de uso seguro
+
+1. La fuente manda. Todo requisito que proponga la IA necesita una fuente humana antes de entrar a la línea base: una persona, un documento o una norma que se pueda abrir. Sin fuente no hay trazabilidad hacia atrás y, por tanto, no hay requisito.
+2. Se verifica con el mismo método. Un requisito generado pasa la misma tabla de cinco criterios del paso 2 que uno escrito por una persona.
+3. Se validan con los interesados. El borrador no sustituye la conversación con quienes usarán la app.
+4. Nada de datos sensibles. No se entregan a servicios externos datos personales de pacientes ni documentos confidenciales. Los datos de salud son sensibles según la Ley 1581 de 2012, como se vio en la Unidad 1. Se usan notas anonimizadas o datos inventados.
+5. Las citas se comprueban. Toda norma, artículo o cifra que proponga la IA se abre en su fuente primaria antes de usarse. Si no se encuentra, no se usa.
+6. Pruebas independientes. Las pruebas se derivan de los criterios de aceptación acordados con los interesados, y no del texto que la misma herramienta acaba de generar.
+7. Se registra el uso. Anotar la herramienta, la versión y la fecha, y qué se aceptó y qué se rechazó, para poder revisarlo después.
+
+### Ejemplo resuelto: filtrar la propuesta de una herramienta de IA
+
+Esta salida se escribió para el ejercicio. No la generó ningún modelo real. Representa lo que una herramienta
+podría proponer a partir de la nota "los pacientes quieren cambiar su turno sin llamar a recepción".
+
+| Propuesta | Se verifica | Fuente | Decisión |
+|---|---|---|---|
+| P1. Cuando el paciente reprograme un turno, el sistema debe mostrarle los turnos libres de la misma especialidad. | Singular, verificable, completa | Nota de reunión con pacientes | Se acepta. Se une a RQ-05 como detalle |
+| P2. El sistema debe integrarse con WhatsApp Business para confirmar turnos. | Singular, pero sin valores | Ninguna: nadie lo pidió | Se rechaza. Sin fuente no entra. Si alguien lo pide, se registra como cambio |
+| P3. El sistema debe permitir reprogramar un turno en cualquier momento. | Verificable | Nota de reunión | Se rechaza. Contradice RQ-04, que limita a 12 horas o más |
+| P4. El sistema debe ser intuitivo. | No: adjetivo | Ninguna | Se rechaza. Si el interesado quiere esto, se mide como RQ-11 |
+| P5. El sistema debe cumplir el artículo 15 de la Ley 1581 sobre reprogramaciones. | No se puede comprobar | Ninguna: la cita no existe | Se rechaza. Es una confabulación típica |
+
+De cinco propuestas se aceptó una. Las otras cuatro se descartaron por tres causas distintas: sin fuente (P2
+y P4), contradicción con el conjunto (P3) y cita falsa (P5). La IA ahorró el borrador de P1. La verificación
+y la validación humanas ahorraron cuatro defectos.
+
+::: {.callout-tip}
+## Reto 7. Decide qué hacer con tres propuestas
+
+Una herramienta propone tres requisitos para la app. A: "El sistema debe enviar recordatorios." B: "El sistema
+debe enviar el recordatorio por correo y por mensaje de texto, según lo que el paciente elija al registrarse,
+y debe registrar cuál canal se usó." C: "El sistema debe cumplir la norma ISO 99999 de mensajería médica."
+Aplica las reglas de uso seguro y decide qué haces con cada una.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 7
+
+A no se verifica: no dice cuándo, a quién ni por qué canal. Se devuelve para reescribirla con la plantilla EARS,
+y de todos modos ya está cubierta por RQ-03.
+
+B es más completa, pero mezcla dos exigencias, el envío según la elección del paciente y el registro del canal.
+Se parte en dos requisitos singulares. Antes de aceptarla se busca su fuente: si ningún interesado pidió
+elegir canal ni registrarlo, no entra a la línea base y se anota como propuesta.
+
+C cita una norma cuyo número se inventó para el ejercicio. La regla 5 manda abrirla en su fuente primaria, y
+si no se encuentra se descarta. Un requisito que cite una norma inexistente no se puede verificar.
+:::
+
+## Errores frecuentes
+
+- Confundir verificar con validar. Dar un documento por bueno porque está bien redactado, sin comprobar con los interesados que es lo que necesitan.
+- Escribir adjetivos como requisitos. "Rápido", "fácil", "seguro" y "robusto" no se pueden probar.
+- Mezclar varias exigencias en un requisito. Una frase con "y" y "o" suele esconder cuatro requisitos, como RO-2.
+- Resolver las contradicciones eligiendo un valor sin consultar. La inconsistencia es un hallazgo para el interesado, no una decisión del equipo.
+- Inventar un número para completar un requisito. Un dato pendiente se marca y se asigna a alguien.
+- Usar "debería" sin convención. Cuando nadie sabe si es obligatorio, nadie puede verificarlo.
+- Construir la RTM al final del proyecto, de memoria. Una matriz hecha tarde documenta lo que se supone que pasó, no lo que pasó.
+- Aceptar un cambio sin analizar su impacto. El costo del cambio rara vez está en el requisito que cambia, sino en lo que lo rodea.
+- Confiar en la salida de una IA porque suena segura. La seguridad del tono no es evidencia.
+- Medir el cumplimiento con el promedio. Un promedio esconde a los usuarios que sufren la cola de la distribución.
+
+## Lo que sigue
+
+El Tema 3 de esta unidad estudia los puntos de control y el costo de la calidad, donde los criterios de
+aceptación de este tema se convierten en la vara con que cada fase decide si el trabajo avanza. El Tema 5
+estudia qué ocurre cuando dos requisitos no funcionales compiten, por ejemplo seguridad frente a
+usabilidad, y cómo se decide con el método ATAM.
+
+## Autoevaluación
+
+Responde sin mirar la guía. Marca tu opción y abre la clave. Es una práctica formativa y no tiene nota.
+
+**1.** ¿Cuál de estas preguntas corresponde a la verificación de requisitos?
+
+<label><input type="checkbox"> ¿Los usuarios necesitan realmente esta función?</label>
+<label><input type="checkbox"> ¿El requisito está escrito de forma que admita una sola lectura y se pueda comprobar?</label>
+<label><input type="checkbox"> ¿El sistema construido cumple el requisito?</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 1
+
+La opción 2. La primera es validación de requisitos. La tercera es verificación del sistema, que ocurre después
+de construir.
+:::
+
+**2.** Los requisitos RO-4 ("20 turnos por día a cada especialidad") y RO-5 ("30 turnos por día en Medicina general") son individualmente verificables. ¿Qué criterio falla al ponerlos juntos?
+
+<label><input type="checkbox"> Singular</label>
+<label><input type="checkbox"> Consistente</label>
+<label><input type="checkbox"> Factible</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 2
+
+La opción 2. Para Medicina general los dos requisitos dan valores distintos. Es un defecto de conjunto, que solo
+aparece al comparar requisitos.
+:::
+
+**3.** ¿Cuál es la edición vigente de la ISO/IEC/IEEE 29148 según la consulta de esta guía?
+
+<label><input type="checkbox"> La de 1998</label>
+<label><input type="checkbox"> La segunda edición, de noviembre de 2018</label>
+<label><input type="checkbox"> La de 2026, que ya la sustituyó</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 3
+
+La opción 2. Los catálogos consultados la listan como vigente y en revisión. No se verificó que exista una edición más nueva.
+:::
+
+**4.** ¿Cuál de estas es una cláusula de escape que vuelve un requisito inverificable?
+
+<label><input type="checkbox"> "Cuando el paciente confirme un horario libre"</label>
+<label><input type="checkbox"> "Si es posible"</label>
+<label><input type="checkbox"> "En 2 segundos o menos"</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 4
+
+La opción 2. Deja el cumplimiento a criterio de quien implementa. La regla R8 de INCOSE pide evitar estas cláusulas.
+:::
+
+**5.** Un requisito de desempeño dice "2 segundos o menos en el percentil 95". ¿Qué significa el percentil 95?
+
+<label><input type="checkbox"> Que el promedio de las mediciones es 2 segundos</label>
+<label><input type="checkbox"> Que el 95 % de las mediciones debe estar dentro de 2 segundos</label>
+<label><input type="checkbox"> Que se hacen 95 mediciones</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 5
+
+La opción 2. El percentil 95 protege a la cola de la distribución, que el promedio esconde.
+:::
+
+**6.** Con 30 días en el mes, una disponibilidad de 99,9 % permite una caída de:
+
+<label><input type="checkbox"> 43,2 minutos</label>
+<label><input type="checkbox"> 7,2 horas</label>
+<label><input type="checkbox"> 4,32 minutos</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 6
+
+La opción 1. El mes tiene 720 horas, el 0,1 % es 0,72 horas y 0,72 x 60 = 43,2 minutos.
+:::
+
+**7.** En una matriz de trazabilidad, ¿qué indica una prueba que no está vinculada a ningún requisito?
+
+<label><input type="checkbox"> Que la prueba es la más importante</label>
+<label><input type="checkbox"> Una prueba huérfana: o falta un requisito que la respalde, o la prueba sobra</label>
+<label><input type="checkbox"> Que el requisito ya fue validado</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 7
+
+La opción 2. Una prueba huérfana es una señal de trabajo sin respaldo en una necesidad.
+:::
+
+**8.** En el cambio CR-01, ¿por qué se revisaron solo dos pruebas y no las de los once requisitos?
+
+<label><input type="checkbox"> Porque las otras no importan</label>
+<label><input type="checkbox"> Porque la matriz mostró que solo RQ-09 y RQ-10 se afectaban, y sus pruebas son PR-02 y PR-03</label>
+<label><input type="checkbox"> Porque el cambio fue pequeño</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 8
+
+La opción 2. La trazabilidad hacia adelante permite acotar el alcance del cambio con evidencia.
+:::
+
+**9.** Una herramienta de IA propone el requisito "El sistema debe cumplir el artículo 15 de la Ley 1581". ¿Qué se hace primero?
+
+<label><input type="checkbox"> Se acepta, porque suena legal</label>
+<label><input type="checkbox"> Se abre la ley en una fuente primaria y se comprueba que la cita existe y dice eso</label>
+<label><input type="checkbox"> Se le pide a la misma herramienta que lo confirme</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 9
+
+La opción 2. Pedirle a la misma herramienta que se confirme a sí misma no aporta una referencia independiente.
+:::
+
+**10.** ¿Qué hallazgo solo puede producir la validación de requisitos y no la verificación?
+
+<label><input type="checkbox"> Un requisito con una palabra vaga</label>
+<label><input type="checkbox"> Un requisito faltante, como el de continuidad con el mismo médico, que ninguna lista de chequeo sobre el texto podía detectar</label>
+<label><input type="checkbox"> Una frase con dos exigencias</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 10
+
+La opción 2. Lo que falta no se ve revisando lo que está escrito. Lo descubre quien conoce el uso real.
+:::
+
+## Lo que te llevas
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Qué establece la ISO/IEC/IEEE 29148:2018 y qué tan segura es su vigencia
+- [ ] Las características de un requisito individual y de un conjunto de requisitos
+- [ ] La diferencia entre verificación y validación de requisitos, con una pregunta y un ejemplo de cada una
+- [ ] Los tres sentidos de la palabra verificación y los cuatro métodos para verificar un requisito
+- [ ] Cómo se encuentran, se reescriben y se validan seis requisitos mal escritos
+- [ ] Qué es un criterio de aceptación en Gherkin y por qué el valor de frontera es el más valioso
+- [ ] La plantilla de seis elementos de un requisito no funcional medible
+- [ ] Cómo se arma una RTM, cómo se calcula su cobertura y cómo se usa para analizar un cambio
+- [ ] Los seis pasos para gestionar un cambio de requisitos
+- [ ] Siete reglas para usar la IA con requisitos sin perder la trazabilidad
+:::
+
+## Glosario
+
+- **Requisito.** Declaración de una capacidad, característica o restricción que el producto debe cumplir y que sirve para decidir si es aceptable.
+- **Requisito funcional.** Lo que el sistema hace.
+- **Requisito no funcional.** Cómo de bien lo hace: desempeño, seguridad, usabilidad, disponibilidad y otros atributos.
+- **Restricción.** Condición impuesta que limita la solución.
+- **ISO/IEC/IEEE 29148.** Norma de ingeniería de requisitos. Su edición vigente es la de 2018.
+- **Verificación de requisitos.** Comprobar que los requisitos están bien escritos, uno por uno y como conjunto.
+- **Validación de requisitos.** Comprobar con los interesados que los requisitos expresan lo que se necesita.
+- **Verificabilidad.** Característica de un requisito que indica que existe un método para comprobar su cumplimiento.
+- **Singular.** Que exige una sola cosa.
+- **Ambigüedad.** Posibilidad de leer un requisito de más de una manera.
+- **Completitud.** Que un requisito, o un conjunto, dice todo lo necesario: condiciones, valores y casos.
+- **Consistencia.** Que ningún requisito contradice a otro ni usa un término con dos sentidos.
+- **Cláusula de escape.** Expresión como "si es posible" que deja el cumplimiento a criterio de quien implementa.
+- **GtWR.** *Guide to Writing Requirements* de INCOSE, versión 4 de 2023, con 42 reglas.
+- **EARS.** Plantilla de redacción de requisitos con cinco patrones: ubicuo, por evento, por estado, característica opcional y comportamiento no deseado.
+- **Inspección, demostración, prueba y análisis.** Los cuatro métodos para verificar un requisito.
+- **BDD.** Desarrollo guiado por comportamiento: se especifica con ejemplos concretos que luego se automatizan.
+- **Gherkin.** Lenguaje de texto con las palabras Dado, Cuando y Entonces para escribir ejemplos.
+- **Criterio de aceptación.** Condición concreta y observable que se debe cumplir para dar un requisito por satisfecho.
+- **Mapa de ejemplos.** Técnica de conversación con tarjetas de cuatro colores para descubrir reglas, ejemplos y preguntas.
+- **Percentil 95.** Valor bajo el cual queda el 95 % de las mediciones.
+- **Disponibilidad.** Proporción del tiempo en que un servicio funciona.
+- **Trazabilidad.** Capacidad de seguir la vida de un requisito hacia atrás, a su origen, y hacia adelante, a su diseño y sus pruebas.
+- **RTM.** Matriz de trazabilidad de requisitos: tabla que registra los vínculos entre requisitos y otros elementos.
+- **Prueba huérfana.** Prueba sin requisito que la respalde.
+- **Gold plating.** Trabajo que ningún requisito pidió.
+- **Línea base.** Conjunto de requisitos aprobado en un momento dado, sobre el que se hacen los cambios.
+- **Volatilidad de requisitos.** Proporción de requisitos que cambia en un periodo.
+- **Confabulación.** Fenómeno por el que un sistema de IA generativa produce y presenta con seguridad contenido falso.
+
+## Bibliografía
+
+Normas y guías de requisitos:
+
+- ISO/IEC/IEEE 29148:2018. *Systems and software engineering, Life cycle processes, Requirements engineering* (2.a ed.). Norma de pago. [Ficha de ISO](https://www.iso.org/standard/72089.html). Estado consultado en el [catálogo de BSI](https://knowledge.bsigroup.com/products/systems-and-software-engineering-life-cycle-processes-requirements-engineering).
+- INCOSE (2023). *Guide to Writing Requirements*, versión 4, INCOSE-TP-2010-006-04. Documento de la tienda de INCOSE. [Presentación del grupo de trabajo](https://www.incose.org/docs/default-source/working-groups/requirements-wg/guidetowritingrequirements/gtwr-v4-overview-081723.pdf).
+- ISO 9000:2015. *Quality management systems, Fundamentals and vocabulary.* Paráfrasis de las definiciones de verificación y validación. Confirmar la edición vigente en iso.org.
+- Mavin, A., Wilkinson, P., Harwood, A. y Novak, M. (2009). Easy Approach to Requirements Syntax (EARS). *17th IEEE International Requirements Engineering Conference (RE'09)*. Descripción de las plantillas en [Wikipedia](https://en.wikipedia.org/wiki/Easy_Approach_to_Requirements_Syntax).
+- IEEE Computer Society (2024). *Guide to the Software Engineering Body of Knowledge (SWEBOK), versión 4.0*, con Software Requirements como área de conocimiento 1. [Página oficial](https://www.computer.org/education/bodies-of-knowledge/software-engineering).
+- Sommerville, I. (2016). *Software Engineering* (10.a ed.). Pearson. Capítulo 4, ingeniería de requisitos.
+
+BDD, Gherkin y trazabilidad:
+
+- North, D. (marzo de 2006). Introducing BDD. *Better Software*. [Artículo](https://dannorth.net/introducing-bdd/).
+- Cucumber. [Referencia de Gherkin](https://cucumber.io/docs/gherkin/reference) y [BDD según Cucumber](https://cucumber.io/docs/bdd/).
+- Wynne, M. (8 de diciembre de 2015). Introducing Example Mapping. [Blog de Cucumber](https://cucumber.io/blog/bdd/example-mapping-introduction/).
+- Gotel, O. y Finkelstein, A. (1994). An Analysis of the Requirements Traceability Problem. *Proceedings of the First International Conference on Requirements Engineering*. Definición consultada en la entrada de [requirements traceability en Wikipedia](https://en.wikipedia.org/wiki/Requirements_traceability), que recoge la lista de estándares que la exigen.
+
+Inteligencia artificial:
+
+- NIST (julio de 2024). *Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile*, NIST AI 600-1. [Documento](https://doi.org/10.6028/NIST.AI.600-1).
+- Congreso de Colombia (2012). *Ley Estatutaria 1581 de 2012.* [Texto](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981).
+
+Otras fuentes de apoyo consultadas: [Wikipedia, Requirement](https://en.wikipedia.org/wiki/Requirement) y [Wikipedia, Software requirements specification](https://en.wikipedia.org/wiki/Software_requirements_specification), para las características de calidad de los requisitos.
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

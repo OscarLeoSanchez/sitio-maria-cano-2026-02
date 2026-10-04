@@ -1,0 +1,1218 @@
+---
+title: "Tema 6. Herramientas de SQA en la industria"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                          |
+|--------|----------------------------------------------------------|
+| Unidad | Unidad 2. Procesos de calidad del software. Modelos y métricas |
+| Tema   | Tema 6. Herramientas de SQA en la industria              |
+:::
+
+[Presentación interactiva de la unidad](../presentacion-interactiva.html){.btn-curso}
+
+Tema anterior: [Tema 5. Modelos y métricas de calidad](../tema-05-modelos-metricas/index.qmd).
+Tema siguiente: [Unidad 3, Tema 1. Estándares IEEE aplicados al software](../../unidad-03/tema-01-estandares-ieee/index.qmd).
+
+## Objetivo y resultado de aprendizaje
+
+Este tema cierra la Unidad 2. Los temas anteriores describieron qué hace un programa de SQA:
+revisiones, auditorías, gestión de la configuración y métricas. Aquí ves con qué herramientas se
+hace eso en la industria a octubre de 2026, qué categoría de problema resuelve cada una y cómo se
+elige una sin dejarse llevar por la moda.
+
+Al terminar puedes:
+
+- Clasificar una herramienta en su categoría (trazabilidad, versiones y CI/CD, análisis estático, seguridad, pruebas, observabilidad o IA) y decir qué actividad de SQA apoya.
+- Explicar la diferencia entre SAST, DAST, análisis de composición de software (SCA) y SBOM, y decir qué ve y qué no ve cada uno.
+- Ejecutar un análisis estático y una auditoría de dependencias con herramientas gratuitas, e interpretar sus hallazgos como verdadero positivo, falso positivo o riesgo aceptado.
+- Calcular un indicador de disponibilidad y su presupuesto de error a partir de datos de monitoreo.
+- Evaluar con criterio las herramientas de IA para revisión y generación de código, con su evidencia, sus límites y sus riesgos.
+- Elegir una herramienta con una matriz de criterios ponderados y comprobar si la decisión cambia cuando cambian los pesos.
+
+Prerrequisitos: los Temas 3 y 4 de esta unidad (actividades de SQA, revisiones, gestión de
+configuración y métricas). Necesitas saber qué es un repositorio, un commit y un defecto. No hace
+falta experiencia previa con ninguna de las herramientas.
+
+## Ruta de estudio
+
+Son unas 8 horas de trabajo independiente. Puedes partirlas en tres o cuatro sesiones. La
+presentación interactiva de la unidad sigue estas partes con los mismos nombres, así que sirve
+como primera mirada o como repaso.
+
+::: {.calendario}
+| Parte | Qué haces | Tiempo |
+|---|---|---|
+| 1. Qué es una herramienta de SQA | Lees el mapa de categorías y la cadena de herramientas | 25 min |
+| 2. Gestión y trazabilidad | Lees y resuelves el ejemplo de matriz de trazabilidad | 35 min |
+| 3. Control de versiones e integración continua | Lees, estudias un flujo de CI y sus riesgos | 40 min |
+| 4. Análisis estático y calidad del código | Lees y resuelves el ejemplo del quality gate | 40 min |
+| 5. Seguridad: SAST, DAST, SCA, secretos y SBOM | Lees las cinco técnicas y sus límites | 50 min |
+| 6. Gestión de pruebas y reportes | Lees las opciones y su papel en SQA | 20 min |
+| 7. Observabilidad y monitoreo | Calculas disponibilidad y presupuesto de error | 35 min |
+| 8. IA para pruebas y revisión de código | Lees la evidencia y el protocolo de uso | 50 min |
+| 9. Ejercicio guiado reproducible | Ejecutas el análisis sobre un repositorio pequeño | 90 min |
+| 10. Cómo elegir una herramienta | Aplicas la matriz de criterios y resuelves los retos | 50 min |
+| Cierre | Autoevaluación y glosario | 30 min |
+:::
+
+::: {.callout-warning}
+## Vigencia de esta guía
+
+Los datos de herramientas (licencias, ediciones, versiones, fechas de fin de vida) se consultaron
+en las fuentes oficiales de cada proyecto el 3 de octubre de 2026. Las herramientas cambian de
+nombre, de licencia y de precio con frecuencia, así que cada vez que el texto da un dato de
+este tipo indica de dónde sale. Lo que no se pudo verificar en una fuente primaria se marca como
+"no verificado". La lista completa está en la sección Bibliografía.
+:::
+
+## El hilo conductor: la app de turnos de la Clínica Aurora
+
+El producto ficticio del curso sigue siendo la app que asigna turnos médicos. Su requisito de
+partida es "la app asigna hasta 20 turnos por día a cada especialidad". En este tema la clínica
+monta su cadena de herramientas: un tablero de tareas, un repositorio, un flujo de integración
+continua, controles de seguridad, un tablero de pruebas y un monitor en producción.
+
+Ningún dato de la clínica es real. Cada número propio se marca como ilustrativo. Los resultados
+de herramientas del ejercicio guiado sí se obtuvieron ejecutando las herramientas, y el texto
+dice cuáles.
+
+## Parte 1. Qué es una herramienta de SQA
+
+Una herramienta no hace SQA. El SQA es un conjunto de actividades planeadas (revisar, auditar,
+medir, controlar el cambio) y una herramienta automatiza o registra una de ellas. Si la
+actividad no existe en el equipo, la herramienta produce informes que nadie lee. El Tema 4
+llamó a ese fenómeno teatro de SQA.
+
+Por eso este tema organiza las herramientas por la actividad que apoyan y no por su marca.
+
+### El mapa de categorías
+
+| Categoría | Pregunta de SQA que responde | Ejemplos de este tema |
+|---|---|---|
+| Gestión y trazabilidad | Qué se pidió, quién lo hace y qué prueba lo cubre | Jira, GitHub Issues, GitLab Issues |
+| Control de versiones e integración continua | Qué cambió, quién lo aprobó y si construye y pasa pruebas | Git, GitHub Actions, GitLab CI |
+| Análisis estático y calidad del código | Qué problemas tiene el código sin ejecutarlo | SonarQube, Semgrep, Bandit, CodeQL |
+| Seguridad | Qué vulnerabilidades hay en el código, en la app en marcha y en las dependencias | CodeQL, ZAP, pip-audit, OSV-Scanner, Dependency-Check, Trivy, Syft |
+| Gestión de pruebas | Qué se probó, con qué resultado y con qué evidencia | Kiwi TCMS, Allure Report |
+| Observabilidad y monitoreo | Cómo se comporta el producto en producción | Prometheus, Grafana, OpenTelemetry, Sentry |
+| IA para pruebas y revisión | Qué apoyo automático hay para escribir, probar y revisar código | GitHub Copilot, CodeRabbit |
+
+### La cadena de herramientas de la clínica
+
+El diagrama muestra el camino de un cambio desde que es una tarea hasta que opera en producción.
+Cada caja es una etapa. Debajo de cada una está la categoría de herramienta que la cubre. La flecha
+de retorno cierra el ciclo, porque lo que el monitoreo detecta vuelve al tablero como trabajo nuevo.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 215" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cadena de herramientas de SQA: requisito y tarea, cambio de código, integración continua, controles automáticos, despliegue y operación, con una flecha de retorno de los incidentes al tablero" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u2t6a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Un cambio recorre la cadena, la operación alimenta el tablero</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="40" width="104" height="62" rx="10"/><rect x="134" y="40" width="104" height="62" rx="10"/><rect x="258" y="40" width="104" height="62" rx="10"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="382" y="40" width="104" height="62" rx="10"/></g>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="506" y="40" width="104" height="62" rx="10"/><rect x="630" y="40" width="104" height="62" rx="10"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t6a)"><path d="M114,71 L132,71"/><path d="M238,71 L256,71"/><path d="M362,71 L380,71"/><path d="M486,71 L504,71"/><path d="M610,71 L628,71"/></g>
+  <g text-anchor="middle" font-size="12.5" font-weight="600" fill="#12324f"><text x="62" y="76">Tarea</text><text x="186" y="76">Cambio</text><text x="310" y="76">Integración</text><text x="434" y="76">Controles</text><text x="558" y="76">Despliegue</text><text x="682" y="76">Operación</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876">
+    <text x="62" y="120">Gestión y</text><text x="62" y="134">trazabilidad</text>
+    <text x="186" y="120">Control de</text><text x="186" y="134">versiones</text>
+    <text x="310" y="120">Integración</text><text x="310" y="134">continua</text>
+    <text x="434" y="120">Análisis estático,</text><text x="434" y="134">seguridad, pruebas</text>
+    <text x="558" y="120">Entrega continua</text><text x="558" y="134">y despliegue</text>
+    <text x="682" y="120">Observabilidad</text><text x="682" y="134">y monitoreo</text>
+  </g>
+  <path d="M682,146 L682,185 L62,185 L62,148" fill="none" stroke="#8fb3d1" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#u2t6a)"/>
+  <text x="372" y="204" font-size="11.5" fill="#0e6f6c" text-anchor="middle">Incidentes y alertas vuelven al tablero como trabajo nuevo</text>
+</svg>
+
+:::
+
+La caja de controles aparece destacada porque ahí vive la mayor parte de las herramientas de este
+tema. Ese es el lugar donde una herramienta puede bloquear un cambio antes de que llegue al usuario.
+
+## Parte 2. Gestión y trazabilidad
+
+Una herramienta de gestión de trabajo registra tareas, defectos, solicitudes de cambio y su
+estado. En SQA cumple tres funciones. La primera es dejar evidencia de quién decidió qué y cuándo.
+La segunda es dar un identificador estable a cada requisito y cada defecto. La tercera es
+permitir la *trazabilidad*: seguir un requisito hasta el código que lo implementa y hasta la
+prueba que lo verifica.
+
+### Qué herramientas hay y qué conviene saber
+
+- **Jira.** Producto de Atlassian, el más usado en la industria para tableros ágiles y seguimiento de incidencias. Atlassian anunció el fin de ciclo de Data Center: no vende suscripciones nuevas a clientes nuevos desde el 30 de marzo de 2026, deja de vender renovaciones y ampliaciones el 30 de marzo de 2028 y cierra la línea el 28 de marzo de 2029, cuando las licencias pasan a modo de solo lectura. La consecuencia práctica es que un equipo que hoy elige Jira elige su versión en la nube.
+- **GitHub Issues y GitLab Issues.** Seguimiento de tareas integrado en la plataforma donde vive el código. Reducen el esfuerzo de enlazar tarea y cambio, porque un mensaje de commit o una solicitud de cambio puede referenciar la incidencia por su número.
+
+La herramienta importa menos que el hábito. Dos reglas lo resumen. Todo cambio de código debe
+referenciar una tarea o defecto. Toda tarea de funcionalidad debe nombrar el requisito que
+implementa. Con esas dos reglas, la trazabilidad se vuelve una consulta y no una investigación.
+
+### Ejemplo resuelto 1. Matriz de trazabilidad de la clínica
+
+La clínica tiene cinco requisitos para el módulo de turnos. El equipo registra, para cada
+uno, los casos de prueba que lo verifican. Los datos son ilustrativos.
+
+| Requisito | Descripción | Casos de prueba |
+|---|---|---|
+| RF-01 | Asignar hasta 20 turnos por día a cada especialidad | CP-01, CP-02, CP-03 |
+| RF-02 | Cancelar un turno libera el cupo | CP-04 |
+| RF-03 | Un paciente no puede tener dos turnos a la misma hora | CP-05 |
+| RF-04 | Enviar recordatorio 24 horas antes | CP-06 |
+| RF-05 | Mostrar al paciente su historial de turnos | (ninguno) |
+
+Paso 1. Cuenta los requisitos: son 5.
+
+Paso 2. Cuenta los que tienen al menos un caso de prueba: RF-01 a RF-04, es decir 4.
+
+Paso 3. Calcula la cobertura de requisitos: 4 de 5 es 80 %.
+
+Paso 4. Interpreta. El requisito sin caso de prueba, RF-05, es un hueco. Con la matriz a la vista el
+hueco se encuentra en segundos. Sin ella se descubriría cuando un paciente reclame.
+
+Paso 5. Mira la dirección contraria. Un caso de prueba que no apunta a ningún requisito (por ejemplo
+CP-07 sin RF) también es una señal: o falta un requisito escrito, o la prueba sobra.
+
+Una matriz de este tipo se mantiene en una hoja de cálculo, en la herramienta de gestión de
+pruebas (Parte 6) o con etiquetas en las incidencias. Lo que importa es que se pueda consultar en
+cualquier momento.
+
+## Parte 3. Control de versiones e integración continua
+
+### Git y la plataforma de alojamiento
+
+*Git* es el sistema de control de versiones dominante. Registra cada cambio como un commit con
+autor, fecha y mensaje, y permite ramas. La gestión de la configuración del Tema 3 depende de eso:
+una línea base es una etiqueta en el historial y un cambio controlado es una solicitud de cambio
+(*pull request* en GitHub, *merge request* en GitLab) que alguien revisa antes de aceptarla.
+
+Las plataformas de alojamiento convierten esas ideas en controles. Con reglas de protección de
+rama se exige que el cambio pase por una solicitud de cambio, que al menos una persona lo apruebe
+y que los chequeos automáticos estén en verde antes de poder fusionarlo.
+
+### Integración continua
+
+La *integración continua* (CI) ejecuta de forma automática la construcción y las pruebas cada vez
+que alguien propone un cambio. Para SQA su valor está en que los controles dejan de depender de la
+memoria de las personas. Los que hoy más se automatizan son las pruebas, el análisis estático, la
+auditoría de dependencias y las métricas como la cobertura.
+
+Dos plataformas dominan los ejemplos de este curso:
+
+- **GitHub Actions.** Los flujos se escriben en archivos YAML dentro de la carpeta `.github/workflows` del repositorio. Según la documentación de GitHub consultada en octubre de 2026, su uso con ejecutores estándar alojados por GitHub es gratuito en repositorios públicos, los ejecutores propios (*self-hosted*) no se facturan, y en repositorios privados la cuenta gratuita incluye 2.000 minutos al mes. Los ejecutores de mayor tamaño siempre se facturan.
+- **GitLab CI/CD.** La canalización se define en un archivo `.gitlab-ci.yml` en la raíz del proyecto, con etapas (por ejemplo construir, probar, desplegar) y trabajos que ejecutan unos *runners*. La edición Community de GitLab se publica con licencia MIT y la Enterprise con términos propios.
+
+### Un flujo de CI de ejemplo
+
+Este flujo hace lo mínimo útil para la clínica: ejecuta el análisis estático y la auditoría de
+dependencias en cada cambio. No se ejecutó para esta guía, porque requiere un repositorio en
+GitHub. Los comandos que contiene sí se ejecutaron en el ejercicio de la Parte 9.
+
+```yaml
+name: calidad
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  analisis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - run: pip install bandit pip-audit
+      - run: bandit -r turnos-clinica -ll
+      - run: pip-audit -r turnos-clinica/requirements.txt
+```
+
+Las versiones `@v7` de las dos acciones son las que anunciaban sus repositorios oficiales en la
+consulta de octubre de 2026. Conviene revisarlas antes de copiar el flujo.
+
+### La cadena de CI también es un riesgo
+
+Quien controla el flujo de CI controla lo que llega a producción, así que el flujo mismo necesita
+controles. La documentación de seguridad de GitHub Actions recomienda tres:
+
+- **Mínimo privilegio.** Dejar el token del flujo (`GITHUB_TOKEN`) con permiso de solo lectura al contenido y ampliar solo donde un trabajo lo necesite. El ejemplo anterior lo hace con `permissions: contents: read`.
+- **Fijar las acciones de terceros.** La documentación indica que fijar una acción a un hash de commit completo es la única forma de usarla como versión inmutable, porque una etiqueta como `@v7` puede moverse. Las acciones oficiales de GitHub del ejemplo usan etiqueta por simplicidad didáctica, y una organización con requisitos estrictos fijaría también esas.
+- **Cuidar los secretos.** No guardar datos estructurados (JSON, YAML) como secreto, porque el enmascarado de los registros compara cadenas exactas, y rotar de inmediato cualquier secreto que aparezca sin enmascarar en un registro.
+
+## Parte 4. Análisis estático y calidad del código
+
+El *análisis estático* examina el código fuente sin ejecutarlo. Busca patrones de error, vulnerabilidades,
+duplicación y complejidad excesiva. Es una actividad de verificación del Tema 4 hecha por una
+máquina: barata, repetible y rápida, pero ciega a lo que solo se ve al ejecutar y a lo que el
+código debería hacer según el requisito.
+
+### Cuatro herramientas que conviene distinguir
+
+- **SonarQube.** Plataforma de calidad de código de Sonar. La edición gratuita y de código abierto se llama *Community Build*, con licencia LGPL-3.0 según su repositorio oficial. Existen además las ediciones Developer, Enterprise y Data Center, de pago, y el servicio en la nube SonarQube Cloud. El repositorio oficial indica que capacidades como el análisis de ramas y la decoración de solicitudes de cambio no están en la Community Build. Se ejecuta con Docker (`docker run -p 9000:9000 sonarqube:community`) y se alimenta con un escáner desde la CI. En la consulta de octubre de 2026 la etiqueta `community` de Docker Hub apuntaba a la versión 26.9.0.129388. La fecha de publicación de esa versión no se verificó.
+- **Semgrep.** Motor de búsqueda de patrones en el código. Su edición Community se publica con licencia LGPL-2.1 y se instala con `pip install semgrep`. Su propio repositorio advierte que esa edición solo analiza dentro de los límites de una función o un archivo, de modo que pierde hallazgos que dependen de varios archivos, y que la plataforma comercial añade ese análisis. En la consulta, la última versión publicada era la 1.179.0, del 2 de octubre de 2026.
+- **Bandit.** Analizador de seguridad solo para Python, mantenido por PyCQA con licencia Apache-2.0. Construye el árbol sintáctico de cada archivo y aplica reglas sobre él. Es el que se usa en el ejercicio de esta guía.
+- **CodeQL.** Motor de análisis de GitHub que trata el código como datos: construye una base de datos del código y ejecuta consultas sobre ella. Soporta C/C++, C#, Go, Java y Kotlin, JavaScript y TypeScript, Python, Ruby, Rust, Swift y los flujos de GitHub Actions, y no soporta lenguajes fuera de esa lista, como PHP o Scala. Se activa con configuración predeterminada, configuración avanzada o ejecutando su línea de comandos en una CI externa. Las condiciones de licencia y de precio no se verificaron en esta guía.
+
+### Qué reporta el análisis estático y cómo se lee
+
+Un hallazgo tiene tres partes que conviene leer separadas: la *severidad* (qué tan grave sería si
+fuera real), la *confianza* (qué tan seguro está el motor de que es real) y la *ubicación*. Un
+hallazgo de severidad alta y confianza baja pide mirar el código, no confiar a ciegas en el motor.
+
+Cada hallazgo termina en una de tres decisiones:
+
+- *Verdadero positivo.* El problema es real. Se corrige o se registra como defecto.
+- *Falso positivo.* La herramienta se equivocó. Se marca como tal con una justificación, para que nadie vuelva a perder tiempo en él.
+- *Riesgo aceptado.* El problema es real pero no se corrige ahora. Se registra quién lo aceptó, por qué y hasta cuándo.
+
+### Quality gate: la regla que bloquea el cambio
+
+Un *quality gate* (puerta de calidad) es un conjunto de condiciones medibles que un cambio debe
+cumplir para poder fusionarse. La idea clave, que SonarQube llama "clean as you code", es aplicar
+las condiciones al código nuevo y no a todo el historial, para no bloquear a un equipo por la deuda
+técnica que heredó.
+
+### Ejemplo resuelto 2. El quality gate de la clínica
+
+La clínica define tres condiciones para el código nuevo de cada solicitud de cambio. Los umbrales
+son ilustrativos y no corresponden al valor por defecto de ninguna herramienta.
+
+| Condición | Umbral | Resultado de la solicitud de cambio | Cumple |
+|---|---|---|---|
+| Cobertura de pruebas del código nuevo | al menos 80 % | 72 % | No |
+| Vulnerabilidades nuevas | 0 | 0 | Sí |
+| Duplicación del código nuevo | como máximo 3 % | 5 % | No |
+
+Paso 1. Compara cada resultado con su umbral. La cobertura (72) está por debajo de 80, así que falla.
+Las vulnerabilidades (0) igualan el umbral de 0, así que cumplen. La duplicación (5) supera 3, así que falla.
+
+Paso 2. Aplica la regla del gate: basta una condición fallida para bloquear. Aquí fallan 2 de 3 y la
+solicitud de cambio no se puede fusionar.
+
+Paso 3. Decide la acción. Para subir la cobertura de 72 % a 80 % en un cambio de 400 líneas nuevas
+ejecutables, hay que cubrir 8 puntos más: 0,08 por 400 son 32 líneas adicionales cubiertas. Para
+bajar la duplicación, hay que extraer a una función compartida el bloque repetido.
+
+Un gate bien diseñado es corto, mide lo que el equipo puede arreglar en un día y se discute en el
+equipo antes de activarlo. Un gate con veinte condiciones se rodea con excepciones hasta que deja de
+significar algo.
+
+## Parte 5. Seguridad: SAST, DAST, SCA, secretos y SBOM
+
+Un producto puede tener un código excelente y aun así ser vulnerable, porque casi todo producto
+actual incorpora decenas o cientos de paquetes de terceros. La seguridad automatizada se divide en
+técnicas que miran lugares distintos. Ninguna reemplaza a las otras.
+
+### Las técnicas y lo que ven
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro técnicas de seguridad y lo que cada una analiza: SAST el código propio, SCA las dependencias, DAST la aplicación en ejecución y SBOM el inventario de componentes" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cada técnica mira un lugar distinto</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="38" width="175" height="190" rx="10"/><rect x="198" y="38" width="175" height="190" rx="10"/><rect x="386" y="38" width="175" height="190" rx="10"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="574" y="38" width="175" height="190" rx="10"/></g>
+  <g text-anchor="middle" font-size="15" font-weight="700" fill="#12324f"><text x="97" y="64">SAST</text><text x="285" y="64">SCA</text><text x="473" y="64">DAST</text><text x="661" y="64" fill="#0e6f6c">SBOM</text></g>
+  <g text-anchor="middle" font-size="11.5" font-weight="600" fill="#0e6f6c"><text x="97" y="84">Código propio</text><text x="285" y="84">Dependencias</text><text x="473" y="84">App en ejecución</text><text x="661" y="84">Inventario</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876">
+    <text x="97" y="110">Analiza el código</text><text x="97" y="125">fuente sin ejecutarlo.</text><text x="97" y="150">Ve: inyección SQL,</text><text x="97" y="165">claves en el código.</text><text x="97" y="190">No ve: fallas de</text><text x="97" y="205">configuración o de red.</text>
+    <text x="285" y="110">Compara los paquetes</text><text x="285" y="125">con bases de</text><text x="285" y="140">vulnerabilidades.</text><text x="285" y="165">Ve: versiones con</text><text x="285" y="180">fallas conocidas.</text><text x="285" y="205">No ve: fallas nuevas.</text>
+    <text x="473" y="110">Ataca la app mientras</text><text x="473" y="125">corre, desde afuera.</text><text x="473" y="150">Ve: cabeceras, XSS,</text><text x="473" y="165">errores de configuración.</text><text x="473" y="190">No ve: el código que</text><text x="473" y="205">nadie ejercitó.</text>
+    <text x="661" y="110">Lista de componentes</text><text x="661" y="125">legible por máquina.</text><text x="661" y="150">Sirve para: saber qué</text><text x="661" y="165">se entregó y responder</text><text x="661" y="180">a una vulnerabilidad</text><text x="661" y="195">nueva con rapidez.</text>
+  </g>
+</svg>
+
+:::
+
+### SAST: análisis estático de seguridad
+
+*SAST* (*Static Application Security Testing*) es el análisis estático orientado a vulnerabilidades.
+CodeQL, Semgrep y Bandit de la Parte 4 son herramientas SAST, y SonarQube incluye reglas de este tipo.
+Encuentra rápido las clases de error que dejan una huella en el código, como concatenar texto
+del usuario dentro de una consulta SQL.
+
+### DAST: pruebas dinámicas de seguridad
+
+*DAST* (*Dynamic Application Security Testing*) prueba la aplicación en ejecución, desde fuera, como
+lo haría un atacante, sin ver el código. La herramienta gratuita más conocida es ZAP, que se publica con
+licencia Apache 2.0 y hoy se presenta como "ZAP by Checkmarx", porque su mantenimiento pasó a
+Checkmarx. Se apunta a una URL de pruebas, nunca a un sistema ajeno ni a producción sin permiso, y
+reporta problemas como cabeceras de seguridad ausentes o campos vulnerables a XSS.
+
+### SCA: análisis de composición de software
+
+*SCA* (*Software Composition Analysis*) compara los paquetes de terceros del producto con bases de
+vulnerabilidades conocidas. Tres herramientas gratuitas que usa la industria:
+
+- **pip-audit.** Audita dependencias de Python. Se publica con licencia Apache 2.0, nació en Trail of Bits con apoyo de Google y hoy lo mantiene la Python Packaging Authority. Consulta por defecto la base de avisos de PyPI y puede usar OSV. Se usa en el ejercicio.
+- **OSV-Scanner.** Herramienta de Google con licencia Apache-2.0 que consulta la base abierta OSV.dev y cubre más de once ecosistemas de lenguajes. Se ejecuta, por ejemplo, con `osv-scanner scan source -r ruta`.
+- **OWASP Dependency-Check.** Licencia Apache 2.0. Cruza los paquetes con la Base Nacional de Vulnerabilidades de Estados Unidos (NVD) mediante su API. Su documentación recomienda obtener una clave de la API de NVD, porque sin ella la actualización de datos es "extremadamente lenta", y exige la versión 12.1.0 o posterior por cambios en esa API.
+
+Dependabot, de GitHub, cubre una necesidad cercana. Genera alertas de dependencias vulnerables,
+solicitudes de cambio automáticas con la corrección (actualizaciones de seguridad) y
+solicitudes periódicas para mantener las versiones al día (actualizaciones de versión). Las
+condiciones de precio de cada función no se verificaron en esta guía.
+
+Trivy, de Aqua Security (licencia Apache-2.0), amplía la idea. Analiza imágenes de contenedor,
+sistemas de archivos y repositorios, y detecta paquetes vulnerables, errores de configuración,
+secretos y licencias.
+
+### Secretos en el código
+
+Una clave o contraseña escrita en el código fuente queda en el historial de Git para siempre,
+aunque se borre en el commit siguiente. Bandit la señala (regla B105 en el ejercicio) y las
+plataformas de alojamiento suelen ofrecer detección de secretos. El remedio correcto tiene dos
+pasos: rotar la clave, porque se debe asumir expuesta, y moverla a una variable de entorno o a un
+gestor de secretos.
+
+### SBOM: el inventario de componentes
+
+Una *SBOM* (*Software Bill of Materials*, lista de materiales de software) es el inventario
+legible por máquina de los componentes de un producto con sus versiones. Su uso en SQA es responder
+con rapidez a la pregunta "¿usamos el paquete afectado por esta vulnerabilidad nueva?". Los dos
+formatos principales, SPDX (ISO/IEC 5962:2021) y CycloneDX (ECMA-424), y su relación con el
+Reglamento (UE) 2024/2847 (CRA) se explicaron en el Tema 3 de la Unidad 1.
+
+Dos herramientas gratuitas generan SBOM:
+
+- **Syft.** Licencia Apache-2.0. Genera la lista desde imágenes de contenedor y sistemas de archivos y exporta a CycloneDX, SPDX y a su formato propio. Ejemplo: `syft <imagen> -o cyclonedx-json`.
+- **cyclonedx-bom** (comando `cyclonedx-py`). Licencia Apache 2.0. Genera la SBOM de un proyecto Python desde un entorno virtual, un `requirements.txt`, Poetry o Pipenv. Se usa en el ejercicio, donde se observa un límite importante de las SBOM generadas desde un archivo de requisitos.
+
+### SCA y SBOM no son lo mismo
+
+La SBOM es el inventario. El SCA es la comparación del inventario contra las vulnerabilidades
+conocidas. Puedes tener una SBOM perfecta que nadie compara con nada, y entonces no ayuda. Por eso
+una cadena de CI madura genera la SBOM y ejecuta el SCA, y vuelve a ejecutar el SCA con
+regularidad aunque el código no cambie, porque aparecen vulnerabilidades nuevas en paquetes viejos.
+
+## Parte 6. Gestión de pruebas y reportes
+
+La *gestión de pruebas* organiza los planes, los casos, las ejecuciones y los resultados, y
+conecta cada caso con su requisito. Es el soporte de la matriz de trazabilidad del Ejemplo 1.
+
+- **Kiwi TCMS.** Sistema de gestión de pruebas de código abierto, con licencia GPL-2.0, para pruebas manuales y automatizadas. Maneja planes, casos y ejecuciones, se integra con gestores de errores y se recomienda ejecutarlo como contenedor Docker. Nació como un proyecto de Red Hat llamado Nitrate y fue bifurcado en 2017.
+- **Allure Report.** Herramienta de reportes de pruebas con licencia Apache-2.0 que unifica los resultados de varios lenguajes y sistemas de CI en un informe navegable. Allure TestOps es un producto comercial distinto, de otra empresa que parte de la misma base, y no debe confundirse con el reporte gratuito.
+
+Existen también productos comerciales de gestión de pruebas. Esta guía no los describe porque sus
+condiciones no se verificaron en fuentes oficiales. La matriz de la Parte 10 sirve para evaluarlos.
+
+Muchos equipos pequeños usan una hoja de cálculo o las propias incidencias de la plataforma con
+etiquetas. Es una elección válida mientras el equipo pueda responder dos preguntas: qué requisito
+no tiene prueba y qué pruebas fallaron en la última versión.
+
+## Parte 7. Observabilidad y monitoreo
+
+El SQA no termina en el despliegue. La calidad que percibe el paciente es la del producto en
+producción, y para saber cómo se comporta hay que medirlo. El *monitoreo* revisa indicadores
+conocidos de antemano (por ejemplo, tasa de errores). La *observabilidad* busca que el sistema emita
+suficiente información para responder también preguntas que nadie previó.
+
+### Herramientas
+
+- **Prometheus.** Sistema de monitoreo de código abierto, proyecto de la CNCF (*Cloud Native Computing Foundation*) con licencia Apache 2.0. Recoge métricas de los servicios, las consulta con su lenguaje PromQL y dispara alertas.
+- **Grafana.** Paneles de visualización. Se distribuye bajo AGPL-3.0, con algunas excepciones Apache-2.0 que detalla su archivo de licencias. La AGPL exige publicar las modificaciones si se ofrece el software modificado como servicio en red, un detalle que cuenta al elegir.
+- **OpenTelemetry.** Proyecto de la CNCF con licencia Apache 2.0 que define cómo se emiten trazas, métricas, registros y perfiles de rendimiento de forma independiente del proveedor. Su valor es no quedar atado a una herramienta de monitoreo.
+- **Sentry.** Captura de errores de aplicación con contexto. Su repositorio la etiqueta como software de licencia Fair Source y ofrece una opción de autoalojamiento. El texto exacto de la licencia no se verificó, y conviene leerlo antes de adoptarla.
+
+### De la medición al compromiso: SLI, SLO y presupuesto de error
+
+Un *SLI* (indicador de nivel de servicio) es una medida, por ejemplo el porcentaje de solicitudes
+que terminan bien. Un *SLO* (objetivo de nivel de servicio) es la meta para ese indicador. El
+*presupuesto de error* es la cantidad de fallas que el SLO todavía tolera.
+
+### Ejemplo resuelto 3. Disponibilidad de "asignar turno"
+
+El monitor de la clínica registra, en una semana, 12.000 solicitudes a "asignar turno", de las
+cuales 36 terminaron con error del servidor. El equipo se comprometió a un SLO de 99,5 %. Los
+datos son ilustrativos.
+
+Paso 1. Calcula las solicitudes buenas: 12.000 menos 36 son 11.964.
+
+Paso 2. Calcula el SLI: 11.964 dividido entre 12.000 es 0,997, es decir 99,7 %.
+
+Paso 3. Compara con el SLO: 99,7 % es mayor que 99,5 %, así que se cumple.
+
+Paso 4. Calcula el presupuesto de error de la semana. El SLO tolera 0,5 % de fallas: 0,005 por 12.000
+son 60 solicitudes con error.
+
+Paso 5. Calcula cuánto se consumió: 36 de 60 es 60 %. Quedan 24 errores de margen.
+
+Paso 6. Decide. Con 60 % consumido a mitad de semana, el equipo frena los cambios riesgosos. Con 10 %
+consumido, puede arriesgar más. El presupuesto de error convierte la discusión entre "entregar
+rápido" y "entregar estable" en un número que las dos partes ven.
+
+## Parte 8. IA para pruebas y revisión de código
+
+Las herramientas de IA generan código, proponen pruebas y comentan solicitudes de cambio. Entran a
+la cadena de la Parte 1 en dos lugares: antes del commit (el asistente que escribe) y en la
+solicitud de cambio (el asistente que revisa). Esta parte describe qué hay, qué evidencia existe
+sobre su efecto en la calidad y qué protocolo de uso protege al equipo.
+
+### Qué hay a octubre de 2026
+
+- **GitHub Copilot, revisión de código.** Analiza solicitudes de cambio y sugiere correcciones sobre errores, vulnerabilidades y estilo. Según la documentación de GitHub, está disponible con los planes Copilot Pro, Pro+, Max, Business y Enterprise. La propia documentación advierte que Copilot no garantiza detectar todos los problemas, que a veces se equivoca, que sus comentarios deben validarse con cuidado y que debe complementarse con revisión humana. Por defecto sus revisiones no cuentan como aprobaciones requeridas, salvo que la organización lo habilite. Excluye ciertos archivos, entre ellos los de dependencias.
+- **CodeRabbit.** Plataforma de revisión de código con IA que se integra con GitHub y otras plataformas, según su organización oficial. Sus condiciones de precio no se verificaron.
+
+El mercado de estas herramientas cambia en meses. Esta guía no las compara entre sí porque eso
+caducaría pronto. Enseña en cambio a evaluar cualquiera con la evidencia y el protocolo siguientes.
+
+### La evidencia sobre calidad y seguridad
+
+Cuatro fuentes sirven de base. Cada una mide algo distinto y ninguna cierra la discusión.
+
+| Fuente | Qué midió | Resultado | Límite al interpretarla |
+|---|---|---|---|
+| Pearce et al. (2021) | 1.689 programas generados por GitHub Copilot en 89 escenarios de riesgo | Cerca de 40 % contenía vulnerabilidades | Midió una versión temprana de Copilot, hoy superada |
+| Veracode (2025) | Código generado por más de 100 modelos de lenguaje en Java, Python, C# y JavaScript | 45 % de las muestras falló pruebas de seguridad y trajo vulnerabilidades del OWASP Top 10. Por lenguaje: Java 72 %, C# 45 %, JavaScript 43 %, Python 38 % | Informe de un proveedor de herramientas de seguridad. Mide seguridad, no productividad |
+| METR (2025) | 16 desarrolladores con experiencia en proyectos de código abierto, 246 tareas | Con herramientas de IA tardaron 19 % más. Esperaban ir 24 % más rápido y después creyeron haber ido 20 % más rápido | Herramientas de principios de 2025. Muestra pequeña y contexto específico: desarrolladores expertos en sus propios proyectos |
+| DORA (2025) | Informe anual de investigación sobre desarrollo asistido por IA | La IA actúa como amplificador de las fortalezas y las debilidades que la organización ya tiene | La página consultada no permitió verificar las cifras del informe, por lo que no se citan |
+
+Tres lecciones salen de esa tabla. La primera es que el código generado por IA necesita las mismas
+revisiones y controles automáticos que el código escrito por una persona. La segunda es que la
+percepción de velocidad no es una medida: en el estudio de METR los desarrolladores se creían más
+rápidos cuando eran más lentos, así que el equipo debe medir. La tercera es que Veracode encontró que los
+modelos más grandes mejoraron en producir código que funciona pero no en producir código seguro, de
+modo que esperar a un modelo mejor no sustituye al control.
+
+### Límites y riesgos específicos
+
+- **Plausible no es correcto.** El código generado suele compilar y parecer razonable. El riesgo está en lo que parece bien y no lo está: una condición de borde omitida, una validación ausente, un manejo de errores que oculta fallas.
+- **Contexto ausente.** La herramienta no conoce el requisito real de la clínica ni sus reglas de negocio. Si el prompt no dice "hasta 20 turnos", la herramienta no lo sabe.
+- **Datos sensibles en el prompt.** Pegar en un asistente en la nube datos reales de pacientes puede incumplir la Ley 1581 de 2012, que clasifica los datos de salud como sensibles (Tema 3 de la Unidad 1). Los prompts y el código compartido salen de la organización según las condiciones de cada producto.
+- **Pruebas que validan lo que el código hace y no lo que debe hacer.** Una IA que escribe pruebas a partir del código existente codifica en ellas los errores del código. Las pruebas deben derivarse del requisito.
+- **Falsa seguridad.** Un revisor automático que aprueba hace que los humanos revisen con menos atención. Un aprobado de IA nunca sustituye al aprobado humano en una solicitud de cambio.
+
+### Protocolo de uso en un equipo
+
+1. Declarar la política: qué herramientas de IA se permiten, para qué tareas y qué datos nunca se comparten.
+2. Pasar el código generado por los mismos controles que el resto: solicitud de cambio, revisión humana, análisis estático, SCA y pruebas.
+3. Derivar las pruebas del requisito y no del código generado.
+4. Marcar en la solicitud de cambio qué parte se generó con IA, para que la persona revisora ponga más atención.
+5. Medir resultados reales (defectos que escapan, tiempo de revisión, tasa de reversiones) y no la percepción.
+6. Mantener la responsabilidad en una persona: quien aprueba el cambio responde por él, sin importar quién lo escribió.
+
+## Parte 9. Ejercicio guiado reproducible
+
+El ejercicio pasa por un repositorio pequeño de la clínica con un análisis estático de seguridad
+(Bandit), una auditoría de dependencias (pip-audit) y una SBOM (cyclonedx-py), y cierra con la
+corrección de los hallazgos. Todas son gratuitas y de código abierto.
+
+Las salidas que se muestran se obtuvieron ejecutando estos mismos comandos el 3 de octubre de 2026
+con Python 3.13, Bandit 1.9.4, pip-audit 2.10.1 y cyclonedx-bom 7.5.0. Tu salida puede diferir en
+rutas (en Windows aparecen con barra invertida), en la hora y, sobre todo, en la cantidad de
+vulnerabilidades de dependencias, porque la base de avisos se actualiza a diario. Donde un bloque
+de salida se recortó, lo dice.
+
+Entregable: una tabla de hallazgos con la decisión de cada uno (Paso 8). Formato: un archivo de
+texto o una hoja de cálculo. Criterios de revisión que puedes aplicarte: cada hallazgo tiene su
+decisión, las decisiones están justificadas y los comandos finales salen limpios o con un riesgo
+aceptado explícito.
+
+### Paso 0. Requisitos
+
+Python 3.10 o superior (pip-audit lo exige) y acceso a Internet para instalar paquetes y consultar
+la base de avisos. No hace falta Docker ni cuenta en ninguna plataforma.
+
+### Paso 1. Crear el repositorio de prueba
+
+Crea una carpeta `turnos-clinica` con dos archivos. El código tiene cinco problemas sembrados a propósito.
+
+El archivo `turnos-clinica/turnos.py`:
+
+```python
+import sqlite3
+import hashlib
+import subprocess
+
+DB_PASSWORD = "clinica2026"
+
+
+def conectar():
+    return sqlite3.connect("turnos.db")
+
+
+def buscar_paciente(documento):
+    con = conectar()
+    consulta = "SELECT * FROM pacientes WHERE documento = '" + documento + "'"
+    return con.execute(consulta).fetchall()
+
+
+def hash_clave(clave):
+    return hashlib.md5(clave.encode()).hexdigest()
+
+
+def exportar_agenda(especialidad):
+    subprocess.call("tar czf agenda.tgz " + especialidad, shell=True)
+
+
+def asignar_turno(cupos_ocupados, limite=20):
+    if cupos_ocupados < limite:
+        return True
+    return False
+```
+
+El archivo `turnos-clinica/requirements.txt`, con una versión antigua a propósito:
+
+```text
+requests==2.19.0
+```
+
+### Paso 2. Instalar las herramientas en un entorno aislado
+
+En Linux o macOS:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install bandit pip-audit cyclonedx-bom
+```
+
+En Windows con PowerShell, la activación cambia:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install bandit pip-audit cyclonedx-bom
+```
+
+### Paso 3. Análisis estático con Bandit
+
+```bash
+bandit -r turnos-clinica
+```
+
+Salida real, recortada a los cinco hallazgos (se omitieron las líneas de código de contexto y
+las de información inicial):
+
+```text
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78
+   Location: turnos-clinica\turnos.py:3:0
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'clinica2026'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259
+   Location: turnos-clinica\turnos.py:5:14
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Low
+   CWE: CWE-89
+   Location: turnos-clinica\turnos.py:14:15
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327
+   Location: turnos-clinica\turnos.py:19:11
+>> Issue: [B602:subprocess_popen_with_shell_equals_true] subprocess call with shell=True identified, security issue.
+   Severity: High   Confidence: High
+   CWE: CWE-78
+   Location: turnos-clinica\turnos.py:23:4
+
+Code scanned:
+	Total lines of code: 18
+Run metrics:
+	Total issues (by severity):
+		Low: 2
+		Medium: 1
+		High: 2
+```
+
+Observa tres cosas. La regla B608 detecta la inyección SQL con confianza baja, y aun así es un
+verdadero positivo, porque el código concatena el texto del usuario. Una confianza baja pide leer el
+código y no descartar el hallazgo. La función `asignar_turno` no genera ningún hallazgo, aunque
+se puede simplificar: el análisis de seguridad no mide estilo. Y el comando termina con código de
+salida 1 porque encontró hallazgos, incluso si solo fueran de severidad baja, lo que en una CI
+rompería el flujo.
+
+### Paso 4. Filtrar por severidad
+
+Una CI útil bloquea por lo grave. El indicador `-ll` pide solo severidad media o superior:
+
+```bash
+bandit -ll -q -r turnos-clinica -f custom --msg-template "{relpath}:{line}  {test_id} {severity}  {msg}"
+```
+
+La plantilla de mensaje reduce cada hallazgo a una línea. La salida real fue:
+
+```text
+turnos-clinica\turnos.py:14  B608 MEDIUM  Possible SQL injection vector through string-based query construction.
+turnos-clinica\turnos.py:19  B324 HIGH  Use of weak MD5 hash for security. Consider usedforsecurity=False
+turnos-clinica\turnos.py:23  B602 HIGH  subprocess call with shell=True identified, security issue.
+```
+
+Quedan tres hallazgos. Los dos de severidad baja (B404 y B105) desaparecieron del filtro. El B105,
+una contraseña escrita en el código, es real aunque su severidad sea baja, y el filtro lo oculta:
+un umbral de severidad es una decisión que hay que tomar con los ojos abiertos.
+
+### Paso 5. Auditoría de dependencias con pip-audit
+
+```bash
+pip-audit -r turnos-clinica/requirements.txt
+```
+
+Salida real, recortada (la herramienta imprimió muchas filas, algunas repetidas porque un mismo aviso
+tiene varios identificadores):
+
+```text
+Found 37 known vulnerabilities in 3 packages
+Name     Version ID              Fix Versions
+-------- ------- --------------- -------------
+requests 2.19.0  PYSEC-2018-28   2.20.0
+requests 2.19.0  PYSEC-2023-74   2.31.0
+requests 2.19.0  PYSEC-2026-1872 2.32.4
+idna     2.7     PYSEC-2024-60   3.7
+urllib3  1.23    PYSEC-2019-133  1.24.2
+urllib3  1.23    PYSEC-2023-192  1.26.17,2.0.6
+...
+```
+
+Fíjate en que el archivo declara un solo paquete (`requests`) y el informe habla de tres. pip-audit
+resuelve las dependencias como lo haría `pip install` y por eso encuentra también `idna` y
+`urllib3`, que `requests` arrastra. Esa es la diferencia entre las dependencias directas, que el
+equipo eligió, y las transitivas, que llegan sin que nadie las pida.
+
+La cifra de 37 corresponde al día de la ejecución. En otra fecha será distinta.
+
+### Paso 6. Corregir y repetir
+
+Las columnas "Fix Versions" dicen a qué versión subir. Cambiar `requests==2.19.0` por
+`requests==2.32.4` no basta. Observa lo que ocurrió al repetir el análisis:
+
+```text
+Found 2 known vulnerabilities in 1 package
+Name     Version ID              Fix Versions
+-------- ------- --------------- ------------
+requests 2.32.4  PYSEC-2026-2275 2.33.0
+```
+
+Una versión que estaba limpia hace unos meses hoy tiene un aviso nuevo. Esa es la razón por la que
+el SCA se ejecuta con regularidad. Con `requests==2.33.0`:
+
+```text
+No known vulnerabilities found
+```
+
+Ahora corrige el código. Esta versión usa una consulta parametrizada, una función de derivación de
+clave en lugar de MD5, una lista de argumentos en lugar de `shell=True`, y lee la contraseña de una
+variable de entorno. El valor de iteraciones es ilustrativo, y la guía OWASP Password Storage
+Cheat Sheet es la fuente para consultar el valor vigente.
+
+```python
+import hashlib
+import os
+import sqlite3
+import subprocess
+
+DB_PASSWORD = os.environ.get("CLINICA_DB_PASSWORD")
+
+
+def conectar():
+    return sqlite3.connect("turnos.db")
+
+
+def buscar_paciente(documento):
+    con = conectar()
+    consulta = "SELECT * FROM pacientes WHERE documento = ?"
+    return con.execute(consulta, (documento,)).fetchall()
+
+
+def hash_clave(clave, sal):
+    return hashlib.pbkdf2_hmac("sha256", clave.encode(), sal, 600_000).hex()
+
+
+def exportar_agenda(especialidad):
+    subprocess.run(["tar", "czf", "agenda.tgz", especialidad], check=True)
+
+
+def asignar_turno(cupos_ocupados, limite=20):
+    return cupos_ocupados < limite
+```
+
+Repite Bandit sobre el código corregido. Salida real, recortada:
+
+```text
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+Run metrics:
+	Total issues (by severity):
+		Low: 3
+		Medium: 0
+		High: 0
+```
+
+Los hallazgos graves desaparecieron y quedan tres de severidad baja, todos sobre la llamada a
+`tar`. Aquí empieza el trabajo de criterio. El argumento `especialidad` viene del usuario, así que
+conviene validarlo contra una lista de especialidades válidas antes de usarlo. Si la validación
+existe, el equipo puede marcar B603 y B607 como riesgo aceptado con una nota que lo diga. Si no
+existe, los hallazgos son verdaderos.
+
+### Paso 7. Generar la SBOM
+
+```bash
+cyclonedx-py requirements turnos-clinica/requirements.txt --of JSON -o sbom.json
+```
+
+Para ver su contenido sin abrir el archivo completo:
+
+```bash
+python -c "import json; d=json.load(open('sbom.json')); print(d['bomFormat'], d['specVersion']); [print(c['type'], c['name'], c['version'], c['purl']) for c in d['components']]"
+```
+
+Salida real (con `requests==2.19.0` en el archivo de requisitos):
+
+```text
+CycloneDX 1.6
+library requests 2.19.0 pkg:pypi/requests@2.19.0
+```
+
+La SBOM generada desde un `requirements.txt` contiene solo `requests`, el paquete declarado, y no
+`idna` ni `urllib3`, que pip-audit sí encontró. El motivo es que ese archivo lista lo que el equipo
+pidió y no lo que se instaló. La herramienta ofrece también el modo `cyclonedx-py environment`,
+que parte de un entorno virtual con todo instalado, y esa es la opción que conviene para obtener
+las dependencias transitivas. Ese modo no se ejecutó en esta guía. Un inventario incompleto da una
+falsa seguridad, y por eso conviene comprobar qué listó la herramienta antes de entregar la SBOM.
+
+### Paso 8. Registrar las decisiones
+
+Llena una tabla como esta con cada hallazgo del Paso 3. La columna de decisión es la que importa.
+
+| Hallazgo | Archivo y línea | Decisión | Justificación |
+|---|---|---|---|
+| B608 | turnos.py:14 | Verdadero positivo, corregido | Consulta parametrizada |
+| B324 | turnos.py:19 | Verdadero positivo, corregido | Derivación de clave con sal |
+| B602 | turnos.py:23 | Verdadero positivo, corregido | Lista de argumentos sin shell |
+| B105 | turnos.py:5 | Verdadero positivo, corregido y clave rotada | Variable de entorno |
+| B404 | turnos.py:3 | Falso positivo o informativo | Importar el módulo no es un defecto |
+
+### Opcional: lo que no se ejecutó
+
+Dos extensiones quedan como práctica, y no se ejecutaron para esta guía.
+
+- Montar el flujo de CI de la Parte 3 en un repositorio público de GitHub y comprobar que falla con el código original y pasa con el corregido.
+- Levantar SonarQube Community Build con `docker run --name sonarqube-clinica -p 9000:9000 sonarqube:community`, abrir `http://localhost:9000` y analizar el repositorio con el escáner. Requiere Docker y su configuración inicial se hace en la interfaz web.
+
+## Parte 10. Cómo elegir una herramienta
+
+La pregunta "¿cuál es la mejor herramienta?" no tiene respuesta, porque la mejor depende del
+contexto. Lo que sí se puede hacer es decidir con criterios explícitos, de modo que otra
+persona pueda revisar la decisión.
+
+### Criterios de una matriz de selección
+
+| Criterio | Qué preguntar |
+|---|---|
+| Costo y licencia | Es gratuita, de pago o freemium. Qué obligaciones impone la licencia (por ejemplo, copyleft en red) |
+| Cobertura de lenguajes y plataformas | Entiende los lenguajes y marcos que el equipo usa realmente |
+| Integración | Se conecta con la CI, el repositorio y el tablero que ya existen |
+| Esfuerzo de puesta en marcha y mantenimiento | Cuánto tarda en funcionar y quién la mantiene |
+| Calidad de los reportes | Muestra ubicación, severidad, confianza, cómo corregir y tendencias |
+| Falsos positivos y ajuste | Permite marcar excepciones con justificación y afinar reglas |
+| Datos y privacidad | Dónde se procesa el código y los datos, y qué sale de la organización |
+| Permanencia y soporte | Quién la mantiene, con qué ritmo de versiones, qué pasa si desaparece |
+| Evidencia y auditoría | Deja un registro que un auditor pueda revisar |
+
+### Ejemplo resuelto 4. Elegir el análisis estático de la clínica
+
+La clínica programa en Python y quiere un análisis estático gratuito. Compara tres candidatas con
+cinco criterios. Cada criterio recibe un peso del 1 al 5 según su importancia para el equipo, y cada
+candidata una puntuación del 1 al 5. Los pesos y las puntuaciones son juicios ilustrativos y no
+mediciones: otro equipo puntuaría distinto.
+
+| Criterio | Peso | SonarQube Community Build | Semgrep Community | Bandit |
+|---|:---:|:---:|:---:|:---:|
+| Costo y licencia | 5 | 5 | 5 | 5 |
+| Cobertura de lenguajes | 4 | 5 | 5 | 2 |
+| Integración con la CI | 4 | 4 | 4 | 5 |
+| Puesta en marcha | 3 | 2 | 4 | 5 |
+| Calidad de los reportes | 2 | 5 | 3 | 2 |
+
+Paso 1. Multiplica cada puntuación por su peso y suma. Para SonarQube: 5 por 5 son 25, más 5 por 4 son 20,
+más 4 por 4 son 16, más 2 por 3 son 6, más 5 por 2 son 10. Total 77.
+
+Paso 2. Semgrep: 25 más 20 más 16 más 12 (4 por 3) más 6 (3 por 2). Total 79.
+
+Paso 3. Bandit: 25 más 8 (2 por 4) más 20 (5 por 4) más 15 (5 por 3) más 4 (2 por 2). Total 72.
+
+Paso 4. El máximo posible es 5 por la suma de pesos, que es 18: 90 puntos. Semgrep lidera con 79, pero
+la distancia entre las tres es pequeña.
+
+Paso 5. Haz un análisis de sensibilidad. Una decisión que se invierte con un cambio razonable de pesos
+es una decisión frágil. Cambia los pesos a 5, 4, 4, 1 y 5 (importa mucho el reporte y poco la
+puesta en marcha), con suma 19. SonarQube pasa a 25 más 20 más 16 más 2 más 25, es decir 88. Semgrep pasa a
+25 más 20 más 16 más 4 más 15, es decir 80. Bandit pasa a 25 más 8 más 20 más 5 más 10, es decir 68.
+
+Paso 6. La conclusión es que la elección depende de qué valora el equipo. Si prioriza arrancar rápido, gana
+Semgrep. Si prioriza reportes y tendencias, gana SonarQube. Bandit es la opción más simple y la más
+limitada, y sirve de primer paso mientras el equipo es solo Python y pequeño. Documentar los pesos
+deja la decisión abierta a revisión.
+
+## Errores frecuentes
+
+- **Instalar la herramienta sin definir la actividad.** Sin un responsable que lea los informes y una regla para actuar sobre ellos, la herramienta genera ruido.
+- **Medir al equipo por el número de hallazgos.** Incentiva a ocultarlos o a marcar falsos positivos sin leer. El número útil es el de hallazgos graves sin resolver y su tiempo de vida.
+- **Gates con demasiadas condiciones o aplicados a todo el historial.** Bloquean al equipo por deuda heredada y terminan desactivados.
+- **Confiar en una sola técnica de seguridad.** SAST no ve dependencias, SCA no ve el código propio y DAST no ve el código que nadie ejercitó.
+- **Ejecutar el SCA solo cuando el código cambia.** Las vulnerabilidades nuevas aparecen en paquetes viejos, y hace falta una ejecución periódica.
+- **Creer que una SBOM es una auditoría.** Es un inventario, y solo ayuda si se compara con avisos de vulnerabilidades y si está completo.
+- **Dar por buena una SBOM sin revisar qué listó.** Una generada desde el archivo de requisitos omite lo transitivo.
+- **Tratar la salida de la IA como código revisado.** Necesita los mismos controles y la misma responsabilidad humana que cualquier otro.
+- **Pegar datos reales de pacientes en un asistente en la nube.** Puede incumplir la Ley 1581 de 2012.
+- **Elegir por moda o por el último anuncio.** La matriz de criterios existe para impedirlo.
+- **Olvidar la licencia.** Una herramienta gratuita con licencia copyleft en red o de uso limitado puede imponer obligaciones que el equipo no previó.
+- **Descuidar la seguridad de la propia CI.** Un flujo con permisos amplios y acciones sin fijar es un camino hacia producción.
+
+## Retos
+
+::: {.callout-tip}
+## Reto 1. Ubica cada herramienta
+
+Escribe la categoría de cada herramienta y la actividad de SQA que apoya: (a) Prometheus,
+(b) pip-audit, (c) Kiwi TCMS, (d) Syft, (e) ZAP, (f) Jira.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+- (a) Prometheus: observabilidad y monitoreo. Apoya el seguimiento del producto en operación.
+- (b) pip-audit: seguridad, técnica SCA. Apoya la verificación de dependencias.
+- (c) Kiwi TCMS: gestión de pruebas. Apoya el registro de planes, casos, ejecuciones y evidencia.
+- (d) Syft: seguridad y cadena de suministro, generación de SBOM. Apoya el inventario de componentes.
+- (e) ZAP: seguridad, técnica DAST. Apoya las pruebas de la aplicación en ejecución.
+- (f) Jira: gestión y trazabilidad. Apoya el registro de tareas, defectos y cambios.
+:::
+
+::: {.callout-tip}
+## Reto 2. Decide con el quality gate
+
+La clínica aplica el gate del Ejemplo 2 (cobertura nueva de al menos 80 %, 0 vulnerabilidades nuevas,
+duplicación nueva de como máximo 3 %). Una solicitud de cambio llega con cobertura de 85 %,
+1 vulnerabilidad nueva y duplicación de 2 %. (a) ¿Pasa el gate? (b) ¿Qué condición manda?
+(c) ¿Es una buena idea relajar la condición de vulnerabilidades a "máximo 2" para que pase?
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+(a) No pasa. (b) La condición de vulnerabilidades nuevas, que exige 0 y recibió 1. Las otras dos
+cumplen (85 es mayor que 80, y 2 es menor que 3), pero basta una condición fallida para bloquear.
+(c) No es buena idea. Relajar el umbral para que pase una solicitud concreta convierte el gate en un
+trámite. Lo correcto es revisar la vulnerabilidad: si es un verdadero positivo se corrige, y si es
+un falso positivo se marca como tal con justificación, y el gate pasa sin tocar el umbral.
+:::
+
+::: {.callout-tip}
+## Reto 3. Triaje de hallazgos
+
+Bandit reporta sobre otra función de la clínica: (1) B105, contraseña de base de datos escrita en
+el código; (2) B608, consulta SQL armada con texto del paciente; (3) B404, importación del módulo
+`subprocess` en un archivo que no lo usa. Clasifica cada uno como verdadero positivo, falso
+positivo o informativo, y ordénalos por prioridad de atención.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+- (2) B608 es un verdadero positivo y va primero: es una inyección SQL sobre datos de pacientes.
+- (1) B105 es un verdadero positivo y va segundo: una clave en el código queda en el historial. Hay que rotarla y moverla a una variable de entorno o a un gestor de secretos.
+- (3) B404 es informativo: importar `subprocess` sin usarlo no es una vulnerabilidad. Se elimina la importación sin uso, y con eso el aviso desaparece.
+
+La prioridad no sigue la severidad que reporta la herramienta, que en este caso daría Low a la
+clave y a la importación. Se decide con el daño posible y la facilidad de explotación.
+:::
+
+::: {.callout-tip}
+## Reto 4. Presupuesto de error
+
+El monitor de la clínica registra en un mes 50.000 solicitudes a "ver mis turnos", con 275 errores del
+servidor. El SLO es 99,5 %. Calcula (a) el SLI, (b) el presupuesto de error del mes en número de
+solicitudes y (c) el porcentaje del presupuesto consumido.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+(a) Solicitudes buenas: 50.000 menos 275 son 49.725. SLI: 49.725 entre 50.000 es 0,9945, es decir
+99,45 %. No cumple el SLO de 99,5 %.
+
+(b) Presupuesto: 0,005 por 50.000 son 250 solicitudes con error.
+
+(c) Consumido: 275 entre 250 es 1,10, es decir 110 %. El presupuesto se agotó y se pasó por 25
+errores. La decisión razonable es detener los cambios riesgosos y dedicar el siguiente ciclo a la
+estabilidad.
+:::
+
+::: {.callout-tip}
+## Reto 5. Revisa código generado por IA
+
+Un asistente de IA generó esta función para la clínica. Encuentra al menos tres problemas y di qué
+herramienta de este tema detectaría cada uno.
+
+```python
+API_KEY = "sk-clinica-9f2c"
+
+def turnos_del_dia(especialidad, cursor):
+    try:
+        cursor.execute(f"SELECT * FROM turnos WHERE esp = '{especialidad}'")
+        return cursor.fetchall()
+    except:
+        pass
+```
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+1. Clave escrita en el código (`API_KEY`). La detectan un análisis estático de seguridad con regla de secretos (en Bandit, la familia B105) y la detección de secretos de la plataforma. La clave se debe rotar.
+2. Inyección SQL por construir la consulta con una cadena formateada. La detecta un SAST (Bandit con B608, Semgrep o CodeQL). Se corrige con consulta parametrizada.
+3. Un `except` sin tipo que ignora el error. Oculta fallas reales, y el monitoreo nunca las vería. Un analizador de calidad lo marca como mala práctica, y la solución es capturar el tipo concreto y registrar o propagar el error.
+4. Faltan además el requisito y la prueba. No hay límite de 20 turnos ni caso de prueba que lo verifique, y eso solo lo detecta la revisión humana contra la matriz de trazabilidad.
+
+El punto 4 muestra el límite de las herramientas: ninguna sabe lo que la clínica quería.
+:::
+
+## Autoevaluación
+
+Marca tu respuesta y abre la clave para comparar.
+
+**1.** La actividad de SQA que automatiza el análisis estático es:
+
+<label><input type="checkbox"> La verificación del código sin ejecutarlo</label>
+<label><input type="checkbox"> La validación con usuarios reales</label>
+<label><input type="checkbox"> La certificación ISO del producto</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 1
+
+La opción 1. El análisis estático examina el código sin ejecutarlo, y es una actividad de
+verificación. La validación con usuarios y la certificación son otras actividades.
+:::
+
+**2.** Una SBOM generada desde un archivo `requirements.txt` con un solo paquete:
+
+<label><input type="checkbox"> Lista siempre todas las dependencias transitivas</label>
+<label><input type="checkbox"> Lista lo declarado y puede omitir lo transitivo</label>
+<label><input type="checkbox"> Compara el paquete con las vulnerabilidades conocidas</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 2
+
+La opción 2. En el ejercicio, la SBOM de `cyclonedx-py requirements` solo contenía `requests`,
+mientras pip-audit encontró también `idna` y `urllib3`. La comparación con vulnerabilidades la
+hace el SCA, no la SBOM.
+:::
+
+**3.** La técnica que prueba la aplicación en ejecución, sin ver el código, es:
+
+<label><input type="checkbox"> SAST</label>
+<label><input type="checkbox"> DAST</label>
+<label><input type="checkbox"> SCA</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 3
+
+La opción 2. DAST ataca la aplicación mientras corre. SAST analiza el código y SCA las dependencias.
+:::
+
+**4.** Bandit reporta un hallazgo de severidad alta y confianza baja. Lo correcto es:
+
+<label><input type="checkbox"> Descartarlo, porque la confianza es baja</label>
+<label><input type="checkbox"> Leer el código y decidir si es verdadero positivo</label>
+<label><input type="checkbox"> Corregirlo sin leerlo</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 4
+
+La opción 2. La confianza baja pide más atención humana, no descartar. En el ejercicio, la inyección
+SQL (B608) tenía confianza baja y era un verdadero positivo.
+:::
+
+**5.** Una solicitud de cambio cumple 2 de las 3 condiciones del quality gate. Entonces:
+
+<label><input type="checkbox"> Pasa, porque cumple la mayoría</label>
+<label><input type="checkbox"> No pasa, porque basta una condición fallida para bloquear</label>
+<label><input type="checkbox"> Pasa si el equipo lo decide, sin dejar registro</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 5
+
+La opción 2. Un gate bloquea si falla cualquiera de sus condiciones. Saltarlo sin registro
+convierte el control en un trámite.
+:::
+
+**6.** Con 20.000 solicitudes en el mes, 40 errores y un SLO de 99,5 %, el SLI y el presupuesto consumido son:
+
+<label><input type="checkbox"> 99,8 % y 40 % del presupuesto</label>
+<label><input type="checkbox"> 99,5 % y 100 % del presupuesto</label>
+<label><input type="checkbox"> 99,8 % y 80 % del presupuesto</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 6
+
+La opción 1. Solicitudes buenas: 19.960, SLI 0,998 (99,8 %). Presupuesto: 0,005 por 20.000 son 100
+errores. Consumido: 40 entre 100 es 40 %.
+:::
+
+**7.** Un estudio con 16 desarrolladores expertos y 246 tareas (METR, 2025) mostró que con herramientas de IA:
+
+<label><input type="checkbox"> Terminaron 19 % más rápido</label>
+<label><input type="checkbox"> Tardaron 19 % más, aunque creían haber ido más rápido</label>
+<label><input type="checkbox"> No hubo ninguna diferencia</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 7
+
+La opción 2. Tardaron 19 % más. Esperaban ir 24 % más rápido y luego creyeron haber ido 20 % más rápido.
+El resultado aplica a herramientas de principios de 2025 y a un contexto específico, y por eso se
+interpreta con cuidado.
+:::
+
+**8.** Para un equipo, el mejor uso de un revisor automático con IA en las solicitudes de cambio es:
+
+<label><input type="checkbox"> Reemplazar la revisión humana para ahorrar tiempo</label>
+<label><input type="checkbox"> Complementar la revisión humana, que sigue siendo la aprobación</label>
+<label><input type="checkbox"> Activarlo sin política de qué datos puede ver</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 8
+
+La opción 2. La documentación de GitHub Copilot indica que debe complementarse con revisión humana,
+y que no garantiza detectar todos los problemas.
+:::
+
+**9.** Dos herramientas de la matriz puntúan 79 y 77, y al cambiar los pesos el orden se invierte. Esto indica que:
+
+<label><input type="checkbox"> La matriz está mal calculada</label>
+<label><input type="checkbox"> La decisión es sensible a los pesos y hay que discutirlos</label>
+<label><input type="checkbox"> Debe elegirse siempre la más barata</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 9
+
+La opción 2. Es el propósito del análisis de sensibilidad: mostrar cuándo la decisión depende de lo
+que el equipo valora, para discutir esos pesos y no solo el resultado.
+:::
+
+**10.** Atlassian anunció el fin de Data Center. Para un equipo que hoy elige Jira, la consecuencia práctica es:
+
+<label><input type="checkbox"> Elegir su versión en la nube, porque la línea Data Center se cierra el 28 de marzo de 2029</label>
+<label><input type="checkbox"> Instalar Data Center, porque durará indefinidamente</label>
+<label><input type="checkbox"> Cambiar a otra herramienta obligatoriamente</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 10
+
+La opción 1. Atlassian anunció que no vende suscripciones nuevas de Data Center a clientes nuevos
+desde el 30 de marzo de 2026 y que la línea termina el 28 de marzo de 2029. Que el cambio sea
+obligatorio hacia otra herramienta no se desprende del anuncio.
+:::
+
+## Lo que te llevas
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Por qué una herramienta apoya una actividad de SQA y no la reemplaza
+- [ ] Las siete categorías de herramientas y un ejemplo de cada una
+- [ ] Qué ven y qué no ven SAST, DAST, SCA y SBOM, y por qué hacen falta varias
+- [ ] Cómo leer un hallazgo (severidad, confianza, ubicación) y las tres decisiones posibles
+- [ ] Cómo calcular un quality gate, un SLI y un presupuesto de error
+- [ ] Qué dice la evidencia sobre el código generado por IA y qué protocolo de uso protege al equipo
+- [ ] Cómo elegir una herramienta con una matriz de criterios y comprobar su sensibilidad a los pesos
+- [ ] Qué riesgos tiene la propia cadena de CI y cómo mitigarlos
+:::
+
+## Glosario
+
+- **Herramienta de SQA.** Software que automatiza o registra una actividad de aseguramiento de calidad, como revisar, medir o controlar el cambio.
+- **Trazabilidad.** Capacidad de seguir un requisito hasta el código que lo implementa y la prueba que lo verifica, y en sentido contrario.
+- **Matriz de trazabilidad.** Tabla que relaciona requisitos con casos de prueba.
+- **Cobertura de requisitos.** Proporción de requisitos con al menos un caso de prueba.
+- **Control de versiones.** Sistema que registra los cambios del código como un historial.
+- **Git.** Sistema de control de versiones distribuido, el de uso dominante.
+- **Solicitud de cambio.** Propuesta de integrar un cambio, revisada antes de aceptarla (*pull request* o *merge request*).
+- **Protección de rama.** Regla de la plataforma que exige revisión y chequeos en verde antes de fusionar.
+- **Integración continua (CI).** Práctica de construir y probar automáticamente cada cambio propuesto.
+- **GitHub Actions.** Servicio de automatización de flujos de GitHub, definido en archivos YAML.
+- **GitLab CI/CD.** Servicio de canalizaciones de GitLab, definido en `.gitlab-ci.yml`.
+- **Ejecutor (runner).** Máquina que ejecuta los trabajos de una canalización.
+- **Análisis estático.** Examen del código sin ejecutarlo.
+- **Severidad.** Gravedad que tendría un hallazgo si fuera real.
+- **Confianza.** Seguridad de la herramienta de que el hallazgo es real.
+- **Verdadero positivo.** Hallazgo correcto de un problema real.
+- **Falso positivo.** Hallazgo incorrecto, de un problema que no existe.
+- **Riesgo aceptado.** Problema real que se decide no corregir ahora, con responsable y plazo.
+- **Quality gate.** Conjunto de condiciones medibles que un cambio debe cumplir para fusionarse.
+- **Clean as you code.** Aplicar las condiciones de calidad al código nuevo y no a todo el historial.
+- **SAST.** Análisis estático de seguridad del código fuente.
+- **DAST.** Pruebas de seguridad sobre la aplicación en ejecución.
+- **SCA.** Análisis de composición de software: comparar las dependencias con vulnerabilidades conocidas.
+- **SBOM.** Lista de materiales de software: inventario legible por máquina de los componentes.
+- **CycloneDX y SPDX.** Dos formatos de SBOM.
+- **Dependencia transitiva.** Paquete que llega porque otro paquete lo necesita, sin que el equipo lo pida.
+- **Vulnerabilidad conocida.** Falla de seguridad publicada en una base de avisos, con identificador.
+- **Dependabot.** Servicio de GitHub que alerta de dependencias vulnerables y propone actualizarlas.
+- **Gestión de pruebas.** Organización de planes, casos, ejecuciones y resultados de prueba.
+- **Monitoreo.** Revisión de indicadores conocidos de antemano.
+- **Observabilidad.** Capacidad de responder preguntas nuevas sobre un sistema a partir de lo que emite.
+- **SLI.** Indicador de nivel de servicio: una medida del servicio.
+- **SLO.** Objetivo de nivel de servicio: la meta para un indicador.
+- **Presupuesto de error.** Cantidad de fallas que el SLO todavía tolera.
+- **OpenTelemetry.** Proyecto abierto que estandariza cómo se emiten trazas, métricas y registros.
+- **Revisión de código con IA.** Comentarios automáticos de un modelo sobre una solicitud de cambio.
+- **Copyleft en red.** Licencia que obliga a publicar las modificaciones si el software se ofrece como servicio (por ejemplo, AGPL).
+- **Matriz de selección.** Tabla con criterios ponderados para comparar opciones.
+- **Análisis de sensibilidad.** Comprobar si una decisión cambia al variar los pesos o los supuestos.
+
+## Bibliografía
+
+Herramientas (fuentes oficiales, consultadas el 3 de octubre de 2026):
+
+- Atlassian. *Atlassian Ascend, anuncio del fin de ciclo de Data Center.* [Anuncio](https://www.atlassian.com/blog/announcements/atlassian-ascend).
+- GitHub Docs. *GitHub Actions billing.* [Facturación de Actions](https://docs.github.com/en/billing/concepts/product-billing/github-actions). *Secure use reference.* [Uso seguro](https://docs.github.com/en/actions/reference/security/secure-use).
+- GitHub. Repositorios [actions/checkout](https://github.com/actions/checkout) y [actions/setup-python](https://github.com/actions/setup-python).
+- GitLab. [Repositorio gitlab-org/gitlab](https://gitlab.com/gitlab-org/gitlab) y [documentación de CI/CD](https://gitlab.com/gitlab-org/gitlab/-/raw/master/doc/ci/_index.md).
+- SonarSource. [Repositorio de SonarQube Community Build](https://github.com/SonarSource/sonarqube) e [imagen oficial en Docker Hub](https://hub.docker.com/_/sonarqube).
+- [Semgrep](https://github.com/semgrep/semgrep) y su [última versión](https://github.com/semgrep/semgrep/releases/latest). [Bandit](https://github.com/PyCQA/bandit) (PyCQA).
+- GitHub Docs. *About code scanning with CodeQL.* [Página](https://docs.github.com/en/code-security/code-scanning/introduction-to-code-scanning/about-code-scanning-with-codeql). GitHub Docs. *Dependabot quickstart.* [Guía](https://docs.github.com/en/code-security/getting-started/dependabot-quickstart-guide).
+- [ZAP by Checkmarx](https://github.com/zaproxy/zaproxy). [pip-audit](https://github.com/pypa/pip-audit). [OSV-Scanner](https://github.com/google/osv-scanner). [OWASP Dependency-Check](https://github.com/dependency-check/DependencyCheck). [Trivy](https://github.com/aquasecurity/trivy).
+- [Syft](https://github.com/anchore/syft). [cyclonedx-python](https://github.com/CycloneDX/cyclonedx-python).
+- [Kiwi TCMS](https://github.com/kiwitcms/Kiwi). [Allure Report](https://github.com/allure-framework/allure2).
+- [Prometheus](https://github.com/prometheus/prometheus). [Grafana](https://github.com/grafana/grafana). [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-specification). [Sentry](https://github.com/getsentry/sentry).
+- GitHub Docs. *About GitHub Copilot code review.* [Página](https://docs.github.com/en/copilot/concepts/agents/code-review). [CodeRabbit](https://github.com/coderabbitai).
+
+Evidencia sobre IA y calidad:
+
+- Pearce, H., Ahmad, B., Tan, B., Dolan-Gavitt, B. y Karri, R. (2021). Asleep at the Keyboard? Assessing the Security of GitHub Copilot's Code Contributions. [arXiv:2108.09293](https://arxiv.org/abs/2108.09293).
+- Becker, J., Rush, N., Barnes, E. y Rein, D. (2025). Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity. METR. [arXiv:2507.09089](https://arxiv.org/abs/2507.09089).
+- Veracode (2025). *GenAI Code Security Report.* [Resumen del informe](https://veracode.com/blog/genai-code-security-report/).
+- DORA, Google Cloud (2025). *State of AI-assisted Software Development.* [Página del informe](https://dora.dev/research/2025/dora-report/).
+
+Marco del curso:
+
+- Reglamento (UE) 2024/2847 (CRA), ISO/IEC 5962:2021 (SPDX) y ECMA-424 (CycloneDX): ver la bibliografía del Tema 3 de la Unidad 1.
+
+::: {.callout-note}
+## Qué no se verificó en una fuente primaria
+
+La licencia y el precio de CodeQL, el texto exacto de la licencia de Sentry, el precio de las
+funciones de Dependabot, el precio de CodeRabbit, el plan gratuito de Jira, la fecha de publicación
+de la versión 26.9.0.129388 de SonarQube Community Build, las cifras del informe DORA 2025 y las
+herramientas comerciales de gestión de pruebas. Esos datos se omiten o se marcan arriba, y conviene
+confirmarlos en el sitio del fabricante antes de decidir.
+:::
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

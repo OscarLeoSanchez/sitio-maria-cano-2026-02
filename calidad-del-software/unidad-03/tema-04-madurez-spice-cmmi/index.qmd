@@ -1,0 +1,933 @@
+---
+title: "Tema 4. Madurez y capacidad de proceso: SPICE y CMMI"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                          |
+|--------|----------------------------------------------------------|
+| Unidad | Unidad 3. Estándares de calidad aplicados al software    |
+| Tema   | Tema 4. Madurez y capacidad de proceso: SPICE y CMMI     |
+:::
+
+[Presentación interactiva de la unidad](../presentacion-interactiva.html){.btn-curso}
+
+Tema anterior: [Tema 3. Usabilidad](../tema-03-usabilidad/index.qmd).
+Tema siguiente: [Unidad 4, Tema 1. Métodos y estándares de validación y verificación](../../unidad-04/tema-01-metodos-estandares-vv/index.qmd).
+
+## Objetivo y resultado de aprendizaje
+
+Este tema cierra la Unidad 3. Los tres anteriores trataron de estándares que miran el documento, el producto o la
+organización completa. Este mira el proceso con el que se construye el software y responde una pregunta que
+interesa a cualquier cliente serio: qué tan fiable es la manera de trabajar de un equipo, más allá de un
+proyecto con suerte.
+
+Dos marcos responden esa pregunta. SPICE, que hoy se apoya en la familia ISO/IEC 33000, califica cada proceso con
+una escala de capacidad. CMMI, mantenido por ISACA, califica la capacidad de áreas de práctica y también la
+madurez de una unidad de la organización. Aquí aprendes los dos, los comparas y descubres cuánto cuesta subir de nivel.
+
+Al terminar puedes:
+
+- Explicar por qué la norma ISO/IEC 15504 está retirada y qué la reemplazó, con fechas.
+- Aplicar la escala de calificación N, P, L y F y derivar el nivel de capacidad de un proceso a partir de sus atributos.
+- Nombrar los nueve atributos de proceso con los nombres de la norma vigente ISO/IEC 33020 y señalar qué cambió respecto de la 15504.
+- Describir los procesos de ingeniería de software (SWE) de Automotive SPICE 4.0 y qué evidencia pide cada uno.
+- Calificar un proceso de la app de turnos con un ejemplo resuelto paso a paso.
+- Explicar la estructura de CMMI v3.0 (dominios, áreas de práctica, niveles de capacidad y de madurez) y sus cuatro tipos de apreciación.
+- Interpretar con criterio lo que se sabe y lo que no se sabe sobre el tiempo y el dinero que cuesta subir de nivel.
+- Elegir entre SPICE y CMMI según la pregunta que se quiere responder.
+
+Prerrequisitos: el Tema 2 de esta unidad (familias ISO) y los temas 2 y 4 de la Unidad 2 (calidad en el
+ciclo de vida, actividades de aseguramiento de la calidad). Necesitas distinguir *proceso* de *producto* y
+saber qué es una evidencia objetiva.
+
+## Ruta de estudio
+
+Son unas 7 horas de trabajo independiente. Puedes partirlas en cuatro sesiones. La presentación interactiva de la
+unidad sigue estas mismas partes, así que sirve como primera mirada o como repaso.
+
+::: {.calendario}
+| Parte | Qué haces | Tiempo |
+|---|---|---|
+| 1. La pregunta común | Distingues capacidad de proceso y madurez de organización | 25 min |
+| 2. ISO/IEC 33000 y la retirada de la 15504 | Lees las fechas y la estructura de la familia | 30 min |
+| 3. La escala N, P, L y F | Aprendes los porcentajes y resuelves el Reto 1 | 35 min |
+| 4. Niveles de capacidad 0 a 5 | Estudias los nueve atributos y resuelves el Reto 2 | 45 min |
+| 5. Automotive SPICE 4.0 | Lees los procesos SWE y cómo se aplican | 40 min |
+| 6. Ejemplo resuelto: calificar SWE.1 | Sigues el cálculo completo y resuelves el Reto 3 | 55 min |
+| 7. CMMI v3.0 | Lees la estructura del modelo y lo que no se pudo verificar | 50 min |
+| 8. Niveles de madurez y apreciaciones | Estudias la tabla de niveles y resuelves el Reto 4 | 45 min |
+| 9. Subir de nivel: qué significa y cuánto cuesta | Lees la evidencia disponible y resuelves el Reto 5 | 40 min |
+| 10. SPICE contra CMMI | Comparas los dos marcos y resuelves el Reto 6 | 30 min |
+| Cierre | Autoevaluación y glosario | 30 min |
+:::
+
+## El hilo conductor: la app de turnos de la Clínica Aurora
+
+Todo el curso usa un producto ficticio, una app que asigna turnos médicos. Su requisito de partida es "la app
+asigna hasta 20 turnos por día a cada especialidad". En este tema la clínica contrata a un equipo de desarrollo
+y el equipo se pregunta qué tan sólido es su proceso. Con ese equipo calificas un proceso real de la norma
+(análisis de requisitos de software) y estimas el costo de mejorar. Ninguna cifra de la clínica es real. Cada vez
+que aparece un número propio, el texto lo marca como ilustrativo.
+
+::: {.callout-note}
+## Cómo se verificó esta guía
+
+Los datos de esta guía se contrastaron en octubre de 2026 con fuentes primarias: los catálogos de ISO, el modelo
+de evaluación Automotive SPICE 4.0 publicado por la VDA, los materiales de ISACA y del CMMI Institute, y un
+informe técnico del Software Engineering Institute (SEI). La norma ISO/IEC 33020 es de pago y no se pudo leer
+completa. Sus nombres y reglas se tomaron del texto que el modelo Automotive SPICE reproduce con licencia de ISO,
+y se parafrasean aquí. Lo que no se pudo confirmar en fuente primaria queda señalado como tal en cada parte.
+:::
+
+## Parte 1. La pregunta común
+
+Un equipo que entregó bien un proyecto no demuestra que sabe entregar bien. Puede haber sido talento individual,
+un cliente fácil o suerte. Los modelos de proceso intentan separar el resultado de una vez de la capacidad
+repetible, bajo la idea de que un proceso bien gestionado produce resultados más predecibles que uno improvisado.
+
+SPICE y CMMI comparten esa idea y la miden de forma distinta. Para no confundirlos desde el principio, fíjate en
+dos palabras que aparecen todo el tiempo.
+
+- **Capacidad.** Qué tan bien funciona un proceso concreto, por ejemplo el análisis de requisitos. Se mide con una escala por proceso.
+- **Madurez.** Qué tan consolidada está la forma de trabajar de una unidad de la organización, medida sobre un conjunto de áreas a la vez.
+
+SPICE califica capacidad de procesos, uno por uno. CMMI califica capacidad por área de práctica y, además,
+madurez de una unidad organizacional. El título del tema nombra ambas porque cada marco usa las dos palabras con su
+propio significado, y la Parte 10 las compara con detalle.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos unidades de análisis. En SPICE cada proceso de un proyecto recibe su propio nivel de capacidad, por ejemplo requisitos nivel 2, diseño nivel 1 y pruebas nivel 3, sin un nivel consolidado. En CMMI un conjunto predefinido de áreas de práctica da un nivel de madurez para una unidad de la organización, y cada área puede además tener su nivel de capacidad" font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="u3t4a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs><text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Qué se califica en cada marco</text><rect x="20" y="34" width="350" height="216" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/><text x="195" y="58" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">SPICE: cada proceso aparte</text><g fill="#eef4fa" stroke="#c7d6e6"><rect x="44" y="76" width="140" height="34" rx="8"/><rect x="44" y="120" width="140" height="34" rx="8"/><rect x="44" y="164" width="140" height="34" rx="8"/></g><g font-size="11.5" fill="#12324f"><text x="56" y="98">Requisitos (SWE.1)</text><text x="56" y="142">Diseño (SWE.3)</text><text x="56" y="186">Pruebas (SWE.4)</text></g><g fill="#e4f2f1" stroke="#8fc9c5"><rect x="230" y="76" width="110" height="34" rx="8"/><rect x="230" y="120" width="110" height="34" rx="8"/><rect x="230" y="164" width="110" height="34" rx="8"/></g><g font-size="11.5" font-weight="600" fill="#0e6f6c" text-anchor="middle"><text x="285" y="98">nivel 2</text><text x="285" y="142">nivel 1</text><text x="285" y="186">nivel 3</text></g><g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#u3t4a)"><path d="M184,93 L228,93"/><path d="M184,137 L228,137"/><path d="M184,181 L228,181"/></g><text x="195" y="228" font-size="11" fill="#5b6876" text-anchor="middle">No existe un nivel consolidado del proyecto</text><rect x="390" y="34" width="350" height="216" rx="12" fill="#f5f7fa" stroke="#cfd8e3"/><text x="565" y="58" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">CMMI: dos lecturas del mismo modelo</text><rect x="410" y="76" width="310" height="52" rx="8" fill="#eef4fa" stroke="#c7d6e6"/><text x="565" y="98" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Un área de práctica</text><text x="565" y="116" font-size="11" fill="#0e6f6c" text-anchor="middle">nivel de capacidad, de 0 a 3</text><rect x="410" y="142" width="310" height="52" rx="8" fill="#eef4fa" stroke="#c7d6e6"/><text x="565" y="164" font-size="11.5" font-weight="600" fill="#12324f" text-anchor="middle">Conjunto predefinido de áreas de práctica</text><text x="565" y="182" font-size="11" fill="#0e6f6c" text-anchor="middle">nivel de madurez de la unidad, de 0 a 5</text><text x="565" y="222" font-size="11" fill="#5b6876" text-anchor="middle">La unidad evaluada es la que define el alcance</text></svg>
+
+:::
+
+## Parte 2. ISO/IEC 33000 y la retirada de la 15504
+
+*SPICE* es la sigla de *Software Process Improvement and Capability dEtermination*. Nació como un proyecto
+internacional que produjo la norma ISO/IEC 15504, y la industria conservó el nombre aunque la norma cambió. Hoy
+conviene decir "SPICE" para el enfoque y citar la familia ISO/IEC 33000 para el documento vigente.
+
+Según el catálogo de ISO, la parte 1 de la norma 15504 (conceptos y vocabulario, edición de 2004) se retiró el 27 de
+febrero de 2015, y la parte 2 (realización de una evaluación, edición de 2003) se retiró el 3 de marzo de 2015.
+Ambas fueron reemplazadas por documentos de la serie 33000 publicados en marzo de 2015. En el catálogo de ISO, esos documentos
+figuran como publicados y confirmados.
+
+::: {.callout-warning}
+## ISO/IEC 15504 está retirada
+
+Una oferta de trabajo, un contrato o una herramienta que mencione "ISO/IEC 15504" usa una referencia obsoleta. El
+documento vigente es de la serie 33000. Todo lo que ves en esta guía sobre atributos de proceso y escala
+de calificación sale de la 33020:2019 y no de la 15504, y más abajo se señala dónde cambian los nombres.
+:::
+
+### Los documentos de la serie que importan aquí
+
+| Documento | Edición y estado en el catálogo de ISO | Qué define |
+|---|---|---|
+| ISO/IEC 33001 | 2015, vigente | Conceptos y terminología de la evaluación de procesos |
+| ISO/IEC 33002 | 2015, vigente | Requisitos para realizar una evaluación de procesos |
+| ISO/IEC 33003 | 2015, vigente | Requisitos para los marcos de medición de procesos |
+| ISO/IEC 33004 | 2015, con versión corregida de 2017, vigente | Requisitos para modelos de referencia de procesos, modelos de evaluación y modelos de madurez |
+| ISO/IEC 33020 | 2019 (edición 2), vigente | Marco de medición para evaluar la capacidad de un proceso |
+| ISO/IEC 33020 | 2015 (edición 1), retirada el 21 de noviembre de 2019 | Reemplazada por la edición de 2019 |
+
+La serie 33000 tiene más documentos, entre ellos modelos de evaluación para procesos concretos. Esta guía usa solo los
+cinco de la tabla, que son los que fijan la escala y las reglas de evaluación.
+
+### Dos modelos que se combinan
+
+En SPICE, describir un proceso y medir qué tan bien se ejecuta son dos trabajos distintos.
+
+- **Modelo de referencia de procesos** (*Process Reference Model*, PRM). Lista los procesos de un dominio y dice el propósito y los resultados de cada uno.
+- **Modelo de evaluación de procesos** (*Process Assessment Model*, PAM). Toma esos procesos y añade los indicadores con los que un evaluador reúne evidencia y juzga.
+
+La norma 33004 fija cómo se construyen ambos. Automotive SPICE define su propio PRM y su propio PAM y los
+publica juntos en un documento, lo que verás en la Parte 5. En CMMI, en cambio, el modelo de buenas prácticas
+y la forma de calificarlo viven en un mismo marco, de modo que no hay dos documentos con esos nombres.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Línea de tiempo con fechas verificadas. 1991 primera versión del Software CMM. 2015 marzo publicación de las normas ISO/IEC 33001 a 33004 y retiro de partes de la 15504. 2019 noviembre edición de 2019 de la 33020. Abril de 2023 anuncio de CMMI v3.0 por ISACA. 29 de noviembre de 2023 fecha del modelo Automotive SPICE 4.0" font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="u3t4b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs><text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Hitos con fecha confirmada en fuente primaria</text><path d="M40,100 L720,100" stroke="#c7d6e6" stroke-width="2.5" fill="none"/><g fill="#0e6f6c"><circle cx="90" cy="100" r="7"/><circle cx="235" cy="100" r="7"/><circle cx="380" cy="100" r="7"/><circle cx="525" cy="100" r="7"/><circle cx="670" cy="100" r="7"/></g><g fill="none" stroke="#8fb3d1" stroke-width="1.5"><path d="M90,107 L90,132"/><path d="M235,107 L235,132"/><path d="M380,107 L380,132"/><path d="M525,107 L525,132"/><path d="M670,107 L670,132"/></g><g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="134" width="140" height="94" rx="10"/><rect x="165" y="134" width="140" height="94" rx="10"/><rect x="310" y="134" width="140" height="94" rx="10"/><rect x="455" y="134" width="140" height="94" rx="10"/><rect x="600" y="134" width="140" height="94" rx="10"/></g><g text-anchor="middle" font-size="12" font-weight="700" fill="#12324f"><text x="90" y="78">1991</text><text x="235" y="78">Marzo de 2015</text><text x="380" y="78">Noviembre de 2019</text><text x="525" y="78">Abril de 2023</text><text x="670" y="78">29 nov. 2023</text></g><g text-anchor="middle" font-size="11" font-weight="600" fill="#12324f"><text x="90" y="156">Software CMM</text><text x="235" y="156">Serie 33000</text><text x="380" y="156">ISO/IEC 33020</text><text x="525" y="156">CMMI v3.0</text><text x="670" y="156">ASPICE PAM 4.0</text></g><g text-anchor="middle" font-size="10" fill="#5b6876"><text x="90" y="176">primera versión, raíz</text><text x="90" y="190">de CMMI según ISACA</text><text x="235" y="176">33001 a 33004 salen y</text><text x="235" y="190">se retira la 15504</text><text x="380" y="176">edición 2, reemplaza</text><text x="380" y="190">a la de 2015</text><text x="525" y="176">ISACA anuncia la</text><text x="525" y="190">versión el 10 de abril</text><text x="670" y="176">fecha del documento</text><text x="670" y="190">publicado por la VDA</text></g></svg>
+
+:::
+
+## Parte 3. La escala de calificación N, P, L y F
+
+En SPICE no se califica un proceso con un solo número de entrada. Primero se califica cada *atributo de proceso*
+(una propiedad medible de la capacidad) y después se deriva el nivel. Cada atributo recibe una de cuatro letras
+según qué parte de él se logró.
+
+| Letra | Nombre | Porcentaje de logro | Significado |
+|---|---|---|---|
+| N | No logrado | de 0 a 15 | Hay poca o ninguna evidencia de que el atributo se logre |
+| P | Parcialmente logrado | más de 15 hasta 50 | Hay un enfoque y algo de logro, y algunos aspectos pueden ser impredecibles |
+| L | Ampliamente logrado | más de 50 hasta 85 | Hay un enfoque sistemático y un logro significativo, con algunas debilidades |
+| F | Plenamente logrado | más de 85 hasta 100 | Hay un enfoque completo y sistemático, sin debilidades significativas |
+
+La escala es ordinal: una letra describe un tramo del porcentaje, no un valor exacto. Los porcentajes y las
+descripciones son los de ISO/IEC 33020:2019, tal como los reproduce el modelo Automotive SPICE 4.0.
+
+### El refinamiento de P y L
+
+La norma permite dividir P y L en dos mitades, útil cuando el equipo evaluador debe distinguir mejor. Según un
+artículo de ISACA sobre la adaptación de COBIT a la serie 33000, los tramos son estos.
+
+| Refinamiento | Porcentaje de logro |
+|---|---|
+| P- | más de 15 hasta 32,5 |
+| P+ | más de 32,5 hasta 50 |
+| L- | más de 50 hasta 67,5 |
+| L+ | más de 67,5 hasta 85 |
+
+N y F no se dividen. El refinamiento no cambia cómo se deriva el nivel, que depende de las letras N, P, L y F.
+
+### Quién pone el porcentaje
+
+El porcentaje es un juicio del equipo evaluador sobre la evidencia que reunió, no una fórmula. La norma 33020 admite
+tres métodos de calificación (R1, R2 y R3) que se diferencian en cómo se agregan los resultados de varias
+instancias del proceso, y el evaluador líder decide cuál usar y lo declara en el informe. El detalle de cada
+método está en la norma de pago y esta guía no lo reproduce.
+
+::: {.callout-tip}
+## Reto 1. Pon la letra
+
+Un equipo evaluador estima el logro de cuatro atributos de proceso: 12 por ciento, 48 por ciento, 67 por ciento y 86
+por ciento. Escribe la letra de la escala básica de cada uno y su refinamiento cuando corresponda.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+- 12 por ciento: N, porque está entre 0 y 15.
+- 48 por ciento: P, y con refinamiento P+, porque está sobre 32,5 y no pasa de 50.
+- 67 por ciento: L, y con refinamiento L-, porque está sobre 50 y no pasa de 67,5.
+- 86 por ciento: F, porque pasa de 85. F no tiene refinamiento.
+
+Un 85 por ciento exacto sería L+, no F. El límite de F es "más de 85".
+:::
+
+## Parte 4. Niveles de capacidad 0 a 5 y los nueve atributos de proceso
+
+El nivel de capacidad de un proceso va de 0 a 5. Cada nivel se define con uno o dos atributos, y la
+suma da nueve atributos desde el nivel 1 en adelante. Los nombres vigentes son los de ISO/IEC 33020:2019.
+
+| Nivel | Nombre | Qué se espera del proceso | Atributos |
+|---|---|---|---|
+| 0 | Incompleto | El proceso no está implementado o no logra su propósito | ninguno |
+| 1 | Ejecutado (*Performed*) | El proceso implementado logra su propósito | PA 1.1 |
+| 2 | Gestionado (*Managed*) | Se planifica, monitorea y ajusta, y sus productos de trabajo se establecen, controlan y mantienen | PA 2.1, PA 2.2 |
+| 3 | Establecido (*Established*) | Se implementa con un proceso definido capaz de lograr sus resultados | PA 3.1, PA 3.2 |
+| 4 | Predecible (*Predictable*) | Opera de forma predecible dentro de límites definidos, con datos para hallar las causas de variación | PA 4.1, PA 4.2 |
+| 5 | Innovador (*Innovating*) | Se mejora de forma continua para responder a cambios de la organización | PA 5.1, PA 5.2 |
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Escalera de los seis niveles de capacidad de ISO/IEC 33020. Nivel 0 Incompleto sin atributos. Nivel 1 Ejecutado con el atributo desempeño del proceso. Nivel 2 Gestionado con gestión del desempeño y gestión de productos de trabajo. Nivel 3 Establecido con definición y despliegue del proceso. Nivel 4 Predecible con análisis cuantitativo y control cuantitativo. Nivel 5 Innovador con innovación del proceso e implementación de la innovación" font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="u3t4c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs><text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Seis niveles de capacidad y sus atributos</text><rect x="14" y="250" width="112" height="60" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/><rect x="134" y="220" width="112" height="90" rx="8" fill="#eef4fa" stroke="#c7d6e6"/><rect x="254" y="190" width="112" height="120" rx="8" fill="#eef4fa" stroke="#c7d6e6"/><rect x="374" y="160" width="112" height="150" rx="8" fill="#eef4fa" stroke="#c7d6e6"/><rect x="494" y="130" width="112" height="180" rx="8" fill="#eef4fa" stroke="#c7d6e6"/><rect x="614" y="100" width="112" height="210" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/><g text-anchor="middle" font-size="11" font-weight="700" fill="#12324f"><text x="70" y="272">Nivel 0</text><text x="190" y="242">Nivel 1</text><text x="310" y="212">Nivel 2</text><text x="430" y="182">Nivel 3</text><text x="550" y="152">Nivel 4</text><text x="670" y="122">Nivel 5</text></g><g text-anchor="middle" font-size="10.5" font-weight="600" fill="#0e6f6c"><text x="70" y="288">Incompleto</text><text x="190" y="258">Ejecutado</text><text x="310" y="228">Gestionado</text><text x="430" y="198">Establecido</text><text x="550" y="168">Predecible</text><text x="670" y="138">Innovador</text></g><g text-anchor="middle" font-size="9.5" fill="#5b6876"><text x="70" y="302">sin atributos</text><text x="190" y="276">PA 1.1</text><text x="310" y="246">PA 2.1 y 2.2</text><text x="430" y="216">PA 3.1 y 3.2</text><text x="550" y="186">PA 4.1 y 4.2</text><text x="670" y="156">PA 5.1 y 5.2</text></g><text x="670" y="180" font-size="10" fill="#3c7d7a" text-anchor="middle">cada nivel suma</text><text x="670" y="194" font-size="10" fill="#3c7d7a" text-anchor="middle">atributos a los</text><text x="670" y="208" font-size="10" fill="#3c7d7a" text-anchor="middle">de los niveles</text><text x="670" y="222" font-size="10" fill="#3c7d7a" text-anchor="middle">anteriores</text><text x="380" y="60" font-size="11" fill="#5b6876" text-anchor="middle">La escalera exige que los niveles de abajo estén plenamente cubiertos</text></svg>
+
+:::
+
+### Los nueve atributos con sus nombres vigentes
+
+| Nivel | Atributo (33020:2019) | Qué mide | Nombre en la 15504, si cambió |
+|---|---|---|---|
+| 1 | PA 1.1 Desempeño del proceso (*Process performance*) | Hasta dónde se logra el propósito del proceso | igual |
+| 2 | PA 2.1 Gestión del desempeño del proceso (*Performance management*) | Que el desempeño se gestione con objetivos, plan, recursos, seguimiento e interfaces | igual |
+| 2 | PA 2.2 Gestión de productos de trabajo (*Work product management*) | Que los productos del proceso estén definidos, controlados y revisados | igual |
+| 3 | PA 3.1 Definición del proceso (*Process definition*) | Que exista un proceso estándar mantenido | igual |
+| 3 | PA 3.2 Despliegue del proceso (*Process deployment*) | Que ese proceso estándar se adapte y se use en los proyectos | igual |
+| 4 | PA 4.1 Análisis cuantitativo (*Quantitative analysis*) | Que se definan necesidades de información, relaciones entre elementos y datos a recoger | Medición del proceso |
+| 4 | PA 4.2 Control cuantitativo (*Quantitative control*) | Que los datos objetivos se usen para controlar un desempeño predecible | Control del proceso |
+| 5 | PA 5.1 Innovación del proceso (*Process innovation*) | Que se identifiquen oportunidades de mejora a partir de los objetivos de negocio | igual |
+| 5 | PA 5.2 Implementación de la innovación del proceso (*Process innovation implementation*) | Que las mejoras aprobadas se pongan en práctica de forma efectiva | Optimización del proceso |
+
+El nombre del nivel 5 también cambió, de *Optimizing* en la 15504 a *Innovating* en la 33020. Las guías antiguas
+(incluida la versión previa de este tema) usan los nombres de la 15504 para los atributos 4.1, 4.2 y 5.2 y para el
+nivel 5. Quien encuentre "Medición del proceso" o "Nivel 5, optimización" está leyendo la terminología retirada. La
+fuente de los cambios es el modelo Automotive SPICE 4.0, que reproduce los nombres de la 33020:2019, y el artículo de
+ISACA que marca esos tres atributos como renombrados.
+
+### Cómo se deriva el nivel a partir de las letras
+
+La regla general que fija la norma es esta: para alcanzar un nivel, sus atributos deben estar ampliamente o
+plenamente logrados, y todos los atributos de los niveles inferiores deben estar plenamente logrados.
+
+| Para alcanzar el nivel | PA 1.1 | PA 2.1 y 2.2 | PA 3.1 y 3.2 | PA 4.1 y 4.2 | PA 5.1 y 5.2 |
+|---|---|---|---|---|---|
+| 1 | L o F | no se exigen | no se exigen | no se exigen | no se exigen |
+| 2 | F | L o F | no se exigen | no se exigen | no se exigen |
+| 3 | F | F | L o F | no se exigen | no se exigen |
+| 4 | F | F | F | L o F | no se exigen |
+| 5 | F | F | F | F | L o F |
+
+La consecuencia práctica es que un solo atributo bajo bloquea el nivel aunque los de arriba estén muy bien.
+Un equipo con gestión del desempeño plenamente lograda y productos de trabajo en P se queda en el nivel 1, por
+buena que sea su planificación. El Reto 2 y el ejemplo de la Parte 6 trabajan justo esa regla.
+
+::: {.callout-tip}
+## Reto 2. Deriva el nivel
+
+Un proceso recibe estas letras: PA 1.1 en F, PA 2.1 en F, PA 2.2 en L, PA 3.1 en L y PA 3.2 en P. ¿Qué nivel de
+capacidad alcanza? Justifica con la tabla de derivación, y di qué atributo habría que subir para llegar al nivel 3.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+El proceso alcanza el nivel 2. Para el nivel 2 se pide PA 1.1 en F, que se cumple, y PA 2.1 y PA 2.2 en L o F, que
+también se cumple porque están en F y L.
+
+No llega al nivel 3 por dos razones. PA 3.2 está en P y se pide L o F. Además, para el nivel 3 también se exige
+PA 2.2 plenamente logrado (F), y está en L.
+
+Hay que subir dos atributos, PA 3.2 hasta L o F y PA 2.2 hasta F. Subir solo uno no alcanza.
+:::
+
+## Parte 5. Automotive SPICE 4.0 y los procesos SWE
+
+*Automotive SPICE* es la aplicación de SPICE a los sistemas basados en software de los vehículos. Según la VDA, la
+asociación alemana de la industria automotriz, el estándar se publicó por primera vez en 2005 y su versión vigente es
+la 4.0. La elaboró el grupo de trabajo 13 del centro de calidad de la VDA (VDA QMC). El documento con
+los modelos de referencia y de evaluación lleva fecha del 29 de noviembre de 2023 y es una revisión de la
+versión 3.1.
+
+La VDA lo describe como un modelo de dos dimensiones. La dimensión de proceso contiene los 32 procesos del modelo, en
+3 categorías y 11 grupos. La dimensión de capacidad contiene los seis niveles de capacidad de la serie 33000. Cada
+proceso incluido en el alcance recibe su propio nivel, y la VDA aclara que no existe un nivel consolidado para un
+proyecto ni para una empresa.
+
+### Los procesos de ingeniería de software
+
+El grupo SWE reúne los seis procesos con los que se construye y verifica el software. Todos conservan el
+patrón de la V: lo que se especifica a la izquierda se verifica a la derecha.
+
+| Proceso | Nombre en el PAM 4.0 | Propósito, resumido |
+|---|---|---|
+| SWE.1 | Análisis de requisitos de software (*Software Requirements Analysis*) | Establecer requisitos de software estructurados y analizados, consistentes con los requisitos y la arquitectura del sistema |
+| SWE.2 | Diseño arquitectónico de software (*Software Architectural Design*) | Establecer una arquitectura analizada, con aspectos estáticos y dinámicos, consistente con los requisitos |
+| SWE.3 | Diseño detallado y construcción de unidades (*Software Detailed Design and Unit Construction*) | Establecer el diseño detallado y construir las unidades de software coherentes con él |
+| SWE.4 | Verificación de unidades de software (*Software Unit Verification*) | Verificar que las unidades de software son consistentes con el diseño detallado |
+| SWE.5 | Verificación de componentes y de integración (*Software Component Verification and Integration Verification*) | Verificar los componentes contra la arquitectura e integrar y verificar los elementos integrados |
+| SWE.6 | Verificación de software (*Software Verification*) | Verificar que el software integrado es consistente con los requisitos de software |
+
+La validación (*Validation*) pasó a tener su propio grupo, con el proceso VAL.1. El PAM 4.0 también trae grupos de
+ingeniería de aprendizaje automático (MLE) y de ingeniería de hardware (HWE), además de los de sistema (SYS),
+adquisición (ACQ), suministro (SPL), apoyo (SUP), gestión (MAN), mejora de procesos (PIM) y reutilización (REU).
+
+La comparación detallada con la versión 3.1, por ejemplo cómo se llamaban antes SWE.5 y SWE.6, no se verificó
+contra el documento de la 3.1. Quien la necesite debe leer ambos PAM.
+
+### Qué evidencia pide un proceso: prácticas base y prácticas genéricas
+
+Cada proceso del grupo trae *prácticas base* (*base practices*, BP), que son actividades que indican si el
+proceso logra su propósito. Sirven de evidencia para el nivel 1. Para los niveles 2 en adelante, el PAM usa
+*prácticas genéricas* (*generic practices*, GP), que valen para cualquier proceso porque miden cómo se gestiona,
+no qué hace.
+
+Como ejemplo, SWE.1 en la versión 4.0 define siete resultados esperados y seis prácticas base.
+
+- BP1. Especificar los requisitos de software.
+- BP2. Estructurar y priorizar los requisitos.
+- BP3. Analizar los requisitos (corrección y factibilidad técnica).
+- BP4. Analizar el impacto sobre el entorno de operación.
+- BP5. Asegurar consistencia y establecer trazabilidad bidireccional.
+- BP6. Comunicar los requisitos acordados y su impacto.
+
+El atributo PA 2.1 se apoya en seis prácticas genéricas, de GP 2.1.1 a GP 2.1.6: definir objetivos y estrategia, planificar,
+determinar necesidades de recursos, hacer disponibles los recursos, monitorear y ajustar, y gestionar las interfaces
+entre las partes. PA 2.2 usa cuatro: definir los requisitos de los productos de trabajo, definir los de almacenamiento y
+control, identificar y controlar los productos, y revisarlos y ajustarlos.
+
+::: {.callout-note}
+## Lo que la VDA no publica en abierto
+
+Los contratos de la industria suelen fijar un nivel de capacidad mínimo y un alcance de procesos. El nivel que cada
+fabricante exige y el alcance exacto no están en los documentos públicos consultados y no se afirman aquí.
+:::
+
+### Quién evalúa
+
+La VDA QMC es el único organismo de certificación de personas para Automotive SPICE. Certifica a los evaluadores
+según el esquema internacional intacs (*International Assessor Certification Scheme*). La licencia de evaluador dura tres años
+y se renueva. Al consultar la página de la VDA en octubre de 2026, el registro mostraba 7619 evaluadores de Automotive SPICE
+en 51 países. Para un proveedor, eso significa que una evaluación con valor para un cliente automotriz la hace
+un evaluador certificado, no el propio equipo.
+
+## Parte 6. Ejemplo resuelto: calificar SWE.1 en la app de turnos
+
+La Clínica Aurora quiere saber cómo está el proceso de análisis de requisitos de software de su app. El equipo
+usa un evaluador externo ficticio que aplica el PAM 4.0. Todos los porcentajes de este ejemplo son juicios
+ilustrativos de ese evaluador, no datos reales.
+
+### Paso 1. Definir el alcance
+
+El proceso es SWE.1. Se evalúa el proyecto "módulo de asignación de turnos", cuyo requisito de partida es "la app asigna
+hasta 20 turnos por día a cada especialidad". Se revisan el repositorio de requisitos, las actas de revisión
+y se entrevista a la analista y al líder técnico.
+
+### Paso 2. Nivel 1: ¿el proceso logra su propósito? (PA 1.1)
+
+El evaluador contrasta las seis prácticas base de SWE.1 con lo que halló.
+
+| Práctica base | Evidencia hallada | Juicio |
+|---|---|---|
+| BP1 Especificar | 46 requisitos escritos en el gestor de tareas, con criterio de verificación en 41 | Casi completa |
+| BP2 Estructurar y priorizar | Agrupados por especialidad y con prioridad en todos | Completa |
+| BP3 Analizar | Se analizó la factibilidad del límite de 20 turnos, falta el análisis de correctitud de los requisitos de cancelación | Parcial |
+| BP4 Impacto en el entorno | Se analizó el impacto sobre el envío de mensajes de texto, no sobre el sistema de historias clínicas de la clínica | Parcial |
+| BP5 Trazabilidad | Trazas hacia los requisitos del sistema en 44 de 46 | Casi completa |
+| BP6 Comunicar | Acta de la reunión de aprobación con el personal médico | Completa |
+
+Con ese balance, el evaluador estima el logro de PA 1.1 en 88 por ciento, que es F.
+
+### Paso 3. Nivel 2: ¿se gestiona el proceso? (PA 2.1 y PA 2.2)
+
+PA 2.1 tiene ocho logros esperados. El equipo tiene un plan de iteraciones, recursos asignados y seguimiento semanal. Le
+falta definir con claridad las responsabilidades y preparar a dos personas nuevas, y la interfaz con el equipo de
+la clínica se gestiona de manera informal. El evaluador estima 70 por ciento, que es L+.
+
+PA 2.2 tiene cuatro logros esperados. Los requisitos viven en un gestor de tareas con control de cambios básico, pero
+no hay criterios definidos de contenido ni de revisión para los documentos de requisitos, no se hacen línea base
+y la revisión es ocasional. El evaluador estima 40 por ciento, que es P+.
+
+### Paso 4. Derivar el nivel
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Barras de logro de los tres atributos del proceso SWE.1 de la app de turnos sobre una escala de 0 a 100 por ciento con zonas N, P, L y F. PA 1.1 llega a 88 por ciento y es F. PA 2.1 llega a 70 por ciento y es L. PA 2.2 llega a 40 por ciento y es P. Como PA 2.2 no llega a L, el proceso queda en el nivel 1" font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="u3t4d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs><text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">SWE.1 de la app de turnos, antes de mejorar</text><g fill="#f5f7fa" stroke="#cfd8e3"><rect x="160" y="50" width="75" height="150"/><rect x="235" y="50" width="175" height="150"/><rect x="410" y="50" width="175" height="150"/><rect x="585" y="50" width="75" height="150"/></g><g font-size="12" font-weight="700" fill="#5b6876" text-anchor="middle"><text x="197" y="44">N</text><text x="322" y="44">P</text><text x="497" y="44">L</text><text x="622" y="44">F</text></g><g fill="#e4f2f1" stroke="#8fc9c5"><rect x="160" y="64" width="440" height="30" rx="4"/></g><g fill="#eef4fa" stroke="#c7d6e6"><rect x="160" y="110" width="350" height="30" rx="4"/><rect x="160" y="156" width="200" height="30" rx="4"/></g><g font-size="11.5" fill="#12324f" text-anchor="end"><text x="150" y="84">PA 1.1</text><text x="150" y="130">PA 2.1</text><text x="150" y="176">PA 2.2</text></g><g font-size="11" font-weight="600" fill="#0e6f6c"><text x="608" y="84">88 F</text><text x="518" y="130">70 L+</text><text x="368" y="176">40 P+</text></g><g font-size="10.5" fill="#5b6876" text-anchor="middle"><text x="160" y="216">0</text><text x="235" y="216">15</text><text x="410" y="216">50</text><text x="585" y="216">85</text><text x="660" y="216">100 por ciento</text></g><rect x="130" y="238" width="500" height="46" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/><text x="380" y="258" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Resultado: nivel 1</text><text x="380" y="275" font-size="11" fill="#3c7d7a" text-anchor="middle">PA 2.2 queda en P y el nivel 2 exige L o F</text></svg>
+
+:::
+
+Se aplica la tabla de derivación de la Parte 4.
+
+1. Nivel 1 pide PA 1.1 en L o F. Hay F. Se cumple.
+2. Nivel 2 pide PA 1.1 en F, PA 2.1 en L o F y PA 2.2 en L o F. PA 1.1 está en F y PA 2.1 en L, pero PA 2.2 está en P. No se cumple.
+
+El proceso SWE.1 del proyecto queda en nivel 1. No se evalúan los niveles superiores.
+
+### Paso 5. Qué mejorar y re-evaluar
+
+El hallazgo útil no es "nivel 1" sino "PA 2.2 es el atributo que bloquea". El equipo ataca justo eso: define una plantilla
+con criterios de contenido y de revisión para el documento de requisitos, marca línea base antes de cada iteración y
+programa una revisión entre pares por cada versión.
+
+Seis meses después, el evaluador califica de nuevo y estima PA 2.2 en 75 por ciento (L+). PA 1.1 se mantiene en 88
+y PA 2.1 en 70. El proceso cumple los criterios del nivel 2. Para el nivel 3 haría falta PA 2.1 y PA 2.2 en F y que
+la organización tenga un proceso estándar definido (PA 3.1) y desplegado (PA 3.2) en L o F, lo que todavía no existe.
+
+::: {.callout-tip}
+## Reto 3. El caso de SWE.4
+
+Otro evaluador califica SWE.4 (verificación de unidades) del mismo proyecto con estas letras: PA 1.1 en L, PA 2.1 en F y
+PA 2.2 en F. ¿Qué nivel alcanza el proceso y qué atributo habría que subir para llegar al nivel 2?
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+Alcanza el nivel 1. Nivel 1 pide PA 1.1 en L o F y se cumple con L. Nivel 2 pide PA 1.1 en F, y ahí falla, aunque PA 2.1 y
+PA 2.2 estén plenamente logrados.
+
+Hay que subir PA 1.1 de L a F: el proceso tiene que lograr su propósito sin debilidades significativas. Una
+buena gestión no compensa un proceso que todavía no logra plenamente lo que debe lograr.
+:::
+
+## Parte 7. CMMI v3.0
+
+*CMMI* (*Capability Maturity Model Integration*) es un modelo de buenas prácticas de ISACA, que lo publica por medio
+del CMMI Institute. Una fuente primaria, un artículo de ISACA del 10 de abril de 2023, ubica sus raíces en el
+Software CMM, publicado por primera vez en 1991, y anuncia la versión 3.0 como la nueva iteración del modelo.
+
+Según ISACA, la versión 2.0 de 2018 pasó a llamarse CMMI Performance Solutions, y la versión 3.0 amplía el modelo
+más allá del desarrollo de productos, la operación de servicios y la gestión de proveedores, hacia seguridad, seguridad
+funcional, gestión de datos, gestión de personas y trabajo virtual. En entrevista de marzo de 2024, un evaluador líder
+certificado por ISACA dice que, para quien usa CMMI en desarrollo, servicios o proveedores, el cambio será mínimo o transparente.
+
+::: {.callout-note}
+## Recuadro. CMMI v1.3, solo como historia
+
+La versión 1.3 se publicó en 2010 por el SEI. Ofrecía dos representaciones: por etapas, con niveles de madurez 1 a 5, y
+continua, con niveles de capacidad por proceso. Tenía tres constelaciones separadas (desarrollo, servicios y
+adquisición) y el método de apreciación se llamaba SCAMPI, con las clases A, B y C. La versión 2.0 fundió las
+constelaciones en un modelo y reemplazó SCAMPI por el método de apreciación de CMMI.
+
+Estos datos vienen de fuentes secundarias. Los documentos del SEI sobre la versión 1.3 no se pudieron consultar en
+esta revisión. Si encuentras "representación por etapas" o "SCAMPI clase A" en un contrato nuevo, se trata de
+vocabulario de la versión 1.3 y conviene preguntar a qué versión del modelo se refiere.
+:::
+
+### Los ocho dominios
+
+ISACA describe la versión 3.0 como un solo modelo con ocho dominios: desarrollo, servicios, gestión de proveedores,
+datos, personas, seguridad funcional (*safety*), seguridad de la información (*security*) y trabajo virtual. Cada
+organización escoge los dominios que le sirven. La página del visor del modelo del CMMI Institute enumera siete
+nombres (sin proveedores como dominio aparte), de modo que la lista de ocho es la de los blogs de ISACA.
+
+Para un equipo como el de la clínica, el dominio de desarrollo es el que corresponde. El de seguridad podría
+sumarse si la clínica exigiera protección de datos de salud.
+
+### Áreas de práctica, grupos de práctica y niveles
+
+En CMMI v3.0, cada dominio se organiza en *áreas de práctica* (*practice areas*). Un artículo de ISACA de 2025
+cita entre las áreas existentes Solución técnica (*Technical Solution*, TS), Verificación (*Verification*, VER) y
+Revisiones entre pares (*Peer Reviews*, PR), y entre las nuevas de la versión 3.0 Gestión de datos (DM), Calidad de
+datos (DQ) y Empoderamiento de la fuerza laboral (WE). El número total de áreas de práctica de la versión 3.0 y la lista
+completa no se pudieron verificar en fuente primaria accesible, porque el contenido del modelo está en un visor
+de suscripción.
+
+Dentro de cada área, las prácticas se agrupan en *grupos de práctica* etiquetados de nivel 0 a nivel 3. Cada nivel se apoya en
+el anterior. Esos grupos son el origen de los niveles de capacidad que verás en la Parte 8.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Estructura de CMMI v3.0. Un dominio contiene áreas de práctica. Cada área de práctica contiene grupos de práctica de nivel 0 a 3 que dan su nivel de capacidad. Un conjunto predefinido de áreas de práctica da el nivel de madurez de una unidad, de 0 a 5" font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="u3t4e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs><text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cómo se organiza el modelo CMMI v3.0</text><rect x="20" y="40" width="200" height="60" rx="10" fill="#eef4fa" stroke="#c7d6e6"/><text x="120" y="64" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Dominio</text><text x="120" y="82" font-size="10.5" fill="#5b6876" text-anchor="middle">uno de los ocho, por ejemplo desarrollo</text><rect x="280" y="40" width="200" height="60" rx="10" fill="#eef4fa" stroke="#c7d6e6"/><text x="380" y="64" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Áreas de práctica</text><text x="380" y="82" font-size="10.5" fill="#5b6876" text-anchor="middle">por ejemplo TS, VER y PR</text><rect x="540" y="40" width="200" height="60" rx="10" fill="#eef4fa" stroke="#c7d6e6"/><text x="640" y="64" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Grupos de práctica</text><text x="640" y="82" font-size="10.5" fill="#5b6876" text-anchor="middle">niveles 0, 1, 2 y 3</text><g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u3t4e)"><path d="M220,70 L278,70"/><path d="M480,70 L538,70"/></g><rect x="540" y="140" width="200" height="60" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/><text x="640" y="164" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Nivel de capacidad</text><text x="640" y="182" font-size="10.5" fill="#3c7d7a" text-anchor="middle">de un área, de 0 a 3</text><path d="M640,100 L640,138" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u3t4e)"/><rect x="280" y="140" width="200" height="60" rx="10" fill="#eef4fa" stroke="#c7d6e6"/><text x="380" y="164" font-size="12.5" font-weight="600" fill="#12324f" text-anchor="middle">Conjunto predefinido</text><text x="380" y="182" font-size="10.5" fill="#5b6876" text-anchor="middle">de áreas de práctica</text><path d="M380,100 L380,138" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u3t4e)"/><rect x="280" y="236" width="200" height="50" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/><text x="380" y="258" font-size="12.5" font-weight="700" fill="#0e6f6c" text-anchor="middle">Nivel de madurez</text><text x="380" y="275" font-size="10.5" fill="#3c7d7a" text-anchor="middle">de la unidad, de 0 a 5</text><path d="M380,200 L380,234" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u3t4e)"/></svg>
+
+:::
+
+### Qué no se pudo verificar
+
+::: {.callout-warning}
+## Datos de CMMI sin confirmar en fuente primaria
+
+- La fecha exacta de lanzamiento de la versión 3.0: ISACA anunció la versión el 10 de abril de 2023, y materiales de terceros dan el 6 de abril. La guía usa "abril de 2023".
+- El número total de áreas de práctica de la versión 3.0 y su lista oficial.
+- Hasta cuándo se aceptaron apreciaciones de las versiones 2.0 y 2.2, y cuándo se retiró cada una. Las páginas del CMMI Institute consultadas en octubre de 2026 todavía mencionan la versión 2.0 en materiales de adopción, y el PDF de cambios de contenido de la versión 3.0 que citan buscadores ya no está disponible.
+- Si una organización puede apreciarse hoy con la versión 2.2.
+
+Antes de contratar una apreciación, pregunta al evaluador líder qué versión del modelo y del método de apreciación se aplica y qué
+fecha rige.
+:::
+
+## Parte 8. Niveles de madurez y apreciaciones
+
+### Niveles de capacidad de CMMI (por área de práctica)
+
+Según el CMMI Institute, los niveles de capacidad aplican al desempeño y la mejora de una organización en áreas de práctica
+individuales.
+
+| Nivel | Nombre | Qué significa para el área de práctica |
+|---|---|---|
+| 0 | Incompleto | Enfoque incompleto, que puede o no cumplir la intención de alguna práctica, con desempeño inconsistente |
+| 1 | Inicial | Enfoque inicial, con un conjunto incompleto de prácticas, que atiende problemas de desempeño |
+| 2 | Gestionado | Conjunto simple pero completo de prácticas que cubre la intención del área, sin exigir activos de la organización, y vigila el avance hacia los objetivos del proyecto |
+| 3 | Definido | Usa estándares de la organización y su adaptación, y busca cumplir objetivos del proyecto y de la organización |
+
+### Tabla de niveles de madurez (por unidad de la organización)
+
+Los niveles de madurez representan un camino por etapas, basado en conjuntos predefinidos de áreas de práctica. Cada
+nivel se apoya en los anteriores.
+
+| Nivel | Nombre | Cómo describe el CMMI Institute a la organización |
+|---|---|---|
+| 0 | Incompleto | Ad hoc y desconocido. El trabajo puede o no terminarse |
+| 1 | Inicial | Impredecible y reactiva. El trabajo se completa pero suele retrasarse y exceder el presupuesto |
+| 2 | Gestionado | Gestionada a nivel de proyecto. Los proyectos se planifican, ejecutan, miden y controlan |
+| 3 | Definido | Proactiva, no reactiva. Los estándares de la organización guían proyectos, programas y portafolios |
+| 4 | Gestionado cuantitativamente | Medida y controlada. Se guía por datos, con objetivos cuantitativos de mejora que son predecibles y atienden las necesidades de las partes interesadas |
+| 5 | En optimización | Estable y flexible. Enfocada en la mejora continua y preparada para responder a oportunidades y cambios |
+
+Los nombres de los niveles son los publicados por el CMMI Institute y se traducen aquí. Los conjuntos exactos de áreas de práctica que cada nivel de
+madurez exige no se pudieron verificar en fuente primaria accesible.
+
+### Los cuatro tipos de apreciación
+
+Una *apreciación* es la actividad que identifica fortalezas y debilidades de los procesos de una organización y mide
+qué tan cerca están de las buenas prácticas de CMMI. El CMMI Institute describe cuatro tipos en su documento de definición del método.
+
+| Tipo | Para qué sirve | Calificaciones | Validez | Tamaño mínimo del equipo |
+|---|---|---|---|---|
+| Benchmark | Evaluación rigurosa y completa para obtener un nivel con valor ante terceros | Sí | 3 años | 4 o más, con un evaluador líder certificado |
+| Sustainment | Chequeo posterior a un benchmark para confirmar que se mantiene el nivel | Sí | 2 años | 2 o más, incluido el evaluador líder |
+| Evaluation | Enfoque flexible y menos formal para prepararse y hallar oportunidades de mejora | No | No aplica | 1 o más, incluido el evaluador líder |
+| Action Plan Reappraisal | Segunda oportunidad para quien no alcanzó por poco el nivel objetivo | Igual que la apreciación previa | Igual que la previa | Igual que la previa |
+
+Reglas que el CMMI Institute precisa para estos tipos.
+
+- No se pueden hacer más de tres apreciaciones sustainment seguidas antes de volver a un benchmark.
+- Para mantener la validez de la calificación previa, un sustainment debe completarse y ser aceptado por ISACA antes de que venza esa validez.
+- Una action plan reappraisal se hace dentro de los 4 meses posteriores al cierre de la apreciación previa, y solo si se falló por poco el nivel de madurez o el perfil de capacidad objetivo.
+- Los resultados publicados se registran en el sitio de resultados de apreciación (PARS) de ISACA.
+
+Una versión anterior de esta guía decía que un sustainment extiende un rating "hasta por seis años en tramos de
+dos". Esa cifra no aparece en la fuente primaria. Lo que sí está confirmado es la validez de 3 años del benchmark y de 2 del
+sustainment, con el tope de tres sustainment seguidos.
+
+::: {.callout-tip}
+## Reto 4. Escoge el tipo de apreciación
+
+Resuelve dos situaciones.
+
+A. Una empresa obtuvo un benchmark con madurez nivel 3 hace 34 meses. Su cliente exige mantener el nivel vigente y no quiere repetir todo el proceso.
+B. Otra empresa se apreció hace dos meses, apuntaba al nivel 3 y quedó a muy poco. Quiere confirmar solo los puntos pendientes.
+
+¿Qué tipo de apreciación encaja en cada una y qué plazo debe vigilar?
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+A. Sustainment. La validez del benchmark es de 3 años, o sea 36 meses, y a los 34 faltan 2. El sustainment debe completarse
+y ser aceptado por ISACA antes de que venza esa validez, y no pueden hacerse más de tres seguidos antes de volver a un benchmark.
+Con dos meses de margen, el plazo es muy ajustado y conviene empezar ya.
+
+B. Action plan reappraisal. Es el tipo para quien falló por poco el nivel objetivo. Debe completarse dentro de los 4
+meses siguientes al cierre de la apreciación previa, así que quedan unos dos meses.
+:::
+
+## Parte 9. Subir de nivel: qué significa y cuánto cuesta
+
+### Qué cambia al subir
+
+Subir de nivel no es sumar documentos. Cambia quién controla el trabajo.
+
+- De nivel 1 a nivel 2 (en CMMI, madurez 2 y capacidad 2; en SPICE, capacidad 2). Un proyecto planifica, mide y controla su trabajo, y gestiona sus productos de trabajo. La mejora la sostienen las personas del proyecto.
+- De nivel 2 a nivel 3. La organización define estándares y los proyectos los adaptan y los usan. Ya hay activos compartidos, como procedimientos y plantillas, que mantiene alguien además de los equipos.
+- Niveles 4 y 5. La mejora pasa a depender de datos cuantitativos y de causas de variación identificadas, con una organización preparada para cambiar de rumbo.
+
+### Qué dice la evidencia sobre el costo
+
+Hay muy pocos datos públicos de costo con método. Los que se pudieron verificar son estos, y no son del modelo vigente.
+
+Un informe técnico del SEI de 1994 (Herbsleb y colaboradores, CMU/SEI-94-TR-013) recogió datos de 13 organizaciones que mejoraban
+procesos con el Software CMM, el modelo anterior a CMMI. Los datos los aportaron las propias organizaciones, y los autores
+señalan que los resultados muestran lo posible "en un entorno favorable". Las cifras están en dólares de la época.
+
+| Medida | Rango | Mediana |
+|---|---|---|
+| Costo anual total de las actividades de mejora | US$ 49.000 a US$ 1.202.000 | US$ 245.000 |
+| Años dedicados a la mejora | 1 a 9 | 3,5 |
+| Costo de la mejora por ingeniero de software al año | US$ 490 a US$ 2.004 | US$ 1.375 |
+| Ganancia anual de productividad | 9 a 67 por ciento | 35 por ciento |
+| Reducción anual de los reportes de defectos posteriores a la entrega | 10 a 94 por ciento | 39 por ciento |
+| Valor del retorno por cada dólar invertido | 4,0 a 8,8 | 5,0 |
+
+El propio informe advierte que los valores absolutos de organizaciones distintas no son comparables, porque cada una definió
+defecto y línea de código a su manera, y que el retorno es de las cifras más difíciles de interpretar por cómo se
+asignaron costos y beneficios.
+
+El mismo informe describe un caso, la División de Ingeniería de Software de Hughes Aircraft. Una primera evaluación asistida por el SEI en 1987 la
+halló en nivel 2, y una segunda en 1990 la halló en un nivel 3 sólido. Ir de un nivel 2 sólido a un nivel 3 sólido en dos años
+costó 75 personas-mes más 45.000 dólares de la evaluación asistida por el SEI, en una unidad de unos 500 profesionales.
+
+### Lo que sí se sabe de precios hoy
+
+- El CMMI Institute describe el benchmark como el tipo con la mayor dedicación de personas, tiempo y costo, y el sustainment como de dedicación reducida. No publica un precio.
+- La suscripción de un año al visor del modelo cuesta US$ 150, y US$ 225 con contenido de madurez en inteligencia artificial, en la página consultada en octubre de 2026.
+- No se encontró en fuente primaria el costo en dinero ni en horas de una apreciación benchmark actual. Esa cifra depende del alcance y de la unidad evaluada, y se cotiza con el evaluador líder.
+
+::: {.callout-note}
+## Cifras de beneficios que circulan
+
+La página de producto del CMMI Institute muestra cifras como 30 por ciento menos defectos, 15 por ciento más de productividad y 47
+por ciento menos variación de costos. La página no indica comparación base, muestra ni periodo, así que sirven como
+mercadeo y no como dato para decidir. ISACA también informa, en un artículo de 2023, que de 33.272 objetivos de desempeño revisados en 8.866
+apreciaciones, 84,4 por ciento se lograron o se superaron. Es un dato de organizaciones que decidieron apreciarse, con objetivos que
+ellas mismas fijaron, y no una comparación con organizaciones sin apreciación.
+:::
+
+::: {.callout-tip}
+## Reto 5. Estima y limita
+
+El equipo de la clínica tiene 8 ingenieros. Con las medianas y los extremos de la tabla del SEI, calcula el costo anual
+de mejora y el costo en 3,5 años con la mediana, y el rango anual. Después escribe dos razones para no usar ese número
+como presupuesto.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+Con la mediana de US$ 1.375 por ingeniero al año, 8 ingenieros cuestan 8 por 1.375 = US$ 11.000 al año. En 3,5 años son
+11.000 por 3,5 = US$ 38.500. El rango anual va de 8 por 490 = US$ 3.920 a 8 por 2.004 = US$ 16.032.
+
+Dos razones para no usarlo como presupuesto: son dólares de 1994 y de otro modelo (el Software CMM), y las organizaciones que
+aportaron los datos lo hicieron de forma voluntaria y en un entorno favorable, que no representa a cualquier equipo. Además, la cifra
+no incluye la apreciación formal actual, cuyo costo no se encontró en fuente primaria.
+
+El resultado es un orden de magnitud para conversar, no una cotización.
+:::
+
+## Parte 10. SPICE contra CMMI
+
+Las dos familias preguntan qué tan fiable es la manera de trabajar. Se diferencian en lo que califican, en quién lo
+califica y en cómo se organiza el documento.
+
+| Aspecto | SPICE (ISO/IEC 33000 y Automotive SPICE) | CMMI v3.0 |
+|---|---|---|
+| Quién lo mantiene | ISO e IEC para la serie 33000. La VDA para Automotive SPICE | ISACA, por medio del CMMI Institute |
+| Qué califica | Cada proceso del alcance, uno por uno | Cada área de práctica (capacidad) y un conjunto predefinido de áreas (madurez de la unidad) |
+| Escala | Capacidad de 0 a 5 con nueve atributos | Capacidad de 0 a 3 por área de práctica y madurez de 0 a 5 por unidad |
+| Escala de logro por atributo | N, P, L, F con porcentajes | Grupos de práctica por nivel, con otro método de calificación |
+| Nivel consolidado | La VDA aclara que no existe para un proyecto ni una empresa | Sí: el nivel de madurez de la unidad evaluada |
+| Organización del documento | Modelo de referencia y modelo de evaluación definidos con la norma 33004 | Un solo modelo con dominios, áreas y grupos de práctica |
+| Quién evalúa | Evaluadores certificados por el esquema intacs, en el caso automotriz | Evaluador líder certificado de CMMI, en la apreciación formal |
+| Dominio habitual | Automotriz, con dominios afines | Desarrollo, servicios, proveedores, datos, personas, seguridad y trabajo virtual |
+
+Un punto merece cuidado. La guía anterior contrastaba a SPICE como "un proceso a la vez" con CMMI como "un nivel para toda la
+organización". La segunda mitad era incompleta, porque CMMI también califica la capacidad de áreas de práctica
+individuales. La diferencia fiel es esta: SPICE no define un nivel consolidado y CMMI sí lo ofrece como una de sus lecturas.
+
+### Los nombres se parecen, los niveles no son equivalentes
+
+Los niveles 2 y 3 de ambos marcos usan palabras cercanas (gestionado, establecido o definido), pero cada uno se define con sus
+propios criterios. En el material consultado no se encontró una correspondencia oficial entre los niveles de SPICE y los de CMMI. Un cliente
+que pide "nivel 3" debe aclarar a qué marco, a qué escala (capacidad o madurez) y a qué alcance se refiere.
+
+### Cuándo conviene cada uno
+
+- Un cliente automotriz exige evaluar procesos de ingeniería de un producto con software embebido: Automotive SPICE, con evaluadores intacs.
+- Una organización de servicios o de desarrollo quiere mejorar y mostrar madurez ante clientes de distintos sectores: CMMI.
+- Un equipo solo quiere ordenar su trabajo, sin certificado: cualquiera de los dos modelos como guía, sin pagar apreciación formal.
+
+::: {.callout-tip}
+## Reto 6. Qué marco aplica
+
+Para cada caso, elige SPICE, CMMI o ninguno de los dos como primera opción y explica en una frase por qué.
+
+1. El taller que construye la app de la clínica quiere vender un módulo a un fabricante de vehículos que le pide evaluar sus procesos de software.
+2. El equipo de la clínica solo quiere reducir los errores de sus entregas y no tiene ningún cliente que exija un certificado.
+3. Una consultora de software con proyectos para gobierno, servicios y datos quiere un nivel reconocido en varios sectores.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+1. SPICE, en concreto Automotive SPICE. Es el marco del sector, con su modelo y su esquema de evaluadores.
+2. Ninguno de los dos como apreciación formal. Pueden servir como guía interna y un equipo con ese objetivo puede avanzar sin pagar una apreciación,
+   con prácticas de revisión y verificación. La apreciación formal solo se justifica si alguien va a pedir su resultado.
+3. CMMI. Cubre varios dominios y produce un nivel de madurez comunicable a clientes de sectores distintos.
+:::
+
+## Errores frecuentes
+
+- Citar ISO/IEC 15504 como norma vigente cuando la serie 33000 la reemplazó en 2015.
+- Usar "Medición del proceso", "Control del proceso" y "Optimización" como nombres de los atributos 4.1, 4.2 y 5.2, que son los de la 15504.
+- Llamar "Optimizing" al nivel 5 de SPICE en documentos nuevos, cuando el nombre vigente es *Innovating*.
+- Creer que el nivel de un proceso se promedia: el nivel exige todos los atributos de los niveles inferiores en F.
+- Pensar que SPICE da un nivel a toda la organización. En Automotive SPICE no existe nivel consolidado.
+- Decir que CMMI es "solo un nivel para toda la organización" y olvidar que también califica la capacidad por área de práctica.
+- Mezclar vocabulario de la versión 1.3 (SCAMPI, representaciones por etapas y continua) con el de las versiones 2.0 y 3.0.
+- Afirmar que una apreciación es un certificado de producto. Mide la capacidad de los procesos evaluados en una unidad y un alcance.
+- Usar cifras de mercadeo (porcentajes de mejora) o de 1994 como presupuesto.
+- Dar por vigente un dato de apreciación sin preguntar qué versión del modelo y del método rige.
+
+## Autoevaluación
+
+Responde sin mirar la guía. Marca tu opción y abre la clave para comprobarla. Es una práctica formativa y no
+tiene nota.
+
+**1.** Según el catálogo de ISO, ¿qué ocurrió con ISO/IEC 15504?
+
+<label><input type="checkbox"> Sigue vigente y es la norma de SPICE</label><br>
+<label><input type="checkbox"> Sus partes 1 y 2 se retiraron en 2015 y las reemplazaron documentos de la serie 33000</label><br>
+<label><input type="checkbox"> Se convirtió en CMMI v3.0</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 1
+
+La opción 2. La parte 1 se retiró el 27 de febrero de 2015 y la parte 2 el 3 de marzo de 2015, y las reemplazaron los documentos 33001
+a 33004, publicados en marzo de 2015.
+:::
+
+**2.** Un atributo de proceso se estima en 62 por ciento de logro. ¿Qué letra recibe con el refinamiento?
+
+<label><input type="checkbox"> P+</label><br>
+<label><input type="checkbox"> L-</label><br>
+<label><input type="checkbox"> L+</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 2
+
+La opción 2. L cubre más de 50 hasta 85, y L- cubre más de 50 hasta 67,5. P+ llega solo hasta 50 y L+ empieza sobre 67,5.
+:::
+
+**3.** Para alcanzar el nivel 2 de capacidad, ¿qué se exige?
+
+<label><input type="checkbox"> PA 1.1 en L o F, y PA 2.1 y 2.2 en F</label><br>
+<label><input type="checkbox"> PA 1.1 en F, y PA 2.1 y 2.2 en L o F</label><br>
+<label><input type="checkbox"> Que la organización tenga un proceso estándar definido</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 3
+
+La opción 2. Los atributos del nivel que se busca pueden estar en L o F, y los de los niveles inferiores deben estar plenamente logrados (F).
+El proceso estándar de la organización es del nivel 3.
+:::
+
+**4.** ¿Cómo se llama el atributo PA 4.1 en ISO/IEC 33020:2019?
+
+<label><input type="checkbox"> Medición del proceso</label><br>
+<label><input type="checkbox"> Análisis cuantitativo</label><br>
+<label><input type="checkbox"> Control cuantitativo</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 4
+
+La opción 2. "Medición del proceso" es el nombre de la 15504, y "Control cuantitativo" es PA 4.2.
+:::
+
+**5.** ¿Cómo se llama hoy el nivel 5 de capacidad?
+
+<label><input type="checkbox"> Optimizing, como en la 15504</label><br>
+<label><input type="checkbox"> Innovating, como en la 33020</label><br>
+<label><input type="checkbox"> Defined</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 5
+
+La opción 2. Innovating (innovador) es el nombre del nivel 5 en la 33020 y en el PAM de Automotive SPICE 4.0. Optimizing era el nombre en la 15504.
+:::
+
+**6.** ¿Qué afirma la VDA sobre el resultado de una evaluación Automotive SPICE?
+
+<label><input type="checkbox"> Entrega un nivel consolidado para toda la empresa</label><br>
+<label><input type="checkbox"> Cada proceso del alcance recibe su nivel y no existe nivel consolidado para un proyecto ni una empresa</label><br>
+<label><input type="checkbox"> Solo se califican los procesos del nivel 1</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 6
+
+La opción 2. La VDA lo dice en la descripción de la dimensión de capacidad del modelo.
+:::
+
+**7.** ¿Cuál es el propósito de SWE.4 en el PAM 4.0?
+
+<label><input type="checkbox"> Verificar que las unidades de software son consistentes con el diseño detallado</label><br>
+<label><input type="checkbox"> Verificar que el software integrado cumple los requisitos de software</label><br>
+<label><input type="checkbox"> Establecer la arquitectura del software</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 7
+
+La opción 1. La opción 2 es SWE.6 y la opción 3 es SWE.2.
+:::
+
+**8.** ¿Cuántos dominios tiene CMMI v3.0 según ISACA y quién lo publica?
+
+<label><input type="checkbox"> Tres dominios, publicado por el SEI</label><br>
+<label><input type="checkbox"> Ocho dominios, publicado por ISACA</label><br>
+<label><input type="checkbox"> Un solo dominio, publicado por ISO</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 8
+
+La opción 2. Los tres dominios originales (desarrollo, servicios y proveedores) se ampliaron con datos, personas, seguridad funcional, seguridad de la información y trabajo virtual.
+:::
+
+**9.** ¿Qué tipo de apreciación CMMI produce calificaciones con validez de 3 años?
+
+<label><input type="checkbox"> Evaluation</label><br>
+<label><input type="checkbox"> Benchmark</label><br>
+<label><input type="checkbox"> Sustainment</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 9
+
+La opción 2. Sustainment da calificaciones con validez de 2 años y evaluation no produce calificaciones.
+:::
+
+**10.** ¿Qué conclusión es correcta sobre el costo de subir de nivel?
+
+<label><input type="checkbox"> Cuesta siempre US$ 1.375 por ingeniero al año</label><br>
+<label><input type="checkbox"> Los datos verificados son del Software CMM, de 1994 y de 13 organizaciones voluntarias, y sirven solo como orden de magnitud</label><br>
+<label><input type="checkbox"> El CMMI Institute publica el precio de un benchmark</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 10
+
+La opción 2. US$ 1.375 es una mediana de ese estudio, no una tarifa, y el CMMI Institute no publica el precio de una apreciación.
+:::
+
+## Lo que te llevas
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] Por qué ISO/IEC 15504 está retirada y qué la reemplazó, con las fechas de ISO
+- [ ] La escala N, P, L y F con sus porcentajes y el refinamiento de P y L
+- [ ] Los seis niveles de capacidad y los nueve atributos con los nombres de la 33020:2019
+- [ ] Cómo se deriva el nivel de un proceso a partir de las letras, y por qué un atributo bajo lo bloquea
+- [ ] Qué son los procesos SWE.1 a SWE.6 de Automotive SPICE 4.0 y qué diferencia hay entre prácticas base y genéricas
+- [ ] Cómo se califica un proceso con un ejemplo, de la evidencia al nivel
+- [ ] La estructura de CMMI v3.0, los niveles de capacidad (0 a 3) y de madurez (0 a 5)
+- [ ] Los cuatro tipos de apreciación, qué produce cada uno y cuánto dura su validez
+- [ ] Qué se sabe y qué no se sabe del costo de subir de nivel
+- [ ] En qué se parecen y en qué se diferencian SPICE y CMMI
+:::
+
+## Glosario
+
+- **SPICE.** Sigla de *Software Process Improvement and Capability dEtermination*. Nombre del enfoque de evaluación de procesos, hoy apoyado en la serie ISO/IEC 33000.
+- **ISO/IEC 15504.** Norma original de SPICE, con sus partes 1 y 2 retiradas en 2015.
+- **ISO/IEC 33000.** Serie de normas de evaluación de procesos que reemplazó a la 15504.
+- **ISO/IEC 33020.** Norma que define el marco de medición de la capacidad de un proceso. La edición vigente es la de 2019.
+- **Modelo de referencia de procesos (PRM).** Catálogo de procesos de un dominio, con su propósito y sus resultados.
+- **Modelo de evaluación de procesos (PAM).** Modelo con los indicadores para evaluar la capacidad de los procesos de un PRM.
+- **Atributo de proceso (PA).** Propiedad medible de la capacidad de un proceso. Hay nueve, de PA 1.1 a PA 5.2.
+- **Nivel de capacidad.** Valor de 0 a 5 que se deriva de las calificaciones de los atributos de un proceso.
+- **Escala N, P, L y F.** Calificación de un atributo: no logrado, parcialmente, ampliamente o plenamente logrado.
+- **Práctica base (BP).** Actividad de un proceso que indica si logra su propósito. Evidencia del nivel 1.
+- **Práctica genérica (GP).** Actividad aplicable a cualquier proceso, que indica cómo se gestiona. Evidencia de los niveles 2 a 5.
+- **Automotive SPICE.** Aplicación de SPICE al software y los sistemas de los vehículos, mantenida por la VDA.
+- **VDA.** Asociación alemana de la industria automotriz. Su centro de calidad es el VDA QMC.
+- **intacs.** Esquema internacional de certificación de evaluadores de SPICE.
+- **SWE.** Grupo de procesos de ingeniería de software de Automotive SPICE, de SWE.1 a SWE.6.
+- **CMMI.** *Capability Maturity Model Integration*. Modelo de buenas prácticas de ISACA, por medio del CMMI Institute.
+- **ISACA.** Asociación que publica y mantiene CMMI.
+- **Dominio (CMMI).** Conjunto de áreas de práctica para un tipo de trabajo. La versión 3.0 tiene ocho.
+- **Área de práctica (CMMI).** Unidad temática del modelo, por ejemplo Verificación (VER).
+- **Grupo de práctica (CMMI).** Conjunto de prácticas de un área, etiquetado de nivel 0 a 3.
+- **Nivel de capacidad (CMMI).** Valor de 0 a 3 del desempeño de una organización en un área de práctica.
+- **Nivel de madurez (CMMI).** Valor de 0 a 5 de una unidad de la organización, sobre un conjunto predefinido de áreas.
+- **Apreciación.** Actividad que identifica fortalezas y debilidades de los procesos de una organización frente a CMMI.
+- **Benchmark, sustainment, evaluation y action plan reappraisal.** Los cuatro tipos de apreciación de CMMI.
+- **Evaluador líder.** Persona certificada que conduce una apreciación formal de CMMI.
+- **Software CMM.** Modelo anterior a CMMI, publicado por primera vez en 1991.
+- **Calificación ordinal.** Escala cuyos valores indican orden y tramo, no una medida exacta.
+
+## Bibliografía
+
+Sobre la serie ISO/IEC 33000 y la retirada de la 15504 (consultados el 3 de octubre de 2026):
+
+- ISO/IEC 33001:2015. *Information technology. Process assessment. Concepts and terminology.* [Catálogo de ISO](https://www.iso.org/standard/54175.html).
+- ISO/IEC 33002:2015. *Requirements for performing process assessment.* [Catálogo de ISO](https://www.iso.org/standard/54176.html).
+- ISO/IEC 33003:2015. *Requirements for process measurement frameworks.* [Catálogo de ISO](https://www.iso.org/standard/54177.html).
+- ISO/IEC 33004:2015. *Requirements for process reference, process assessment and maturity models.* [Catálogo de ISO](https://www.iso.org/standard/54178.html).
+- ISO/IEC 33020:2019 (edición 2). *Process measurement framework for assessment of process capability.* [Catálogo de ISO](https://www.iso.org/standard/78526.html). La edición de 2015 consta [retirada](https://www.iso.org/standard/54195.html).
+- ISO/IEC 15504-1:2004. *Concepts and vocabulary.* [Retirada el 27 de febrero de 2015](https://www.iso.org/standard/38932.html).
+- ISO/IEC 15504-2:2003. *Performing an assessment.* [Retirada el 3 de marzo de 2015](https://www.iso.org/standard/37458.html).
+- Souza Neto, J., Almeida, R., Linares Pinto, P. y Mira da Silva, M. (2018). A COBIT 5 PAM Update Compliant With ISO/IEC 330xx Family. *ISACA Journal*, vol. 1. [Artículo](https://www.isaca.org/resources/isaca-journal/issues/2018/volume-1/a-cobit-5-pam-update-compliant-with-isoiec-330xx-family). Refinamiento de la escala y atributos renombrados.
+
+Sobre Automotive SPICE:
+
+- VDA Working Group 13 (2023). *Automotive SPICE Process Reference Model, Process Assessment Model, versión 4.0*, 29 de noviembre de 2023. VDA QMC. [PDF](https://vda-qmc.de/wp-content/uploads/2023/12/Automotive-SPICE-PAM-v40.pdf). Reproduce, con licencia de ISO, los nombres y reglas de la 33020:2019.
+- VDA QMC. [Automotive SPICE](https://vda-qmc.de/en/automotive-spice/) y [certificación de evaluadores](https://vda-qmc.de/en/automotive-spice/automotive-spice-zertifizierung/). Consultados el 3 de octubre de 2026.
+
+Sobre CMMI (consultados el 3 de octubre de 2026):
+
+- Lear, R. (2023). CMMI Updates Take Performance Improvements to the Next Level. *ISACA Now Blog*, 10 de abril de 2023. [Artículo](https://www.isaca.org/resources/news-and-trends/isaca-now-blog/2023/cmmi-updates-take-performance-improvements-to-the-next-level).
+- ISACA Now (2024). Shaping the Future with CMMI, 28 de marzo de 2024. [Entrevista](https://www.isaca.org/resources/news-and-trends/isaca-now-blog/2024/shaping-the-future-with-cmmi).
+- Sundaram, J. (2025). CMMI in the AI Age: Driving Efficiency, Innovation, and Governance. *ISACA Journal*, vol. 3, 1 de mayo de 2025. [Artículo](https://www.isaca.org/resources/isaca-journal/issues/2025/volume-3/cmmi-in-the-ai-age).
+- CMMI Institute. [Tipos de apreciación de CMMI](https://cmmiinstitute.com/learning/appraisals/types), [niveles de capacidad y de madurez](https://cmmiinstitute.com/learning/appraisals/levels), [qué es una apreciación](https://cmmiinstitute.com/learning/appraisals), [visor del modelo](https://cmmiinstitute.com/products/cmmi/cmmi-model-viewer) y [página de producto](https://cmmiinstitute.com/products/cmmi).
+- Wikipedia. [Capability Maturity Model Integration](https://en.wikipedia.org/wiki/Capability_Maturity_Model_Integration). Fuente secundaria, usada solo para el recuadro histórico de la versión 1.3.
+
+Sobre costos de la mejora de procesos:
+
+- Herbsleb, J., Carleton, A., Rozum, J., Siegel, J. y Zubrow, D. (1994). *Benefits of CMM-Based Software Process Improvement: Initial Results.* CMU/SEI-94-TR-013. Software Engineering Institute. [Ficha y PDF](https://www.sei.cmu.edu/library/benefits-of-cmm-based-software-process-improvement-initial-results/).
+
+::: {.callout-note}
+## Fuentes de pago
+
+Las normas ISO/IEC 33001 a 33004 y 33020 son de pago y no se leyeron completas. Esta guía se apoya en los catálogos de ISO (títulos,
+ediciones, fechas y estado) y en el modelo Automotive SPICE 4.0, que reproduce con licencia partes de la 33020:2019.
+El modelo CMMI v3.0 está en un visor por suscripción y no se leyó. Lo que se afirma de su contenido sale de materiales públicos de ISACA y del CMMI Institute.
+:::
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

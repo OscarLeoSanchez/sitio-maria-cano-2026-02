@@ -1,0 +1,1263 @@
+---
+title: "Tema 5. Modelos y métricas de calidad"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                                 |
+|--------|-----------------------------------------------------------------|
+| Unidad | Unidad 2. Procesos de calidad del software. Modelos y métricas  |
+| Tema   | Tema 5. Modelos y métricas de calidad                           |
+:::
+
+[Presentación interactiva de la unidad](../presentacion-interactiva.html){.btn-curso}
+
+Tema anterior: [Tema 4. Actividades de SQA](../tema-04-actividades-sqa/index.qmd).
+Tema siguiente: [Tema 6. Herramientas de SQA](../tema-06-herramientas/index.qmd).
+
+## Objetivo y resultado de aprendizaje
+
+Los temas anteriores de la unidad describieron quién hace SQA, en qué momento del ciclo de vida
+entra y con qué actividades trabaja. Este tema responde cómo se sabe si todo eso funciona. La
+respuesta son los números, y también el cuidado necesario para no engañarse con ellos.
+
+Al terminar puedes:
+
+- Distinguir dato, medida, métrica e indicador, y decir qué decisión sostiene cada uno.
+- Construir un plan de medición con el método GQM (*Goal, Question, Metric*), partiendo de una meta.
+- Clasificar métricas como de proceso, de producto o de proyecto.
+- Calcular a mano la densidad de defectos, la eficiencia de eliminación de defectos (DRE), la fuga de defectos y el MTTR, e interpretar el resultado.
+- Nombrar las cinco métricas DORA vigentes, definirlas y calcularlas con datos de un mes de trabajo.
+- Calcular la complejidad ciclomática de un método, derivar sus casos de prueba y explicar por qué la cobertura de pruebas no garantiza pruebas buenas.
+- Calcular la razón de deuda técnica y su calificación, y explicar la deuda técnica como metáfora.
+- Reconocer cuándo una métrica se vuelve meta y deja de informar (ley de Goodhart), y proponer salvaguardas.
+
+Prerrequisitos: los Temas 1 a 4 de esta unidad y el Tema 2 de la Unidad 1. Necesitas distinguir
+*defecto* de *falla*, y saber qué es una prueba automatizada y qué es una revisión de código.
+
+## Ruta de estudio
+
+Son unas 8 horas de trabajo independiente. Puedes partirlas en tres o cuatro sesiones. La
+presentación interactiva de la unidad sigue estos mismos conceptos, así que sirve de repaso.
+
+::: {.calendario}
+| Parte | Qué haces | Tiempo |
+|---|---|---|
+| 1. Medir para decidir | Lees las definiciones y las aplicas al hilo conductor | 35 min |
+| 2. Los modelos dicen qué medir | Relacionas ISO/IEC 25010 y CMMI con las métricas | 20 min |
+| 3. GQM | Construyes un plan de medición y resuelves el Reto 1 | 50 min |
+| 4. Proceso, producto y proyecto | Clasificas métricas y resuelves el Reto 2 | 30 min |
+| 5. Defectos | Sigues el ejemplo de densidad, DRE y fuga, y resuelves el Reto 3 | 60 min |
+| 6. MTTR y DORA | Calculas las cinco métricas DORA y resuelves el Reto 4 | 70 min |
+| 7. Código | Calculas complejidad y cobertura, y resuelves los Retos 5 y 6 | 70 min |
+| 8. Deuda técnica | Calculas la razón de deuda y resuelves el Reto 7 | 30 min |
+| 9. Cuando la métrica se vuelve meta | Lees la ley de Goodhart y resuelves el Reto 8 | 30 min |
+| 10. Tablero de la versión 2.0 | Lees todas las métricas juntas y decides | 30 min |
+| Cierre | Autoevaluación y glosario | 40 min |
+:::
+
+## El hilo conductor: la app de turnos de la Clínica Aurora
+
+La app de turnos médicos es un producto ficticio que atraviesa todo el curso. Su requisito de partida
+dice que la app asigna hasta 20 turnos por día a cada especialidad. En este tema se le mide la
+versión 2.0, que ya salió a producción.
+
+Todas las cifras de la clínica son ilustrativas. Se inventaron para practicar el cálculo y no vienen
+de ningún proyecto real. Los datos base de la versión 2.0 son estos.
+
+| Módulo | Tamaño | Defectos hallados antes de entregar | Defectos reportados en producción (90 días) |
+|---|:---:|:---:|:---:|
+| Asignación de turnos | 14 kLOC | 56 | 14 |
+| Notificaciones | 6 kLOC | 14 | 3 |
+| Pacientes | 10 kLOC | 30 | 6 |
+| Facturación | 10 kLOC | 40 | 12 |
+| Total | 40 kLOC | 140 | 35 |
+
+La sigla kLOC significa miles de líneas de código (*kilo lines of code*). Los 140 defectos de la
+columna central se hallaron con cuatro actividades, y esa distribución se usa en la Parte 5.
+
+## Parte 1. Medir para decidir
+
+### Dato, medida, métrica e indicador
+
+Los textos de la disciplina usan estas palabras con matices distintos según el autor. Esta guía fija
+cuatro significados y los mantiene de principio a fin.
+
+- **Dato.** Un hecho registrado, como "el defecto 311 de Facturación se reportó el 14 de octubre".
+- **Medida.** Un valor obtenido al contar o medir algo con una regla definida, como "12 defectos de Facturación en 90 días" o "10 kLOC".
+- **Métrica.** Una medida, o un cociente entre medidas, con su definición, su unidad y su regla de cálculo, como "1,2 defectos por kLOC".
+- **Indicador.** Una métrica interpretada frente a un criterio, que puede ser un umbral, una meta o una tendencia, y que sirve para tomar una decisión.
+
+Una cifra sola no decide nada. Que Facturación tenga 1,2 defectos por kLOC es una métrica. Que el
+equipo haya acordado un umbral de 1,0 y que 1,2 lo supere convierte esa métrica en un indicador, y
+ese indicador dispara una decisión.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cadena de cinco pasos, dato, medida, metrica, indicador y decision, con el ejemplo de los defectos de Facturacion de la app de turnos" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u2t5a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">De un dato a una decisión</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="11" y="42" width="130" height="104" rx="10"/><rect x="163" y="42" width="130" height="104" rx="10"/><rect x="315" y="42" width="130" height="104" rx="10"/></g>
+  <rect x="467" y="42" width="130" height="104" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="619" y="42" width="130" height="104" rx="10" fill="#fff3d6" stroke="#e6c46f"/>
+  <g text-anchor="middle" font-size="13" font-weight="700" fill="#12324f"><text x="76" y="68">Dato</text><text x="228" y="68">Medida</text><text x="380" y="68">Métrica</text><text x="532" y="68" fill="#0e6f6c">Indicador</text><text x="684" y="68">Decisión</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876">
+    <text x="76" y="92">Un defecto de</text><text x="76" y="108">Facturación se</text><text x="76" y="124">reporta en producción</text>
+    <text x="228" y="92">12 defectos en</text><text x="228" y="108">90 días y</text><text x="228" y="124">10 kLOC</text>
+    <text x="380" y="92">1,2 defectos</text><text x="380" y="108">por kLOC, con su</text><text x="380" y="124">regla de cálculo</text>
+    <text x="532" y="92">1,2 supera el</text><text x="532" y="108">umbral acordado</text><text x="532" y="124">de 1,0</text>
+    <text x="684" y="92">Reforzar la</text><text x="684" y="108">revisión de código</text><text x="684" y="124">de Facturación</text>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t5a)"><path d="M141,94 L161,94"/><path d="M293,94 L313,94"/><path d="M445,94 L465,94"/><path d="M597,94 L617,94"/></g>
+  <text x="380" y="190" font-size="12" fill="#12324f" text-anchor="middle">Cada paso agrega interpretación. Solo el último cambia el producto o el proceso.</text>
+  <text x="380" y="210" font-size="11" fill="#5b6876" text-anchor="middle">Las cifras son ilustrativas.</text>
+</svg>
+
+:::
+
+### Qué hace buena a una métrica
+
+Medir cuesta tiempo, y una métrica mal definida cuesta más porque produce discusiones en lugar de
+decisiones. Una métrica útil cumple estas condiciones.
+
+- **Definida sin ambigüedad.** Dice qué se cuenta, qué se deja fuera y en qué unidad. Por ejemplo, si las kLOC incluyen o no el código generado.
+- **Repetible.** Dos personas que la calculen con los mismos datos obtienen el mismo número.
+- **Ligada a una decisión.** Existe alguien que cambiaría algo según su valor. Si nadie la usaría, no se mide.
+- **Comparable en el tiempo.** Se calcula con la misma regla cada vez, de modo que la tendencia significa algo.
+- **Difícil de manipular.** Cambiar el número sin cambiar la realidad cuesta más que mejorar la realidad. La Parte 9 explica por qué esta condición es la más difícil.
+- **Leída con otras.** Ninguna métrica sola describe la calidad. La Parte 10 las junta.
+
+::: {.callout-note}
+## Una medida no es el objeto medido
+
+Cada métrica de este tema es una representación parcial. Las líneas de código no son el tamaño
+funcional del producto, los defectos reportados no son todos los defectos presentes, y la cobertura
+no es la calidad de las pruebas. Esa distancia entre el número y lo que representa es la fuente de
+casi todos los errores de interpretación de la Parte 9.
+:::
+
+## Parte 2. Los modelos de calidad dicen qué medir
+
+Un modelo de calidad dice qué propiedades importan. Una métrica dice cuánto vale una de ellas.
+Sin modelo, el equipo mide lo que la herramienta ya trae. Sin métricas, el modelo queda como una
+lista de buenas intenciones.
+
+### ISO/IEC 25010:2023, en una referencia
+
+La ISO/IEC 25010 define el modelo de calidad de producto. Su edición de 2023 tiene nueve
+características, y el Tema 2 de la Unidad 1 las desarrolla con sus subcaracterísticas y con lo que
+cambió respecto a la edición de 2011. Aquí solo interesa un punto de ese tema, la cadena
+característica, subcaracterística, medida y requisito. La norma aporta los dos primeros pasos y cada
+proyecto elige la medida y el valor.
+
+La ISO/IEC 25023:2016 trae medidas para esas características. Es anterior al modelo de 2023, así que
+esta guía no afirma cómo se alinea con él. Los nombres de las métricas de la tabla siguiente son
+ejemplos del hilo conductor y no medidas oficiales de esa norma.
+
+| Característica (ISO/IEC 25010:2023) | Pregunta sobre la app de turnos | Métrica candidata |
+|---|---|---|
+| Adecuación funcional | ¿Hace lo que los requisitos dicen? | Requisitos con pruebas aprobadas, sobre el total de requisitos |
+| Eficiencia de desempeño | ¿Responde a tiempo con carga real? | Tiempo de respuesta al listar turnos, percentil 95 |
+| Fiabilidad | ¿Está disponible cuando se necesita? | Minutos operativos del mes, sobre los minutos totales |
+| Capacidad de interacción | ¿Un paciente logra pedir su turno? | Porcentaje de pacientes que completan la solicitud sin ayuda |
+| Mantenibilidad | ¿Es costoso cambiarla? | Complejidad ciclomática y razón de deuda técnica por módulo |
+
+### CMMI, en una referencia
+
+CMMI es un modelo de madurez de procesos, y la Unidad 3, Tema 4, explica su versión vigente, la
+3.0 publicada en abril de 2023. Para este tema basta una idea. Cuando una organización quiere
+demostrar que su proceso es predecible, la evidencia son datos como los que se calculan a
+continuación, con definiciones estables y recogidos de la misma manera en cada proyecto.
+
+Dos modelos, dos preguntas distintas. El de producto pregunta qué propiedades tiene lo que se
+construyó. El de proceso pregunta cómo trabaja la organización. Las métricas de las partes
+siguientes sirven a las dos.
+
+## Parte 3. GQM: de la meta a la métrica
+
+### El problema de empezar por las métricas
+
+Muchos equipos empiezan por lo que su herramienta ya reporta, como líneas de código, número de
+commits o cobertura. Al cabo de unos meses tienen un tablero lleno de cifras y ninguna decisión que
+tomar con ellas. El método GQM (*Goal, Question, Metric*, en español meta, pregunta, métrica) propone
+el camino inverso.
+
+El método lo desarrolló Victor Basili con colegas en el Goddard Space Flight Center de la NASA y la
+Universidad de Maryland. La referencia habitual es el capítulo de Basili, Caldiera y Rombach de 1994
+en la *Encyclopedia of Software Engineering*.
+
+### Tres niveles
+
+- **Meta (nivel conceptual).** Lo que la organización quiere lograr con respecto a un objeto, desde un punto de vista y en un contexto.
+- **Pregunta (nivel operativo).** Lo que hay que saber para decidir si la meta se alcanza.
+- **Métrica (nivel cuantitativo).** El dato que responde cada pregunta.
+
+Una meta bien formulada nombra cinco elementos. El objeto que se estudia, el propósito, el aspecto de
+calidad en foco, el punto de vista y el contexto. Esos cinco elementos evitan metas vagas como
+"mejorar la calidad".
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arbol GQM, una meta sobre turnos duplicados de la version 2.1, tres preguntas que la desglosan y una metrica bajo cada pregunta" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u2t5b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Árbol GQM de la app de turnos</text>
+  <rect x="170" y="34" width="420" height="68" rx="12" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <text x="380" y="56" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">META</text>
+  <text x="380" y="74" font-size="12" fill="#12324f" text-anchor="middle">Reducir los turnos duplicados de la versión 2.1,</text>
+  <text x="380" y="91" font-size="12" fill="#12324f" text-anchor="middle">desde el punto de vista del personal de recepción</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="14" y="138" width="226" height="74" rx="10"/><rect x="267" y="138" width="226" height="74" rx="10"/><rect x="520" y="138" width="226" height="74" rx="10"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f">
+    <text x="127" y="160" font-weight="700">PREGUNTA 1</text><text x="127" y="178">¿Cuántos duplicados hay</text><text x="127" y="194">y cómo evolucionan?</text>
+    <text x="380" y="160" font-weight="700">PREGUNTA 2</text><text x="380" y="178">¿En qué flujo de la app</text><text x="380" y="194">nacen los duplicados?</text>
+    <text x="633" y="160" font-weight="700">PREGUNTA 3</text><text x="633" y="178">¿Las correcciones funcionan</text><text x="633" y="194">o el defecto reaparece?</text>
+  </g>
+  <g fill="#fff3d6" stroke="#e6c46f"><rect x="14" y="248" width="226" height="82" rx="10"/><rect x="267" y="248" width="226" height="82" rx="10"/><rect x="520" y="248" width="226" height="82" rx="10"/></g>
+  <g text-anchor="middle" font-size="11.5" fill="#12324f">
+    <text x="127" y="270" font-weight="700">MÉTRICA 1</text><text x="127" y="288">Turnos duplicados por cada</text><text x="127" y="304">1.000 asignados, por semana</text>
+    <text x="380" y="270" font-weight="700">MÉTRICA 2</text><text x="380" y="288">Porcentaje de duplicados por</text><text x="380" y="304">origen: web, teléfono, reasignación</text>
+    <text x="633" y="270" font-weight="700">MÉTRICA 3</text><text x="633" y="288">Defectos de duplicado</text><text x="633" y="304">reabiertos, sobre los cerrados</text>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t5b)"><path d="M300,102 C230,116 170,124 140,136"/><path d="M380,102 L380,136"/><path d="M460,102 C530,116 590,124 620,136"/><path d="M127,212 L127,246"/><path d="M380,212 L380,246"/><path d="M633,212 L633,246"/></g>
+</svg>
+
+:::
+
+### Ejemplo resuelto: del problema a la medición
+
+Después del lanzamiento, recepción reporta que algunos pacientes llegan con un turno que otro
+paciente también tiene. El equipo decide medir antes de arreglar.
+
+1. Formula la meta con los cinco elementos. Objeto, la asignación de turnos. Propósito, reducir. Aspecto de calidad, turnos duplicados. Punto de vista, el personal de recepción. Contexto, la versión 2.1 en producción.
+2. Deriva las preguntas. Qué tan grande es el problema, de dónde viene y si las correcciones lo resuelven.
+3. Elige una métrica por pregunta, con su definición completa. La métrica 1 divide los turnos con paciente duplicado entre los turnos asignados de la semana y multiplica por 1.000.
+4. Define el indicador. El equipo acuerda que más de 2 duplicados por cada 1.000 turnos asignados exige una acción esa misma semana.
+5. Revisa lo que no se midió. Nadie midió el tiempo de espera de recepción. La meta lo deja fuera a propósito, porque el punto de vista es el de los duplicados y no el de la espera.
+
+Una semana con 3.200 turnos asignados y 9 duplicados da 9 dividido entre 3.200 por 1.000, es decir
+2,8 duplicados por cada 1.000 turnos. Supera el umbral de 2, así que el indicador pide acción. Si en la
+semana siguiente hay 3.400 turnos y 5 duplicados, la métrica baja a 1,5 y el indicador queda en verde.
+
+::: {.callout-note}
+## Sobre el origen del método
+
+Los tres niveles y la secuencia meta, pregunta, métrica están en la referencia citada. La plantilla de
+cinco elementos de la meta es la formulación habitual del método, escrita aquí en español. El texto
+original de 1994 no se pudo consultar completo durante la preparación de esta guía, así que la
+redacción de la plantilla es una paráfrasis y no una cita.
+:::
+
+::: {.callout-tip}
+## Reto 1. Construye un árbol GQM
+
+La clínica quiere reducir las cancelaciones de turnos que ocurren en la misma mañana de la cita.
+Escribe la meta con sus cinco elementos, tres preguntas y una métrica por pregunta, y define el
+indicador de una de ellas.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 1
+
+Una solución posible, entre varias válidas.
+
+- Meta. Analizar los turnos cancelados el mismo día de la cita (objeto), con el propósito de reducirlos, respecto a su frecuencia y causa (aspecto de calidad), desde el punto de vista de la dirección de la clínica, en la app versión 2.1 con pacientes ambulatorios (contexto).
+- Pregunta 1. ¿Qué porcentaje de turnos se cancela el mismo día? Métrica, cancelaciones del mismo día divididas entre los turnos asignados, por mes.
+- Pregunta 2. ¿Quién cancela y por qué motivo? Métrica, porcentaje de cancelaciones por motivo registrado (olvido, cruce de agenda, enfermedad, otro).
+- Pregunta 3. ¿Un recordatorio reduce las cancelaciones? Métrica, la métrica 1 de los pacientes que recibieron recordatorio frente a los que no.
+- Indicador de la pregunta 1. Si el porcentaje supera el 8 % durante dos meses seguidos, se revisa el flujo de recordatorios. El 8 % es un valor inventado para el ejemplo. En un caso real se obtiene de los datos históricos.
+
+Tu redacción puede variar. Lo que se revisa es que cada métrica responda una pregunta y que cada
+pregunta salga de la meta. Una métrica sin pregunta, como "número de pacientes registrados", no
+pertenece al árbol.
+:::
+
+## Parte 4. Métricas de proceso, de producto y de proyecto
+
+La literatura agrupa las métricas según lo que observan. La clasificación ayuda a decidir quién
+usa cada número y con qué rapidez reacciona.
+
+| Categoría | Qué observa | Ejemplos en la app de turnos | Quién decide con ella |
+|---|---|---|---|
+| Proceso | Cómo se trabaja | Tiempo medio de resolución de un defecto, tasa de reapertura de defectos, porcentaje de cambios revisados antes de fusionarse | Quien mejora el método de trabajo |
+| Producto | Propiedades de lo construido | Densidad de defectos, complejidad ciclomática, cobertura de pruebas, deuda técnica, tiempo de respuesta | Quien diseña, prueba y mantiene |
+| Proyecto | Salud del proyecto | Esfuerzo real frente al planificado, cumplimiento del cronograma, uso del presupuesto | Quien gestiona recursos y compromisos |
+
+Los límites se cruzan. La eficiencia de eliminación de defectos describe el producto, porque cuenta
+defectos, pero también juzga el proceso de revisión y prueba que los encontró. Cuando una métrica
+admite dos lecturas, importa menos la etiqueta que la decisión a la que sirve.
+
+### Métricas del producto en uso y del proceso de entrega
+
+Dos familias que aparecen más adelante merecen nombre propio. Las de calidad del producto en
+operación, como la disponibilidad o el tiempo de respuesta, miden lo que el usuario experimenta. Las
+de entrega, como las cinco de DORA, miden qué tan rápido y qué tan estable es el flujo que lleva un
+cambio desde el repositorio hasta producción.
+
+::: {.callout-tip}
+## Reto 2. Clasifica ocho métricas
+
+Clasifica cada métrica como de proceso, de producto o de proyecto. Luego marca cuál de ellas
+necesita un umbral para convertirse en indicador.
+
+1. Tasa de reapertura de defectos.
+2. Complejidad ciclomática de la clase que asigna turnos.
+3. Horas de trabajo reales frente a las planificadas.
+4. Densidad de defectos de Facturación.
+5. Porcentaje de cambios revisados por otra persona antes de fusionarse.
+6. Entregas realizadas en la fecha acordada.
+7. Cobertura de pruebas del módulo Pacientes.
+8. Tiempo medio de resolución de un defecto.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 2
+
+- Proceso, las métricas 1, 5 y 8. Describen cómo trabaja el equipo con los defectos y con las revisiones.
+- Producto, las métricas 2, 4 y 7. Describen propiedades del código entregado.
+- Proyecto, las métricas 3 y 6. Describen esfuerzo y cumplimiento de compromisos.
+
+Las ocho son métricas y ninguna es indicador por sí sola. Cualquiera se convierte en indicador al
+compararla con un umbral o una meta. Por ejemplo, la complejidad de la métrica 2 se vuelve
+indicador cuando el equipo acuerda un límite, como el de 10 que se trata en la Parte 7.
+:::
+
+## Parte 5. Métricas de defectos: densidad, DRE y fuga
+
+### Densidad de defectos
+
+La *densidad de defectos* divide la cantidad de defectos entre el tamaño del software.
+
+> Densidad de defectos = defectos / tamaño
+
+El tamaño suele expresarse en kLOC o en puntos de función. Cada elección tiene sus problemas. Las
+líneas de código dependen del lenguaje y de cómo se escribe, y los puntos de función exigen un
+conteo laborioso. Lo importante es fijar una regla, por ejemplo excluir el código generado, y no
+cambiarla.
+
+La densidad permite comparar módulos de distinto tamaño. Un módulo grande acumula más defectos solo
+por ser grande, y dividir entre el tamaño corrige esa distorsión. También hay que declarar qué
+defectos se cuentan, los hallados antes de entregar, los reportados después, o ambos.
+
+### Eficiencia de eliminación de defectos (DRE)
+
+La *eficiencia de eliminación de defectos*, en inglés *defect removal efficiency* o DRE, mide qué
+fracción de los defectos presentes se eliminó antes de entregar.
+
+> DRE = defectos hallados antes de entregar / (defectos hallados antes de entregar + defectos hallados después)
+
+El denominador usa los defectos hallados después de la entrega durante una ventana acordada, por
+ejemplo 90 días. Eso hace de la DRE una métrica retrospectiva. Su valor depende de cuánto tiempo
+se espera antes de calcularla, porque los defectos de producción siguen apareciendo.
+
+La *fuga de defectos* (*defect leakage*) es el complemento. Es la fracción que escapó a producción.
+
+> Fuga = defectos hallados después / (defectos hallados antes + defectos hallados después) = 1 - DRE
+
+::: {.callout-note}
+## Sobre estas fórmulas
+
+La DRE y la fuga se definen aquí con la formulación habitual de la literatura de calidad de software,
+por ejemplo en los libros de Kan (2003) y de Jones y Bonsignour (2012). Ambos son de pago y no se
+pudo verificar la página exacta de cada definición. Esta guía no cita valores de referencia de la
+industria para la DRE, porque no se verificaron en una fuente primaria.
+:::
+
+### Ejemplo resuelto 1: densidad de defectos por módulo
+
+Con la tabla de datos base se calcula la densidad de defectos de producción de cada módulo,
+dividiendo los defectos reportados entre las kLOC.
+
+| Módulo | Defectos en producción | kLOC | Densidad (defectos por kLOC) |
+|---|:---:|:---:|:---:|
+| Asignación de turnos | 14 | 14 | 14 / 14 = 1,00 |
+| Notificaciones | 3 | 6 | 3 / 6 = 0,50 |
+| Pacientes | 6 | 10 | 6 / 10 = 0,60 |
+| Facturación | 12 | 10 | 12 / 10 = 1,20 |
+| Total | 35 | 40 | 35 / 40 = 0,875 |
+
+Lectura. Asignación de turnos tiene la mayor cantidad de defectos, 14, pero Facturación tiene la
+mayor densidad, 1,20. Con 10 kLOC genera casi tantos defectos como el módulo grande con 14. Si
+el equipo decidiera solo por la cuenta absoluta, reforzaría el módulo equivocado.
+
+La densidad previa a la entrega también merece lectura. Se hallaron 140 defectos antes de entregar
+en 40 kLOC, es decir 3,5 defectos por kLOC. Esa cifra alta no dice si el producto es bueno o malo. Puede
+significar que el código nació con muchos defectos, o que las revisiones y pruebas fueron
+eficaces. Para separar las dos lecturas hace falta la DRE.
+
+### Ejemplo resuelto 2: DRE y fuga de la versión 2.0
+
+1. Defectos hallados antes de entregar. 140.
+2. Defectos hallados en producción durante 90 días. 35.
+3. Total de defectos conocidos. 140 + 35 = 175.
+4. DRE. 140 / 175 = 0,80, es decir 80,0 %.
+5. Fuga. 35 / 175 = 0,20, es decir 20,0 %. Coincide con 1 - 0,80.
+
+De cada cinco defectos que tenía la versión 2.0, el proceso encontró cuatro antes de entregar y uno
+llegó al paciente.
+
+### Ejemplo resuelto 3: la eficiencia de cada filtro
+
+Los 140 defectos previos a la entrega se hallaron con cuatro actividades, que trabajan como filtros en
+serie. Cada filtro recibe lo que dejó pasar el anterior.
+
+| Actividad | Defectos que le llegan | Hallados | Eficiencia del filtro | Quedan |
+|---|:---:|:---:|:---:|:---:|
+| Revisión de requisitos | 175 | 14 | 14 / 175 = 8,0 % | 161 |
+| Revisión de código | 161 | 41 | 41 / 161 = 25,5 % | 120 |
+| Pruebas automáticas | 120 | 58 | 58 / 120 = 48,3 % | 62 |
+| Piloto con pacientes | 62 | 27 | 27 / 62 = 43,5 % | 35 |
+
+Los 35 que quedan son los que llegan a producción, y coinciden con la fila de totales del hilo
+conductor. La DRE global es 80,0 %, pero el cuadro agrega información. La revisión de requisitos
+atrapa solo el 8,0 % de lo que le llega. El piloto con pacientes atrapa casi la mitad de lo que
+sobrevivió a las demás actividades, lo que indica que las actividades anteriores dejan pasar mucho.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro filtros en serie que atrapan defectos, de 175 defectos presentes quedan 161, 120, 62 y finalmente 35 llegan a produccion, con una DRE de 80 por ciento" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u2t5c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Los defectos de la versión 2.0 pasan por cuatro filtros</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="44" width="124" height="118" rx="10"/><rect x="162" y="44" width="124" height="118" rx="10"/><rect x="314" y="44" width="124" height="118" rx="10"/><rect x="466" y="44" width="124" height="118" rx="10"/></g>
+  <rect x="618" y="44" width="124" height="118" rx="10" fill="#fbeae5" stroke="#e0a595"/>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#12324f">
+    <text x="72" y="66">Revisión de</text><text x="72" y="81">requisitos</text>
+    <text x="224" y="66">Revisión</text><text x="224" y="81">de código</text>
+    <text x="376" y="66">Pruebas</text><text x="376" y="81">automáticas</text>
+    <text x="528" y="66">Piloto con</text><text x="528" y="81">pacientes</text>
+    <text x="680" y="66">Producción</text>
+  </g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876">
+    <text x="72" y="104">entran 175</text><text x="224" y="104">entran 161</text><text x="376" y="104">entran 120</text><text x="528" y="104">entran 62</text><text x="680" y="104">llegan 35</text>
+  </g>
+  <g text-anchor="middle" font-size="13" font-weight="700" fill="#0e6f6c">
+    <text x="72" y="126">halla 14</text><text x="224" y="126">halla 41</text><text x="376" y="126">halla 58</text><text x="528" y="126">halla 27</text>
+  </g>
+  <g text-anchor="middle" font-size="11" fill="#12324f">
+    <text x="72" y="146">8,0 %</text><text x="224" y="146">25,5 %</text><text x="376" y="146">48,3 %</text><text x="528" y="146">43,5 %</text>
+  </g>
+  <text x="680" y="132" font-size="13" font-weight="700" fill="#9a3b25" text-anchor="middle">fuga 20,0 %</text>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t5c)"><path d="M134,103 L160,103"/><path d="M286,103 L312,103"/><path d="M438,103 L464,103"/><path d="M590,103 L616,103"/></g>
+  <text x="380" y="200" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">DRE = 140 / 175 = 80,0 %</text>
+  <text x="380" y="222" font-size="11" fill="#5b6876" text-anchor="middle">Cifras ilustrativas. La eficiencia de cada filtro se calcula sobre los defectos que le llegan.</text>
+</svg>
+
+:::
+
+### Ejemplo resuelto 4: la DRE por módulo y por severidad
+
+La DRE global puede esconder diferencias. Con los defectos previos a la entrega de cada módulo
+se calcula la de cada uno.
+
+| Módulo | Antes de entregar | En producción | Total | DRE |
+|---|:---:|:---:|:---:|:---:|
+| Asignación de turnos | 56 | 14 | 70 | 56 / 70 = 80,0 % |
+| Notificaciones | 14 | 3 | 17 | 14 / 17 = 82,4 % |
+| Pacientes | 30 | 6 | 36 | 30 / 36 = 83,3 % |
+| Facturación | 40 | 12 | 52 | 40 / 52 = 76,9 % |
+
+Facturación combina la mayor densidad y la menor DRE. Dos métricas distintas señalan el mismo módulo, lo
+que da más confianza para actuar sobre él.
+
+Por severidad aparece otro matiz. De los 35 defectos de producción, 3 fueron críticos, 11 mayores y 21
+menores. Antes de entregar se habían hallado 9 críticos. La DRE de los críticos es 9 / (9 + 3) =
+0,75, es decir 75,0 %, menor que la global de 80,0 %. El proceso encuentra peor justo los defectos
+que más duelen, y esa es una conclusión que la cifra global no muestra.
+
+### Límites de estas métricas
+
+- Los defectos no reportados no existen para la métrica. Un módulo que casi nadie usa parece sano.
+- La ventana de 90 días es una decisión. Con una ventana de 30 días la DRE se ve mejor, porque todavía no llegaron los reportes tardíos.
+- Un conteo de defectos depende de qué se considera defecto y de quién lo registra. Sin una definición compartida, los números de dos equipos no se comparan.
+
+::: {.callout-tip}
+## Reto 3. Calcula las métricas de la versión 2.1
+
+La versión 2.1 tiene 44 kLOC. Se hallaron 150 defectos antes de entregar y 25 en producción durante
+90 días. Calcula la densidad de defectos de producción, la DRE y la fuga. Compáralas con las de la
+versión 2.0. Después calcula la DRE que se habría reportado si solo hubieran pasado 30 días y para
+entonces se hubieran reportado 12 defectos.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+- Densidad en producción. 25 / 44 = 0,568, es decir 0,57 defectos por kLOC. En la versión 2.0 era 0,875, así que bajó.
+- DRE. 150 / (150 + 25) = 150 / 175 = 0,857, es decir 85,7 %. En la 2.0 era 80,0 %.
+- Fuga. 25 / 175 = 0,143, es decir 14,3 %. Coincide con 1 - 0,857.
+- Con 30 días y 12 defectos en producción, la DRE sería 150 / 162 = 0,926, es decir 92,6 %. Parece mejor, pero es una ilusión producida por una ventana corta.
+
+Las tres métricas mejoran de la 2.0 a la 2.1. La conclusión de que el proceso mejoró solo se sostiene
+si las dos versiones se midieron con la misma ventana de 90 días y con la misma regla de conteo.
+:::
+
+## Parte 6. MTTR y las métricas DORA
+
+### MTTR
+
+El MTTR, siglas de *mean time to repair*, *recover*, *restore* o *resolve*, según el autor, es el
+promedio de tiempo que tarda en resolverse un incidente. La letra R admite varias lecturas, y por eso
+conviene fijar la definición antes de comparar dos números.
+
+> MTTR = suma de las duraciones de los incidentes / número de incidentes
+
+Ejemplo resuelto. En el mes siguiente a la entrega de la versión 2.0, el registro de incidentes de la
+app tiene cinco entradas.
+
+| Incidente | Causa | Duración hasta restaurar el servicio |
+|---|---|:---:|
+| 1 | Un despliegue con un defecto en notificaciones | 30 min |
+| 2 | Un despliegue con un defecto en la asignación | 45 min |
+| 3 | Un despliegue con un defecto en facturación | 105 min |
+| 4 | Caída del proveedor externo de mensajes de texto | 120 min |
+| 5 | Saturación del servicio de base de datos en la nube | 25 min |
+
+1. Suma de duraciones. 30 + 45 + 105 + 120 + 25 = 325 minutos.
+2. Número de incidentes. 5.
+3. MTTR. 325 / 5 = 65 minutos.
+4. Mediana. Los valores ordenados son 25, 30, 45, 105 y 120. El valor central es 45 minutos.
+
+La media, 65 minutos, supera la mediana, 45, porque unos pocos incidentes largos la arrastran hacia
+arriba. En datos de tiempos de recuperación la distribución casi siempre es asimétrica. Por eso muchos
+equipos reportan la mediana junto con la media, o en su lugar, y fijan cuál usan.
+
+### Las métricas DORA
+
+DORA (*DevOps Research and Assessment*) es el programa de investigación de Google Cloud que estudia
+qué prácticas llevan a equipos de software a entregar mejor. Su informe anual, conocido como
+*Accelerate State of DevOps*, popularizó un conjunto de métricas de entrega. Libros como *Accelerate*
+(Forsgren, Humble y Kim, 2018) explican el trabajo de investigación que las sustenta.
+
+La guía actual de DORA, actualizada el 5 de enero de 2026, define cinco métricas de entrega de
+software y las agrupa en dos factores.
+
+| Factor | Métrica | Definición de DORA, en español |
+|---|---|---|
+| Rendimiento (*throughput*) | Tiempo de entrega del cambio (*change lead time*) | Tiempo que tarda un cambio desde que se registra en el control de versiones hasta que está desplegado en producción |
+| Rendimiento (*throughput*) | Frecuencia de despliegue (*deployment frequency*) | Número de despliegues en un periodo, o el tiempo entre despliegues |
+| Rendimiento (*throughput*) | Tiempo de recuperación de un despliegue fallido (*failed deployment recovery time*) | Tiempo que tarda en recuperarse un despliegue que falla y exige intervención inmediata |
+| Inestabilidad (*instability*) | Tasa de fallo de cambios (*change fail rate*) | Proporción de despliegues que exigen intervención inmediata tras desplegarse |
+| Inestabilidad (*instability*) | Tasa de retrabajo de despliegues (*deployment rework rate*) | Proporción de despliegues no planificados que ocurren como resultado de un incidente en producción |
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Linea de tiempo de un despliegue, del commit al despliegue es el change lead time, de la falla a la recuperacion es el failed deployment recovery time, con las cinco metricas DORA agrupadas en rendimiento e inestabilidad" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u2t5d" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Dónde se mide cada métrica DORA</text>
+  <line x1="40" y1="118" x2="720" y2="118" stroke="#8fb3d1" stroke-width="2.4"/>
+  <g fill="#eef4fa" stroke="#8fb3d1" stroke-width="2"><circle cx="70" cy="118" r="9"/><circle cx="330" cy="118" r="9"/></g>
+  <circle cx="480" cy="118" r="9" fill="#fbeae5" stroke="#e0a595" stroke-width="2"/>
+  <circle cx="690" cy="118" r="9" fill="#e4f2f1" stroke="#8fc9c5" stroke-width="2"/>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="70" y="146">commit en el</text><text x="70" y="161">control de versiones</text><text x="330" y="146">despliegue a</text><text x="330" y="161">producción</text><text x="480" y="146">falla que exige</text><text x="480" y="161">intervención</text><text x="690" y="146">servicio</text><text x="690" y="161">restaurado</text></g>
+  <g fill="none" stroke="#0e6f6c" stroke-width="1.6"><path d="M70,98 L70,78 L330,78 L330,98"/><path d="M480,98 L480,78 L690,78 L690,98"/></g>
+  <text x="200" y="68" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Change lead time</text>
+  <text x="585" y="68" font-size="12" font-weight="700" fill="#0e6f6c" text-anchor="middle">Failed deployment recovery time</text>
+  <text x="380" y="48" font-size="11" fill="#5b6876" text-anchor="middle">Deployment frequency cuenta cuántos despliegues ocurren en el periodo</text>
+  <rect x="20" y="190" width="350" height="84" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <rect x="390" y="190" width="350" height="84" rx="10" fill="#fbeae5" stroke="#e0a595"/>
+  <g font-size="12" fill="#12324f"><text x="38" y="212" font-weight="700">Rendimiento (throughput)</text><text x="38" y="232">Change lead time</text><text x="38" y="248">Deployment frequency</text><text x="38" y="264">Failed deployment recovery time</text></g>
+  <g font-size="12" fill="#12324f"><text x="408" y="212" font-weight="700">Inestabilidad (instability)</text><text x="408" y="232">Change fail rate</text><text x="408" y="248">Deployment rework rate</text></g>
+</svg>
+
+:::
+
+### Cómo llegaron a cinco
+
+DORA publica una historia de sus propias métricas. Los cambios que cuenta son estos.
+
+- En 2014, el primer estudio identificó cuatro variables, frecuencia de despliegue, tiempo de entrega de los cambios, tiempo medio de recuperación (MTTR) y tasa de fallo de cambios.
+- En 2018 se agregó la disponibilidad como medida de salud operativa. En 2021 se amplió a fiabilidad, porque esta abarca también latencia, desempeño y escalabilidad. La fiabilidad se sigue midiendo aparte de las métricas de entrega.
+- En 2023 el MTTR se renombró y redefinió como tiempo de recuperación de un despliegue fallido. El cambio separa los fallos que causa un cambio de software de los que vienen de fuera, como la caída de un centro de datos.
+- En 2024 se añadió la tasa de retrabajo de despliegues, porque la tasa de fallo de cambios funcionaba como un indicio indirecto de cuánto retrabajo debía hacer el equipo.
+- El informe de 2025, publicado el 23 de septiembre de 2025, propone siete perfiles de equipo que combinan las métricas con bienestar y factores organizativos, porque las métricas solas dicen qué pasa pero no por qué.
+
+Una consecuencia práctica. Un texto que hable de "las cuatro métricas DORA" o que use MTTR como una de ellas
+describe una versión anterior. La definición vigente tiene cinco métricas y reserva la sigla MTTR
+para el uso general de la industria.
+
+### Ejemplo resuelto: las cinco métricas DORA en un mes de la app
+
+El mes siguiente a la entrega de la versión 2.0, el equipo registra estos datos de la app.
+
+- 24 despliegues a producción en 30 días.
+- 3 de esos despliegues fallaron y exigieron intervención inmediata, que son los de los incidentes 1, 2 y 3 de la tabla anterior.
+- 4 de los 24 despliegues fueron no planificados y ocurrieron por un incidente en producción. Son las 3 correcciones de los despliegues fallidos más un cambio de configuración para esquivar la caída del proveedor de mensajes.
+- Una muestra de seis cambios tardó, desde el commit hasta producción, 6, 20, 4, 52, 8 y 30 horas.
+
+1. Frecuencia de despliegue. 24 despliegues / 30 días = 0,8 por día, unos 5,6 por semana.
+2. Tiempo de entrega del cambio. Los seis valores ordenados son 4, 6, 8, 20, 30 y 52. La mediana es (8 + 20) / 2 = 14 horas. La media sería 120 / 6 = 20 horas. Aquí se usa la mediana porque un solo cambio de 52 horas arrastra la media, y lo importante es fijar la regla y mantenerla.
+3. Tasa de fallo de cambios. 3 / 24 = 0,125, es decir 12,5 %.
+4. Tiempo de recuperación de un despliegue fallido. Solo cuentan los incidentes 1, 2 y 3, con 30, 45 y 105 minutos. La media es 180 / 3 = 60 minutos. Los incidentes 4 y 5 no cuentan, porque no los causó un despliegue.
+5. Tasa de retrabajo de despliegues. 4 / 24 = 0,167, es decir 16,7 %.
+
+Compara dos números del mismo mes. El MTTR de todos los incidentes fue 65 minutos y el tiempo de
+recuperación de un despliegue fallido fue 60 minutos. No miden lo mismo, y la diferencia nace de las
+causas externas que el segundo deja fuera.
+
+Para saber si el equipo mejora hay que comparar con el mes anterior. Supón que en ese mes hubo 12
+despliegues, 3 fallidos y una mediana de tiempo de entrega de 40 horas. La frecuencia pasó de 12 a 24
+despliegues, la mediana bajó de 40 a 14 horas y la tasa de fallo de cambios bajó de 25,0 % (3 / 12) a
+12,5 %. El equipo entrega más rápido y falla proporcionalmente menos. Eso es lo que DORA llama
+rendimiento e inestabilidad que mejoran juntos.
+
+### Cómo usar DORA con criterio
+
+DORA advierte sobre los usos que dañan la medición. Su guía enumera siete errores frecuentes.
+
+- Convertir las métricas en una meta.
+- Esperar que una sola métrica lo resuma todo.
+- Usar el sector como excusa para no mejorar.
+- Comparar sistemas muy distintos entre sí.
+- Que cada área mida por separado y nadie vea el conjunto.
+- Poner a los equipos a competir entre ellos.
+- Concentrarse en medir y dejar de mejorar.
+
+La guía recomienda aplicar las métricas a una aplicación o servicio concreto y no a toda una
+organización, y no comparar, por ejemplo, una app móvil con un sistema de mainframe. En este tema los
+números de la app de turnos sirven para comparar la app consigo misma entre meses.
+
+::: {.callout-note}
+## Qué dice DORA sobre la inteligencia artificial
+
+Los informes de 2024 y 2025 estudian el efecto de las herramientas de IA en el desarrollo. DORA resume su
+hallazgo de 2025 así, la IA mejora el rendimiento, pero a menudo a costa de la estabilidad si los
+cimientos del equipo no son sólidos. Es un resumen del informe, y su detalle y sus cifras están en el
+documento original.
+:::
+
+::: {.callout-tip}
+## Reto 4. Calcula las cinco métricas del mes siguiente
+
+En el mes siguiente, el equipo registra 30 despliegues en 30 días. Tres fallaron y exigieron
+intervención inmediata, y se recuperaron en 20, 40 y 60 minutos. Cinco de los 30 despliegues fueron no
+planificados y se debieron a incidentes. Una muestra de cinco cambios tardó 10, 12, 30, 5 y 18 horas
+desde el commit hasta producción. Calcula las cinco métricas y compáralas con las del mes de la
+Parte 6. Escribe un cuidado antes de concluir que el equipo mejoró.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+- Frecuencia de despliegue. 30 / 30 = 1 por día.
+- Tiempo de entrega. Ordenados, 5, 10, 12, 18 y 30. La mediana es 12 horas.
+- Tasa de fallo de cambios. 3 / 30 = 10,0 %.
+- Tiempo de recuperación de un despliegue fallido. (20 + 40 + 60) / 3 = 40 minutos.
+- Tasa de retrabajo. 5 / 30 = 16,7 %.
+
+Frente al mes anterior, la frecuencia sube de 0,8 a 1 por día, la mediana de entrega baja de 14 a 12
+horas, la tasa de fallo de cambios baja de 12,5 % a 10,0 % y la recuperación baja de 60 a 40 minutos. La
+tasa de retrabajo se mantiene en 16,7 %.
+
+El cuidado es el tamaño de las muestras. La mediana de entrega sale de seis cambios un mes y de cinco
+el otro, y tres fallos por mes dan una tasa que se mueve mucho con un solo caso más. Antes de
+concluir que el equipo mejoró conviene mirar varios meses seguidos y la tendencia, y no la
+diferencia entre dos.
+:::
+
+## Parte 7. Métricas del código: complejidad ciclomática y cobertura
+
+### Complejidad ciclomática
+
+La *complejidad ciclomática* mide cuántos caminos linealmente independientes tiene el flujo de
+control de un fragmento de código. La propuso Thomas McCabe en un artículo de 1976 en *IEEE
+Transactions on Software Engineering*. Cuantos más caminos, más casos de prueba hacen falta y más
+difícil es razonar sobre el código.
+
+Sobre el grafo de flujo de control, donde cada bloque sin bifurcaciones es un nodo y cada salto
+posible es una arista, la fórmula es M = E - N + 2P. E es el número de aristas, N el de nodos y P
+el de componentes conectados, que vale 1 para una sola función.
+
+La publicación del NIST sobre pruebas estructuradas (Special Publication 500-235, 1996) muestra una
+regla equivalente y más rápida. Si todas las decisiones son binarias, la complejidad es el número de
+decisiones más uno. Cada `if`, cada `while` y cada `for` suma una decisión. Los operadores booleanos
+con evaluación de cortocircuito, como `&&` y `||` en Java, suman una decisión cada uno, porque pueden
+omitir la evaluación del segundo operando.
+
+### Ejemplo resuelto: complejidad de un método de la app
+
+```java
+public boolean puedeAsignarTurno(Paciente p, Especialidad esp, LocalDate dia) {
+    if (p == null || !p.activo()) {
+        return false;
+    }
+    if (esp.turnosAsignados(dia) >= 20) {
+        return false;
+    }
+    for (Turno t : p.turnosDelDia(dia)) {
+        if (t.especialidad().equals(esp)) {
+            return false;
+        }
+    }
+    return true;
+}
+```
+
+1. Cuenta las decisiones. El primer `if` suma uno, y el operador `||` suma otro. El segundo `if` suma uno. El `for` suma uno. El `if` dentro del `for` suma uno. En total, 5 decisiones.
+2. Aplica la regla. M = 5 + 1 = 6.
+3. Verifica con el grafo. Con un nodo por condición, uno por la prueba del `for`, uno por cada `return` y uno de salida, el grafo tiene 10 nodos y 14 aristas, y 14 - 10 + 2 da 6. El resultado coincide.
+
+Algunas herramientas no cuentan `&&` ni `||`, y entonces reportan 5. Antes de comparar números de
+dos herramientas, confirma qué regla usa cada una.
+
+La complejidad también dice cuántos casos de prueba cubren todos los caminos básicos. El NIST
+explica que, en su metodología de pruebas estructuradas, el número de caminos de prueba requeridos
+por un módulo es exactamente su complejidad ciclomática. Para este método son seis.
+
+| Caso | Entrada | Resultado esperado |
+|---|---|---|
+| 1 | Paciente nulo | false |
+| 2 | Paciente existente pero inactivo | false |
+| 3 | Paciente activo, la especialidad ya tiene 25 turnos ese día | false |
+| 4 | Paciente activo, con un turno de la misma especialidad ese día | false |
+| 5 | Paciente activo, con un turno de otra especialidad ese día | true |
+| 6 | Paciente activo, sin turnos ese día | true |
+
+### Qué umbral usar
+
+McCabe propuso dividir un módulo cuando su complejidad superara 10. El NIST, en la sección 2.5 de
+su publicación, señala que ese límite tiene respaldo empírico significativo y que límites de hasta 15
+se han usado con éxito, pero solo en proyectos con ventajas operativas claras, como personal
+con experiencia, diseño formal, lenguaje moderno y un plan de pruebas completo. También advierte que
+el número exacto es algo controvertido, y que importan más las excepciones que se admiten que el
+valor del límite.
+
+Para la app de turnos, un equipo podría acordar el límite de 10 como indicador y revisar cada método
+que lo supere. El método del ejemplo, con 6, está dentro del límite.
+
+::: {.callout-note}
+## Complejidad cognitiva
+
+La documentación de SonarQube define la complejidad cognitiva como una cualificación de qué tan
+difícil es entender el flujo de control del código, con un modelo matemático distinto al de la
+complejidad ciclomática. La ciclomática cuenta caminos y la cognitiva intenta medir esfuerzo de
+lectura. Esta guía no desarrolla las reglas de cálculo de la cognitiva, porque no se verificaron
+contra la fuente primaria.
+:::
+
+### Cobertura de pruebas
+
+La *cobertura de pruebas* mide qué porción del código ejecutan las pruebas. Se calcula con
+varios criterios. La cobertura de líneas divide las líneas ejecutadas entre las ejecutables. La
+cobertura de condiciones (o de ramas) cuenta cuántas veces cada condición se evaluó como verdadera
+y como falsa. Según la documentación de SonarQube, la de condiciones es (condiciones evaluadas como
+verdaderas + condiciones evaluadas como falsas) / (2 x número de condiciones).
+
+Con el método `puedeAsignarTurno`, que tiene 8 líneas ejecutables y 4 condiciones (`p == null`,
+`!p.activo()`, `>= 20` y `equals`), se calcula la cobertura de una prueba aislada. Considera solo el
+caso 6, un paciente activo sin turnos en una especialidad con 3 turnos.
+
+1. Líneas ejecutadas. La del primer `if`, la del segundo `if`, la del `for` y la del `return true`. Son 4 de 8, es decir 50,0 %.
+2. Condiciones. `p == null` se evaluó como falsa, `!p.activo()` como falsa, `>= 20` como falsa, y `equals` nunca se evaluó. Son 3 evaluaciones de 8 posibles, es decir 3 / 8 = 37,5 %.
+
+Con los seis casos de la tabla anterior, todas las líneas se ejecutan y todas las condiciones se
+evalúan en sus dos sentidos. La cobertura de líneas llega a 8 / 8 = 100 % y la de condiciones a
+8 / 8 = 100 %.
+
+### Los límites de la cobertura
+
+El 100 % anterior no garantiza que el código esté bien probado. Hay tres razones.
+
+- Una prueba sin comprobaciones ejecuta el código y no verifica nada. Si los seis casos llaman al método y no comparan el resultado, la cobertura sigue en 100 %.
+- La cobertura no detecta casos que faltan. Si el código dijera `> 20` en lugar de `>= 20`, los seis casos de la tabla pasarían igual, porque el caso 3 usa 25 turnos y el 5 y el 6 usan pocos. Solo un séptimo caso, con exactamente 20 turnos ya asignados, revela que el turno 21 se asigna cuando no debería. Ese séptimo caso es una prueba de valor límite, y la complejidad ciclomática no la pide.
+- Medir cobertura no dice nada sobre lo que el código debería hacer. Las pruebas del ejemplo cubren el método, pero ninguna dice si el requisito de 20 turnos por día es el correcto.
+
+Una técnica que ataca el segundo problema es la *prueba de mutación*. Una herramienta introduce
+cambios pequeños en el código, como convertir `>=` en `>`, y comprueba si alguna prueba falla. Si ninguna
+falla, el cambio sobrevive y señala una prueba que falta.
+
+El trabajo de Ivankovic, Petrovic, Just y Fraser (2019) describe cómo Google calcula cobertura sobre
+su código y qué decide hacer con ella, y concluye que resulta accionable cuando se aplica sobre el
+conjunto de cambios de una revisión de código y no como un número global.
+
+Otro estudio, de Inozemtseva y Holmes (2014), lleva por título *Coverage is not strongly correlated with test suite effectiveness*, es decir,
+que la cobertura no se correlaciona fuertemente con la eficacia del conjunto de pruebas. El título
+resume su conclusión. El texto completo del segundo estudio no se pudo leer durante la preparación de
+esta guía.
+
+::: {.callout-tip}
+## Reto 5. Complejidad y casos de prueba
+
+Calcula la complejidad ciclomática del método siguiente, con la regla de decisiones más uno, y escribe
+los casos de prueba de sus caminos básicos.
+
+```java
+public int contarTurnosValidos(List<Turno> turnos) {
+    int validos = 0;
+    for (Turno t : turnos) {
+        if (t.confirmado() && !t.vencido()) {
+            validos++;
+        }
+    }
+    return validos;
+}
+```
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+Las decisiones son el `for`, el `if` y el operador `&&`, que por ser de cortocircuito suma una. Son 3
+decisiones y M = 3 + 1 = 4. Una herramienta que no cuente `&&` reportaría 3.
+
+Los cuatro casos de prueba de los caminos básicos son estos.
+
+1. Lista vacía. El ciclo no se ejecuta y el resultado es 0.
+2. Un turno no confirmado. Falla la primera condición, y el resultado es 0.
+3. Un turno confirmado pero vencido. Falla la segunda condición, y el resultado es 0.
+4. Un turno confirmado y vigente. El resultado es 1.
+
+La complejidad no depende de cuántos elementos tenga la lista, sino de cuántas decisiones tiene el
+código. Con 3 o con 3.000 turnos, M sigue siendo 4.
+:::
+
+::: {.callout-tip}
+## Reto 6. Cobertura de un conjunto parcial
+
+Un equipo escribe solo dos pruebas para `puedeAsignarTurno`. La primera llama al método con un
+paciente nulo. La segunda lo llama con un paciente activo sin turnos, en una especialidad con 3 turnos
+asignados. Calcula la cobertura de líneas y de condiciones del conjunto. Después indica qué prueba
+agregarías primero para subir la cobertura de condiciones y qué prueba descubriría un cambio de `>= 20`
+por `> 20`.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+- Líneas. La primera prueba ejecuta el primer `if` y su `return false`. La segunda ejecuta el primer `if`, el segundo `if`, el `for` y el `return true`. La unión es de 5 líneas de 8, es decir 62,5 %.
+- Condiciones. `p == null` se evaluó como verdadera y como falsa, que son 2 de 2. `!p.activo()` solo se evaluó como falsa, 1 de 2. `>= 20` solo como falsa, 1 de 2. `equals` nunca se evaluó, 0 de 2. Son 4 evaluaciones de 8, es decir 50,0 %.
+- Para subir la cobertura de condiciones, agregar el caso de un paciente inactivo, que evalúa `!p.activo()` como verdadera. También sirve el caso de una especialidad llena.
+- Para descubrir el cambio de `>= 20` por `> 20`, agregar el caso de una especialidad con exactamente 20 turnos asignados. Con `>=` el método devuelve false, y con `>` devolvería true.
+:::
+
+## Parte 8. Deuda técnica
+
+### La metáfora
+
+*Deuda técnica* es una metáfora que Ward Cunningham presentó en 1992 en un informe de experiencia de la
+conferencia OOPSLA, sobre el sistema WyCash. La idea es que publicar código con una solución
+imperfecta se parece a endeudarse. Un poco de deuda acelera el desarrollo, siempre que se pague pronto
+con una reescritura. El peligro aparece cuando no se paga, porque los intereses, el costo extra de cada
+cambio posterior, se acumulan.
+
+Martin Fowler, en una nota del 14 de octubre de 2009, clasificó la deuda en cuatro tipos según dos
+ejes, si fue deliberada o inadvertida, y si fue prudente o imprudente.
+
+- **Deliberada y prudente.** El equipo toma un atajo consciente para cumplir una fecha y planifica pagarlo.
+- **Deliberada e imprudente.** El equipo ignora el diseño porque cree que no tiene tiempo, y subestima lo que costará.
+- **Inadvertida e imprudente.** El equipo no sabe diseñar bien y acumula deuda sin notarlo.
+- **Inadvertida y prudente.** El equipo aprende con el tiempo lo que el diseño debió ser. Es inevitable incluso en buenos equipos.
+
+### Cómo se mide
+
+La deuda técnica no se mide directamente. Una herramienta de análisis estático como SonarQube estima el
+esfuerzo para corregir los problemas de mantenibilidad que detecta. Según su documentación, la deuda
+técnica es la suma de los costos de corrección de cada problema, donde cada regla tiene asignado un
+esfuerzo en minutos, y cuando se muestra en días se asume una jornada de 8 horas.
+
+La *razón de deuda técnica* compara esa deuda con el costo de desarrollar el código desde cero.
+
+> Razón de deuda = deuda técnica / (costo de desarrollar una línea x número de líneas)
+
+SonarQube asume por defecto 30 minutos de desarrollo por línea, valor configurable. Su calificación de
+mantenibilidad usa estos rangos de la razón: A, hasta 5 %. B, de 5 % a menos de 10 %. C, de 10 % a
+menos de 20 %. D, de 20 % a menos de 50 %. E, 50 % o más.
+
+### Ejemplo resuelto: razón de deuda de los cuatro módulos
+
+Una herramienta estima la deuda de cada módulo de la app. El costo de desarrollo de cada módulo es su
+cantidad de líneas por 30 minutos, convertido a horas.
+
+| Módulo | Líneas | Costo de desarrollo | Deuda estimada | Razón | Calificación |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Asignación de turnos | 14.000 | 14.000 x 30 min = 7.000 h | 1.260 h | 1.260 / 7.000 = 18,0 % | C |
+| Notificaciones | 6.000 | 6.000 x 30 min = 3.000 h | 90 h | 90 / 3.000 = 3,0 % | A |
+| Pacientes | 10.000 | 10.000 x 30 min = 5.000 h | 150 h | 150 / 5.000 = 3,0 % | A |
+| Facturación | 10.000 | 10.000 x 30 min = 5.000 h | 400 h | 400 / 5.000 = 8,0 % | B |
+| Total | 40.000 | 20.000 h | 1.900 h | 1.900 / 20.000 = 9,5 % | B |
+
+Lectura. La deuda concentra en Asignación de turnos, con 1.260 de las 1.900 horas, y ese módulo es el
+único con calificación C. Facturación tiene la mayor densidad de defectos, pero su deuda es moderada. Eso
+sugiere que sus defectos nacen de algo distinto a la mantenibilidad, quizá requisitos mal entendidos
+o pruebas insuficientes, y que pagar deuda no basta para resolverlos.
+
+Cuidado con la interpretación. La razón compara una estimación de la herramienta con un costo
+hipotético de reescritura. No es dinero gastado ni medido, y cambia al cambiar las reglas de la
+herramienta o el costo por línea.
+
+::: {.callout-tip}
+## Reto 7. Razón de deuda y calificación
+
+Un módulo nuevo tiene 8.000 líneas y la herramienta estima 700 horas de deuda. Calcula la razón de
+deuda y su calificación con el costo por defecto de 30 minutos por línea. Luego calcula cuántas horas
+habría que eliminar para llegar a la calificación B.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 7
+
+- Costo de desarrollo. 8.000 x 30 min = 240.000 min = 4.000 h.
+- Razón. 700 / 4.000 = 0,175, es decir 17,5 %. Cae entre 10 % y menos de 20 %, así que la calificación es C.
+- Para la calificación B hace falta una razón menor que 10 %, es decir una deuda menor que 400 horas. Con exactamente 400 horas la razón sería 10,0 % y seguiría en C. Hay que eliminar más de 300 horas.
+
+La conclusión práctica es que el número de horas por pagar es un objetivo de mejora y no una orden. Qué
+deuda pagar primero depende de en qué módulos se hacen cambios con frecuencia.
+:::
+
+## Parte 9. Cuando la métrica se vuelve meta
+
+### La ley de Goodhart
+
+En 1975, el economista Charles Goodhart escribió, sobre política monetaria, que cualquier regularidad
+estadística observada tiende a colapsar cuando se presiona sobre ella con fines de control. En 1997, la
+antropóloga Marilyn Strathern la resumió en una frase que se hizo célebre, cuando una medida se
+convierte en objetivo, deja de ser una buena medida. Esa formulación aparece en su artículo *'Improving
+ratings': audit in the British University system*, en *European Review*.
+
+En software ocurre así. Una métrica sirve mientras nadie tiene interés en cambiarla sin cambiar lo que
+mide. Cuando alguien recibe un premio o un castigo según su valor, las personas racionales optimizan el
+número, y el número deja de representar lo que representaba.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cuatro pasos de la ley de Goodhart con el ejemplo de la cobertura de pruebas, la cobertura refleja la calidad de las pruebas, se vuelve meta, el equipo escribe pruebas sin comprobaciones, la cobertura sube y la calidad no" font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u2t5e" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="20" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Cómo una métrica se separa de su objetivo</text>
+  <rect x="10" y="40" width="160" height="116" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
+  <rect x="196" y="40" width="160" height="116" rx="10" fill="#fff3d6" stroke="#e6c46f"/>
+  <rect x="382" y="40" width="160" height="116" rx="10" fill="#fff3d6" stroke="#e6c46f"/>
+  <rect x="568" y="40" width="160" height="116" rx="10" fill="#fbeae5" stroke="#e0a595"/>
+  <g text-anchor="middle" font-size="12" font-weight="700" fill="#12324f"><text x="90" y="64">1. La métrica refleja</text><text x="90" y="80">el objetivo</text><text x="276" y="64">2. Se vuelve meta</text><text x="276" y="80">con premio o castigo</text><text x="462" y="64">3. El equipo optimiza</text><text x="462" y="80">el número</text><text x="648" y="64">4. El número mejora y</text><text x="648" y="80">el objetivo no</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876">
+    <text x="90" y="106">Una cobertura alta</text><text x="90" y="122">suele indicar</text><text x="90" y="138">pruebas más completas</text>
+    <text x="276" y="106">La dirección exige</text><text x="276" y="122">90 % de cobertura</text><text x="276" y="138">para fusionar</text>
+    <text x="462" y="106">Se escriben pruebas</text><text x="462" y="122">que ejecutan código</text><text x="462" y="138">sin comprobar nada</text>
+    <text x="648" y="106">La cobertura marca 90 %</text><text x="648" y="122">y los defectos en</text><text x="648" y="138">producción siguen igual</text>
+  </g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t5e)"><path d="M170,98 L194,98"/><path d="M356,98 L380,98"/><path d="M542,98 L566,98"/></g>
+  <text x="380" y="200" font-size="12" fill="#12324f" text-anchor="middle">El número deja de informar justo cuando más se lo mira.</text>
+  <text x="380" y="220" font-size="11" fill="#5b6876" text-anchor="middle">La defensa es medir el objetivo con más de una métrica y leer las cifras como diagnóstico.</text>
+</svg>
+
+:::
+
+### Un caso documentado en la propia fuente
+
+La sección 2.5 de la publicación del NIST sobre pruebas estructuradas cuenta un caso de manipulación
+real. Como los módulos con una sola decisión de múltiples ramas (un `switch`) se eximían del límite de
+complejidad, un desarrollador empezó a reportar una complejidad "modificada", que dividía la
+complejidad entre el número de ramas de esas decisiones. El resultado fue que podía tomar un módulo
+de complejidad 90 y reducirlo a una complejidad "modificada" de 10 con solo agregarle una decisión
+de diez ramas que no hacía nada.
+
+La métrica mejoró de 90 a 10 y el módulo siguió igual de difícil de probar. Es la ley de Goodhart
+en una sola anécdota.
+
+### Otras formas de abuso en el hilo conductor
+
+- Meta de cobertura. Si no se fusiona un cambio sin 90 % de cobertura, aparecen pruebas que recorren el código sin comprobar el resultado.
+- Meta de densidad de defectos. Si se premia a un equipo por bajar los defectos reportados, tiene un incentivo para clasificar los reportes como "consulta de usuario" o para no registrarlos.
+- Meta de frecuencia de despliegue. Si se exige 40 despliegues al mes, un equipo puede partir cambios en pasos triviales para llegar al número, sin mejorar el flujo de valor.
+- Meta de resolución rápida. Si se mide el MTTR y se premia bajarlo, es más barato cerrar un incidente con un parche provisional que corregir su causa, y el incidente reaparece.
+
+### Salvaguardas
+
+- Medir cada objetivo con un par de métricas que se contrapesen, como velocidad y estabilidad. DORA agrupa sus cinco métricas con ese criterio.
+- Usar las métricas para diagnosticar y conversar, y no para premiar ni castigar a personas.
+- Revisar de vez en cuando si el número sigue correspondiendo a lo que se creía, con una muestra cualitativa. Por ejemplo, leer 10 pruebas de un módulo con cobertura alta.
+- Cambiar las métricas cuando dejan de informar, en lugar de defenderlas por costumbre.
+- Declarar para qué sirve cada métrica y quién decide con ella, que es el principio de GQM.
+
+::: {.callout-tip}
+## Reto 8. Anticipa el abuso
+
+La dirección de la clínica propone dos metas para el equipo de la app. La primera exige un 90 % de
+cobertura en cada módulo, bajo pena de no fusionar el cambio. La segunda exige 40 despliegues al mes.
+Describe una conducta dañina que cada meta podría producir y propone una métrica acompañante o una
+salvaguarda para cada una.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 8
+
+- Meta de cobertura. Conducta dañina, pruebas sin comprobaciones o enfocadas en líneas triviales para subir el número. Salvaguarda, acompañar la cobertura con una revisión de las pruebas en cada solicitud de cambio y, si las herramientas lo permiten, con pruebas de mutación en los módulos críticos. También conviene medir los defectos que escapan a producción, que es lo que la cobertura debería reducir.
+- Meta de despliegues. Conducta dañina, partir los cambios en despliegues triviales o desplegar cambios vacíos para llegar a 40. Salvaguarda, acompañar la frecuencia con la tasa de fallo de cambios y el tiempo de entrega del cambio, de modo que subir el número sin mejorar el flujo no se note como éxito.
+
+Tu respuesta puede ser distinta si cada conducta es creíble y cada salvaguarda mide el objetivo de
+fondo, que es la confianza en los cambios y la rapidez del flujo, y no solo el número.
+:::
+
+## Parte 10. Tablero de la versión 2.0
+
+Las métricas anteriores se leen juntas. Este tablero reúne los resultados de la app de turnos.
+
+| Aspecto | Métrica | Valor | Lectura |
+|---|---|:---:|---|
+| Defectos | Densidad en producción, total | 0,875 por kLOC | Referencia para comparar versiones |
+| Defectos | DRE global | 80,0 % | Cuatro de cada cinco defectos se hallaron antes de entregar |
+| Defectos | DRE de defectos críticos | 75,0 % | El proceso halla peor los defectos más graves |
+| Defectos | Módulo con mayor densidad | Facturación, 1,20 | Supera el umbral de 1,0 |
+| Defectos | Módulo con menor DRE | Facturación, 76,9 % | Coincide con el de mayor densidad |
+| Entrega | Frecuencia de despliegue | 0,8 por día | Rendimiento |
+| Entrega | Tiempo de entrega (mediana) | 14 h | Rendimiento |
+| Entrega | Tiempo de recuperación de un fallo | 60 min | Rendimiento |
+| Entrega | Tasa de fallo de cambios | 12,5 % | Inestabilidad |
+| Entrega | Tasa de retrabajo | 16,7 % | Inestabilidad |
+| Código | Razón de deuda técnica | 9,5 % total, 18,0 % en Asignación | Calificación B en total, C en Asignación |
+
+### Ejemplo resuelto: leer el tablero y decidir
+
+Pregunta de análisis. Si el equipo solo pudiera hacer una intervención este trimestre, ¿cuál
+elegiría, y qué evidencia la sostiene?
+
+1. Busca coincidencias entre métricas independientes. Facturación aparece primero en densidad y en DRE más baja, dos métricas calculadas con datos distintos.
+2. Descarta explicaciones que otras métricas contradicen. Facturación no tiene mucha deuda, razón de 8,0 %, así que el problema no parece ser de mantenibilidad.
+3. Elige la intervención. Reforzar la revisión de requisitos y de código en Facturación, y agregar pruebas de valor límite. No refactorizar primero.
+4. Define cómo se sabrá si funcionó. En la versión siguiente, la densidad de producción de Facturación debe bajar de 1,20 y su DRE subir de 76,9 %, medidas con la misma ventana de 90 días y la misma regla de conteo.
+5. Anota lo que el tablero no responde. Nada indica cuántos pacientes sufrieron cada defecto, ni cuánto costó cada uno. Eso exige otros datos.
+
+Esa decisión se apoya en cuatro métricas que apuntan al mismo lugar, no en una sola. Y lo que parecía
+la intervención obvia, pagar la deuda de Asignación de turnos, queda en segundo plano porque los
+defectos más densos están en otro lado.
+
+## Errores frecuentes
+
+- Confundir una métrica con un indicador, y presentar un número sin umbral ni decisión como si ya dijera algo.
+- Medir lo que la herramienta ya trae, sin partir de una meta.
+- Comparar la densidad de dos módulos o equipos sin una regla común para el tamaño y para qué defectos se cuentan.
+- Calcular la DRE con una ventana corta y celebrar una cifra que sube sola.
+- Usar el número global y no mirar la DRE por módulo ni por severidad.
+- Hablar de "las cuatro métricas DORA" o usar MTTR como una métrica DORA. La definición vigente tiene cinco.
+- Dar por buenas las pruebas porque la cobertura es alta.
+- Tomar una calificación de deuda técnica como dinero real gastado.
+- Fijar una métrica como meta con premio o castigo, y sorprenderse cuando el número mejora y el producto no.
+- Comparar equipos entre sí con métricas de entrega, en lugar de comparar un servicio consigo mismo en el tiempo.
+- Usar una tabla de riesgo por complejidad o un umbral de cobertura copiados de un blog sin comprobar su fuente.
+
+## Autoevaluación
+
+Responde sin mirar la guía. Marca tu opción y abre la clave para comprobarla. Es una práctica formativa
+y no tiene nota.
+
+**1.** El tiempo medio de resolución de un defecto es de 6 días. Esa métrica pasa a ser un indicador cuando:
+
+<label><input type="checkbox"> Se mide en horas en lugar de días</label>
+<label><input type="checkbox"> Se compara con un umbral o una meta y eso dispara una decisión</label>
+<label><input type="checkbox"> La calcula una herramienta automática</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 1
+
+La opción 2. Un indicador es una métrica interpretada frente a un criterio para tomar una decisión. La
+unidad y la herramienta no cambian la naturaleza del número.
+:::
+
+**2.** En el método GQM, ¿por dónde se empieza?
+
+<label><input type="checkbox"> Por las métricas que ya trae la herramienta de análisis</label>
+<label><input type="checkbox"> Por el umbral de cada métrica</label>
+<label><input type="checkbox"> Por la meta que se quiere alcanzar</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 2
+
+La opción 3. GQM va de la meta a las preguntas y de las preguntas a las métricas. Empezar por las
+métricas disponibles produce un tablero sin decisiones.
+:::
+
+**3.** Un equipo halló 90 defectos antes de entregar y 30 en los 90 días posteriores. ¿Cuál es su DRE?
+
+<label><input type="checkbox"> 75,0 %</label>
+<label><input type="checkbox"> 25,0 %</label>
+<label><input type="checkbox"> 33,3 %</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 3
+
+La opción 1. DRE = 90 / (90 + 30) = 90 / 120 = 0,75, es decir 75,0 %. El 25,0 % es la fuga, que es 30 / 120.
+:::
+
+**4.** Un módulo de 12 kLOC tuvo 18 defectos en producción. Su densidad de defectos es:
+
+<label><input type="checkbox"> 0,67 defectos por kLOC</label>
+<label><input type="checkbox"> 216 defectos por kLOC</label>
+<label><input type="checkbox"> 1,5 defectos por kLOC</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 4
+
+La opción 3. 18 / 12 = 1,5. La opción 1 invierte el cociente, y la 2 multiplica en lugar de dividir.
+:::
+
+**5.** Según la guía actual de DORA, ¿cuál de estas NO es una de las cinco métricas de entrega?
+
+<label><input type="checkbox"> Tasa de retrabajo de despliegues</label>
+<label><input type="checkbox"> Líneas de código escritas por desarrollador</label>
+<label><input type="checkbox"> Frecuencia de despliegue</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 5
+
+La opción 2. Las cinco son tiempo de entrega del cambio, frecuencia de despliegue, tiempo de
+recuperación de un despliegue fallido, tasa de fallo de cambios y tasa de retrabajo de despliegues.
+:::
+
+**6.** ¿Qué diferencia hay entre el tiempo de recuperación de un despliegue fallido y el MTTR general?
+
+<label><input type="checkbox"> El primero solo cuenta las fallas causadas por un despliegue, y el MTTR general cuenta cualquier incidente</label>
+<label><input type="checkbox"> El primero usa la mediana y el segundo la media</label>
+<label><input type="checkbox"> Ninguna, son dos nombres de la misma métrica</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 6
+
+La opción 1. DORA renombró y redefinió el MTTR en 2023 para limitarlo a las fallas que causa un cambio
+en producción, y dejar fuera causas externas como la caída de un centro de datos.
+:::
+
+**7.** Un método tiene dos `if`, un `while` y un operador `&&` de cortocircuito. Con la regla de decisiones
+más uno, su complejidad ciclomática es:
+
+<label><input type="checkbox"> 4</label>
+<label><input type="checkbox"> 6</label>
+<label><input type="checkbox"> 5</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 7
+
+La opción 3. Las decisiones son 2 + 1 + 1 = 4, y la complejidad es 4 + 1 = 5.
+:::
+
+**8.** Un módulo tiene 100 % de cobertura de líneas. ¿Qué se puede concluir con seguridad?
+
+<label><input type="checkbox"> Que no tiene defectos</label>
+<label><input type="checkbox"> Que sus pruebas ejecutan todas las líneas, pero no que comprueben bien el resultado</label>
+<label><input type="checkbox"> Que sus pruebas cubren todos los requisitos</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 8
+
+La opción 2. La cobertura mide ejecución, no verificación. Pruebas sin comprobaciones, o casos de valor
+límite que faltan, no se ven en el número.
+:::
+
+**9.** Un módulo tiene 2.000 líneas y una deuda estimada de 120 horas, con el costo por defecto de 30 minutos
+por línea. Su razón de deuda y su calificación son:
+
+<label><input type="checkbox"> 12,0 %, calificación C</label>
+<label><input type="checkbox"> 6,0 %, calificación B</label>
+<label><input type="checkbox"> 12,0 %, calificación B</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 9
+
+La opción 1. El costo de desarrollo es 2.000 x 30 min = 60.000 min = 1.000 h. La razón es 120 / 1.000 =
+12,0 %, que cae entre 10 % y menos de 20 %, es decir calificación C.
+:::
+
+**10.** Una dirección exige que cada módulo tenga 90 % de cobertura y el equipo lo logra con pruebas que no comprueban
+nada. Este fenómeno se describe como:
+
+<label><input type="checkbox"> Una falla de la herramienta de cobertura</label>
+<label><input type="checkbox"> Una prueba de mutación</label>
+<label><input type="checkbox"> La ley de Goodhart, cuando una medida se convierte en objetivo deja de ser una buena medida</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 10
+
+La opción 3. El equipo optimizó el número en lugar del objetivo que el número representaba, que
+era tener pruebas que detecten defectos.
+:::
+
+## Lo que te llevas
+
+::: {.checklist}
+**Al salir de este tema deberías poder explicar, sin mirar la guía**
+
+- [ ] La diferencia entre dato, medida, métrica e indicador, con un ejemplo de la clínica
+- [ ] Cómo se construye un árbol GQM desde una meta con cinco elementos
+- [ ] Las tres categorías de métricas, proceso, producto y proyecto, y cuándo una métrica admite dos lecturas
+- [ ] Cómo se calculan la densidad de defectos, la DRE y la fuga, y por qué dependen de reglas y de una ventana de tiempo
+- [ ] Las cinco métricas DORA vigentes, cómo llegaron a ser cinco y en qué se diferencia el MTTR del tiempo de recuperación de un despliegue fallido
+- [ ] Cómo se calcula la complejidad ciclomática de un método y cuántos casos de prueba sugiere
+- [ ] Por qué una cobertura del 100 % no garantiza pruebas buenas, y qué agrega una prueba de mutación
+- [ ] Cómo se calcula la razón de deuda técnica y qué dice y qué no dice
+- [ ] Qué es la ley de Goodhart y qué salvaguardas reducen el abuso de métricas
+:::
+
+## Glosario
+
+- **Dato.** Hecho registrado, como un reporte de defecto con su fecha.
+- **Medida.** Valor obtenido al contar o medir algo con una regla definida.
+- **Métrica.** Medida, o cociente entre medidas, con definición, unidad y regla de cálculo.
+- **Indicador.** Métrica interpretada frente a un umbral, una meta o una tendencia, para tomar una decisión.
+- **Umbral.** Valor que separa una situación aceptable de una que exige acción.
+- **GQM.** Método *Goal, Question, Metric* que deriva las métricas de una meta, pasando por preguntas.
+- **Métrica de proceso.** Observa cómo trabaja el equipo, como el tiempo de resolución de un defecto.
+- **Métrica de producto.** Observa propiedades de lo construido, como la densidad de defectos.
+- **Métrica de proyecto.** Observa la salud del proyecto, como el esfuerzo real frente al planificado.
+- **kLOC.** Miles de líneas de código, una medida de tamaño.
+- **Densidad de defectos.** Defectos divididos entre el tamaño del software.
+- **DRE.** Eficiencia de eliminación de defectos: fracción de los defectos conocidos hallada antes de entregar.
+- **Fuga de defectos.** Fracción de los defectos conocidos que llegó a producción. Es 1 menos la DRE.
+- **MTTR.** Tiempo medio de reparación, recuperación, restauración o resolución, según el autor. Debe definirse antes de usarse.
+- **Mediana.** Valor central de una lista ordenada. Resiste mejor que la media a los valores extremos.
+- **DORA.** Programa de investigación de Google Cloud sobre qué prácticas llevan a entregar mejor software.
+- **Tiempo de entrega del cambio.** Tiempo desde que un cambio se registra en el control de versiones hasta que está en producción.
+- **Frecuencia de despliegue.** Número de despliegues en un periodo, o tiempo entre ellos.
+- **Tiempo de recuperación de un despliegue fallido.** Tiempo que tarda en recuperarse un despliegue que falla y exige intervención inmediata.
+- **Tasa de fallo de cambios.** Proporción de despliegues que exigen intervención inmediata.
+- **Tasa de retrabajo de despliegues.** Proporción de despliegues no planificados que resultan de un incidente en producción.
+- **Complejidad ciclomática.** Número de caminos linealmente independientes del flujo de control. Se calcula como decisiones más uno.
+- **Cobertura de pruebas.** Porción del código que las pruebas ejecutan, medida por líneas o por condiciones.
+- **Prueba de mutación.** Técnica que introduce cambios pequeños en el código y comprueba si alguna prueba falla.
+- **Deuda técnica.** Metáfora del costo futuro de soluciones imperfectas que se dejaron por rapidez.
+- **Razón de deuda técnica.** Deuda estimada dividida entre el costo hipotético de desarrollar el código.
+- **Ley de Goodhart.** Cuando una medida se convierte en objetivo, deja de ser una buena medida.
+- **ISO/IEC 25010:2023.** Modelo de calidad de producto de nueve características, desarrollado en el Tema 2 de la Unidad 1.
+- **CMMI.** Modelo de madurez de procesos, desarrollado en el Tema 4 de la Unidad 3.
+
+## Bibliografía
+
+Sobre medición y GQM:
+
+- Basili, V. R., Caldiera, G. y Rombach, H. D. (1994). The Goal Question Metric Approach. En *Encyclopedia of Software Engineering*, vol. 1, pp. 528-532. John Wiley & Sons.
+- Kan, S. H. (2003). *Metrics and Models in Software Quality Engineering* (2.a ed.). Addison-Wesley. Libro de pago, usado como referencia de las fórmulas de defectos.
+- Jones, C. y Bonsignour, O. (2012). *The Economics of Software Quality.* Addison-Wesley. Libro de pago, usado como referencia de las fórmulas de defectos.
+- Sommerville, I. (2016). *Software Engineering* (10.a ed.). Pearson.
+
+Sobre DORA:
+
+- DORA. [Software delivery performance metrics](https://dora.dev/guides/dora-metrics/). Actualizada el 5 de enero de 2026, consultada el 3 de octubre de 2026.
+- DORA. [A history of DORA's software delivery metrics](https://dora.dev/insights/dora-metrics-history/). Actualizada el 2 de enero de 2026, consultada el 3 de octubre de 2026.
+- DORA. [DORA 2025: year in review](https://dora.dev/insights/dora-2025-year-in-review/). Consultada el 3 de octubre de 2026.
+- Google Cloud (23 de septiembre de 2025). [Announcing the 2025 DORA Report](https://cloud.google.com/blog/products/ai-machine-learning/announcing-the-2025-dora-report).
+- Google Cloud (22 de octubre de 2024). [Announcing the 2024 DORA report](https://cloud.google.com/blog/products/devops-sre/announcing-the-2024-dora-report).
+- Forsgren, N., Humble, J. y Kim, G. (2018). *Accelerate: The Science of Lean Software and DevOps.* IT Revolution Press.
+
+Sobre métricas de código y deuda técnica:
+
+- McCabe, T. J. (1976). A Complexity Measure. *IEEE Transactions on Software Engineering*, 2(4), 308-320. [doi.org](https://doi.org/10.1109/tse.1976.233837).
+- Watson, A. H. y McCabe, T. J. (1996). *Structured Testing: A Testing Methodology Using the Cyclomatic Complexity Metric.* NIST Special Publication 500-235, D. R. Wallace (ed.). [nvlpubs.nist.gov](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication500-235.pdf).
+- SonarSource. [Metrics definition](https://docs.sonarsource.com/sonarqube-server/user-guide/code-metrics/metrics-definition). Documentación de SonarQube Server, consultada el 3 de octubre de 2026.
+- Ivankovic, M., Petrovic, G., Just, R. y Fraser, G. (2019). Code Coverage at Google. *Proceedings of the 2019 27th ACM Joint Meeting on ESEC/FSE.* [Ficha](https://research.google/pubs/code-coverage-at-google/).
+- Inozemtseva, L. y Holmes, R. (2014). Coverage is not strongly correlated with test suite effectiveness. *International Conference on Software Engineering (ICSE).* [doi.org](https://doi.org/10.1145/2568225.2568271). Solo se verificaron el título y los datos de publicación. El texto no se pudo leer.
+- Cunningham, W. (1992). The WyCash Portfolio Management System. Informe de experiencia, OOPSLA 1992. Dato verificado en una fuente secundaria.
+- Fowler, M. (14 de octubre de 2009). [Technical Debt Quadrant](https://martinfowler.com/bliki/TechnicalDebtQuadrant.html).
+
+Sobre abuso de métricas:
+
+- Goodhart, C. A. E. (1975). Problems of Monetary Management: The UK Experience. Cita verificada en una fuente secundaria.
+- Strathern, M. (1997). 'Improving ratings': audit in the British University system. *European Review*, 5(3), desde la p. 305. [doi.org](https://doi.org/10.1002/(SICI)1234-981X(199707)5:3%3C305::AID-EURO184%3E3.0.CO;2-4).
+
+Sobre los modelos de calidad, que se desarrollan en otros temas:
+
+- ISO/IEC 25010:2023 e ISO/IEC 25023:2016. Véase el [Tema 2 de la Unidad 1](../../unidad-01/tema-02-calidad-proceso-producto-iso-25010/index.qmd).
+- CMMI. Véase la [Unidad 3](../../unidad-03/tema-04-madurez-spice-cmmi/index.qmd), Tema 4.
+
+::: {.pie-doc}
+Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial,
+usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.
+:::

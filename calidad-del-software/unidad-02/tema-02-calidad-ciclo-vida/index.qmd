@@ -9,419 +9,1101 @@ date-format: "D [de] MMMM [de] YYYY"
 |        |                                                                  |
 |--------|------------------------------------------------------------------|
 | Unidad | Unidad 2. Procesos de calidad del software. Modelos y métricas   |
-| Tema   | Tema 2. La calidad en el ciclo de vida del software               |
+| Tema   | Tema 2. La calidad en cada fase del ciclo de vida                |
 :::
 
-El Tema 1 dejó establecida una distinción que hoy vas a poner en movimiento, ya que el aseguramiento
-de la calidad del software, o SQA (del inglés *software quality assurance*), es un proceso preventivo
-que vigila cómo se construye el software, mientras que el control de calidad es un conjunto de
-técnicas correctivas que revisa lo que ya se construyó. Hoy esa distinción deja de ser abstracta, porque vas a ver exactamente
-en qué momento del desarrollo entra cada actividad de SQA, quién la ejecuta dentro de un equipo real
-y qué habilidades le exige el oficio a esa persona. También vas a ver, con dos casos documentados en
-fuentes técnicas y en investigaciones oficiales, qué pasa cuando esas actividades faltan.
+[Presentación interactiva de la unidad](../presentacion-interactiva.html){.btn-curso}
 
-## El modelo en V: la prueba se diseña junto con la fase, no después
+Tema anterior: [Tema 1. El SQA y su relación con la ingeniería de software](../tema-01-sqa-relacion-ingenieria/index.qmd).
+Tema siguiente: [Tema 3. Roles y habilidades del personal de SQA](../tema-03-roles-habilidades/index.qmd).
 
-La intuición más común de quien empieza en desarrollo de software es que las pruebas vienen al final,
-después de que el código ya existe. Esa intuición es exactamente lo que la norma IEEE Std 730-2014,
-*IEEE Standard for Software Quality Assurance Processes*, busca corregir. La publica el IEEE, sigla de
-*Institute of Electrical and Electronics Engineers* (en español Instituto de Ingenieros Eléctricos y
-Electrónicos), y la norma establece los requisitos para iniciar, planificar, controlar y ejecutar los
-procesos de aseguramiento de calidad desde el arranque del proyecto, no como una fase que se agrega al
-cierre. El modelo en V es la forma
-más citada de mostrar esa idea, porque conecta cada fase de construcción con una fase de verificación
-o validación que se diseña en el mismo momento, no después.
+## Objetivo y resultado de aprendizaje
 
-Cuando se define el análisis de requisitos, se definen también los criterios de las pruebas de
-aceptación que van a confirmar, más adelante, que el sistema hace lo que el usuario necesita. Cuando
-se diseña el sistema completo, se diseñan también las pruebas de sistema que van a verificar que las
-piezas funcionan juntas como un todo. Cuando se diseña la arquitectura, se diseñan las pruebas de
-integración que van a confirmar que los módulos se comunican correctamente entre sí. Y cuando se llega
-al diseño de cada módulo y a su codificación, se escriben junto con él las pruebas unitarias que van a
-confirmar que ese módulo, por sí solo, hace lo que debía hacer.
+El Tema 1 explicó qué es el aseguramiento de la calidad del software (SQA) y cómo se relaciona con la
+ingeniería de software. Este tema responde una pregunta más concreta: en qué momento del desarrollo
+entra cada actividad de calidad, qué necesita para empezar, qué entrega al terminar y quién responde por
+ella. Los roles y las habilidades de esas personas se estudian en el Tema 3.
+
+Al terminar puedes:
+
+- Explicar qué hace ISO/IEC/IEEE 12207 con el ciclo de vida y por qué habla de procesos y no de fases fijas.
+- Ubicar la calidad en la cascada, el modelo en V, el desarrollo iterativo y el ágil (Scrum y Kanban).
+- Describir un pipeline de CI/CD y las métricas DORA que miden su salud.
+- Distinguir *shift-left*, *shift-right* y *quality engineering*, y decidir qué control va en cada lado.
+- Leer y construir una matriz de actividades de calidad por fase, con entradas, salidas y responsable.
+- Calcular la efectividad de remoción de defectos de cada fase y el costo que produce el reparto de hallazgos.
+- Armar un plan de calidad por fase para una función de la app de turnos de la clínica.
+- Analizar el caso del Boeing 737 MAX (MCAS) y nombrar en qué fase faltó cada control.
+
+Prerrequisitos: el Tema 1 de esta unidad y los Temas 1 a 3 de la Unidad 1. Necesitas distinguir
+*requisito*, *defecto* y *falla*, y saber qué es una norma.
+
+## Ruta de estudio
+
+Son unas 6 horas de trabajo independiente, que puedes partir en tres sesiones. La presentación
+interactiva de la unidad sigue estas mismas partes y en el mismo orden.
+
+::: {.calendario}
+| Parte | Qué haces | Tiempo |
+|---|---|---|
+| 1. La calidad por fase y la norma 12207 | Lees qué es una fase de calidad y qué dice la norma vigente | 35 min |
+| 2. Cuatro formas de organizar el ciclo de vida | Comparas cascada, V, iterativo y ágil, y resuelves el Reto 1 | 50 min |
+| 3. CI/CD y DevOps | Lees el pipeline y las métricas DORA, y resuelves el Reto 2 | 45 min |
+| 4. Shift-left, shift-right y quality engineering | Lees los tres enfoques y resuelves el Reto 3 | 35 min |
+| 5. La matriz de actividades por fase | Lees la matriz completa y resuelves el Reto 4 | 40 min |
+| 6. Ejemplo resuelto: efectividad por fase | Sigues el cálculo de defectos y de costo, y resuelves el Reto 5 | 55 min |
+| 7. Ejemplo resuelto: plan de calidad de la app | Lees el plan de una función y resuelves el Reto 6 | 45 min |
+| 8. Caso: Boeing 737 MAX y MCAS | Analizas el caso fase por fase y resuelves el Reto 7 | 45 min |
+| Cierre | Errores frecuentes, autoevaluación y glosario | 30 min |
+:::
+
+## El hilo conductor: la app de turnos de la Clínica Aurora
+
+La app de la Clínica Aurora asigna turnos médicos, con su requisito de partida "la app asigna hasta 20
+turnos por día a cada especialidad". En este tema el equipo de la clínica prepara una función nueva,
+cancelar y reprogramar un turno, y tú le armas el plan de calidad de principio a fin.
+
+Todas las cifras de la clínica son ilustrativas. Se inventaron para practicar el cálculo y no vienen de
+ninguna clínica real. Las cifras de normas, informes y casos sí vienen de fuentes que se citan en la
+bibliografía.
+
+## Parte 1. La calidad por fase y la norma ISO/IEC/IEEE 12207
+
+### Qué es una actividad de calidad por fase
+
+El Tema 1 distinguió dos ideas. El aseguramiento de la calidad (SQA) vigila que el proceso de construcción
+sea adecuado y trabaja de forma preventiva. El control de calidad revisa el producto ya construido y
+detecta defectos. Una guía de calidad por fase pone esas dos ideas en el calendario del proyecto.
+
+Para ubicar una actividad de calidad dentro del ciclo de vida, hazle cinco preguntas.
+
+1. Qué fase la contiene, por ejemplo requisitos, diseño o construcción.
+2. Qué entrada necesita, es decir qué documento o producto debe existir antes.
+3. Qué salida produce, es decir qué evidencia queda cuando termina.
+4. Quién responde por ella, un rol y no una persona con nombre.
+5. Qué criterio decide que la fase puede cerrarse, y por tanto qué defecto la detendría.
+
+Con esas cinco respuestas, "hacer pruebas" deja de ser una sola caja al final y pasa a ser un conjunto de
+controles repartidos. La matriz de la Parte 5 reúne las respuestas para todas las fases.
+
+### Verificación y validación
+
+Toda actividad de calidad por fase se apoya en dos preguntas distintas, que los Temas 1 y 2 de la
+Unidad 4 desarrollan a fondo. Aquí basta la idea central.
+
+- Verificación: ¿se construyó bien el producto frente a lo que se especificó? Compara un resultado contra su especificación.
+- Validación: ¿se construyó el producto correcto para quien lo va a usar? Compara el producto contra la necesidad real.
+
+Una revisión de requisitos que busca contradicciones es verificación. Un piloto con pacientes reales que
+prueban la app es validación. El equipo necesita las dos, porque un producto puede cumplir su
+especificación y aun así no servir para lo que el usuario necesitaba.
+
+### La norma ISO/IEC/IEEE 12207
+
+La norma ISO/IEC/IEEE 12207, *Systems and software engineering, Software life cycle processes*, la
+publican de forma conjunta ISO, IEC e IEEE. Establece un marco común de procesos para describir el ciclo de
+vida completo de un sistema de software, desde la concepción hasta el retiro. Sirve tanto para quien
+adquiere software como para quien lo suministra, lo desarrolla, lo opera y lo mantiene.
+
+Su idea más útil para este tema es que define procesos, no una secuencia obligatoria de fases. La propia
+norma indica que esos procesos se pueden aplicar de forma concurrente, iterativa y recursiva. La
+organización elige su modelo de ciclo de vida (cascada, iterativo, ágil) y usa los procesos de la norma
+como catálogo de lo que debe cubrir, sin importar el orden.
+
+::: {.callout-important}
+## Edición vigente en octubre de 2026
+
+La edición vigente es ISO/IEC/IEEE 12207:2026, segunda edición, publicada en abril de 2026. Según la
+ficha de IEEE, su fecha de publicación es el 15 de abril de 2026, y sustituye a la edición de 2017.
+
+Según el resumen del catálogo de ISO, el cambio es una revisión técnica. Actualiza procesos técnicos como
+análisis de negocio o misión, definición de arquitectura, implementación, integración, operación y
+mantenimiento. Mejora procesos de gestión técnica como riesgos y gestión de configuración. Amplía el
+contenido sobre métodos ágiles y revisa el anexo sobre ingeniería de sistemas y software basada en
+modelos. La ficha de IEEE añade que se alinea con ISO/IEC/IEEE 15288:2023, la norma de procesos de ciclo de
+vida de sistemas.
+
+El texto completo de la norma es de pago y no se pudo leer en fuente primaria. Por eso esta guía no cita
+números de cláusula de la edición 2026 y describe los procesos con los nombres de la edición 2017, que tampoco se pudieron contrastar con el texto completo.
+Antes de usar la norma como referencia contractual, confirma el texto en iso.org o en standards.ieee.org.
+:::
+
+### Los procesos que importan para la calidad
+
+En la edición 2017 los procesos se agrupan en cuatro familias principales y un grupo propio del software.
+Para este tema interesan tres de ellas.
+
+| Grupo de la edición 2017 | Procesos relevantes para la calidad |
+|---|---|
+| Gestión técnica | Planificación, evaluación y control del proyecto, gestión del riesgo, gestión de configuración, medición y aseguramiento de la calidad |
+| Técnicos | Definición de requisitos, definición de arquitectura y de diseño, implementación, integración, verificación, transición, validación, operación y mantenimiento |
+| Habilitación organizacional | Gestión del modelo de ciclo de vida, gestión de la calidad de la organización |
+
+Dos cosas se desprenden de la tabla. Primera, el aseguramiento de la calidad es un proceso de gestión
+técnica que acompaña a todos los demás, y no una fase que ocurre al final. Segunda, la verificación y la
+validación son procesos técnicos con nombre propio, que se ejecutan sobre cada producto intermedio y no solo
+sobre el programa terminado.
+
+### La norma de SQA que la acompaña
+
+La norma específica de procesos de SQA es la IEEE 730. Su edición de 2014 quedó inactiva-reservada el 27 de
+marzo de 2025. La edición vigente es IEEE 730-2026, publicada el 21 de agosto de 2026, que sustituye a la de
+2014. Establece los requisitos para iniciar, planificar, controlar y ejecutar los procesos de SQA en
+proyectos de desarrollo o de mantenimiento de software. Según su ficha, se armoniza con la edición 2017 de
+ISO/IEC/IEEE 12207 y con ISO/IEC/IEEE 15289:2019, que trata el contenido de la información de ciclo de vida.
+La Unidad 3 estudia las normas IEEE con detalle.
+
+::: {.callout-note}
+## Una advertencia sobre las fuentes antiguas
+
+Muchas guías, apuntes y presentaciones todavía citan IEEE 730-2014 como la norma vigente y
+ISO/IEC/IEEE 12207:2017 como la última edición. Al revisar una fuente, mira el año. Si es anterior a 2026,
+su afirmación sobre la edición vigente puede haber cambiado. La ficha del catálogo, no el apunte de otra
+persona, es la que dice qué edición rige.
+:::
+
+### La calidad de producto en una referencia breve
+
+La calidad del producto se evalúa contra el modelo ISO/IEC 25010:2023, con nueve características, que el
+Tema 2 de la Unidad 1 desarrolla. Cada actividad de este tema puede entenderse como una forma de proteger
+una o varias de esas características en un momento concreto del ciclo de vida.
+
+## Parte 2. Cuatro formas de organizar el ciclo de vida
+
+Un modelo de ciclo de vida decide el orden y el tamaño de los pasos. La calidad no cambia de objetivo, pero
+sí cambia el momento en que llega la primera señal de que algo está mal. Esta parte compara cuatro modelos
+con la misma pregunta: cuándo se entera el equipo de un defecto.
+
+### Cascada
+
+En el modelo en cascada las fases ocurren una tras otra: requisitos, diseño, construcción, pruebas y
+mantenimiento. Cada fase termina antes de que empiece la siguiente, y un documento aprobado marca la salida.
+La calidad se apoya en revisiones formales de cada documento y en un conjunto grande de pruebas al final.
+
+Winston Royce describió esta secuencia en 1970 en su artículo *Managing the Development of Large Software
+Systems*. Lo que muchas veces se omite es que el propio Royce la presentó como un esquema arriesgado en su
+forma pura, y recomendó iterar, involucrar al cliente y planificar las pruebas con anticipación. El nombre
+"cascada" vino después y la imagen se popularizó sin esas advertencias.
+
+La señal de calidad llega tarde. Un defecto de requisitos puede viajar hasta las pruebas finales sin que
+nadie lo vea, y entonces corregirlo obliga a rehacer fases ya cerradas. Funciona bien cuando los requisitos
+son estables y bien conocidos, y mal cuando el usuario descubre lo que necesita mientras ve el producto.
+
+### Modelo en V
+
+El modelo en V conserva la secuencia de la cascada y le agrega una idea. Cada fase de especificación o de
+diseño tiene una fase de verificación o validación que se planifica al mismo tiempo que ella. Cuando el
+equipo escribe los requisitos, escribe también los criterios de la prueba de aceptación. Cuando define la
+arquitectura, define también las pruebas de integración.
 
 ::: {.diagrama}
 
-<svg viewBox="0 0 740 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Modelo en V: cuatro fases de diseño a la izquierda bajando hacia la codificacion en el vertice, y cuatro tipos de prueba a la derecha subiendo desde pruebas unitarias hasta pruebas de aceptacion; una linea punteada conecta cada fase de diseño con el tipo de prueba que se planifica junto con ella" font-family="Segoe UI, Inter, system-ui, sans-serif">
-<defs><marker id="cali22a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
-<text x="370" y="14" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">El modelo en V: cada prueba se disena junto con su fase de desarrollo</text>
-<g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="34" width="170" height="38" rx="8"/><rect x="60" y="104" width="170" height="38" rx="8"/><rect x="110" y="174" width="170" height="38" rx="8"/></g>
-<g fill="#e4f2f1" stroke="#8fc9c5"><rect x="160" y="244" width="170" height="38" rx="8"/><rect x="400" y="244" width="170" height="38" rx="8"/></g>
-<g fill="#eef4fa" stroke="#c7d6e6"><rect x="450" y="174" width="170" height="38" rx="8"/><rect x="500" y="104" width="170" height="38" rx="8"/><rect x="550" y="34" width="170" height="38" rx="8"/></g>
-<g fill="none" stroke="#8fb3d1" stroke-width="1.8"><path d="M95,72 L145,104"/><path d="M145,142 L195,174"/><path d="M195,212 L245,244"/></g>
-<g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cali22a)"><path d="M485,244 L535,212"/><path d="M535,174 L585,142"/><path d="M585,104 L635,72"/></g>
-<g stroke="#cfd8e3" stroke-width="1.2" stroke-dasharray="4 4"><line x1="180" y1="53" x2="550" y2="53"/><line x1="230" y1="123" x2="500" y2="123"/><line x1="280" y1="193" x2="450" y2="193"/><line x1="330" y1="263" x2="400" y2="263"/></g>
-<g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="95" y="57">Analisis de requisitos</text><text x="145" y="127">Diseno del sistema</text><text x="195" y="197">Diseno de arquitectura</text></g>
-<g text-anchor="middle" font-size="11" fill="#0e6f6c" font-weight="600"><text x="245" y="267">Diseno de módulo / codificacion</text><text x="485" y="267">Pruebas unitarias</text></g>
-<g text-anchor="middle" font-size="11.5" fill="#12324f"><text x="535" y="197">Pruebas de integración</text><text x="585" y="127">Pruebas de sistema</text><text x="635" y="57">Pruebas de aceptacion</text></g>
-<text x="370" y="304" font-size="11" fill="#5b6876" text-anchor="middle">La línea punteada horizontal marca el par: cada fase de diseno define, en ese mismo momento, el criterio de la prueba que la va a verificar</text>
+<svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Modelo en V: a la izquierda bajan requisitos, diseño del sistema, diseño de arquitectura y diseño detallado; en el vértice está la construcción; a la derecha suben pruebas unitarias, de integración, de sistema y de aceptación. Líneas punteadas unen cada fase con la prueba que se planifica junto a ella." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u2t2a" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">El modelo en V: cada prueba se planifica junto a su fase</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="38" width="190" height="42" rx="8"/><rect x="60" y="108" width="190" height="42" rx="8"/><rect x="110" y="178" width="190" height="42" rx="8"/><rect x="160" y="248" width="190" height="42" rx="8"/></g>
+  <rect x="285" y="296" width="190" height="38" rx="8" fill="#fff6dc" stroke="#e6cf8a"/>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="410" y="248" width="190" height="42" rx="8"/><rect x="460" y="178" width="190" height="42" rx="8"/><rect x="510" y="108" width="190" height="42" rx="8"/><rect x="560" y="38" width="190" height="42" rx="8"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8"><path d="M105,80 L155,108"/><path d="M155,150 L205,178"/><path d="M205,220 L255,248"/><path d="M255,290 L320,296"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t2a)"><path d="M440,296 L505,290"/><path d="M505,248 L555,220"/><path d="M555,178 L605,150"/><path d="M605,108 L655,80"/></g>
+  <g stroke="#cfd8e3" stroke-width="1.2" stroke-dasharray="4 4"><line x1="200" y1="59" x2="560" y2="59"/><line x1="250" y1="129" x2="510" y2="129"/><line x1="300" y1="199" x2="460" y2="199"/><line x1="350" y1="269" x2="410" y2="269"/></g>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="105" y="63">Requisitos</text><text x="155" y="133">Diseño del sistema</text><text x="205" y="203">Diseño de arquitectura</text><text x="255" y="273">Diseño detallado</text></g>
+  <text x="380" y="320" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Construcción</text>
+  <g text-anchor="middle" font-size="12" fill="#12324f"><text x="505" y="273">Pruebas unitarias</text><text x="555" y="203">Pruebas de integración</text><text x="605" y="133">Pruebas de sistema</text><text x="655" y="63">Pruebas de aceptación</text></g>
+  <g font-size="11" fill="#5b6876"><text x="380" y="46" text-anchor="middle">validación</text><text x="380" y="116" text-anchor="middle">verificación contra el diseño</text><text x="380" y="186" text-anchor="middle">verificación de interfaces</text><text x="380" y="256" text-anchor="middle">verificación del módulo</text></g>
 </svg>
 
 :::
 
-Vale la pena detenerse en un matiz que la propia IEEE 730-2014 hace explícito, ya que la norma
-distingue entre software crítico, donde una falla puede causar pérdidas humanas o económicas
-significativas, y software no crítico, para el cual basta con aplicar un subconjunto de sus
-requisitos. Esa distinción importa porque el nivel de rigor del modelo en V no es el mismo para las
-dos categorías, así que un sistema de facturación interno no exige la misma profundidad de pruebas de
-integración que un sistema de control de una máquina de radioterapia. Vas a ver por qué esa diferencia
-no es solo teórica más adelante en esta guía.
+El modelo en V no deja la validación para el final. Por eso se dice que lleva la prueba hacia la izquierda:
+se escribe el criterio de aceptación antes de que exista el código. Su punto débil es que sigue siendo
+secuencial. Si el análisis y el diseño se atrasan, la presión de la fecha comprime las pruebas del lado
+derecho, y la cobertura real termina siendo menor que la planificada.
 
-El modelo en V también tiene un punto donde falla en la práctica, y conviene conocerlo antes de
-idealizarlo. La crítica más documentada es que, cuando las fases de análisis y diseño se retrasan
-frente al cronograma original, la presión de la fecha de entrega termina comprimiendo las pruebas
-hacia el final del proyecto, exactamente lo que el modelo pretendía evitar al planificarlas desde el
-principio. El resultado es una cobertura real de verificación y validación mucho más pobre que la que
-el plan original prometía, no porque el modelo esté mal pensado, sino porque nada en un diagrama
-obliga a que el cronograma real lo respete.
+### Iterativo e incremental
 
-## ISO/IEC/IEEE 12207 y las actividades de SQA por fase
+En el desarrollo iterativo el equipo repite ciclos cortos de análisis, diseño, construcción y prueba, y en
+cada ciclo entrega una parte del producto. Barry Boehm propuso en 1988 el modelo en espiral, que añade el
+análisis explícito de riesgos al comienzo de cada vuelta. La idea de fondo es que una señal de calidad
+llega en semanas y no en meses, porque cada incremento se prueba y se enseña a un usuario.
 
-El modelo en V explica la idea, pero la norma ISO/IEC/IEEE 12207:2017, *Systems and software
-engineering, Software life cycle processes*, es la que formaliza esa idea a nivel de todo un marco de
-procesos organizacional. La publican en conjunto ISO, sigla de *International Organization for
-Standardization* (en español Organización Internacional de Normalización), e IEC, sigla de
-*International Electrotechnical Commission* (en español Comisión Electrotécnica Internacional), junto
-con el IEEE ya mencionado. Su alcance cubre la adquisición, el suministro, el desarrollo, la operación,
-el mantenimiento y la disposición del software, y uno de sus principios centrales es que la
-verificación y la validación son procesos de soporte transversales a todo el ciclo de vida, no una
-fase aislada que se ejecuta solo al cierre del proyecto. Eso significa que, en la práctica, un
-programa de SQA tiene actividades concretas asociadas a cada fase, no una única actividad genérica
-llamada "hacer pruebas" al final.
+Esto cambia la manera de verificar. Las pruebas de regresión se vuelven imprescindibles, porque cada ciclo
+toca código que ya funcionaba. Y las revisiones se hacen sobre piezas pequeñas, que son más fáciles de
+revisar a fondo.
 
-::: {.diagrama}
+### Ágil: Scrum y Kanban
 
-<svg viewBox="0 0 740 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco fases del ciclo de vida del software en fila, requisitos, diseno, codificacion, pruebas y liberacion y mantenimiento, conectadas por flechas; debajo de cada fase una caja lista la actividad de aseguramiento de calidad que corre en esa fase, y una linea superior indica que verificacion y validacion son transversales a todo el ciclo" font-family="Segoe UI, Inter, system-ui, sans-serif">
-<defs><marker id="cali22b" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
-<text x="370" y="14" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">ISO/IEC/IEEE 12207: la calidad corre junto a cada fase, no al final</text>
-<line x1="20" y1="38" x2="710" y2="38" stroke="#8fc9c5" stroke-width="1.4" stroke-dasharray="3 3"/>
-<text x="370" y="32" font-size="11" fill="#0e6f6c" text-anchor="middle">verificación y validación: procesos transversales a todo el ciclo</text>
-<g fill="#eef4fa" stroke="#c7d6e6"><rect x="20" y="46" width="130" height="42" rx="8"/><rect x="160" y="46" width="130" height="42" rx="8"/><rect x="300" y="46" width="130" height="42" rx="8"/><rect x="440" y="46" width="130" height="42" rx="8"/><rect x="580" y="46" width="130" height="42" rx="8"/></g>
-<g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cali22b)"><path d="M150,67 L160,67"/><path d="M290,67 L300,67"/><path d="M430,67 L440,67"/><path d="M570,67 L580,67"/></g>
-<g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="85" y="71">Requisitos</text><text x="225" y="71">Diseno</text><text x="365" y="71">Codificacion</text><text x="505" y="71">Pruebas</text><text x="645" y="63">Liberacion y</text><text x="645" y="77">mantenimiento</text></g>
-<g fill="#f5f7fa" stroke="#cfd8e3"><rect x="20" y="102" width="130" height="76" rx="8"/><rect x="160" y="102" width="130" height="76" rx="8"/><rect x="300" y="102" width="130" height="76" rx="8"/><rect x="440" y="102" width="130" height="76" rx="8"/><rect x="580" y="102" width="130" height="76" rx="8"/></g>
-<g text-anchor="middle" font-size="11" fill="#12324f"><text x="85" y="122">revisión de</text><text x="85" y="136">completitud y</text><text x="85" y="150">trazabilidad</text><text x="225" y="122">Revisiones</text><text x="225" y="136">técnicas</text><text x="225" y="150">formales</text><text x="365" y="122">estándares de</text><text x="365" y="136">codificacion y</text><text x="365" y="150">revisión de pares</text><text x="505" y="122">Gestion de</text><text x="505" y="136">defectos y</text><text x="505" y="150">regresion</text><text x="645" y="122">Comites de</text><text x="645" y="136">control de</text><text x="645" y="150">cambios</text></g>
-<text x="370" y="230" font-size="11" fill="#5b6876" text-anchor="middle">Estas son actividades tipicas de un programa de SQA por fase</text>
-</svg>
+Los métodos ágiles llevan la iteración al extremo, con ciclos de una a cuatro semanas y entregas
+frecuentes. Dos marcos son muy usados, y cada uno pone la calidad en un lugar distinto.
 
+La Guía de Scrum (Schwaber y Sutherland, edición de noviembre de 2020) organiza el trabajo en sprints. La
+calidad vive en la *Definición de Terminado* (*Definition of Done*), que la guía describe como una
+descripción formal del estado del incremento cuando cumple las medidas de calidad que el producto exige.
+Un elemento del trabajo no está terminado hasta que cumple esa definición. La guía agrega que la calidad es
+responsabilidad del equipo completo y no de una función separada, y que el Sprint Review y la Retrospectiva
+sirven para inspeccionar y mejorar.
+
+Kanban no tiene sprints. El trabajo fluye por un tablero, y la calidad se apoya en cuatro prácticas que
+describe David Anderson: visualizar el flujo, limitar el trabajo en curso, gestionar el flujo y hacer
+explícitas las políticas. Limitar el trabajo en curso reduce las tareas a medias y acorta el tiempo en que
+un defecto espera a ser visto. Las políticas explícitas, como "una tarjeta no pasa a Listo sin revisión de
+pares", son el equivalente de una definición de terminado.
+
+### Comparación
+
+::: {.tabla-ancha}
+| Modelo | Cuándo llega la primera señal de calidad | Control principal | Riesgo típico |
+|---|---|---|---|
+| Cascada | Al final de cada fase, o en las pruebas finales | Revisión formal de cada documento | Defectos de requisitos que se descubren tarde |
+| Modelo en V | En la fase, con las pruebas ya planificadas | Pares de fase y prueba | Pruebas comprimidas por el cronograma |
+| Iterativo e incremental | Al final de cada iteración | Prueba de regresión y revisión de riesgos | Incrementos que acumulan deuda técnica |
+| Ágil (Scrum) | Dentro del sprint | Definición de Terminado | Una definición débil que deja pasar defectos |
+| Ágil (Kanban) | Cuando la tarjeta cambia de columna | Límite de trabajo en curso y políticas explícitas | Políticas que nadie hace cumplir |
 :::
 
-Detente en cada caja de la fila inferior, porque cada una responde a un riesgo distinto que aparece en
-ese momento del proyecto. En requisitos, el riesgo es construir algo completo y correcto pero que no
-es lo que el usuario pidió, así que la actividad de SQA revisa completitud, consistencia y
-trazabilidad de cada requisito. En diseño, el riesgo es que una decisión de arquitectura no cumpla lo
-que los requisitos exigen, así que la actividad son las revisiones técnicas formales, también
-llamadas walkthroughs o inspecciones, donde el equipo revisa el diseño antes de que nadie escriba una
-sola línea de código sobre él. En codificación, el riesgo es que cada desarrollador resuelva el mismo
-problema de una forma distinta y que nadie más entienda ese código después, así que la actividad son
-los estándares de codificación y la revisión de pares, junto con la gestión de configuración del
-código fuente para que todos trabajen sobre versiones controladas. En pruebas, el riesgo es que un
-defecto corregido reaparezca sin que nadie lo note, así que la actividad central es la gestión de
-defectos junto con las pruebas de regresión. Y en liberación y mantenimiento, el riesgo es que un
-cambio aparentemente pequeño rompa algo que funcionaba, así que la actividad son los comités de
-control de cambios, que evalúan el impacto de cada modificación sobre el alcance, la arquitectura y el
-desempeño antes de aprobarla, en vez de dejar que cualquier cambio entre a producción sin revisión.
+### Ejemplo resuelto: la misma función en dos modelos
 
-## Roles: quién hace SQA dentro de un equipo
+El equipo de la clínica debe entregar "cancelar y reprogramar un turno". Mira cuándo se descubre un defecto
+de requisitos, por ejemplo olvidar que un turno ya atendido no se puede cancelar.
 
-Las actividades de la sección anterior no se ejecutan solas, y en la práctica profesional que
-documentan Pressman y Sommerville, ambos parte de la bibliografía de este curso, ese trabajo se reparte
-entre dos roles con alcances distintos, uno a nivel de proyecto y otro a nivel de toda la organización.
+1. En cascada, el defecto sale cuando el equipo de pruebas ejecuta los casos de cancelación, en la semana 9 de un proyecto de 10.
+2. En el modelo en V, sale en la revisión de requisitos de la semana 1, porque los criterios de la prueba de aceptación se escriben ahí y el caso "cancelar un turno atendido" lo exige.
+3. En Scrum, sale en la planificación del sprint, cuando el equipo escribe los criterios de aceptación de la historia y alguien pregunta por ese caso.
+4. En Kanban, sale cuando la tarjeta pasa a revisión de pares y la política exige criterios de aceptación escritos.
 
-::: {.diagrama}
-
-<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparacion de roles: el lider de calidad define politicas y estandares a nivel organizacional arriba, y una flecha baja hacia el ingeniero de SQA que las aplica dentro de un proyecto concreto abajo, cada caja con su lista de responsabilidades" font-family="Segoe UI, Inter, system-ui, sans-serif">
-<defs><marker id="cali22c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
-<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Dos roles, dos niveles de alcance</text>
-<rect x="230" y="32" width="300" height="118" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
-<text x="380" y="54" font-size="14" font-weight="700" fill="#0e6f6c" text-anchor="middle">Lider de calidad</text>
-<text x="380" y="70" font-size="11" fill="#3c7d7a" text-anchor="middle">nivel organizacional</text>
-<g font-size="11" fill="#12324f"><text x="248" y="90">- Define politicas y estándares de calidad</text><text x="248" y="106">- Coordina auditorias y evaluaciones de madurez</text><text x="248" y="122">- Reporta indicadores a la direccion</text><text x="248" y="138">- Preside el comite de control de cambios</text></g>
-<path d="M380,150 L380,192" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#cali22c)"/>
-<text x="400" y="175" font-size="11" fill="#5b6876">las define y el proyecto las aplica</text>
-<rect x="230" y="192" width="300" height="118" rx="10" fill="#eef4fa" stroke="#c7d6e6"/>
-<text x="380" y="214" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Ingeniero de SQA</text>
-<text x="380" y="230" font-size="11" fill="#5b6876" text-anchor="middle">nivel de proyecto</text>
-<g font-size="11" fill="#12324f"><text x="248" y="250">- Ejecuta el plan de SQA del proyecto</text><text x="248" y="266">- Participa en revisiones técnicas formales</text><text x="248" y="282">- Disena y ejecuta casos de prueba</text><text x="248" y="298">- Registra y da seguimiento a defectos</text></g>
-</svg>
-
-:::
-
-El ingeniero o analista de SQA trabaja dentro de un proyecto concreto. Ejecuta el plan de
-aseguramiento de calidad de ese proyecto, participa en las revisiones técnicas formales de requisitos
-y diseño, diseña y ejecuta los casos de prueba, registra cada defecto que encuentra y le da
-seguimiento hasta que se cierra, verifica que el código cumpla los estándares de codificación
-acordados y que la gestión de configuración se respete, y recopila las métricas de calidad de proceso
-y de producto. Es, en otras palabras, quien pone en práctica todas las
-cajas inferiores del diagrama de la sección anterior, proyecto por proyecto.
-
-El líder de calidad, a veces llamado gerente de calidad, trabaja un nivel más arriba, a escala de toda
-la organización. Define las políticas y los estándares de calidad que todos los proyectos de la
-empresa deben seguir, coordina auditorías de proceso y evaluaciones formales de madurez, gestiona las
-iniciativas de mejora de procesos que surgen de esas auditorías, y reporta los indicadores de calidad
-a la dirección de la empresa. También es responsable de que el plan de calidad de cada proyecto esté
-alineado con la política organizacional, y suele presidir o participar en los comités de control de
-cambios que aprueban modificaciones de alto impacto. En una organización pequeña, una sola persona
-puede cumplir los dos roles en distintos momentos, pero la distinción entre ejecutar dentro de un
-proyecto y definir política para toda la organización se mantiene, sin importar cuántas personas la
-cubran.
-
-## Habilidades que exige el oficio de SQA
-
-Ejercer cualquiera de los dos roles anteriores exige tres tipos de habilidades, y ninguna sobra.
-
-- **Técnicas.** Dominio de técnicas de prueba, tanto de caja negra como de caja blanca, manejo de
-  herramientas de automatización de pruebas y de análisis estático de código, conocimiento práctico de
-  gestión de configuración, y familiaridad con los estándares de proceso del ciclo de vida como
-  ISO/IEC/IEEE 12207 y con los modelos de referencia de calidad y madurez de procesos.
-- **Analíticas.** Pensamiento crítico para distinguir un síntoma de una causa raíz, atención al
-  detalle para no dejar pasar una inconsistencia pequeña, y capacidad de trazar cada requisito hasta
-  la prueba concreta que lo verifica, sin perder ese hilo en medio de un proyecto grande.
-- **Blandas.** Comunicación efectiva para negociar hallazgos de calidad con un equipo de desarrollo
-  sin generar una cultura de señalamiento, ya que la literatura de gestión de calidad insiste en que
-  encontrar un defecto debe tratarse como información útil para el proyecto, no como un motivo para
-  culpar a quien lo escribió. También hace falta independencia de criterio frente a la presión del
-  cronograma, porque quien hace SQA a veces tiene que decir que algo no está listo aunque la fecha de
-  entrega diga lo contrario, y en sistemas críticos para la seguridad esa independencia deja de ser
-  una preferencia y se vuelve una responsabilidad ética.
-
-Las dos secciones que siguen muestran, con dos casos documentados, qué pasa exactamente cuando esa
-independencia de criterio no existe o no se ejerce a tiempo.
-
-## Cuando falta la revisión independiente: el caso Therac-25
-
-Entre 1985 y 1987, el Therac-25, una máquina de radioterapia controlada por computador fabricada por
-Atomic Energy of Canada Limited, causó al menos seis sobredosis documentadas de radiación, muy por
-encima de la dosis prevista, con muertes y lesiones graves entre los pacientes tratados. Antes de ver
-qué falló, vale la pena plantear la misma pregunta que hace el análisis académico de referencia sobre
-este caso, es decir si el problema fue un error de codificación puntual que un programador más
-cuidadoso hubiera evitado, o si fue un problema del proceso que debía haber atrapado ese error antes
-de que llegara a un paciente.
-
-El artículo de Nancy Leveson y Clark Turner, publicado en 1993 en la revista *IEEE Computer*, respondió
-esa pregunta con una investigación detallada de los seis incidentes, y su conclusión apunta al proceso,
-no solo al código. Encontraron cuatro fallas que se combinaron para producir el desastre. Primero,
-condiciones de carrera en el software, es decir errores de concurrencia donde dos partes del programa
-competían por el mismo recurso sin la sincronización adecuada, que no se detectaron porque nadie
-diseñó pruebas específicas de concurrencia para atraparlas. Segundo, los modelos anteriores de la
-máquina, el Therac-6 y el Therac-20, tenían salvaguardas de hardware, mecanismos físicos independientes
-del software que impedían una sobredosis aunque el programa fallara. Tercero, esas salvaguardas de
-hardware se eliminaron en el Therac-25 y se reemplazaron por controles que dependían únicamente del
-software, violando el principio de tener más de una capa de protección independiente. Cuarto, y el que
-más importa para esta guía, el software no pasó por ninguna auditoría de calidad independiente del
-equipo que lo desarrolló, así que nadie externo al propio equipo revisó si el diseño era seguro antes
-de instalar la máquina en hospitales.
-
-::: {.diagrama}
-
-<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cadena causal del Therac-25: reutilizacion de codigo sin volver a probarlo, enclavamientos de hardware eliminados, y ausencia de revision independiente de SQA destacada en el centro, llevan a condiciones de carrera no detectadas y a sobredosis de radiacion documentadas entre 1985 y 1987" font-family="Segoe UI, Inter, system-ui, sans-serif">
-<defs><marker id="cali22d" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
-<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Therac-25 (1985-1987): la cadena que llevo a la sobredosis</text>
-<g fill="#eef4fa" stroke="#c7d6e6"><rect x="15" y="50" width="130" height="80" rx="8"/><rect x="165" y="50" width="130" height="80" rx="8"/></g>
-<rect x="315" y="50" width="130" height="80" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
-<rect x="465" y="50" width="130" height="80" rx="8" fill="#eef4fa" stroke="#c7d6e6"/>
-<rect x="615" y="50" width="130" height="80" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
-<g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cali22d)"><path d="M145,90 L165,90"/><path d="M295,90 L315,90"/><path d="M445,90 L465,90"/><path d="M595,90 L615,90"/></g>
-<g text-anchor="middle" font-size="11" fill="#12324f"><text x="80" y="78">código de modelos</text><text x="80" y="92">anteriores reutilizado</text><text x="80" y="106">sin volver a probarlo</text><text x="230" y="78">Enclavamientos de</text><text x="230" y="92">hardware eliminados,</text><text x="230" y="106">solo quedo el software</text></g>
-<g text-anchor="middle" font-size="11" fill="#0e6f6c" font-weight="600"><text x="380" y="78">Sin auditoria ni</text><text x="380" y="92">revisión independiente</text><text x="380" y="106">de SQA externa</text></g>
-<g text-anchor="middle" font-size="11" fill="#12324f"><text x="530" y="78">Condiciones de carrera</text><text x="530" y="92">no detectadas por falta</text><text x="530" y="106">de pruebas de concurrencia</text></g>
-<g text-anchor="middle" font-size="11" fill="#12324f" font-weight="600"><text x="680" y="78">Al menos seis</text><text x="680" y="92">sobredosis de</text><text x="680" y="106">radiacion documentadas</text></g>
-<text x="380" y="160" font-size="11" fill="#5b6876" text-anchor="middle">Leveson y Turner (1993) atribuyen el desastre a fallas de proceso, no solo a errores de código puntuales</text>
-</svg>
-
-:::
-
-El detalle que más debería quedarte de este caso es la reutilización de código. El software de los
-modelos anteriores había funcionado durante años sin causar sobredosis, precisamente porque el
-hardware compensaba sus fallas, así que ese mismo código, al perder el respaldo del hardware, pasó de
-ser seguro a ser peligroso sin que una sola línea suya cambiara. Es la prueba concreta de que "ya
-funcionó antes" no es evidencia de que algo sea seguro en un contexto nuevo, y de que evaluar ese
-riesgo es exactamente el trabajo que le corresponde a una revisión de SQA independiente del equipo que
-escribió el código, no a la confianza de que si no falló ayer no va a fallar hoy.
-
-## Cuando falla la gobernanza: MCAS y el Boeing 737 MAX
-
-El segundo caso ocurre casi tres décadas después y en un dominio distinto, la aviación comercial, y
-sirve para mostrar que una falla de SQA no siempre es un problema de código, a veces es un problema de
-cómo la organización gobierna sus decisiones de diseño. El sistema MCAS, sigla de *Maneuvering Characteristics Augmentation System* (en español sistema de
-aumento de las características de maniobra), instalado en el Boeing 737 MAX y relacionado con los
-accidentes de 2018 y 2019, dependía de un único sensor de ángulo de ataque,
-sin ningún sensor redundante que lo respaldara, aunque las versiones posteriores del sistema sí exigen
-dos sensores. Vale la pena preguntarse, antes de ver el desenlace, si el riesgo de un sistema con
-autoridad para mover automáticamente el estabilizador horizontal del avión, basado en un único sensor
-sin redundancia, debería haber pasado por un nivel de revisión independiente más alto que el que en
-efecto recibió.
-
-Documentación pública, incluido el informe final del Comité de Transporte e Infraestructura de la
-Cámara de Representantes de Estados Unidos, publicado en septiembre de 2020, describe que la aprobación
-de un rediseño del sistema, y la posterior eliminación de referencias a MCAS del manual de vuelo,
-ocurrieron en cuestión de horas, sin el nivel de revisión independiente que un sistema con ese grado
-de autoridad automática debería requerir según las propias prácticas de certificación aeronáutica. La
-propia autoridad reguladora había estimado internamente el riesgo de accidentes antes de que el
-sistema fuera rediseñado, lo que indica que la información sobre el riesgo existía dentro del proceso,
-pero no se tradujo en una revisión a la altura de ese riesgo antes de que el sistema entrara en
-operación.
-
-::: {.diagrama}
-
-<svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cadena de gobernanza del MCAS en el Boeing 737 MAX: un unico sensor de angulo de ataque sin redundancia, un rediseno aprobado con revision en cuestion de horas destacado en el centro, la eliminacion de referencias a MCAS del manual de vuelo, y una certificacion otorgada sin el nivel de revision independiente que el sistema exigia" font-family="Segoe UI, Inter, system-ui, sans-serif">
-<defs><marker id="cali22e" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
-<text x="380" y="16" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">MCAS en el Boeing 737 MAX: cuando falla la gobernanza del proceso</text>
-<g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="40" width="170" height="90" rx="8"/></g>
-<rect x="200" y="40" width="170" height="90" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
-<g fill="#eef4fa" stroke="#c7d6e6"><rect x="390" y="40" width="170" height="90" rx="8"/></g>
-<rect x="580" y="40" width="170" height="90" rx="8" fill="#f5f7fa" stroke="#cfd8e3"/>
-<g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#cali22e)"><path d="M180,85 L200,85"/><path d="M370,85 L390,85"/><path d="M560,85 L580,85"/></g>
-<g text-anchor="middle" font-size="11" fill="#12324f"><text x="95" y="62">Un único sensor de</text><text x="95" y="76">ángulo de ataque,</text><text x="95" y="90">sin redundancia</text></g>
-<g text-anchor="middle" font-size="11" fill="#0e6f6c" font-weight="600"><text x="285" y="62">Rediseno del sistema</text><text x="285" y="76">aprobado en cuestion</text><text x="285" y="90">de horas</text></g>
-<g text-anchor="middle" font-size="11" fill="#12324f"><text x="475" y="62">Referencias a MCAS</text><text x="475" y="76">retiradas del manual</text><text x="475" y="90">de vuelo</text></g>
-<g text-anchor="middle" font-size="11" fill="#12324f" font-weight="600"><text x="665" y="62">Certificacion otorgada</text><text x="665" y="76">sin la revisión independiente</text><text x="665" y="90">que el sistema exigia</text></g>
-<text x="380" y="160" font-size="11" fill="#5b6876" text-anchor="middle">aquí el SQA que fallo no fue técnico sino de proceso: gestion de riesgos y trazabilidad de decisiones de diseno</text>
-</svg>
-
-:::
-
-Compara este caso con el del Therac-25 antes de seguir. En el Therac-25 faltó una revisión técnica
-independiente del código durante la fase de codificación y pruebas. Aquí falta algo un nivel más
-arriba, la gobernanza del proceso de certificación, es decir la gestión de riesgos, la trazabilidad de
-las decisiones de diseño y la honestidad en la comunicación con los organismos reguladores, todas ellas
-actividades de proceso que, según lo que viste en la sección de roles, le corresponde supervisar
-justamente al líder de calidad, no solo al ingeniero de SQA de un proyecto puntual. El aseguramiento de
-calidad, en sistemas de este tamaño, excede la revisión de una función o un módulo, incluye también
-si la organización completa dejó suficiente rastro documentado de por qué aprobó lo que aprobó.
+El defecto es el mismo, y el modelo solo cambia cuándo y a qué costo se descubre. Ningún modelo garantiza
+que el control funcione. Cada uno necesita que alguien escriba el criterio y alguien lo haga cumplir.
 
 ::: {.callout-tip}
-## Reto 1. Quién revisa qué
+## Reto 1. Ubica el control en cada modelo
 
-Antes de leer la solución, marca para cada tarea quién la ejecuta típicamente: el ingeniero de SQA, el
-líder de calidad, o cualquiera de los dos según el tamaño de la organización.
-
-1. **Auditar que un proyecto siga el estándar de codificación acordado**
-
-   <label><input type="checkbox"> Ingeniero de SQA</label>
-   <label><input type="checkbox"> Líder de calidad</label>
-   <label><input type="checkbox"> Cualquiera de los dos, según el tamaño de la organización</label>
-
-2. **Presidir el comité de control de cambios de toda la organización**
-
-   <label><input type="checkbox"> Ingeniero de SQA</label>
-   <label><input type="checkbox"> Líder de calidad</label>
-   <label><input type="checkbox"> Cualquiera de los dos, según el tamaño de la organización</label>
-
-3. **Diseñar y ejecutar los casos de prueba de un módulo específico**
-
-   <label><input type="checkbox"> Ingeniero de SQA</label>
-   <label><input type="checkbox"> Líder de calidad</label>
-   <label><input type="checkbox"> Cualquiera de los dos, según el tamaño de la organización</label>
-
-4. **Coordinar una evaluación formal de madurez de procesos**
-
-   <label><input type="checkbox"> Ingeniero de SQA</label>
-   <label><input type="checkbox"> Líder de calidad</label>
-   <label><input type="checkbox"> Cualquiera de los dos, según el tamaño de la organización</label>
-
-5. **Registrar y dar seguimiento a un defecto encontrado en una revisión técnica formal**
-
-   <label><input type="checkbox"> Ingeniero de SQA</label>
-   <label><input type="checkbox"> Líder de calidad</label>
-   <label><input type="checkbox"> Cualquiera de los dos, según el tamaño de la organización</label>
-
-Cuando termines de marcar, compara tu predicción con la solución de abajo.
+La clínica quiere asegurar que "el cupo liberado por una cancelación pueda ser tomado por otro paciente
+en menos de 60 segundos". Escribe, para el modelo en V y para Scrum, en qué momento escribirías el
+criterio de esa prueba y quién lo aprobaría. Después explica por qué la cascada pura lo haría tarde.
 :::
 
 ::: {.callout-note collapse="true"}
 ## Solución del Reto 1
 
-Tres de las cinco tareas son propias del ingeniero de SQA, porque ocurren dentro de un proyecto
-concreto y sobre un artefacto específico. Auditar el estándar de codificación de un proyecto, diseñar
-y ejecutar casos de prueba de un módulo, y registrar y dar seguimiento a un defecto son trabajo del
-día a día del proyecto, y es ahí donde el ingeniero de SQA opera.
+- Modelo en V: el criterio nace con los requisitos, junto con la prueba de aceptación "cancelar y reservar el cupo en menos de 60 segundos". Lo aprueba quien representa a la clínica, como el dueño del requisito.
+- Scrum: el criterio se escribe al refinar la historia, antes del sprint, y entra en la Definición de Terminado de esa historia. Lo acuerdan el dueño del producto y el equipo.
+- Cascada pura: el tiempo de liberación se mediría en las pruebas finales, y un valor de 5 minutos obligaría a rehacer diseño y código ya cerrados.
 
-Las otras dos tareas son propias del líder de calidad, porque cruzan la frontera de un solo proyecto y
-hablan a nombre de toda la organización. Presidir el comité de control de cambios de la organización y
-coordinar una evaluación formal de madurez de procesos son decisiones que afectan a todos los
-proyectos de la empresa, no solo a uno, y por eso le corresponden al rol con esa mirada más amplia.
-
-En una organización pequeña, la misma persona puede terminar haciendo las cinco tareas en distintos
-momentos, pero la lógica que separa cuál tarea es cuál no cambia, solo cambia cuántas personas la
-reparten.
+Tu respuesta puede variar en los roles mientras ubique el criterio antes de construir.
 :::
 
+## Parte 3. CI/CD y DevOps
+
+### Qué cambia con la entrega continua
+
+En los modelos anteriores la calidad se inspecciona en puntos del calendario. La integración continua (CI)
+y la entrega continua (CD) la inspeccionan en cada cambio. Cada vez que un desarrollador envía código al
+repositorio, una serie de controles automáticos lo construye, lo prueba y decide si puede avanzar. A ese
+recorrido se le llama *pipeline* de entrega, o línea de despliegue.
+
+DevOps es la cultura y el conjunto de prácticas que acercan desarrollo y operaciones, con el fin de entregar
+cambios pequeños y frecuentes con menos riesgo. Para la calidad significa tres cosas. Los cambios son
+pequeños, así que un defecto es más fácil de localizar. El pipeline automatiza las verificaciones repetibles.
+Y la operación en producción devuelve datos al equipo, que usa para corregir el rumbo.
+
+### Un pipeline con puertas de calidad
+
+Un pipeline se organiza en etapas. Al final de cada etapa hay una puerta de calidad, un criterio que debe
+cumplirse para que el cambio avance. Si no se cumple, el cambio se detiene y el autor recibe aviso.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pipeline de CI/CD con cinco etapas: confirmación del cambio con revisión de pares, construcción y pruebas rápidas, pruebas de integración, despliegue por anillos y observación en producción. Entre etapas hay puertas de calidad. Una flecha de retorno lleva los datos de producción de vuelta al inicio." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u2t2b" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Un pipeline de entrega con puertas de calidad</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="12" y="40" width="130" height="86" rx="10"/><rect x="162" y="40" width="130" height="86" rx="10"/><rect x="312" y="40" width="130" height="86" rx="10"/><rect x="462" y="40" width="130" height="86" rx="10"/></g>
+  <rect x="612" y="40" width="136" height="86" rx="10" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t2b)"><path d="M142,83 L162,83"/><path d="M292,83 L312,83"/><path d="M442,83 L462,83"/><path d="M592,83 L612,83"/></g>
+  <g fill="#fff6dc" stroke="#e6cf8a"><rect x="146" y="136" width="8" height="8"/><rect x="296" y="136" width="8" height="8"/><rect x="446" y="136" width="8" height="8"/><rect x="596" y="136" width="8" height="8"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="77" y="66">1. Cambio</text><text x="227" y="66">2. Construcción</text><text x="377" y="66">3. Integración</text><text x="527" y="66">4. Despliegue</text><text x="680" y="66" fill="#0e6f6c">5. Producción</text></g>
+  <g text-anchor="middle" font-size="11" fill="#5b6876"><text x="77" y="86">revisión de pares</text><text x="77" y="100">análisis estático</text><text x="227" y="86">compila y corre</text><text x="227" y="100">pruebas unitarias</text><text x="377" y="86">pruebas de API</text><text x="377" y="100">y de seguridad</text><text x="527" y="86">por anillos con</text><text x="527" y="100">interruptores</text><text x="680" y="86">métricas, alertas</text><text x="680" y="100">y quejas</text></g>
+  <g font-size="11" fill="#5b6876" text-anchor="middle"><text x="150" y="162">puerta</text><text x="300" y="162">puerta</text><text x="450" y="162">puerta</text><text x="600" y="162">puerta</text></g>
+  <path d="M680,126 C680,200 400,230 77,230 C60,230 60,200 77,128" fill="none" stroke="#8fb3d1" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#u2t2b)"/>
+  <text x="380" y="252" font-size="11" fill="#5b6876" text-anchor="middle">lo que se observa en producción vuelve al equipo y alimenta el siguiente cambio</text>
+</svg>
+
+:::
+
+Cada etapa filtra defectos distintos. La revisión de pares y el análisis estático atrapan errores de
+escritura y de diseño local. Las pruebas unitarias atrapan fallas de lógica. Las pruebas de integración
+atrapan interfaces rotas. El despliegue por anillos, que libera el cambio a grupos crecientes de usuarios con
+observación entre grupos, limita el daño de lo que ninguna prueba vio. El Tema 3 de la Unidad 1 mostró lo que
+pasa cuando esa última defensa falta.
+
+### Ejemplo resuelto: por qué el pipeline se parte en niveles
+
+El equipo de la clínica integra unos 20 cambios por día. Su suite completa de pruebas tarda 50 minutos, y
+la puede ejecutar de dos maneras.
+
+1. Todo en cada cambio. 20 cambios x 50 minutos = 1.000 minutos de ejecución al día, y cada desarrollador espera 50 minutos para saber si rompió algo.
+2. Por niveles. Una etapa rápida de 5 minutos (compilación, pruebas unitarias, análisis estático) corre en cada cambio: 20 x 5 = 100 minutos. Una etapa de integración de 15 minutos corre solo al fusionar con la rama principal, unas 6 veces al día: 6 x 15 = 90 minutos. Las pruebas de extremo a extremo, de 30 minutos, corren una vez cada noche: 30 minutos.
+3. Suma el segundo esquema. 100 + 90 + 30 = 220 minutos al día, contra 1.000. Ahorra 780 minutos, unas 13 horas de ejecución.
+4. Lee el efecto en la calidad. El aviso de la mayoría de los defectos llega en 5 minutos y no en 50, y eso hace probable que el autor lo corrija mientras todavía recuerda el cambio.
+
+Los tiempos y el número de cambios son ilustrativos. Lo que se aprende es el razonamiento, es decir llevar
+los controles rápidos al lugar más frecuente y los lentos al menos frecuente, sin quitar ninguno.
+
+### Las métricas DORA
+
+El programa de investigación DORA (*DevOps Research and Assessment*), de Google, mide el desempeño de la
+entrega de software con cinco métricas. DORA las lista en su guía vigente de la siguiente manera.
+
+| Métrica | Qué mide | Tipo |
+|---|---|---|
+| Tiempo de entrega de un cambio (*change lead time*) | Tiempo que pasa desde que un cambio se confirma en el control de versiones hasta que está en producción | Rendimiento |
+| Frecuencia de despliegue (*deployment frequency*) | Número de despliegues en un periodo, o tiempo entre despliegues | Rendimiento |
+| Tiempo de recuperación de un despliegue fallido (*failed deployment recovery time*) | Tiempo para restablecer el servicio tras un despliegue que requirió atención urgente | Rendimiento |
+| Tasa de fallo de cambios (*change fail rate*) | Proporción de despliegues que requieren intervención inmediata | Inestabilidad |
+| Tasa de retrabajo (*deployment rework rate*) | Proporción de despliegues no planificados que ocurren como resultado de un incidente en producción | Inestabilidad |
+
+Las tres primeras miden qué tan rápido se entrega. Las dos últimas miden qué tan estable es lo que se
+entrega. La lectura correcta mira las dos familias juntas, porque ir rápido a costa de la estabilidad
+no es mejora. El informe *Accelerate State of DevOps 2024* de DORA encontró que la adopción de inteligencia
+artificial aumenta la productividad individual pero afecta de forma negativa la estabilidad y el rendimiento
+de la entrega, y recomienda mantener lotes pequeños y pruebas sólidas para compensarlo.
+
+### Ejemplo resuelto: las métricas de la clínica en un mes
+
+En un mes, el equipo de la clínica registra lo siguiente.
+
+- 22 despliegues.
+- 3 de esos despliegues requirieron intervención inmediata, con recuperaciones de 40, 90 y 20 minutos.
+- 2 despliegues no planificados ocurrieron como resultado de un incidente en producción.
+- 5 cambios medidos tardaron 1, 2, 2, 3 y 7 días entre la confirmación y la producción.
+
+Los cálculos son estos.
+
+1. Frecuencia de despliegue: 22 en el mes, con unos 22 días hábiles, cerca de uno por día hábil.
+2. Tasa de fallo de cambios: 3 / 22 = 13,6 %.
+3. Tiempo de recuperación: promedio (40 + 90 + 20) / 3 = 50 minutos. La mediana es 40 minutos, y es la cifra menos sensible al caso de 90 minutos.
+4. Tasa de retrabajo: 2 / 22 = 9,1 %.
+5. Tiempo de entrega: la mediana de 1, 2, 2, 3 y 7 días es 2 días. El promedio sería 3, y el 7 lo infla.
+
+Con una muestra tan pequeña, las cifras sirven para empezar la conversación y no para comparar con otros
+equipos. DORA no fija un valor universal "bueno". Cada equipo compara su propia tendencia mes a mes.
+
 ::: {.callout-tip}
-## Reto 2. Aplica la lección del Therac-25
+## Reto 2. Lee las métricas
 
-Imagina que eres el ingeniero de SQA asignado a un proyecto que va a controlar el software de un
-dispositivo médico nuevo, y el equipo de desarrollo propone reutilizar varios módulos de un producto
-anterior de la empresa que llevan años funcionando sin ningún reporte de falla.
-
-Con lo que aprendiste del caso Therac-25, responde en un párrafo: ¿qué actividad de SQA de las que
-viste en la sección de ISO/IEC/IEEE 12207 deberías insistir en aplicar antes de aprobar esa
-reutilización, y por qué el hecho de que ese código ya haya funcionado bien durante años en el
-producto anterior no es, por sí solo, evidencia suficiente de que es seguro en el producto nuevo?
+El mes siguiente la clínica hace 30 despliegues. De ellos, 6 requieren intervención inmediata, con
+recuperaciones de 15, 20, 25, 30, 30 y 60 minutos. Calcula la tasa de fallo de cambios y la mediana del
+tiempo de recuperación. Después di si el equipo mejoró o empeoró frente al mes anterior y qué dos números
+usarías para sostener tu respuesta.
 :::
 
 ::: {.callout-note collapse="true"}
 ## Solución del Reto 2
 
-La actividad que corresponde aplicar es una revisión técnica formal del diseño, seguida de pruebas de
-integración específicas para el nuevo contexto de hardware, exactamente lo que faltó en el Therac-25.
-El código reutilizado del Therac-6 y el Therac-20 nunca causó una sobredosis mientras estuvo
-acompañado de salvaguardas físicas de hardware que impedían el error aunque el software fallara. Al
-quitar esas salvaguardas en el Therac-25 y dejar que el software fuera el único control, el mismo
-código pasó de seguro a peligroso sin que una sola línea suya cambiara, porque lo que cambió no fue el
-código, fue el entorno en el que ese código tenía que operar.
+- Tasa de fallo de cambios: 6 / 30 = 20 %.
+- Mediana de recuperación: ordenados son 15, 20, 25, 30, 30 y 60. Con seis datos, la mediana es el promedio de los dos centrales, (25 + 30) / 2 = 27,5 minutos.
+- Frente al mes anterior (13,6 % de fallos y mediana de 40 minutos), el equipo desplegó más (30 contra 22) y recuperó más rápido (27,5 contra 40 minutos), pero falló más veces en proporción (20 % contra 13,6 %).
 
-Por eso "ya funcionó antes" solo es evidencia de que el código funcionó bien en su entorno anterior,
-no en el nuevo. La responsabilidad del ingeniero de SQA es tratar cada reutilización de código en un
-contexto de hardware o de riesgo distinto como si fuera código nuevo, sometiéndolo a la misma revisión
-técnica formal y a las mismas pruebas de integración que se le exigirían a un módulo escrito desde
-cero, en vez de aprobarlo por confianza en su historial.
+La respuesta honesta es que el resultado es mixto. Entrega más rápido y se recupera mejor, pero la
+estabilidad bajó. Los dos números que lo sostienen son la tasa de fallo de cambios, que empeoró, y el
+tiempo de recuperación, que mejoró. Faltaría saber por qué subieron los fallos antes de decidir qué
+controlar.
 :::
 
-## Lo que te llevas de hoy
+## Parte 4. Shift-left, shift-right y quality engineering
+
+### Shift-left
+
+El principio *shift-left* (mover a la izquierda) consiste en llevar las actividades de calidad lo más
+temprano posible en la línea de tiempo del proyecto. El Tema 3 de la Unidad 1 lo presentó junto con la
+discusión sobre la curva de costo del defecto. Aquí interesa su aplicación fase por fase.
+
+Algunas prácticas concretas de *shift-left* son revisar los requisitos antes de diseñar, escribir los
+criterios de aceptación antes de programar, hacer análisis de amenazas durante el diseño, ejecutar
+análisis estático al guardar el código, y escribir la prueba antes que el código, como en el desarrollo
+guiado por pruebas (TDD). El currículo de ISTQB para el nivel básico, en su versión 4.0, incluye un
+capítulo propio sobre las pruebas a lo largo del ciclo de vida y otro sobre pruebas estáticas, y declara que
+sus conceptos aplican por igual a cascada, ágil, DevOps y entrega continua.
+
+El marco SSDF (*Secure Software Development Framework*), del NIST de Estados Unidos, lleva la misma
+idea a la seguridad. Su versión 1.1, de febrero de 2022 (NIST SP 800-218), organiza las prácticas en cuatro
+grupos: preparar la organización, proteger el software, producir software bien asegurado y responder a las
+vulnerabilidades. Los tres primeros caen casi por completo antes de la entrega. No se verificó en este
+tema si existe una versión posterior.
+
+### Shift-right
+
+El principio *shift-right* (mover a la derecha) reconoce que ninguna prueba previa cubre todo lo que pasa
+con usuarios y datos reales. Lleva actividades de calidad al entorno de producción, con mecanismos para
+observar y limitar el daño. Algunas prácticas son monitorear métricas y alertas, activar funciones con
+interruptores (*feature flags*) para poder apagarlas, liberar a un grupo pequeño de usuarios antes que al
+resto (*canary release*), y estudiar los incidentes sin buscar culpables.
+
+Mover a la derecha no sustituye a mover a la izquierda. El primero controla lo que no se pudo prever, y el
+segundo evita lo que sí se pudo. Un equipo que solo hace *shift-left* queda ciego ante lo que ocurre en
+producción, y uno que solo hace *shift-right* usa a sus usuarios como pruebas.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Línea de tiempo del ciclo de vida de izquierda a derecha, con cinco momentos: requisitos, diseño, construcción, pruebas y producción. Arriba, una flecha hacia la izquierda agrupa los controles tempranos. Abajo, una flecha hacia la derecha agrupa los controles en producción." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u2t2c" markerWidth="10" markerHeight="10" refX="8" refY="3.2" orient="auto"><path d="M0,0 L8,3.2 L0,6.4 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Dónde van los controles: a la izquierda y a la derecha</text>
+  <line x1="40" y1="120" x2="720" y2="120" stroke="#8fb3d1" stroke-width="2"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="30" y="100" width="110" height="40" rx="8"/><rect x="170" y="100" width="110" height="40" rx="8"/><rect x="310" y="100" width="110" height="40" rx="8"/><rect x="450" y="100" width="110" height="40" rx="8"/></g>
+  <rect x="590" y="100" width="130" height="40" rx="8" fill="#e4f2f1" stroke="#8fc9c5"/>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="85" y="125">Requisitos</text><text x="225" y="125">Diseño</text><text x="365" y="125">Construcción</text><text x="505" y="125">Pruebas</text><text x="655" y="125">Producción</text></g>
+  <rect x="30" y="38" width="390" height="40" rx="8" fill="#fff6dc" stroke="#e6cf8a"/>
+  <path d="M410,58 L40,58" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t2c)"/>
+  <text x="225" y="53" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Shift-left</text>
+  <text x="225" y="70" font-size="11" fill="#5b6876" text-anchor="middle">revisar, criterios de aceptación, TDD, análisis estático</text>
+  <rect x="450" y="162" width="270" height="40" rx="8" fill="#fff6dc" stroke="#e6cf8a"/>
+  <path d="M460,182 L710,182" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#u2t2c)"/>
+  <text x="585" y="177" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Shift-right</text>
+  <text x="585" y="194" font-size="11" fill="#5b6876" text-anchor="middle">monitoreo, interruptores, canary, postmortem</text>
+  <text x="380" y="232" font-size="11" fill="#5b6876" text-anchor="middle">Los dos lados se complementan: uno evita lo previsible y el otro limita lo imprevisto</text>
+</svg>
+
+:::
+
+### Quality engineering
+
+*Quality engineering* (ingeniería de calidad) es el nombre que muchas organizaciones dan a un cambio de
+enfoque. En vez de tener un equipo de pruebas que revisa al final, la calidad se trata como una capacidad de
+ingeniería que se diseña, automatiza y mide a lo largo de todo el ciclo. Quien hace esto construye
+herramientas, pipelines y estrategias de prueba, y ayuda a los equipos a prevenir defectos y no solo a
+encontrarlos.
+
+No existe una definición única y normativa del término, y el nombre del puesto varía mucho entre empresas. Lo
+que sí es estable es el contenido, que combina cuatro tareas.
+
+- Definir qué significa calidad para el producto y cómo se mide.
+- Automatizar las verificaciones repetibles dentro del pipeline.
+- Acompañar al equipo para que la calidad esté en cada fase y no al final.
+- Usar los datos de producción para decidir dónde invertir.
+
+El Tema 3 describe los roles y las habilidades que sostienen esas tareas.
+
+::: {.callout-tip}
+## Reto 3. Izquierda o derecha
+
+Para cada control de la clínica, escribe si es *shift-left* o *shift-right*, y en qué fase vive.
+
+1. Revisar con la recepcionista que el requisito de cancelación cubre los turnos ya atendidos.
+2. Activar la cancelación con un interruptor para el 5 % de los pacientes durante la primera semana.
+3. Una alerta cuando la cancelación falla más de 2 veces por cada 100 intentos.
+4. Escribir la prueba "cancelar un turno atendido devuelve un error claro" antes de programar.
+5. Un análisis posterior de por qué 14 pacientes recibieron un mensaje de cancelación equivocado.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 3
+
+1. *Shift-left*, en requisitos. Es una revisión que evita un defecto antes de diseñar.
+2. *Shift-right*, en liberación y operación. Limita el daño de lo que no se pudo prever a un grupo pequeño.
+3. *Shift-right*, en operación. Observa el comportamiento real con datos de producción.
+4. *Shift-left*, en construcción. La prueba va antes que el código, como en TDD.
+5. *Shift-right*, en operación y mantenimiento. Aprende de un incidente real sin buscar culpables.
+
+Observa que tres de los cinco son de la derecha. Un equipo maduro necesita controles en los dos lados.
+:::
+
+## Parte 5. La matriz de actividades de calidad por fase
+
+La matriz reúne lo que las partes anteriores explicaron. Las filas son las fases de un ciclo de vida
+genérico y las columnas son las cinco preguntas de la Parte 1. El modelo que uses cambia el orden y el
+tamaño, pero las actividades siguen siendo estas. Las que se describen con más detalle (revisiones técnicas,
+auditorías, gestión de configuración) se estudian en el Tema 4, y los roles en el Tema 3.
+
+::: {.tabla-ancha}
+| Fase | Actividad de calidad | Entradas | Salidas | Responsable |
+|---|---|---|---|---|
+| Requisitos | Revisión de requisitos: completitud, consistencia, verificabilidad. Criterios de aceptación | Necesidades del usuario, reglas del negocio | Requisitos aprobados y criterios de aceptación escritos | Analista de requisitos, dueño del producto, SQA |
+| Requisitos | Análisis de riesgos del producto | Requisitos, contexto de uso | Lista de riesgos con prioridad y controles previstos | Dueño del producto, líder técnico |
+| Diseño | Revisión técnica de la arquitectura y análisis de amenazas | Requisitos aprobados, riesgos | Decisiones de diseño revisadas, hallazgos cerrados | Arquitecto, revisores, SQA |
+| Diseño | Planificación de pruebas (estrategia y casos) | Requisitos, diseño | Plan de pruebas, casos diseñados, datos de prueba definidos | Ingeniero de pruebas |
+| Construcción | Estándares de código, revisión de pares, análisis estático | Diseño, estándares del equipo | Código revisado, reporte del análisis, deuda técnica visible | Desarrolladores, revisor de pares |
+| Construcción | Pruebas unitarias y gestión de configuración | Código, casos unitarios | Pruebas pasando, versiones controladas | Desarrolladores |
+| Verificación | Pruebas de integración, de sistema, de seguridad y de desempeño | Plan de pruebas, build candidato | Informe de pruebas, defectos registrados y priorizados | Ingeniero de pruebas, equipo |
+| Validación | Pruebas de aceptación y piloto con usuarios | Criterios de aceptación, build candidato | Acta de aceptación, observaciones del usuario | Dueño del producto, usuarios |
+| Liberación | Revisión de criterios de salida y plan de despliegue y de reversión | Informe de pruebas, defectos abiertos | Decisión de liberar, plan de reversión probado | Líder de calidad, líder técnico |
+| Operación | Monitoreo, alertas, gestión de incidentes y soporte | Métricas de producción, reportes de usuarios | Incidentes registrados, métricas, solicitudes de cambio | Operaciones, soporte |
+| Mantenimiento | Control de cambios, análisis de impacto y pruebas de regresión | Solicitud de cambio, código existente | Cambio aprobado, regresión ejecutada | Comité de cambios, desarrolladores |
+| Retiro | Plan de migración y retiro de datos | Decisión de retirar | Datos migrados o eliminados, cierre documentado | Líder del proyecto, operaciones |
+:::
+
+Cuatro observaciones ayudan a leer la matriz.
+
+- Cada fase tiene una salida que es la entrada de la siguiente. Una revisión de requisitos mal hecha contamina todo lo que sigue.
+- La verificación y la validación son filas separadas porque responden preguntas distintas.
+- El responsable es un rol, no una persona. En un equipo pequeño, una persona puede cubrir varios.
+- La matriz es una plantilla. Una organización la ajusta a su modelo, a su tamaño y al riesgo de su producto.
+
+::: {.callout-tip}
+## Reto 4. Completa una fila
+
+La clínica añade un pago en línea de la consulta. Escribe, para la fase de diseño, una actividad de calidad
+específica de ese riesgo, su entrada, su salida y quién la ejecutaría. Después indica qué pasaría con los
+datos de tarjeta si esa actividad se omitiera.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+- Actividad: análisis de amenazas del flujo de pago, que revisa por dónde viajan y dónde se guardan los datos de tarjeta.
+- Entrada: el requisito de pago aprobado y el diagrama de la arquitectura.
+- Salida: lista de amenazas con su control, por ejemplo delegar el cobro a un proveedor certificado para no almacenar el número de la tarjeta.
+- Responsable: arquitecto, con apoyo de quien lidere la seguridad.
+
+Si se omite, el equipo podría diseñar un almacenamiento propio de números de tarjeta sin cifrar. Corregirlo
+después implicaría rediseñar y migrar datos ya guardados, lo que cuesta mucho más que decidirlo en el diseño.
+:::
+
+## Parte 6. Ejemplo resuelto: efectividad de remoción por fase
+
+### El concepto
+
+Cada actividad de la matriz funciona como un filtro. Entran defectos, el filtro encuentra una parte y deja
+pasar el resto. La *efectividad de remoción de defectos* (DRE, de *defect removal effectiveness*) de una
+fase es la proporción de los defectos presentes en ella que esa fase encontró.
+
+DRE de una fase = defectos encontrados en la fase / defectos presentes al entrar a la fase, incluidos los que
+la propia fase introdujo.
+
+Stephen Kan formaliza esta métrica y su uso en *Metrics and Models in Software Quality Engineering*. El Tema 5
+de esta unidad la retoma entre los modelos y las métricas.
+
+### Datos de la función "cancelar y reprogramar un turno"
+
+El equipo de la clínica llevó la cuenta de los defectos de esta función, desde el origen hasta el primer mes
+de producción. Introdujo 30 defectos en requisitos, 22 en diseño y 48 en código, 100 en total. Las
+columnas son las siguientes.
+
+::: {.tabla-ancha}
+| Filtro | Defectos que entran | Defectos hallados | DRE | Defectos que pasan |
+|---|:---:|:---:|:---:|:---:|
+| Revisión de requisitos | 30 | 12 | 40 % | 18 |
+| Revisión de diseño | 18 + 22 = 40 | 16 | 40 % | 24 |
+| Revisión de pares y pruebas unitarias | 24 + 48 = 72 | 36 | 50 % | 36 |
+| Pruebas de integración y de sistema | 36 | 24 | 66,7 % | 12 |
+| Aceptación y piloto | 12 | 6 | 50 % | 6 |
+| Producción (primer mes) | 6 | 6 | 100 % | 0 |
+:::
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Seis grupos de barras, una por filtro. Defectos que entran y defectos hallados: requisitos 30 y 12, diseño 40 y 16, código 72 y 36, integración y sistema 36 y 24, aceptación 12 y 6, producción 6 y 6." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">Defectos que entran y defectos hallados en cada filtro (cifras ilustrativas)</text>
+  <line x1="50" y1="230" x2="730" y2="230" stroke="#cfd8e3" stroke-width="1.4"/>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="62" y="160" width="36" height="70"/><rect x="176" y="136" width="36" height="94"/><rect x="290" y="62" width="36" height="168"/><rect x="404" y="146" width="36" height="84"/><rect x="518" y="202" width="36" height="28"/><rect x="632" y="216" width="36" height="14"/></g>
+  <g fill="#e4f2f1" stroke="#8fc9c5"><rect x="102" y="202" width="36" height="28"/><rect x="216" y="192" width="36" height="38"/><rect x="330" y="146" width="36" height="84"/><rect x="444" y="174" width="36" height="56"/><rect x="558" y="216" width="36" height="14"/><rect x="672" y="216" width="36" height="14"/></g>
+  <g font-size="11" font-weight="600" fill="#12324f" text-anchor="middle"><text x="80" y="154">30</text><text x="120" y="196">12</text><text x="194" y="130">40</text><text x="234" y="186">16</text><text x="308" y="56">72</text><text x="348" y="140">36</text><text x="422" y="140">36</text><text x="462" y="168">24</text><text x="536" y="196">12</text><text x="576" y="210">6</text><text x="650" y="210">6</text><text x="690" y="210">6</text></g>
+  <g font-size="11" fill="#12324f" text-anchor="middle"><text x="100" y="250">Requisitos</text><text x="214" y="250">Diseño</text><text x="328" y="250">Código y</text><text x="328" y="264">unitarias</text><text x="442" y="250">Integración</text><text x="442" y="264">y sistema</text><text x="556" y="250">Aceptación</text><text x="670" y="250">Producción</text></g>
+  <rect x="540" y="30" width="12" height="12" fill="#eef4fa" stroke="#c7d6e6"/><text x="558" y="40" font-size="11" fill="#5b6876">entran</text>
+  <rect x="620" y="30" width="12" height="12" fill="#e4f2f1" stroke="#8fc9c5"/><text x="638" y="40" font-size="11" fill="#5b6876">hallados</text>
+  <text x="380" y="288" font-size="11" fill="#5b6876" text-anchor="middle">Los 6 defectos que llegan a producción son los que ningún filtro anterior encontró</text>
+</svg>
+
+:::
+
+### Paso a paso
+
+1. Calcula cada DRE. Requisitos 12 / 30 = 40 %. Diseño 16 / 40 = 40 %. Código 36 / 72 = 50 %. Integración y sistema 24 / 36 = 66,7 %. Aceptación 6 / 12 = 50 %.
+2. Calcula la remoción antes de entregar. Los defectos hallados antes de producción son 12 + 16 + 36 + 24 + 6 = 94 de 100. La DRE global antes de entregar es 94 %.
+3. Cuenta lo que escapó. Los 6 restantes llegaron a los pacientes.
+4. Mira cuál filtro es el más débil. Los de requisitos y de diseño encuentran 40 %, es decir que dejan pasar 6 de cada 10 defectos presentes. Para esa etapa temprana, la revisión puede mejorar.
+
+### El costo del hallazgo
+
+El costo de corregir depende de la fase en que se halla el defecto. Supón estas horas por defecto, que son
+un ejemplo y no un dato de ninguna clínica: 1 hora en requisitos, 2 en diseño, 3 en código, 6 en integración y
+sistema, 8 en aceptación y 20 en producción (arreglo, soporte y citas perdidas). Una hora del equipo cuesta
+60.000 pesos, como en el Tema 3 de la Unidad 1.
+
+| Filtro | Defectos | Horas por defecto | Horas |
+|---|:---:|:---:|:---:|
+| Requisitos | 12 | 1 | 12 |
+| Diseño | 16 | 2 | 32 |
+| Código y unitarias | 36 | 3 | 108 |
+| Integración y sistema | 24 | 6 | 144 |
+| Aceptación | 6 | 8 | 48 |
+| Producción | 6 | 20 | 120 |
+| Total | 100 | | 464 |
+
+El total es 464 horas, es decir 464 x 60.000 = 27.840.000 pesos. Cuatro cosas salen de la tabla.
+
+1. Los 94 defectos hallados antes de entregar cuestan 344 horas. Los 6 que llegaron a producción cuestan 120.
+2. El 6 % de los defectos produce el 25,9 % del costo (120 / 464).
+3. El promedio es 4,64 horas por defecto.
+4. Integración, sistema y aceptación suman 192 de las 464 horas (41,4 %), porque hallan lo que los filtros tempranos dejaron pasar.
+
+### Escenario: mejorar la revisión de requisitos
+
+Supón que el equipo no hiciera la revisión de requisitos, cuyo esfuerzo fue de 16 horas, y que esos 12
+defectos se hallaran después en las pruebas de sistema, a 6 horas cada uno.
+
+1. Costo sin revisión: 12 x 6 = 72 horas de corrección. Costo con revisión: 12 x 1 = 12 horas de corrección más 16 de revisión = 28 horas.
+2. Diferencia: 72 menos 28 son 44 horas a favor de la revisión.
+3. Condición: el resultado supone que los defectos se habrían hallado en pruebas de sistema, y que la revisión de 16 horas no halló más que esos 12.
+
+Este tipo de cálculo no demuestra que revisar siempre se pague. Como se vio en el Tema 3 de la Unidad 1, los
+estudios empíricos discuten cuánto cuesta de verdad un defecto tardío, y por eso conviene medir las horas
+reales del propio equipo.
+
+::: {.callout-tip}
+## Reto 5. Mejora la revisión de diseño
+
+El equipo propone una revisión de diseño más profunda, que cuesta 20 horas más. Con ella la DRE de diseño
+sube de 40 % a 60 %. Supón que los defectos extra que ahora se hallan en diseño se habrían hallado antes
+en integración y sistema. Calcula cuántos defectos extra se hallan, cuántas horas se ahorran con los costos de
+la tabla, y si la inversión se paga.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+- Defectos hallados con 60 %: 0,60 x 40 = 24. Con 40 % eran 16, así que se hallan 8 defectos extra.
+- Cada uno cuesta 2 horas en diseño y habría costado 6 en integración y sistema. Se ahorran 6 menos 2 = 4 horas por defecto, y 8 x 4 = 32 horas.
+- La inversión es de 20 horas. La ganancia neta es 32 menos 20 = 12 horas, así que se paga, aunque con un margen modesto.
+
+El margen es modesto y depende de los supuestos de costo. Si los defectos extra se hubieran hallado en
+código a 3 horas, el ahorro sería 8 x 1 = 8 horas y la inversión no se pagaría. Por eso el cálculo exige
+conocer en qué fase se habrían hallado.
+:::
+
+## Parte 7. Ejemplo resuelto: plan de calidad por fase de la app
+
+### Qué es un plan de calidad por fase
+
+Un plan de calidad por fase fija, para cada fase de una función, cuál es el objetivo medible, qué
+actividades se ejecutan, cuál es el criterio de salida y qué evidencia queda. Es el resultado de aplicar la
+matriz de la Parte 5 a un producto concreto. Se escribe al comienzo, con la información que existe, y se
+ajusta mientras avanza el proyecto.
+
+La función es "cancelar y reprogramar un turno". Su requisito, escrito para que se pueda verificar, es
+"un paciente puede cancelar un turno hasta 2 horas antes de la cita, el cupo queda disponible para otro
+paciente en menos de 60 segundos, y la app envía un mensaje de confirmación".
+
+### El plan
+
+::: {.tabla-ancha}
+| Fase | Objetivo medible | Actividades | Criterio de salida | Evidencia |
+|---|---|---|---|---|
+| Requisitos | 0 requisitos ambiguos o sin criterio de aceptación | Revisión con recepción y con un paciente, lista de casos límite (turno atendido, turno de otro paciente, cita a menos de 2 horas) | Cada requisito con al menos un criterio de aceptación escrito | Acta de revisión, matriz de requisitos y criterios |
+| Diseño | Ningún dato de salud viaja sin cifrar. El cupo se libera de forma atómica | Revisión técnica de la arquitectura, análisis de amenazas, diseño de la concurrencia del cupo | Hallazgos de la revisión cerrados | Diagrama revisado, lista de amenazas con control |
+| Construcción | Código revisado por un par antes de fusionar. Cobertura de pruebas unitarias mínima de 80 % en el módulo nuevo (valor ilustrativo) | Revisión de pares, análisis estático, pruebas unitarias, TDD en las reglas de cancelación | Pipeline en verde y 0 hallazgos críticos del análisis estático | Reporte del pipeline, reporte de cobertura |
+| Verificación | 0 defectos críticos abiertos. Liberación de cupo en menos de 60 segundos en el percentil 95 | Pruebas de integración, de sistema, de seguridad y de carga con 200 usuarios simultáneos (valor ilustrativo) | Casos de prueba ejecutados y defectos críticos cerrados | Informe de pruebas, resultados de la carga |
+| Validación | 8 de 10 pacientes de un piloto completan la cancelación sin ayuda (valor ilustrativo) | Piloto con pacientes reales en una sede, observación del uso | Acta de aceptación del dueño del producto | Registro del piloto, observaciones |
+| Liberación | Reversión probada en menos de 10 minutos | Revisión de criterios de salida, ensayo de reversión, despliegue por anillos con interruptor | Lista de salida firmada y reversión ensayada | Lista de salida, registro del ensayo |
+| Operación | Detectar una falla de cancelación en menos de 15 minutos | Alerta sobre la tasa de error, tablero de métricas, revisión semanal de reclamos | Alertas activas y tablero publicado | Configuración de alertas, reporte semanal |
+| Mantenimiento | Todo cambio con regresión ejecutada | Control de cambios, análisis de impacto, regresión automática | Regresión en verde antes de cada liberación | Registro de cambios, reporte de regresión |
+:::
+
+### Cómo leer el plan
+
+Tres detalles distinguen un plan útil de una lista de buenas intenciones.
+
+1. Cada objetivo se puede medir. "Buena calidad" no sirve. "Liberación de cupo en menos de 60 segundos en el percentil 95" sí, porque alguien puede comprobarlo.
+2. Cada fase tiene criterio de salida. Sin criterio, la fase se cierra por fecha y no por evidencia.
+3. La evidencia existe y queda guardada. Si no hay evidencia, la actividad no se puede auditar.
+
+Los valores marcados como ilustrativos (80 % de cobertura, 200 usuarios simultáneos, 8 de 10 pacientes) son
+decisiones que cada equipo toma según su riesgo. Subirlos tiene costo, y por eso se fijan al comienzo y se
+justifican.
+
+### Ejemplo resuelto: aplicar el criterio de salida
+
+Al final de la fase de verificación, el informe de la clínica muestra lo siguiente.
+
+- 4 defectos críticos abiertos, 2 de ellos en la liberación del cupo.
+- Liberación de cupo: 38 segundos en el percentil 95.
+- Carga de 200 usuarios simultáneos sin errores.
+
+Decide si la función puede pasar a validación.
+
+1. Revisa los criterios. Se exigía 0 defectos críticos abiertos y la liberación del cupo menor a 60 segundos en el percentil 95.
+2. Compara. La liberación (38 segundos) cumple. La carga cumple. Los defectos críticos (4) no cumplen.
+3. Decide. La función no pasa a validación. Se cierran los 4 defectos críticos y se vuelve a ejecutar lo afectado.
+4. Registra. El acta dice que se detuvo la fase y por qué, y eso es evidencia del proceso.
+
+Un cumplimiento parcial no basta. Si un criterio falla, la fase no se cierra, aunque los demás se cumplan.
+
+::: {.callout-tip}
+## Reto 6. Escribe una fila
+
+Añade al plan una fila de la fase de liberación para una regla nueva: "la cancelación debe seguir funcionando
+si el proveedor de mensajes está caído". Define un objetivo medible, dos actividades, un criterio de salida
+y la evidencia. Indica además qué defecto o falla impediría cerrar la fase.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+- Objetivo medible: con el proveedor de mensajes apagado, el 100 % de las cancelaciones se registra, y los mensajes se reintentan al volver el servicio.
+- Actividades: una prueba de caos dirigida que apaga el proveedor en el entorno de pruebas, y un ensayo de reversión del despliegue.
+- Criterio de salida: ninguna cancelación perdida en la prueba, y mensajes enviados en un máximo de 30 minutos tras la recuperación.
+- Evidencia: informe de la prueba con el número de cancelaciones y mensajes, y el registro del ensayo de reversión.
+- Falla que impediría cerrar: que una cancelación se pierda o que el cupo no se libere cuando el mensaje falla.
+
+Tu respuesta puede variar en los valores mientras sean medibles y tengan evidencia.
+:::
+
+## Parte 8. Caso real: el Boeing 737 MAX y el sistema MCAS
+
+### Por qué este caso
+
+El caso del 737 MAX no sirve para aprender de aviación sino para ver, en un producto real y con
+documentos oficiales, qué ocurre cuando varias actividades de calidad fallan en fases distintas. Cada
+control que se estudió en este tema tiene aquí un ejemplo de su ausencia. Antes de leerlo, piensa qué
+fase de la matriz de la Parte 5 crees que falló más.
+
+### Los hechos
+
+El 29 de octubre de 2018 se estrelló el vuelo 610 de Lion Air, con 189 muertos. El 10 de marzo de 2019 se
+estrelló el vuelo 302 de Ethiopian Airlines, con 157 muertos. Los dos accidentes suman 346 víctimas. La
+FAA ordenó mantener los aviones en tierra el 13 de marzo de 2019. El Boeing 737 MAX volvió a servicio el 18 de
+noviembre de 2020, tras 619 días.
+
+El sistema MCAS (*Maneuvering Characteristics Augmentation System*) está en el centro de los dos accidentes.
+Es un software diseñado para ayudar a controlar la tendencia del avión a levantar el morro en ciertas
+condiciones, causada por motores más grandes y colocados en otra posición. En su diseño original dependía
+de la lectura de un solo sensor de ángulo de ataque. Si ese sensor entregaba un valor erróneo, MCAS podía
+empujar el morro hacia abajo de forma repetida.
+
+Estos son los hechos que respaldan los informes y las fuentes oficiales consultadas.
+
+- La investigación indonesia del accidente de Lion Air (informe final de octubre de 2019) identificó nueve factores que contribuyeron. El software MCAS se activó con datos de un sensor de ángulo de ataque mal instalado, y el informe criticó los análisis de seguridad del diseño y la falta de información de MCAS en el manual y en el entrenamiento.
+- La investigación etíope del accidente de Ethiopian (informe final del 23 de diciembre de 2022) señaló como causa más probable las entradas repetidas y no ordenadas de MCAS por un valor erróneo de ese sensor, con una activación que la tripulación no pudo recuperar. La NTSB de Estados Unidos y el BEA francés publicaron comentarios propios sobre ese informe.
+- El informe final del Comité de Transporte e Infraestructura de la Cámara de Representantes (septiembre de 2020) concluyó que el diseño y desarrollo del MAX estuvo marcado por fallas técnicas, falta de transparencia con reguladores y clientes, y esfuerzos para ocultar información sobre la operación del avión.
+- Ese mismo informe documentó que MCAS no se mencionaba en el manual de los pilotos, y que ingenieros de Boeing plantearon preocupaciones sobre el uso de un solo sensor durante el desarrollo.
+- Según el informe del comité, ciertos modos de falla que podían activar MCAS sin orden, como un valor alto erróneo de ángulo de ataque, no se simularon en la validación del análisis de riesgos funcionales, y por eso otros efectos de la misma falla no se documentaron.
+- Según la cobertura del informe, Boeing supuso que las tripulaciones reaccionarían a una activación errónea de MCAS en unos cuatro segundos, mientras que en una prueba de 2012 un piloto de Boeing tardó más de diez segundos.
+- Un análisis de la FAA de diciembre de 2018, hecho poco después del primer accidente, estimó que, sin cambios en MCAS, el MAX tendría unos 15,4 accidentes fatales a lo largo de la vida de una flota de 4.800 aviones.
+- El Departamento de Justicia de Estados Unidos y Boeing llegaron en enero de 2021 a un acuerdo por 2.500 millones de dólares por cargos de fraude relacionados con el 737 MAX.
+- Para volver al servicio, la FAA exigió que MCAS use datos de dos sensores de ángulo de ataque y un nuevo entrenamiento en simulador.
+
+::: {.callout-note}
+## Sobre las fuentes de este caso
+
+Los documentos oficiales completos (el informe de la Cámara, los informes de las investigaciones de
+Indonesia y de Etiopía, y los comunicados de la FAA) están citados en la bibliografía. Varios hechos de esta
+parte se confirmaron por medio de resúmenes y cobertura de esos documentos y no por una lectura directa
+del texto completo, porque los sitios de las agencias no estaban accesibles en la consulta. Los números de
+página y las citas literales de los informes no se reproducen.
+:::
+
+### Dónde faltó cada control
+
+El caso se entiende mejor al mapearlo a las fases de la matriz. La tabla propone una lectura. Es un análisis
+docente con base en los hechos anteriores, y no una conclusión de los informes.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cinco fases con el control que faltó en cada una en el caso del Boeing 737 MAX: en requisitos y diseño, un solo sensor de ángulo de ataque; en diseño, supuestos sobre la reacción de los pilotos; en verificación, modos de falla no simulados; en liberación, MCAS ausente del manual y el entrenamiento; en operación, el riesgo estimado tras el primer accidente sin que se detuviera la flota." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <defs><marker id="u2t2d" markerWidth="9" markerHeight="9" refX="7" refY="2.8" orient="auto"><path d="M0,0 L7,2.8 L0,5.6 z" fill="#8fb3d1"/></marker></defs>
+  <text x="380" y="18" font-size="13.5" font-weight="700" fill="#12324f" text-anchor="middle">737 MAX: el control que faltó en cada fase</text>
+  <g fill="#eef4fa" stroke="#c7d6e6"><rect x="10" y="36" width="140" height="44" rx="8"/><rect x="162" y="36" width="140" height="44" rx="8"/><rect x="314" y="36" width="140" height="44" rx="8"/><rect x="466" y="36" width="140" height="44" rx="8"/><rect x="618" y="36" width="132" height="44" rx="8"/></g>
+  <g fill="none" stroke="#8fb3d1" stroke-width="1.6" marker-end="url(#u2t2d)"><path d="M150,58 L162,58"/><path d="M302,58 L314,58"/><path d="M454,58 L466,58"/><path d="M606,58 L618,58"/></g>
+  <g text-anchor="middle" font-size="12" font-weight="600" fill="#12324f"><text x="80" y="63">Requisitos</text><text x="232" y="63">Diseño</text><text x="384" y="63">Verificación</text><text x="536" y="63">Liberación</text><text x="684" y="63">Operación</text></g>
+  <g fill="#fbeae5" stroke="#e0a595"><rect x="10" y="100" width="140" height="150" rx="8"/><rect x="162" y="100" width="140" height="150" rx="8"/><rect x="314" y="100" width="140" height="150" rx="8"/><rect x="466" y="100" width="140" height="150" rx="8"/><rect x="618" y="100" width="132" height="150" rx="8"/></g>
+  <g text-anchor="middle" font-size="11" fill="#12324f"><text x="80" y="124">Un solo sensor</text><text x="80" y="139">de ángulo de</text><text x="80" y="154">ataque como</text><text x="80" y="169">entrada de un</text><text x="80" y="184">sistema con</text><text x="80" y="199">autoridad sobre</text><text x="80" y="214">el estabilizador</text><text x="232" y="124">Se supuso que</text><text x="232" y="139">la tripulación</text><text x="232" y="154">reaccionaría en</text><text x="232" y="169">unos cuatro</text><text x="232" y="184">segundos. Un</text><text x="232" y="199">piloto tardó</text><text x="232" y="214">más de diez</text><text x="384" y="124">Fallas que</text><text x="384" y="139">activaban MCAS</text><text x="384" y="154">sin orden no</text><text x="384" y="169">se simularon</text><text x="384" y="184">en la validación</text><text x="384" y="199">del análisis de</text><text x="384" y="214">riesgos</text><text x="536" y="124">MCAS no figuraba</text><text x="536" y="139">en el manual de</text><text x="536" y="154">los pilotos, y</text><text x="536" y="169">hubo presión para</text><text x="536" y="184">evitar simulador</text><text x="536" y="199">en el entrenamiento</text><text x="684" y="124">La FAA estimó en</text><text x="684" y="139">dic. de 2018 unos</text><text x="684" y="154">15,4 accidentes</text><text x="684" y="169">fatales sin cambio.</text><text x="684" y="184">La flota siguió</text><text x="684" y="199">volando hasta el</text><text x="684" y="214">segundo accidente</text></g>
+  <text x="380" y="276" font-size="11" fill="#5b6876" text-anchor="middle">Cada caja roja es un control que la matriz de la Parte 5 prevé en esa fase</text>
+  <text x="380" y="296" font-size="11" fill="#5b6876" text-anchor="middle">El sistema falló por la suma de varias ausencias y no por un solo defecto de código</text>
+</svg>
+
+:::
+
+::: {.tabla-ancha}
+| Fase | Control que la matriz prevé | Qué muestran los hechos |
+|---|---|---|
+| Requisitos | Análisis de riesgos del producto | Un sistema con autoridad sobre el estabilizador se apoyó en un solo sensor, y ingenieros de Boeing lo cuestionaron durante el desarrollo |
+| Diseño | Revisión técnica y análisis de amenazas | Supuestos de reacción de la tripulación que una prueba de 2012 contradecía |
+| Verificación | Pruebas de integración y de sistema | Modos de falla que activaban MCAS sin orden no se simularon |
+| Liberación | Revisión de criterios de salida y documentación | MCAS no se mencionaba en el manual de los pilotos |
+| Operación | Monitoreo y gestión de incidentes | El riesgo estimado tras el primer accidente no detuvo la operación de la flota |
+:::
+
+### La auditoría de la FAA de 2024
+
+En enero de 2024 hubo un incidente con un 737 MAX 9 de Alaska Airlines en pleno vuelo, con la pérdida de un
+tapón de puerta. A raíz de eso, la FAA realizó una auditoría especial de seis semanas a la producción del 737.
+Según la cobertura de prensa del resumen de la FAA, Boeing superó 56 de las 89 auditorías de producto que se
+le hicieron y no superó 33, con 97 casos de incumplimiento. En las 13 auditorías a Spirit AeroSystems,
+proveedor del fuselaje, 6 se aprobaron y 7 no. Muchos de los problemas se relacionaban con no seguir los
+procesos de manufactura aprobados y con no mantener la documentación de control de calidad.
+
+El 28 de febrero de 2024, el administrador de la FAA, Michael Whitaker, comunicó a Boeing que debía
+presentar un plan de acción integral en 90 días que incorporara los resultados de la auditoría y los hallazgos
+del panel de expertos que la ley de 2020 había exigido. La FAA señaló incumplimientos en el control de
+procesos de manufactura, el manejo y almacenamiento de piezas y el control del producto. El panel de expertos
+encontró, entre otras cosas, que los estándares de seguridad de Boeing podían ser demasiado complejos y
+confundir a los empleados.
+
+Esta auditoría corresponde a otro momento y a otro problema, la calidad de la producción del 737 MAX 9, y
+no al diseño de MCAS. Sirve para completar la lectura. Una organización que falla en el diseño puede fallar
+también en el proceso de fabricación, y los dos casos muestran que la calidad es una propiedad de todo el
+ciclo de vida y no de una fase.
+
+::: {.callout-note}
+## Sobre estas cifras de 2024
+
+Las cifras de la auditoría (89, 56, 33, 97, 13, 6 y 7) provienen de la cobertura de prensa del resumen de la FAA.
+No se pudo leer el documento original de la agencia en la consulta. Antes de citarlas en un trabajo, confirma
+cada una en el sitio de la FAA.
+:::
+
+::: {.callout-tip}
+## Reto 7. Mapa del caso
+
+Un compañero afirma que el desastre del 737 MAX fue "un bug de software". Escribe tres razones por las que
+esa frase es incompleta, cada una con una fase del ciclo de vida. Después propón un control concreto de la
+matriz que habría reducido el riesgo en una de esas fases.
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 7
+
+- Requisitos y diseño: el diseño dependía de un solo sensor para una función con alta autoridad. Eso es una decisión de arquitectura y de análisis de riesgos, y no un error de una línea de código.
+- Verificación: ciertos modos de falla que activaban MCAS sin orden no se simularon. Una verificación más amplia habría expuesto la dependencia del sensor.
+- Liberación y documentación: MCAS no se mencionaba en el manual de los pilotos, de modo que quien lo operaba no sabía que existía.
+- Control propuesto, por ejemplo: una revisión técnica del diseño con revisores independientes del equipo, que cuestionara por escrito el uso de un solo sensor y exigiera la redundancia antes de pasar a verificación.
+
+Tu respuesta puede variar mientras cada razón tenga una fase y un hecho.
+:::
+
+## Errores frecuentes
+
+- Creer que la calidad es una fase. La norma 12207 la trata como un proceso que acompaña a todos los demás.
+- Confundir verificación con validación. Una cumple la especificación, y la otra sirve a la necesidad.
+- Citar IEEE 730-2014 o ISO/IEC/IEEE 12207:2017 como vigentes en 2026 sin revisar la edición.
+- Usar el modelo en V sin respetar el cronograma de las pruebas. Si se comprimen al final, se pierde la ventaja.
+- Escribir una Definición de Terminado de una línea, como "funciona", que no detiene nada.
+- Medir solo la velocidad de entrega. Las métricas DORA se leen en pares, rendimiento e inestabilidad.
+- Hacer solo shift-left o solo shift-right. Cada lado cubre lo que el otro no ve.
+- Cerrar una fase por fecha y no por criterio de salida.
+- Reducir el caso del 737 MAX a un bug de software, y olvidar el análisis de riesgos, la verificación y la documentación.
+- Dar cifras de casos o de normas sin fuente. En esta guía, cada cifra indica de dónde sale.
+
+## Autoevaluación
+
+Responde cada pregunta sin mirar la guía y después abre la clave.
+
+**1.** ¿Qué idea distingue al modelo en V de la cascada pura?
+
+<label><input type="checkbox"> Cada fase de especificación o diseño tiene su prueba planificada al mismo tiempo</label>
+<label><input type="checkbox"> No tiene pruebas, solo revisiones</label>
+<label><input type="checkbox"> Cada fase dura exactamente la misma cantidad de tiempo</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 1
+
+La opción 1. Los criterios de aceptación se escriben con los requisitos, y las pruebas de integración se definen con la arquitectura.
+:::
+
+**2.** Una revisión de requisitos que busca contradicciones entre ellos es:
+
+<label><input type="checkbox"> Verificación</label>
+<label><input type="checkbox"> Validación</label>
+<label><input type="checkbox"> Control de configuración</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 2
+
+La opción 1. Compara los requisitos entre sí contra una regla de consistencia. La validación compara el producto contra la necesidad real.
+:::
+
+**3.** ¿Cuál es la edición vigente de ISO/IEC/IEEE 12207 en octubre de 2026?
+
+<label><input type="checkbox"> La de 2017</label>
+<label><input type="checkbox"> La de 2026, publicada en abril</label>
+<label><input type="checkbox"> La de 2008</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 3
+
+La opción 2. Es la segunda edición y sustituye a la de 2017, según el catálogo de ISO y la ficha de IEEE.
+:::
+
+**4.** ¿Qué edición de IEEE 730 sustituyó a la de 2014?
+
+<label><input type="checkbox"> IEEE 730-2026, publicada en agosto de 2026</label>
+<label><input type="checkbox"> IEEE 730-2002</label>
+<label><input type="checkbox"> Ninguna, la de 2014 sigue activa</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 4
+
+La opción 1. La de 2014 quedó inactiva-reservada en marzo de 2025.
+:::
+
+**5.** En Scrum, ¿qué es la Definición de Terminado?
+
+<label><input type="checkbox"> Una descripción formal del estado del incremento cuando cumple las medidas de calidad exigidas</label>
+<label><input type="checkbox"> La fecha de entrega del proyecto</label>
+<label><input type="checkbox"> El informe final del auditor</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 5
+
+La opción 1, según la Guía de Scrum 2020. Un elemento no está terminado hasta que cumple esa definición.
+:::
+
+**6.** ¿Cuál de estas prácticas es *shift-right*?
+
+<label><input type="checkbox"> Escribir criterios de aceptación antes de programar</label>
+<label><input type="checkbox"> Liberar a un grupo pequeño de usuarios con un interruptor y observar</label>
+<label><input type="checkbox"> Revisar los requisitos antes del diseño</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 6
+
+La opción 2. Lleva el control a producción para limitar el daño de lo que no se previó.
+:::
+
+**7.** Un filtro tiene 50 defectos presentes y halla 35. ¿Cuál es su DRE?
+
+<label><input type="checkbox"> 30 %</label>
+<label><input type="checkbox"> 70 %</label>
+<label><input type="checkbox"> 85 %</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 7
+
+La opción 2. 35 / 50 = 0,70, es decir 70 %. Quedan 15 defectos que pasan al siguiente filtro.
+:::
+
+**8.** Un equipo hace 25 despliegues y 4 requieren intervención inmediata. ¿Cuál es su tasa de fallo de cambios?
+
+<label><input type="checkbox"> 4 %</label>
+<label><input type="checkbox"> 16 %</label>
+<label><input type="checkbox"> 25 %</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 8
+
+La opción 2. 4 / 25 = 0,16, es decir 16 %. Es una métrica de inestabilidad en la lista de DORA.
+:::
+
+**9.** ¿Qué hecho del diseño original de MCAS es central en los dos accidentes del 737 MAX?
+
+<label><input type="checkbox"> Dependía de un solo sensor de ángulo de ataque</label>
+<label><input type="checkbox"> Funcionaba sin software</label>
+<label><input type="checkbox"> Usaba tres sensores en paralelo</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 9
+
+La opción 1. Un valor erróneo de ese sensor podía empujar el morro hacia abajo de forma repetida. Para volver
+al servicio, la FAA exigió datos de dos sensores.
+:::
+
+**10.** ¿Por qué un pipeline se parte en etapas de distinta duración?
+
+<label><input type="checkbox"> Para que los controles rápidos corran en cada cambio y los lentos con menos frecuencia, sin quitar ninguno</label>
+<label><input type="checkbox"> Para reducir el número de pruebas que existen</label>
+<label><input type="checkbox"> Para que el equipo no vea los resultados</label>
+
+::: {.callout-note collapse="true"}
+## Clave de la pregunta 10
+
+La opción 1. Una etapa rápida en cada cambio da aviso en minutos, y las etapas lentas corren menos veces, por
+ejemplo al fusionar o cada noche. En el ejemplo de la clínica se pasó de 1.000 a 220 minutos de ejecución al día.
+:::
+
+## Lo que te llevas
 
 ::: {.checklist}
 **Al salir de este tema deberías poder explicar, sin mirar la guía**
 
-- [ ] Por qué el modelo en V diseña cada prueba junto con su fase de desarrollo, y no después
-- [ ] Qué significa que verificación y validación sean procesos transversales, según ISO/IEC/IEEE 12207
-- [ ] Las actividades de SQA típicas de cada fase del ciclo de vida, de requisitos a mantenimiento
-- [ ] La diferencia de alcance entre el ingeniero de SQA y el líder de calidad
-- [ ] Las tres categorías de habilidades que necesita el personal de SQA
-- [ ] Por qué el Therac-25 fue una falla de proceso además de una falla de código
-- [ ] Por qué el caso MCAS muestra que el SQA también cubre la gobernanza de las decisiones de diseño
+- [ ] Las cinco preguntas que ubican una actividad de calidad en una fase, y la diferencia entre verificar y validar
+- [ ] Qué hace ISO/IEC/IEEE 12207 y cuál es su edición vigente, y cuál es la edición vigente de IEEE 730
+- [ ] Dónde llega la primera señal de calidad en cascada, modelo en V, iterativo, Scrum y Kanban
+- [ ] Qué es un pipeline con puertas de calidad y cómo se leen las cinco métricas DORA
+- [ ] La diferencia entre shift-left, shift-right y quality engineering, con un ejemplo de cada uno
+- [ ] Cómo se lee la matriz de actividades por fase, con entradas, salidas y responsable
+- [ ] Cómo se calcula la DRE de un filtro y el costo de los hallazgos por fase
+- [ ] Qué contiene un plan de calidad por fase y cómo se aplica un criterio de salida
+- [ ] Qué fallas de fase muestra el caso del Boeing 737 MAX y por qué no fue solo un bug
 :::
 
-## Antes del Tema 3
+## Glosario
 
-1. Elige una de las cinco fases del ciclo de vida que viste hoy, y escribe en un párrafo qué pasaría
-   si esa fase se saltara por completo su actividad de SQA asociada.
-2. Repasa el caso Therac-25 y anota, en tus propias palabras, cuál de las cuatro fallas identificadas
-   por Leveson y Turner te parece más fácil de prevenir con un cambio de proceso, y por qué.
-3. Piensa en un proyecto de software en el que hayas participado, en clase o fuera de ella, y describe
-   qué actividad de SQA de las que viste hoy faltó, y qué riesgo concreto quedó sin cubrir por esa
-   ausencia.
+- **Actividad de calidad.** Control que se ejecuta en una fase del ciclo de vida para prevenir o detectar defectos.
+- **Aseguramiento de la calidad (SQA).** Conjunto de actividades preventivas que vigilan que el proceso de construcción sea adecuado.
+- **Cascada.** Modelo de ciclo de vida en el que las fases ocurren una tras otra y cada una cierra antes de la siguiente.
+- **Modelo en V.** Variante de la secuencia en la que cada fase de especificación o diseño tiene su prueba planificada al mismo tiempo.
+- **Iterativo e incremental.** Modelo que repite ciclos cortos y entrega una parte del producto en cada uno.
+- **Modelo en espiral.** Modelo propuesto por Boehm en 1988 que añade el análisis de riesgos al comienzo de cada vuelta.
+- **Scrum.** Marco ágil que organiza el trabajo en sprints, con roles, eventos y artefactos definidos en la Guía de Scrum.
+- **Definición de Terminado.** Descripción formal del estado del incremento cuando cumple las medidas de calidad que el producto exige.
+- **Kanban.** Método ágil que gestiona el flujo de trabajo en un tablero, con límite de trabajo en curso y políticas explícitas.
+- **Verificación.** Confirmación de que el producto cumple lo especificado.
+- **Validación.** Confirmación de que el producto sirve para la necesidad real del usuario.
+- **Proceso de ciclo de vida.** Conjunto de actividades y tareas que la norma 12207 describe, sin imponer un orden de fases.
+- **ISO/IEC/IEEE 12207.** Norma de procesos del ciclo de vida del software. Edición vigente: 2026.
+- **IEEE 730.** Norma de procesos de aseguramiento de la calidad del software. Edición vigente: 2026.
+- **Integración continua (CI).** Práctica de integrar y probar el código de forma automática en cada cambio.
+- **Entrega continua (CD).** Práctica de mantener el software siempre listo para liberarse mediante un pipeline automatizado.
+- **DevOps.** Cultura y prácticas que acercan desarrollo y operaciones para entregar cambios pequeños y frecuentes con menos riesgo.
+- **Pipeline.** Recorrido automatizado que construye, prueba y despliega un cambio, con puertas de calidad entre etapas.
+- **Puerta de calidad.** Criterio que debe cumplirse para que un cambio avance a la siguiente etapa.
+- **Despliegue por anillos.** Liberar un cambio a grupos crecientes de usuarios, con observación entre grupos.
+- **Métricas DORA.** Cinco métricas de entrega de software: tiempo de entrega, frecuencia de despliegue, tiempo de recuperación, tasa de fallo de cambios y tasa de retrabajo.
+- **Tasa de fallo de cambios.** Proporción de despliegues que requieren intervención inmediata.
+- **Shift-left.** Llevar las actividades de calidad a las fases tempranas del proyecto.
+- **Shift-right.** Llevar actividades de calidad a producción, con observación y límites al daño.
+- **Interruptor de función (feature flag).** Mecanismo para activar o apagar una función sin volver a desplegar.
+- **Canary release.** Liberar un cambio a un grupo pequeño de usuarios antes que al resto.
+- **Quality engineering.** Enfoque que trata la calidad como una capacidad de ingeniería que se diseña, automatiza y mide en todo el ciclo.
+- **Matriz de actividades por fase.** Tabla que lista, por fase, la actividad de calidad, sus entradas, salidas y responsable.
+- **Criterio de salida.** Condición que decide que una fase puede cerrarse.
+- **Efectividad de remoción de defectos (DRE).** Defectos hallados en una fase dividido entre los presentes al entrar a ella.
+- **Plan de calidad por fase.** Documento que fija objetivos medibles, actividades, criterios de salida y evidencia para cada fase.
+- **MCAS.** Sistema de aumento de las características de maniobra del Boeing 737 MAX, central en los accidentes de 2018 y 2019.
+- **Ángulo de ataque.** Ángulo entre el ala y el flujo de aire, que un sensor mide en el avión.
+- **SSDF.** Marco de desarrollo seguro de software del NIST, publicado como SP 800-218.
 
-Hoy viste dónde entra la calidad en el ciclo de vida, quién la ejecuta y qué habilidades necesita. El
-Tema 3 completa la Unidad 2 con las actividades concretas de un programa de SQA, revisiones,
-auditorías y gestión de configuración, con las métricas que permiten medir la calidad de un proceso y
-de un producto, y con las herramientas que la industria usa hoy para gestionar todo eso.
+## Bibliografía
 
-## Recursos
+Normas y marcos:
 
-- Pressman, R. S. *Ingeniería de software: un enfoque práctico.* Capítulo dedicado al aseguramiento
-  de la calidad del software, bibliografía oficial del curso.
-- Sommerville, I. *Software Engineering* (10a ed.). Pearson. Capítulo de gestión de calidad,
-  bibliografía oficial del curso.
-- Leveson, N. G. y Turner, C. S. (1993). "An Investigation of the Therac-25 Accidents." *IEEE
-  Computer*, 26(7), pp. 18-41. DOI: 10.1109/MC.1993.274940.
-- [IEEE Std 730-2014, IEEE Standard for Software Quality Assurance Processes](https://standards.ieee.org/standard/730-2014.html)
-- [ISO/IEC/IEEE 12207:2017, Systems and software engineering, Software life cycle processes](https://standards.ieee.org/standard/12207-2017.html)
-- Committee on Transportation and Infrastructure, U.S. House of Representatives (septiembre de 2020).
-  *The Boeing 737 MAX Aircraft: Costs, Consequences, and Lessons from its Design, Development, and
-  Certification*, Final Committee Report. Consulta el sitio oficial del comité
-  (transportation.house.gov) para ubicar el documento vigente; el enlace directo no se incluye aquí
-  porque no se pudo verificar contra el original al momento de escribir esta guía.
+- ISO/IEC/IEEE 12207:2026. *Systems and software engineering, Software life cycle processes.* 2.a ed., abril de 2026. Sustituye a la edición de 2017. [Ficha de ISO](https://www.iso.org/standard/90219.html). [Ficha de IEEE](https://standards.ieee.org/standard/12207-2026.html).
+- IEEE 730-2026. *Standard for Software Quality Assurance Processes.* Publicada el 21 de agosto de 2026. Sustituye a IEEE 730-2014, inactiva-reservada desde el 27 de marzo de 2025. [Ficha de IEEE](https://standards.ieee.org/standard/730-2026.html).
+- ISO/IEC/IEEE 15288:2023. *Systems and software engineering, System life cycle processes.* Mencionada en la ficha de IEEE de la 12207:2026.
+- ISO/IEC 25010:2023. *Systems and software engineering, Product quality model.* Se desarrolla en la Unidad 1, Tema 2.
+- Souppaya, M., Scarfone, K. y Dodson, D. (2022). *Secure Software Development Framework (SSDF) Version 1.1.* NIST SP 800-218. [DOI](https://doi.org/10.6028/NIST.SP.800-218).
+- Schwaber, K. y Sutherland, J. (2020). *La Guía de Scrum.* Edición de noviembre de 2020. [scrumguides.org](https://scrumguides.org/scrum-guide.html).
+- DORA (consulta de enero de 2026). *DORA's software delivery performance metrics.* [Guía](https://dora.dev/guides/dora-metrics/). DORA (2024). *Accelerate State of DevOps Report 2024.* [Informe](https://dora.dev/research/2024/dora-report/).
+- ISTQB. *Certified Tester Foundation Level, versión 4.0.* [Página](https://istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/).
+
+Modelos de ciclo de vida y métricas:
+
+- Royce, W. W. (1970). Managing the Development of Large Software Systems. *Proceedings of IEEE WESCON*, pp. 328 a 338.
+- Boehm, B. W. (1988). A Spiral Model of Software Development and Enhancement. *IEEE Computer*, 21(5), 61 a 72.
+- Anderson, D. J. (2010). *Kanban: Successful Evolutionary Change for Your Technology Business.* Blue Hole Press.
+- Humble, J. y Farley, D. (2010). *Continuous Delivery.* Addison-Wesley.
+- Kan, S. H. (2002). *Metrics and Models in Software Quality Engineering* (2.a ed.). Addison-Wesley.
+- Pressman, R. S. y Maxim, B. R. *Ingeniería del software: un enfoque práctico.* Capítulos sobre calidad y aseguramiento de la calidad, bibliografía del curso.
+- Sommerville, I. (2016). *Software Engineering* (10.a ed.). Pearson.
+
+Caso Boeing 737 MAX:
+
+- Committee on Transportation and Infrastructure, U.S. House of Representatives (septiembre de 2020). *Final Committee Report on the Design, Development and Certification of the Boeing 737 MAX.* [Informe](https://democrats-transportation.house.gov/imo/media/doc/final_boeing_737_max_report.pdf). [Comunicado del 16 de septiembre de 2020](https://democrats-transportation.house.gov/news/press-releases/after-18-month-investigation-chairs-defazio-and-larsen-release-final-committee-report-on-boeing-737-max).
+- KNKT, Comité Nacional de Seguridad en el Transporte de Indonesia (octubre de 2019). *Final Aircraft Accident Investigation Report, PT Lion Mentari Airlines, Boeing 737-8 (MAX), PK-LQP.*
+- EAIB, Oficina de Investigación de Accidentes de Aeronaves de Etiopía (23 de diciembre de 2022). *Final Investigation Report, Ethiopian Airlines Flight ET302.* Comentarios de la [NTSB](https://www.ntsb.gov/investigations/Documents/Response%20to%20EAIB%20final%20report.pdf).
+- FAA (2024). [FAA Continues to Hold Boeing Accountable for Implementing Safety and Production Quality Fixes](https://www.faa.gov/newsroom/faa-continues-hold-boeing-accountable-implementing-safety-and-production-quality-fixes), comunicado de febrero de 2024. FAA. [Informe del panel de expertos, Sección 103 ODA](https://www.faa.gov/newsroom/Sec103_ExpertPanelReview_Report_Final.pdf).
+- Cobertura de la auditoría de producción: [NBC News (2024)](https://www.nbcnews.com/news/us-news/faa-audit-boeings-737-max-production-reportedly-found-dozens-issues-rcna142923).
+- Cobertura del informe de la Cámara: [ABC News (2020)](https://abcnews.com/US/house-committee-final-report-boeing-faa-failures-blame/story?id=73035288).
+- Resumen cronológico: [Wikipedia, Boeing 737 MAX groundings](https://en.wikipedia.org/wiki/Boeing_737_MAX_groundings), solo para fechas y cifras generales de la cronología.
+
+::: {.callout-note}
+## Qué no se pudo leer directamente
+
+El texto de pago de ISO/IEC/IEEE 12207:2026 y de IEEE 730-2026 no se pudo abrir, y las páginas de ISO, de
+la FAA, de la NTSB y de la Cámara de Representantes no estaban accesibles en la consulta. Los datos de
+edición y fecha de las normas vienen de las fichas de IEEE y del resumen del catálogo de ISO. Los hechos del
+caso 737 MAX y de la auditoría de 2024 vienen de cobertura de esos documentos y de la cronología citada. Los
+libros y artículos de Royce, Boehm, Anderson, Humble y Farley, y Kan se citan como bibliografía clásica del
+tema, sin haber sido abiertos en línea. Verifica cada uno antes de citarlo en un trabajo.
+:::
 
 ::: {.pie-doc}
 Calidad del software (CDS01). Fundación Universitaria María Cano. Facultad de Ingeniería.
