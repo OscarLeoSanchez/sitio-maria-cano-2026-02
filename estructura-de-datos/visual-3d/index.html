@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Estructuras de datos en 3D | ESD01</title>
+<style>
+:root{--bg:#070d1a;--ink:#eaf2ff;--mut:#a4b6d3;--acc:#38bdf8;--amb:#fbbf24;--line:#223859;--card:#0f1f3b;--ok:#4ade80;--bad:#fb7185}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Inter,system-ui,-apple-system,sans-serif;overflow:hidden}
+#app{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100vh;height:100dvh}
+#top{display:flex;align-items:center;gap:14px;padding:8px 16px;border-bottom:1px solid var(--line);background:#09142a;flex-wrap:wrap}
+#brand{font-weight:700;font-size:clamp(13px,1.1vw,17px);color:var(--amb);letter-spacing:.04em}
+#sname{font-weight:700;font-size:clamp(15px,1.5vw,24px)}
+#tabs{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.tab{background:#10213f;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font:600 clamp(12px,1.05vw,16px) inherit;font-family:inherit;cursor:pointer}
+.tab.on{background:var(--acc);color:#04141f;border-color:var(--acc)}
+.tab:hover:not(.on){border-color:var(--acc);color:var(--ink)}
+main{display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,34vw,640px);min-height:0}
+#stage{position:relative;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 28%,#173560 0%,#0b1733 52%,#050a15 100%)}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;transition:opacity .22s;cursor:grab}
+#c:active{cursor:grabbing}
+#state{position:absolute;left:10px;top:10px;max-width:min(52%,440px);font:clamp(12px,1vw,16px)/1.45 ui-monospace,Consolas,monospace;background:rgba(7,15,30,.8);border:1px solid var(--line);border-radius:10px;padding:8px 12px;pointer-events:none;display:none}
+#state table{border-collapse:collapse}
+#state td,#state th{padding:1px 8px;text-align:center;border-bottom:1px solid #1b2f52}
+#state .h{color:var(--amb)}
+#state .g{color:var(--ok)}
+#panel{overflow:auto;padding:clamp(14px,1.6vw,28px);background:linear-gradient(#0e1c38,#0a1329);border-left:1px solid var(--line);display:flex;flex-direction:column;gap:12px;min-height:0}
+#ptitle{margin:0;font-size:clamp(22px,2.5vw,42px);line-height:1.1}
+#ptext{font-size:clamp(15px,1.5vw,25px);line-height:1.42;color:#d6e3f7}
+#ptext p{margin:0 0 .6em}
+#ptext .f{font:700 1.05em ui-monospace,Consolas,monospace;color:var(--amb);background:#162748;border-radius:10px;padding:.5em .8em}
+#ptext ul{margin:0;padding-left:1.1em}
+#ptext li{margin:.25em 0}
+#ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#ctrls.busy{opacity:.55;pointer-events:none}
+.btn{background:#16294d;color:var(--ink);border:1px solid #2d4d82;border-radius:10px;padding:8px 14px;font:600 clamp(13px,1.1vw,18px) inherit;font-family:inherit;cursor:pointer}
+.btn:hover{border-color:var(--acc)}
+.btn.p{background:var(--amb);color:#201600;border-color:var(--amb)}
+.btn:disabled{opacity:.4;cursor:default}
+.fld{display:flex;align-items:center;gap:6px;color:var(--mut);font-size:clamp(13px,1.1vw,18px)}
+.fld input,.fld select{width:5.2em;background:#0a1630;color:var(--ink);border:1px solid #2d4d82;border-radius:8px;padding:7px 8px;font:inherit}
+.fld input[type=text]{width:7em}
+.seg{display:inline-flex;border:1px solid #2d4d82;border-radius:10px;overflow:hidden}
+.seg button{background:#0f1f3b;color:var(--mut);border:0;padding:8px 12px;font:600 clamp(13px,1.1vw,18px) inherit;font-family:inherit;cursor:pointer}
+.seg button.on{background:var(--acc);color:#04141f}
+.pl{display:flex;gap:8px;align-items:center;width:100%}
+.pl span{color:var(--mut);font:600 14px ui-monospace,Consolas,monospace}
+#msg{background:#0b1a33;border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:10px;padding:10px 14px;font-size:clamp(14px,1.3vw,22px);line-height:1.4;min-height:3.2em}
+#panel>*{flex-shrink:0}
+#msg:empty{display:none}
+#code{margin:0;background:#06101f;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font:clamp(12px,1.05vw,17px)/1.45 ui-monospace,Consolas,monospace;color:#c8dcff;overflow:auto;white-space:pre;display:none}
+#nav{display:flex;align-items:center;gap:12px;padding:8px 16px;border-top:1px solid var(--line);background:#09142a}
+#prog{flex:1;display:flex;gap:4px}
+#prog button{flex:1;height:14px;border:0;padding:0;border-radius:4px;background:#17294b;cursor:pointer;position:relative;overflow:hidden}
+#prog button i{position:absolute;left:0;top:0;bottom:0;background:var(--acc);width:0}
+#prog button.cur{outline:2px solid var(--amb)}
+#cnt{font:600 14px ui-monospace,Consolas,monospace;color:var(--mut);min-width:4.5em;text-align:center}
+.spd{display:flex;align-items:center;gap:6px;color:var(--mut);font-size:13px}
+.spd input{width:90px;accent-color:var(--amb)}
+@media (max-aspect-ratio:1/1){
+ main{grid-template-columns:1fr;grid-template-rows:minmax(0,46%) minmax(0,1fr)}
+ #panel{border-left:0;border-top:1px solid var(--line);padding:12px 14px;gap:9px}
+ #brand{display:none}
+ .tab{padding:4px 10px;font-size:12px}#top{padding:6px 10px;gap:6px}#sname{display:none}
+ #tabs{margin-left:0;width:100%}
+ #ptitle{font-size:21px}#ptext{font-size:15px}#msg{font-size:14px}
+ #state{max-width:70%}
+ .spd span{display:none}.spd input{width:60px}
+ #nav{padding:6px 10px;gap:8px}
+}
+@media (max-height:520px) and (min-aspect-ratio:1/1){#top{padding:4px 12px}#nav{padding:4px 12px}main{grid-template-columns:minmax(0,1fr) 300px}}
+@media (prefers-reduced-motion:reduce){#c{transition:none}}
+</style>
+</head>
+<body>
+<div id="app">
+ <header id="top"><div id="brand">ESD01</div><div id="sname"></div><nav id="tabs"></nav></header>
+ <main>
+  <section id="stage"><canvas id="c"></canvas><div id="state"></div></section>
+  <aside id="panel">
+   <h2 id="ptitle"></h2>
+   <div id="ptext"></div>
+   <div id="msg"></div>
+   <div id="ctrls"></div>
+   <pre id="code"></pre>
+  </aside>
+ </main>
+ <footer id="nav">
+  <button class="btn" id="prev">Anterior</button>
+  <div id="prog"></div>
+  <div id="cnt"></div>
+  <label class="spd"><span>Velocidad</span><input id="spd" type="range" min="0.4" max="3" step="0.1" value="1" aria-label="Velocidad"></label>
+  <button class="btn p" id="next">Siguiente</button>
+ </footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>if(!window.THREE){document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');}</script>
+<script>
+(function(){
+'use strict';
+if(!window.THREE){document.getElementById('stage').innerHTML='<p style="padding:2rem">No se pudo cargar Three.js. Revisa la conexión a internet.</p>';return;}
+const T=THREE,V3=T.Vector3;
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=s=>document.querySelector(s);
+const C={dato:0x38bdf8,ptr:0xfbbf24,act:0xfb7185,vis:0x4ade80,dim:0x3b4a66,nuevo:0xc084fc,mem:0x24344f,edge:0x8fa3c2};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const hex=n=>'0x'+n.toString(16).toUpperCase();
+
+/* ---------- renderer, escena, luces ---------- */
+const canvas=$('#c');
+const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.75));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+renderer.outputEncoding=T.sRGBEncoding;
+const scene=new T.Scene();
+scene.fog=new T.Fog(0x0a1530,30,90);
+const camera=new T.PerspectiveCamera(45,1,.1,300);
+scene.add(new T.HemisphereLight(0xcfe0ff,0x1a2646,.95));
+const sun=new T.DirectionalLight(0xffffff,.9);sun.position.set(8,16,10);sun.castShadow=true;
+sun.shadow.mapSize.set(1024,1024);const sc=sun.shadow.camera;sc.left=-24;sc.right=24;sc.top=24;sc.bottom=-24;sc.near=1;sc.far=60;sun.shadow.radius=4;sun.shadow.bias=-.0004;
+scene.add(sun);
+const rim=new T.PointLight(0x5aa9ff,.6,60);rim.position.set(-10,6,-8);scene.add(rim);
+const floor=new T.Mesh(new T.PlaneGeometry(240,240),new T.ShadowMaterial({opacity:.38}));
+floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+const grid=new T.GridHelper(120,60,0x2a4a7c,0x16294b);grid.material.transparent=true;grid.material.opacity=.45;scene.add(grid);
+function setFloor(y){floor.position.y=y;grid.position.y=y+.01;}
+{const n=360,p=new Float32Array(n*3);for(let i=0;i<n;i++){const r=26+Math.random()*34,a=Math.random()*6.283,b=Math.acos(2*Math.random()-1);p[i*3]=r*Math.sin(b)*Math.cos(a);p[i*3+1]=r*Math.cos(b)*.6+6;p[i*3+2]=r*Math.sin(b)*Math.sin(a);}
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(p,3));
+ scene.add(new T.Points(g,new T.PointsMaterial({color:0x8fb8ff,size:.16,transparent:true,opacity:.6,fog:false})));}
+
+/* ---------- camara orbital propia ---------- */
+const cam={th:0,ph:1.2,r:16,t:new V3(),g:{th:0,ph:1.2,r:16,t:new V3()}};
+let fit=1;
+function setCam(pos,tgt,snap){const p=new V3(...pos),t=new V3(...tgt),d=p.clone().sub(t),g=cam.g;g.r=d.length();g.ph=Math.acos(clamp(d.y/g.r,-1,1));g.th=Math.atan2(d.x,d.z);g.t.copy(t);
+ if(snap){cam.r=g.r;cam.ph=g.ph;cam.th=g.th;cam.t.copy(t);}}
+function stepCam(dt){const g=cam.g,k=RM?1:1-Math.pow(.002,dt);
+ let d=g.th-cam.th;d=Math.atan2(Math.sin(d),Math.cos(d));cam.th+=d*k;cam.ph+=(g.ph-cam.ph)*k;cam.r+=(g.r-cam.r)*k;cam.t.lerp(g.t,k);
+ const r=cam.r*fit,s=Math.sin(cam.ph);camera.position.set(cam.t.x+r*s*Math.sin(cam.th),cam.t.y+r*Math.cos(cam.ph),cam.t.z+r*s*Math.cos(cam.th));camera.lookAt(cam.t);}
+const ptrs=new Map();let moved=0,pd=0;
+const pdist=()=>{const a=[...ptrs.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1;};
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=0;if(ptrs.size===2)pd=pdist();});
+canvas.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+ if(ptrs.size===1){cam.g.th-=dx*.006;cam.g.ph=clamp(cam.g.ph-dy*.006,.12,Math.PI-.12);moved+=Math.abs(dx)+Math.abs(dy);}
+ else if(ptrs.size===2){const nd=pdist();cam.g.r=clamp(cam.g.r*pd/nd,3,80);pd=nd;moved+=9;}});
+const endp=e=>{if(ptrs.size===1&&moved<6&&e.type==='pointerup'&&inst&&inst.tap)inst.tap(e);ptrs.delete(e.pointerId);};
+canvas.addEventListener('pointerup',endp);canvas.addEventListener('pointercancel',endp);
+canvas.addEventListener('wheel',e=>{e.preventDefault();cam.g.r=clamp(cam.g.r*Math.exp(e.deltaY*.0012),3,80);},{passive:false});
+function pick(e,objs){const r=canvas.getBoundingClientRect(),m=new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+ const rc=new T.Raycaster();rc.setFromCamera(m,camera);const h=rc.intersectObjects(objs,true);return h.length?h[0].object:null;}
+const stage=$('#stage');
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();fit=Math.max(1,1.4/camera.aspect);}
+new ResizeObserver(resize).observe(stage);
+
+/* ---------- tweens ---------- */
+let tws=[],SPEED=1;
+const ease={io:t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,out:t=>1-Math.pow(1-t,3),back:t=>{const c=1.70158,c3=c+1;return 1+c3*Math.pow(t-1,3)+c*Math.pow(t-1,2);}};
+function tw(d,fn,ez){return new Promise(res=>{tws.push({t:0,d:RM?.0001:Math.max(d,.0001),fn,ez:ez||ease.io,res});});}
+function stepTw(dt){const a=tws;for(let i=0;i<a.length;i++){const w=a[i];w.t+=dt*SPEED/w.d;if(w.t>=1){w.fn(1);w.done=true;w.res();}else w.fn(w.ez(w.t));}
+ if(tws===a)tws=a.filter(w=>!w.done);}
+const wait=ms=>tw(ms/1000,()=>{});
+const cancelAll=()=>{tws=[];};
+function move(o,to,d,ez){const f=o.position.clone();return tw(d==null?.5:d,e=>o.position.lerpVectors(f,to,e),ez);}
+function scl(o,to,d,ez){const f=o.scale.clone();return tw(d==null?.4:d,e=>o.scale.lerpVectors(f,to,e),ez);}
+function fade(o,to,d){const ms=[];o.traverse(m=>{if(m.material&&!m.material.userData.shared)ms.push(m.material);});const f=ms.map(m=>m.opacity);ms.forEach(m=>m.transparent=true);return tw(d==null?.4:d,e=>ms.forEach((m,i)=>m.opacity=f[i]+(to-f[i])*e));}
+
+/* ---------- materiales, cajas, etiquetas ---------- */
+const GEO={};
+const bg=(w,h,d)=>{const k=w+','+h+','+d;return GEO[k]||(GEO[k]=new T.BoxGeometry(w,h,d));};
+const eg=(w,h,d)=>{const k='e'+w+','+h+','+d;return GEO[k]||(GEO[k]=new T.EdgesGeometry(bg(w,h,d)));};
+const EDGE=new T.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.22});EDGE.userData.shared=true;
+const CONE_G=new T.ConeGeometry(1,1,18),CYL_G=new T.CylinderGeometry(1,1,1,16),SPH_G=new T.SphereGeometry(1,36,24);
+const mat=(c,o)=>new T.MeshStandardMaterial(Object.assign({color:c,roughness:.38,metalness:.14,emissive:c,emissiveIntensity:.07},o||{}));
+function box(w,h,d,c,o){const m=new T.Mesh(bg(w,h,d),mat(c,o));m.castShadow=m.receiveShadow=true;m.add(new T.LineSegments(eg(w,h,d),EDGE));return m;}
+function ball(r,c){const m=new T.Mesh(SPH_G,mat(c,{roughness:.25,metalness:.2}));m.scale.setScalar(r);m.castShadow=true;return m;}
+function disc(r,h,c){const m=new T.Mesh(CYL_G,mat(c,{roughness:.3}));m.scale.set(r,h,r);m.castShadow=m.receiveShadow=true;return m;}
+function paintMat(mt,c,glow,dur){const tk=(mt.userData.tk||0)+1;mt.userData.tk=tk;const c0=mt.color.clone(),c1=new T.Color(c),e0=mt.emissiveIntensity,e1=glow==null?.07:glow;
+ return tw(dur==null?.3:dur,e=>{if(mt.userData.tk!==tk)return;mt.color.copy(c0).lerp(c1,e);mt.emissive.copy(mt.color);mt.emissiveIntensity=e0+(e1-e0)*e;});}
+const paint=(m,c,glow,dur)=>paintMat(m.material,c,glow,dur);
+const GL=.55;
+function lab(text,h,o){o=o||{};const cv=document.createElement('canvas');const tex=new T.CanvasTexture(cv);tex.minFilter=T.LinearFilter;tex.generateMipmaps=false;
+ const s=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false,fog:false}));s.renderOrder=20;s.userData.h=h;s.userData.o=o;
+ s.userData.set=t=>drawLab(s,t);drawLab(s,text);return s;}
+function drawLab(s,text){const o=s.userData.o,lines=String(text).split('\n'),fs=64,f=(o.w||'600')+' '+fs+'px "Segoe UI",Inter,sans-serif',cv=s.material.map.image;
+ let x=cv.getContext('2d');x.font=f;const pad=o.bg?34:10,w=Math.ceil(Math.max(10,...lines.map(l=>x.measureText(l).width))+pad*2),lh=fs*1.18,hh=Math.ceil(lines.length*lh+pad);
+ cv.width=w;cv.height=hh;x=cv.getContext('2d');x.font=f;
+ if(o.bg){x.fillStyle=o.bg;const r=26;x.beginPath();x.moveTo(r,0);x.arcTo(w,0,w,hh,r);x.arcTo(w,hh,0,hh,r);x.arcTo(0,hh,0,0,r);x.arcTo(0,0,w,0,r);x.fill();}
+ else{x.shadowColor='rgba(0,0,0,.85)';x.shadowBlur=8;}
+ x.fillStyle=o.c||'#eaf2ff';x.textAlign='center';x.textBaseline='middle';lines.forEach((l,i)=>x.fillText(l,w/2,pad/2+lh*(i+.5)));
+ s.material.map.needsUpdate=true;const sy=hh/fs*s.userData.h;s.scale.set(sy*w/hh,sy,1);}
+function L(par,text,h,x,y,z,o){const s=lab(text,h,o);s.position.set(x,y,z);par.add(s);return s;}
+
+/* ---------- flechas y enlaces ---------- */
+class Arrow{
+ constructor(color,rad,cone){this.rad=rad||.07;this.g=new T.Group();this.m=mat(color==null?C.ptr:color,{emissiveIntensity:.25});
+  this.shaft=new T.Mesh(CYL_G,this.m);this.shaft.castShadow=true;this.g.add(this.shaft);
+  if(cone!==false){this.head=new T.Mesh(CONE_G,this.m);this.head.castShadow=true;this.g.add(this.head);}}
+ set(p0,p1,k){k=k==null?1:k;const d=p1.clone().sub(p0),L0=d.length();if(L0<1e-4){this.g.visible=false;return;}this.g.visible=true;d.divideScalar(L0);
+  const L2=L0*k,hl=this.head?Math.min(.55,L2*.45):0,q=new T.Quaternion().setFromUnitVectors(new V3(0,1,0),d);
+  this.shaft.position.copy(p0).addScaledVector(d,(L2-hl)/2);this.shaft.scale.set(this.rad,Math.max(L2-hl,.001),this.rad);this.shaft.quaternion.copy(q);
+  if(this.head){this.head.position.copy(p0).addScaledVector(d,L2-hl/2);this.head.scale.set(this.rad*3.2,Math.max(hl,.001),this.rad*3.2);this.head.quaternion.copy(q);}}
+ paint(c,glow){return paintMat(this.m,c,glow);}
+}
+let R=null,inst=null;const LINKS=[],UPD=[];
+function exitPt(n,off,dir){
+ if(n.r)return dir.clone().multiplyScalar(n.r);
+ let t=1e9;for(const a of ['x','y','z']){const dv=Math.abs(dir[a]);if(dv>1e-6){const lim=(dir[a]>0?n.half[a]-off[a]:n.half[a]+off[a])/dv;if(lim<t)t=lim;}}
+ return dir.clone().multiplyScalar(Math.max(t,0)).add(off);}
+class Link{
+ constructor(a,b,o){o=o||{};this.a=a;this.b=b;this.fo=o.fo||new V3();this.to=o.to||new V3();this.k=o.k==null?1:o.k;this.par=o.parent||R;
+  this.ar=new Arrow(o.color,o.rad,o.cone);this.par.add(this.ar.g);LINKS.push(this);this.update();}
+ update(){const a=this.a.g.position,b=this.b.g.position,sa=a.clone().add(this.fo),sb=b.clone().add(this.to),d=sb.sub(sa);if(d.lengthSq()<1e-6){this.ar.g.visible=false;return;}d.normalize();
+  const p0=exitPt(this.a,this.fo,d).add(a),p1=exitPt(this.b,this.to,d.clone().negate()).add(b);this.ar.set(p0,p1,this.k);}
+ grow(d){const me=this;this.k=0;return tw(d==null?.45:d,e=>{me.k=e;},ease.out);}
+ remove(){const i=LINKS.indexOf(this);if(i>=0)LINKS.splice(i,1);if(this.ar.g.parent)this.ar.g.parent.remove(this.ar.g);this.ar.m.dispose();}
+}
+function clearScene(){LINKS.length=0;UPD.length=0;if(!R)return;R.traverse(o=>{if(o.material&&!o.material.userData.shared){if(o.material.map)o.material.map.dispose();o.material.dispose();}});scene.remove(R);R=null;}
+
+/* ---------- registro con campos (nodos de memoria) ---------- */
+function mkRec(fields,o){o=o||{};const g=new T.Group(),H=o.h||1;let W=0;fields.forEach(f=>{f.w=f.w||1;W+=f.w;});let x=-W/2;const cells=[];
+ fields.forEach(f=>{const col=f.t==='p'?C.ptr:f.t==='n'?C.dim:C.dato,b=box(f.w*.96,H*.96,.96,col);b.position.set(x+f.w/2,0,0);g.add(b);
+  const l=lab(f.s,f.big?(f.fs||.46):.3,{c:f.t==='n'?'#c0cde4':'#071018',w:'700'});l.position.set(x+f.w/2,0,.6);g.add(l);cells.push({m:b,l,x:x+f.w/2,w:f.w,f});x+=f.w;});
+ if(o.addr){const a=lab(o.addr,.27,{c:'#a4b6d3'});a.position.set(0,H/2+.38,0);g.add(a);}
+ return {g,half:new V3(W/2,H/2,.5),cells,W};}
+
+/* ---------- barras de costo ---------- */
+const OH={'1':1,'logn':2.2,'n':4,'nlogn':5.6,'n2':7.2,'V+E':4,'(V+E)logV':5.6,'V2':7.2};
+const OL={'1':'O(1)','logn':'O(log n)','n':'O(n)','nlogn':'O(n log n)','n2':'O(n^2)','V+E':'O(V+E)','(V+E)logV':'O((V+E) log V)','V2':'O(V^2)'};
+const OC={'1':0x4ade80,'logn':0x2dd4bf,'n':0xfbbf24,'nlogn':0xfb923c,'n2':0xfb7185,'V+E':0xfbbf24,'(V+E)logV':0xfb923c,'V2':0xfb7185};
+function costBars(items){const g=new T.Group(),sp=2.7,x0=-(items.length-1)*sp/2;
+ items.forEach((it,i)=>{const h=OH[it.o],b=box(1.5,h,1.5,OC[it.o]);b.position.set(x0+i*sp,h/2,0);g.add(b);
+  L(g,OL[it.o],.52,x0+i*sp,h+.7,0,{w:'700'});L(g,it.n,.4,x0+i*sp,-.8,1.7,{c:'#d6e3f7'});});
+ return g;}
+
+/* ---------- panel, controles, reproductor ---------- */
+let busy=false;
+function setMsg(h){$('#msg').innerHTML=h;}
+function setState(h){const s=$('#state');if(h){s.innerHTML=h;s.style.display='block';}else s.style.display='none';}
+function run(f){if(busy)return;busy=true;$('#ctrls').classList.add('busy');
+ Promise.resolve().then(f).catch(e=>console.error(e)).finally(()=>{busy=false;$('#ctrls').classList.remove('busy');});}
+const val=id=>{const i=$('#f_'+id);return i?i.value:'';};
+const P={steps:[],i:0,playing:false,busy:false,reset:null};
+function updP(){const a=$('#pStep'),b=$('#pPlay'),c=$('#pRst'),n=$('#pCnt');if(!a)return;const has=P.steps.length>0;
+ a.disabled=!has||P.i>=P.steps.length;b.disabled=!has;c.disabled=!has;b.textContent=P.playing?'Pausa':'Reproducir';n.textContent=has?P.i+' / '+P.steps.length:'';}
+async function pStep(){if(P.busy||P.i>=P.steps.length)return;P.busy=true;const s=P.steps[P.i++];s.run();setMsg(s.text);updP();await wait(380);P.busy=false;}
+async function pPlay(){if(P.playing){P.playing=false;updP();return;}if(P.i>=P.steps.length)pReset();P.playing=true;updP();
+ while(P.playing&&P.i<P.steps.length){await pStep();await wait(560);}P.playing=false;updP();}
+function pReset(){cancelAll();busy=false;$('#ctrls').classList.remove('busy');P.busy=false;P.playing=false;P.i=0;if(P.reset)P.reset();updP();}
+function algo(steps,reset,intro){cancelAll();busy=false;$('#ctrls').classList.remove('busy');P.steps=steps;P.reset=reset;P.i=0;P.busy=false;P.playing=false;reset();setMsg(intro||'');updP();}
+function clearAlgo(){P.steps=[];P.reset=null;P.i=0;P.playing=false;P.busy=false;}
+function renderCtrls(list){const box=$('#ctrls');box.innerHTML='';
+ list.forEach(c=>{let e;
+  if(c.t==='btn'){e=document.createElement('button');e.className='btn '+(c.cls||'');e.textContent=c.l;e.onclick=()=>run(c.f);}
+  else if(c.t==='num'||c.t==='txt'){e=document.createElement('label');e.className='fld';e.append(c.l+' ');const i=document.createElement('input');i.id='f_'+c.id;i.type=c.t==='num'?'number':'text';
+   if(c.t==='num'){i.min=c.min;i.max=c.max;}else i.maxLength=c.max||8;i.value=c.val;i.autocomplete='off';i.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&c.enter)run(c.enter);});e.append(i);}
+  else if(c.t==='seg'){e=document.createElement('div');e.className='seg';c.opts.forEach(o=>{const b=document.createElement('button');b.textContent=o[1];b.className=c.get()===o[0]?'on':'';b.onclick=()=>{if(busy)return;c.set(o[0]);refreshCtrls();};e.append(b);});}
+  else if(c.t==='sel'){e=document.createElement('label');e.className='fld';e.append(c.l+' ');const s=document.createElement('select');s.id='f_'+c.id;c.opts.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;s.append(op);});e.append(s);}
+  else if(c.t==='sep'){e=document.createElement('div');e.style.cssText='flex-basis:100%;height:0';}
+  else if(c.t==='player'){e=document.createElement('div');e.className='pl';
+   const mk=(id,l,f,cls)=>{const b=document.createElement('button');b.id=id;b.className='btn '+(cls||'');b.textContent=l;b.onclick=f;return b;};
+   const n=document.createElement('span');n.id='pCnt';e.append(mk('pStep','Paso',()=>{if(!P.playing)pStep();},'p'),mk('pPlay','Reproducir',pPlay),mk('pRst','Reiniciar',pReset),n);}
+  box.append(e);});updP();}
+
+/* ---------- diapositivas ---------- */
+const slides=[];
+function lerpC(a,b,t){return a+(b-a)*t;}
+const cur={si:-1,ti:0};let navTok=0,main=null,costG=null,qS=null;
+function refreshCtrls(){renderCtrls(inst&&inst.ctrls?inst.ctrls(cur.ti):[]);}
+function updateProg(){const flat=slides.reduce((a,s)=>a+s.tabs.length,0);let idx=0;for(let i=0;i<cur.si;i++)idx+=slides[i].tabs.length;idx+=cur.ti;
+ $('#cnt').textContent=(idx+1)+' / '+flat;[...$('#prog').children].forEach((b,i)=>{b.className=i===cur.si?'cur':'';b.firstChild.style.width=(i<cur.si?100:i===cur.si?(cur.ti+1)/slides[i].tabs.length*100:0)+'%';});}
+function setStep(ti){const s=slides[cur.si];cur.ti=ti;
+ [...$('#tabs').children].forEach((b,i)=>b.className='tab'+(i===ti?' on':''));
+ $('#ptext').innerHTML=s.text[ti];const cd=$('#code');if(s.code&&s.code[ti]){cd.textContent=s.code[ti];cd.style.display='block';}else cd.style.display='none';
+ const isCost=!!s.cost&&ti===s.tabs.length-1;
+ if(main)main.visible=!isCost;if(costG)costG.visible=isCost;if(qS)qS.visible=ti===0;
+ setFloor(isCost?-.02:(s.floor==null?-1:s.floor));
+ const cs=s.cams;let c=cs[Math.min(ti,cs.length-1)];if(isCost)c=s.costCam||[[0,6,17],[0,2.6,0]];setCam(c[0],c[1]);
+ clearAlgo();setState('');setMsg(s.msg?s.msg[ti]||'':'');
+ if(inst&&inst.step)inst.step(ti);refreshCtrls();updateProg();
+ try{history.replaceState(null,'','#'+cur.si+'.'+ti);}catch(e){}}
+function buildSlide(si,ti){const s=slides[si];cancelAll();busy=false;clearAlgo();clearScene();
+ R=new T.Group();scene.add(R);cur.si=si;main=null;costG=null;qS=null;
+ inst=s.build()||{};main=inst.main||R;
+ if(s.q){qS=lab(s.q,.62,{bg:'rgba(10,22,44,.82)',c:'#ffffff',w:'700'});qS.position.set(0,s.qy==null?4.5:s.qy,0);R.add(qS);}
+ if(s.cost){costG=costBars(s.cost);R.add(costG);}
+ $('#sname').textContent=s.name;$('#ptitle').textContent=s.name;
+ const tabs=$('#tabs');tabs.innerHTML='';s.tabs.forEach((t,i)=>{const b=document.createElement('button');b.className='tab';b.textContent=(i+1)+'. '+t;b.onclick=()=>setStep(i);tabs.append(b);});
+ setStep(ti);canvas.style.opacity=1;}
+function go(si,ti){si=clamp(si,0,slides.length-1);ti=clamp(ti,0,slides[si].tabs.length-1);
+ if(si===cur.si){setStep(ti);return;}
+ const tok=++navTok;canvas.style.opacity=0;setTimeout(()=>{if(tok===navTok)buildSlide(si,ti);},RM?0:200);}
+function nav(d){let si=cur.si,ti=cur.ti+d;if(ti<0){if(si===0)return;si--;ti=slides[si].tabs.length-1;}else if(ti>=slides[si].tabs.length){if(si===slides.length-1)return;si++;ti=0;}go(si,ti);}
+$('#next').onclick=()=>nav(1);$('#prev').onclick=()=>nav(-1);
+$('#spd').oninput=e=>{SPEED=+e.target.value;};
+addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+ if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();nav(1);}
+ else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();nav(-1);}
+ else if(e.key==='Home')go(0,0);else if(e.key==='End')go(slides.length-1,0);
+ else if(/^[1-4]$/.test(e.key)&&+e.key<=slides[cur.si].tabs.length)setStep(+e.key-1);});
+{let x0=null;const pn=$('#panel');pn.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;},{passive:true});
+ pn.addEventListener('touchend',e=>{if(x0==null||/INPUT|SELECT|BUTTON/.test(e.target.tagName)){x0=null;return;}const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>70)nav(dx<0?1:-1);},{passive:true});}
+
+function disp(o){o.traverse(m=>{if(m.material&&!m.material.userData.shared){if(m.material.map)m.material.map.dispose();m.material.dispose();}});if(o.parent)o.parent.remove(o);}
+const one=new V3(1,1,1),tiny=new V3(.01,.01,.01);
+const num=(id,d)=>{const v=parseInt(val(id),10);return isNaN(v)?d:v;};
+const sidx=id=>slides.findIndex(s=>s.id===id);
+
+/* ===================== 0. PORTADA Y MAPA ===================== */
+slides.push({id:'portada',name:'Estructuras de datos',tabs:['Curso','Mapa'],floor:-3,
+ text:['<p>Fundación Universitaria María Cano. Ingeniería de Software. Curso ESD01.</p><p>Docente: Oscar Leonel Sánchez Conde.</p><p>Cada estructura responde cuatro preguntas: qué problema resuelve, cómo se guarda en memoria, cómo se recorre y cuánto cuesta.</p>',
+  '<ul><li>Arreglos: acceso directo por índice.</li><li>Listas enlazadas: crecen sin mover datos.</li><li>Pilas y colas: LIFO y FIFO.</li><li>Árboles BST y AVL: búsqueda en O(log n).</li><li>Grafos: relaciones y rutas mínimas.</li><li>Tabla hash: búsqueda por clave en O(1) promedio.</li></ul>'],
+ cams:[[[0,5,24],[0,0,0]],[[0,12,19],[0,0,0]]],
+ build(){
+  const ring=new T.Group();R.add(ring);const minis=[],labs=[];
+  const mk={
+   arr(){const g=new T.Group();for(let i=0;i<5;i++){const b=box(.7,.7,.7,C.dato);b.position.x=(i-2)*.78;g.add(b);}return g;},
+   list(){const g=new T.Group(),ns=[];for(let i=0;i<3;i++){const n={g:new T.Group(),half:new V3(.55,.28,.28)},a=box(.5,.55,.55,C.dato),b=box(.5,.55,.55,C.ptr);a.position.x=-.27;b.position.x=.27;n.g.add(a,b);n.g.position.set((i-1)*1.9,(i%2)*.5-.25,0);g.add(n.g);ns.push(n);}
+    for(let i=0;i<2;i++)new Link(ns[i],ns[i+1],{parent:g,rad:.05});return g;},
+   stack(){const g=new T.Group();for(let i=0;i<4;i++){const d=disc(.85,.3,[0x38bdf8,0x60a5fa,0x818cf8,0xa78bfa][i]);d.position.y=i*.36;g.add(d);}g.position.y=-.5;return g;},
+   queue(){const g=new T.Group();for(let i=0;i<4;i++){const b=disc(.3,.7,C.nuevo),h=ball(.3,C.nuevo);b.position.set((i-1.5)*.95,0,0);h.position.set((i-1.5)*.95,.6,0);g.add(b,h);}return g;},
+   tree(){const g=new T.Group(),P=[[0,1.1],[-1,.2],[1,.2],[-1.6,-.7],[-.4,-.7],[.4,-.7],[1.6,-.7]],ns=P.map(p=>{const s=ball(.3,C.dato);s.position.set(p[0],p[1],0);g.add(s);return {g:s,r:.3};});
+    [[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]].forEach(e=>new Link(ns[e[0]],ns[e[1]],{parent:g,cone:false,rad:.05,color:C.edge}));return g;},
+   graph(){const g=new T.Group(),P=[[-1.2,.3,0],[0,1,.6],[1.2,.2,0],[.4,-.8,-.5],[-.7,-.7,.4]],ns=P.map(p=>{const s=ball(.3,C.vis);s.position.set(...p);g.add(s);return {g:s,r:.3};});
+    [[0,1],[1,2],[2,3],[3,4],[4,0],[1,3]].forEach(e=>new Link(ns[e[0]],ns[e[1]],{parent:g,cone:false,rad:.04,color:C.edge}));return g;},
+   hash(){const g=new T.Group();for(let i=0;i<4;i++){const b=box(.8,.45,.6,i%2?C.dim:C.ptr);b.position.set(-.6,(1.5-i)*.55,0);g.add(b);if(i%2===0){const n=box(.45,.4,.5,C.dato);n.position.set(.5+(i?.6:0),(1.5-i)*.55,0);g.add(n);}}return g;}
+  };
+  const defs=[['arr','Arreglos','arreglos'],['list','Listas enlazadas','listas'],['stack','Pilas','pilas'],['queue','Colas','colas'],['tree','Árboles BST y AVL','bst'],['graph','Grafos','grafos'],['hash','Tabla hash','hash']];
+  defs.forEach((d,i)=>{const a=i/defs.length*Math.PI*2,m=mk[d[0]](),w=new T.Group();w.position.set(Math.cos(a)*6.2,0,Math.sin(a)*6.2);w.add(m);w.userData.go=d[2];
+   const l=lab(d[1],.5,{bg:'rgba(10,22,44,.8)',w:'700'});l.position.set(0,-2.1,0);w.add(l);labs.push(l);ring.add(w);minis.push(w);
+   UPD.push((dt)=>{if(!RM)m.rotation.y+=dt*.5;w.position.y=RM?0:Math.sin(performance.now()/900+i)*.25;});});
+  const title=lab('Estructuras\nde datos',.8,{w:'800',c:'#ffffff'});title.position.set(0,.4,0);R.add(title);
+  UPD.push(dt=>{if(!RM)ring.rotation.y+=dt*.1;});
+  return {main:R,step(i){title.visible=i===0;labs.forEach(l=>l.visible=i===1);},
+   tap(e){let o=pick(e,minis);while(o&&o.userData.go===undefined)o=o.parent;if(o){const k=sidx(o.userData.go);if(k>=0)go(k,0);}}};}
+});
+
+/* ===================== 1. MEMORIA RAM ===================== */
+slides.push({id:'ram',name:'Memoria RAM',tabs:['Problema','Memoria','Operaciones','Costo'],floor:-.2,q:'¿Dónde vive una variable?',qy:3.8,
+ cams:[[[0,7,13],[0,.5,0]],[[0,8.5,11],[0,0,.2]],[[0,8.5,11],[0,0,.2]]],
+ text:['<p>Un programa guarda valores y los vuelve a encontrar en nanosegundos. La memoria RAM es una tira enorme de celdas de un byte, y cada celda tiene una dirección numérica propia.</p><p>Una variable es un nombre que el lenguaje asocia a una dirección. Sin direcciones ningún dato se podría volver a localizar.</p>',
+  '<p>Las direcciones se escriben en hexadecimal. Un int ocupa 4 celdas seguidas y un char ocupa 1.</p><p>Un puntero, o referencia, es una variable cuyo valor es la dirección de otra. En la escena, p guarda 0x1004, que es la dirección de y.</p>',
+  '<p>Leer o escribir una variable es ir directo a su dirección. Seguir un puntero son dos accesos: leer la dirección guardada y luego ir a esa dirección.</p>',
+  '<p>El hardware llega a cualquier dirección en el mismo tiempo, O(1), sin importar qué tan lejos esté. Recorrer n celdas cuesta n accesos, O(n).</p><p>Todas las estructuras siguientes se construyen sobre esta propiedad.</p>'],
+ msg:['','Direcciones: x en 0x1000, y en 0x1004, c en 0x1008, p en 0x1010.','',''],
+ cost:[{n:'Leer o escribir\nuna variable',o:'1'},{n:'Seguir un\npuntero',o:'1'},{n:'Recorrer\nn celdas',o:'n'},{n:'Copiar un bloque\nde n bytes',o:'n'}],
+ build(){
+  const g=new T.Group();R.add(g);const S=1.3,COLS=8,x0=-(COLS-1)*S/2,z0=-S;
+  const pos=i=>new V3(x0+(i%COLS)*S,0,z0+Math.floor(i/COLS)*S);
+  for(let i=0;i<24;i++){const b=box(1.15,.25,1.15,C.mem);b.position.copy(pos(i));g.add(b);L(g,hex(0x1000+i),.24,b.position.x,.3,b.position.z+.38,{c:'#a4b6d3'});}
+  const defs={x:{t:'int',v:7,a:0,len:4,c:C.dato},y:{t:'int',v:42,a:4,len:4,c:C.dato},c:{t:'char',v:"'A'",a:8,len:1,c:C.dato},p:{t:'int*',v:'0x1004',a:16,len:4,c:C.ptr}};
+  const nd={},lb={};
+  Object.keys(defs).forEach(k=>{const d=defs[k],p0=pos(d.a),p1=pos(d.a+d.len-1),w=d.len*S-.15,b=box(w,.6,1.1,d.c);b.position.set((p0.x+p1.x)/2,.42,p0.z);g.add(b);
+   nd[k]={g:b,half:new V3(w/2,.3,.55)};lb[k]=L(g,d.t+' '+k+' = '+d.v,.5,b.position.x,1.35,b.position.z,{w:'700'});});
+  const ar=new Link(nd.p,nd.y,{parent:g,rad:.08});
+  const back=async()=>{await wait(900);Object.keys(nd).forEach(k=>paint(nd[k].g,defs[k].c,.07));};
+  return {main:g,ctrls(st){if(st!==2)return[];return[
+   {t:'btn',l:'Leer x',f:async()=>{await paint(nd.x.g,C.act,.6);setMsg('x vale 7 y ocupa 4 bytes desde 0x1000.');await back();}},
+   {t:'num',id:'w',l:'y =',val:99,min:0,max:999,enter:null},
+   {t:'btn',l:'Escribir y',f:async()=>{const n=num('w',99);defs.y.v=n;await paint(nd.y.g,C.act,.6);lb.y.userData.set('int y = '+n);setMsg('Se escribe '+n+' en las 4 celdas desde 0x1004.');await back();}},
+   {t:'btn',l:'Seguir p',cls:'p',f:async()=>{await paint(nd.p.g,C.act,.6);setMsg('1. Se lee p: guarda la dirección 0x1004.');await wait(900);await ar.ar.paint(C.act,.8);await paint(nd.y.g,C.act,.6);
+     setMsg('2. Se va a 0x1004 y se lee el valor: *p = '+defs.y.v+'.');await wait(700);await ar.ar.paint(C.ptr,.25);await back();}}];}};}
+});
+
+/* ===================== 2. ARREGLOS ===================== */
+slides.push({id:'arreglos',name:'Arreglos',tabs:['Problema','Memoria','Operaciones','Costo'],floor:-.1,q:'¿Cómo leo la quinta nota sin recorrer las anteriores?',qy:4.2,
+ cams:[[[0,6,11],[0,.7,0]],[[0,5.5,10.5],[0,.8,0]],[[0,5.5,10.5],[0,.8,0]]],
+ text:['<p>Ocho variables sueltas obligan a nombrar y escribir cada una. Un arreglo guarda n elementos del mismo tipo en un solo bloque y los numera desde 0.</p><p>Ese número, el índice, basta para llegar a cualquier elemento.</p>',
+  '<p>Los elementos ocupan celdas contiguas, de 4 bytes cada una en este ejemplo. La dirección del elemento i sale de una cuenta.</p><p class="f">dirección = base + i * tamaño</p><p>Con base 0x2000 e i = 3 resulta 0x200C. Una matriz se guarda fila tras fila, y la cuenta pasa a base + (i * columnas + j) * tamaño.</p>',
+  '<p>Acceder es una cuenta. Insertar o eliminar en el medio obliga a desplazar, uno por uno, los elementos que quedan a la derecha del hueco.</p>',
+  '<p>El acceso por índice es O(1) porque es una sola cuenta. Buscar un valor sin orden recorre hasta n elementos. Insertar o eliminar en el medio mueve hasta n elementos.</p><p>Insertar al final, mientras quede espacio, cuesta O(1).</p>'],
+ code:[null,null,'// Java: insertar v en la posicion i\nfor (int k = n - 1; k >= i; k--) {\n    a[k + 1] = a[k];\n}\na[i] = v;\nn++;',null],
+ cost:[{n:'Acceso a[i]',o:'1'},{n:'Buscar\nun valor',o:'n'},{n:'Insertar\nal final',o:'1'},{n:'Insertar\nen el medio',o:'n'},{n:'Eliminar\nen el medio',o:'n'}],
+ build(){
+  const N=8,GX=1.65,sx=i=>(i-(N-1)/2)*GX;let mode='v';
+  const g=new T.Group();R.add(g);const vG=new T.Group(),mG=new T.Group();g.add(vG,mG);
+  for(let i=0;i<N;i++){const p=box(1.5,.2,1.5,C.mem);p.position.set(sx(i),0,0);vG.add(p);L(vG,'['+i+']',.36,sx(i),.05,1.3,{c:'#c0cde4'});L(vG,hex(0x2000+i*4),.3,sx(i),.05,1.9,{c:'#7f95b8'});}
+  const items=[];
+  const mkItem=v=>{const it=new T.Group(),b=box(1.4,1.05,1.4,C.dato);b.position.y=.62;it.add(b);it.userData.b=b;it.userData.l=L(it,String(v),.6,0,.62,0,{c:'#05121c',w:'800'});it.userData.v=v;return it;};
+  [12,7,25,3,18,9].forEach((v,i)=>{const it=mkItem(v);it.position.set(sx(i),0,0);vG.add(it);items.push(it);});
+  const F=L(g,'dirección = base + i * 4',.5,0,3.3,0,{bg:'rgba(10,22,44,.88)',c:'#fbbf24',w:'700'});
+  const mk=new Arrow(C.ptr,.1);vG.add(mk.g);mk.g.visible=false;
+  // matriz
+  const MV=[[5,2,8,1],[4,9,3,7],[6,1,5,2]],mb=[],ms=[];
+  for(let i=0;i<3;i++)for(let j=0;j<4;j++){const h=.5+MV[i][j]*.18,b=box(1.3,h,1.3,C.dato);b.position.set((j-1.5)*1.6,h/2,(i-1)*1.6-1.2);mG.add(b);mb.push(b);
+   L(mG,MV[i][j]+'',.5,b.position.x,h+.45,b.position.z,{w:'800'});L(mG,'['+i+']['+j+']',.26,b.position.x,.1,b.position.z+.85,{c:'#d6e3f7'});}
+  for(let k=0;k<12;k++){const b=box(.98,.4,.98,C.dato);b.position.set((k-5.5)*1.08,.2,3.6);mG.add(b);ms.push(b);L(mG,MV[Math.floor(k/4)][k%4]+'',.36,b.position.x,.2,b.position.z,{c:'#05121c',w:'800'});L(mG,hex(0x3000+k*4),.2,b.position.x,.1,b.position.z+.75,{c:'#7f95b8'});}
+  L(mG,'Memoria lineal, fila tras fila',.38,0,1.0,5.0,{c:'#a4b6d3'});
+  mG.visible=false;
+  const camFor=()=>setCam(mode==='v'?[0,5.5,10.5]:[0,9,10],mode==='v'?[0,.8,0]:[0,.4,1.2]);
+  const show=()=>{vG.visible=mode==='v';mG.visible=mode==='m';F.position.y=mode==='v'?3.3:3.6;F.userData.set(mode==='v'?'dirección = base + i * 4':'dirección = base + (i * 4 + j) * 4');camFor();};
+  const reset=()=>items.forEach(it=>paint(it.userData.b,C.dato,.07));
+  const slot=(it,k,d)=>move(it,new V3(sx(k),0,0),d==null?.45:d);
+  const stat=()=>setMsg('Elementos: n = '+items.length+' de capacidad '+N+'.');
+  return {main:g,
+   step(st){if(st===3)return;show();F.visible=st>=1;mk.g.visible=false;if(st===2)stat();},
+   ctrls(st){if(st===0||st===3)return[];const seg={t:'seg',opts:[['v','Vector'],['m','Matriz']],get:()=>mode,set:v=>{mode=v;show();if(v==='m')setMsg('');else stat();}};if(st===1)return[seg];
+    if(mode==='m')return[seg,{t:'num',id:'i',l:'i',val:1,min:0,max:2},{t:'num',id:'j',l:'j',val:2,min:0,max:3},
+     {t:'btn',l:'Acceder a[i][j]',cls:'p',f:async()=>{const i=clamp(num('i',1),0,2),j=clamp(num('j',2),0,3),k=i*4+j;mb.forEach(b=>paint(b,C.dato,.07,.1));ms.forEach(b=>paint(b,C.dato,.07,.1));await wait(150);
+      F.userData.set('0x3000 + ('+i+' * 4 + '+j+') * 4 = '+hex(0x3000+k*4));paint(mb[k],C.act,.6);await paint(ms[k],C.act,.6);setMsg('a['+i+']['+j+'] = '+MV[i][j]+' está en la posición lineal '+k+'.');}},
+     {t:'btn',l:'Recorrer por filas',f:async()=>{mb.forEach(b=>paint(b,C.dato,.07,.1));ms.forEach(b=>paint(b,C.dato,.07,.1));await wait(150);for(let k=0;k<12;k++){paint(mb[k],C.vis,.5);paint(ms[k],C.vis,.5);setMsg('Posición '+k+': a['+Math.floor(k/4)+']['+k%4+']');await wait(380);}}}];
+    return[seg,{t:'num',id:'v',l:'valor',val:33,min:0,max:99},{t:'num',id:'i',l:'índice',val:2,min:0,max:7},
+     {t:'btn',l:'Acceder',f:async()=>{const i=num('i',0);reset();if(i<0||i>=items.length){mk.g.visible=false;F.userData.set('índice '+i+' fuera de rango');setMsg('El índice '+i+' está fuera del arreglo (n = '+items.length+').');return;}
+       F.userData.set('0x2000 + '+i+' * 4 = '+hex(0x2000+i*4));mk.g.visible=true;const x=sx(i);await tw(.5,e=>mk.set(new V3(x,2.7,0),new V3(x,1.25,0),e),ease.out);await paint(items[i].userData.b,C.act,.6);
+       setMsg('a['+i+'] = '+items[i].userData.v+'. Una multiplicación y una suma, sin recorrer los '+i+' anteriores.');}},
+     {t:'btn',l:'Buscar valor',f:async()=>{const v=num('v',0);reset();mk.g.visible=false;for(let k=0;k<items.length;k++){await paint(items[k].userData.b,C.act,.6,.2);setMsg('Compara a['+k+'] = '+items[k].userData.v+' con '+v+'.');await wait(420);
+        if(items[k].userData.v===v){await paint(items[k].userData.b,C.vis,.6,.2);setMsg('Encontrado en el índice '+k+' tras '+(k+1)+' comparaciones.');return;}paint(items[k].userData.b,C.dato,.07,.2);}
+       setMsg('El valor '+v+' no está: se hicieron '+items.length+' comparaciones.');}},
+     {t:'btn',l:'Insertar en i',cls:'p',f:async()=>{const v=num('v',0),n=items.length;let i=clamp(num('i',n),0,n);reset();mk.g.visible=false;if(n>=N){setMsg('El arreglo está lleno: no hay espacio para insertar.');return;}
+       for(let k=n-1;k>=i;k--){setMsg('Desplaza a['+k+'] a la posición '+(k+1)+'.');await slot(items[k],k+1,.4);}
+       const it=mkItem(v);it.position.set(sx(i),4,0);vG.add(it);items.splice(i,0,it);await move(it,new V3(sx(i),0,0),.5,ease.back);await paint(it.userData.b,C.nuevo,.5);
+       setMsg('Insertado '+v+' en el índice '+i+'. Se desplazaron '+(n-i)+' elementos. n = '+items.length+'.');await wait(500);paint(it.userData.b,C.dato,.07);}},
+     {t:'btn',l:'Eliminar i',f:async()=>{const n=items.length,i=num('i',0);reset();mk.g.visible=false;if(i<0||i>=n){setMsg('El índice '+i+' está fuera del arreglo.');return;}
+       const it=items[i];await paint(it.userData.b,C.act,.7,.25);await scl(it,tiny,.35);vG.remove(it);items.splice(i,1);
+       for(let k=i;k<items.length;k++){setMsg('Desplaza a['+(k+1)+'] a la posición '+k+'.');await slot(items[k],k,.4);}
+       setMsg('Eliminado el índice '+i+'. Se desplazaron '+(n-1-i)+' elementos. n = '+items.length+'.');}}];}};}
+});
+
+/* ===================== 3. LISTAS ENLAZADAS ===================== */
+slides.push({id:'listas',name:'Listas enlazadas',tabs:['Problema','Memoria','Operaciones','Costo'],floor:-2.4,q:'¿Y si no sé cuántos datos llegarán?',qy:4,
+ cams:[[[0,6.5,19],[0,0,0]]],
+ text:['<p>Un arreglo fija su tamaño al crearse, y crecer exige copiar todo a un bloque nuevo. Una lista enlazada crece de a un nodo, en cualquier lugar libre de la memoria.</p><p>Cada nodo guarda su dato y la dirección del siguiente, así que insertar o eliminar no mueve a los demás.</p>',
+  '<p>Los nodos no son contiguos. Cada uno vive en una dirección cualquiera y guarda el dato más uno o dos punteros: siguiente en la lista simple, anterior y siguiente en la doble.</p><p>La cabeza es la única referencia que el programa conserva. En la lista circular el último nodo apunta al primero y no existe null al final.</p>',
+  '<p>Para llegar a un nodo hay que seguir los punteros desde la cabeza. Insertar al inicio solo cambia dos punteros. Eliminar un nodo conecta el anterior con el siguiente.</p>',
+  '<p>Insertar al inicio es O(1). Acceder por posición, buscar o insertar al final sin referencia a la cola cuesta O(n), porque no existe una fórmula para saltar al nodo i.</p><p>En la lista doble, eliminar un nodo del que ya se tiene la referencia es O(1), porque el nodo conoce a su anterior.</p>'],
+ code:[null,null,'# Python: recorrer la lista\nactual = cabeza\nwhile actual is not None:\n    print(actual.dato)\n    actual = actual.siguiente',null],
+ cost:[{n:'Insertar\nal inicio',o:'1'},{n:'Insertar\nal final',o:'n'},{n:'Acceso por\nposición',o:'n'},{n:'Buscar\nun valor',o:'n'},{n:'Eliminar\nel primero',o:'1'}],
+ build(){
+  const g=new T.Group();R.add(g);let type='s',ai=0;const CAP=7,items=[];
+  const ADDR=[0x4A10,0x5C38,0x4F80,0x6120,0x5290,0x4C08,0x5E70,0x6A44,0x5518];
+  const head=mkRec([{t:'p',s:'cabeza',w:1.5}],{h:.8}),nul=mkRec([{t:'n',s:'null'}],{h:.7});g.add(head.g,nul.g);
+  const fields=(v)=>type==='d'?[{t:'p',s:'ant'},{t:'d',s:String(v),big:1},{t:'p',s:'sig'}]:[{t:'d',s:String(v),big:1},{t:'p',s:'sig'}];
+  const build1=it=>{if(it.g)disp(it.g);const r=mkRec(fields(it.v),{addr:hex(it.addr)});it.rec=r;it.g=r.g;it.half=r.half;g.add(r.g);return it;};
+  const newItem=v=>{const a=ADDR[ai++%ADDR.length],it={v,addr:a,off:new V3(0,(((a*37)%100)/100-.5)*1.8,(((a*71)%100)/100-.5)*3)};return build1(it);};
+  const dcell=it=>it.rec.cells.find(c=>c.f.t==='d').m;
+  const lay=(i,n)=>{if(type==='c'){const r=Math.max(3.6,n*1.0),a=Math.PI+i*2*Math.PI/n;return new V3(r*Math.cos(a),items[i].off.y*.25,r*Math.sin(a));}return new V3((i-(n-1)/2)*3.8,items[i].off.y,items[i].off.z);};
+  const place=async(anim)=>{const n=items.length,ps=items.map((it,i)=>lay(i,n)),f0=n?ps[0]:new V3(-1.5,0,0),hp=f0.clone().add(new V3(-2.7,1.8,0)),
+    np=type==='c'?new V3(0,-20,0):(n?ps[n-1].clone().add(new V3(3.2,0,0)):f0.clone().add(new V3(0,0,0)));
+   nul.g.visible=type!=='c';const all=[...items.map((it,i)=>[it.g,ps[i]]),[head.g,hp],[nul.g,np]];
+   if(!anim){all.forEach(a=>a[0].position.copy(a[1]));return;}const f=all.map(a=>a[0].position.clone());await tw(.6,e=>all.forEach((a,i)=>a[0].position.lerpVectors(f[i],a[1],e)));};
+  let lk=[];
+  const relink=grow=>{lk.forEach(l=>l.remove());lk=[];const n=items.length,d=type==='d';
+   lk.push(new Link(head,n?items[0]:nul,{parent:g}));
+   items.forEach((it,i)=>{const sx=it.rec.cells[it.rec.cells.length-1].x,nx=i<n-1?items[i+1]:(type==='c'?items[0]:nul);
+    lk.push(new Link(it,nx,{parent:g,fo:new V3(sx,d?.22:0,0),to:new V3(0,d?.22:0,0)}));
+    if(d){const pv=i>0?items[i-1]:null;if(pv)lk.push(new Link(it,pv,{parent:g,fo:new V3(it.rec.cells[0].x,-.22,0),to:new V3(0,-.22,0),color:C.nuevo}));}});
+   if(grow)lk.forEach(l=>l.grow());};
+  // cursor
+  const cp=new V3(),car=new Arrow(C.act,.09),clb=lab('actual',.46,{bg:'rgba(251,113,133,.9)',c:'#1b0509',w:'700'});g.add(car.g,clb);car.g.visible=clb.visible=false;
+  UPD.push(()=>{if(!clb.visible)return;car.set(cp.clone().add(new V3(0,2.4,0)),cp.clone().add(new V3(0,.8,0)));clb.position.copy(cp).add(new V3(0,2.85,0));});
+  const cursorTo=(p,d)=>{const f=cp.clone(),t=p.clone();return tw(d==null?.45:d,e=>cp.lerpVectors(f,t,e));};
+  const showCur=it=>{clb.visible=car.g.visible=true;cp.copy(it?it.g.position:head.g.position);};
+  const resetCol=()=>{clb.visible=car.g.visible=false;items.forEach(it=>paint(dcell(it),C.dato,.07,.1));};
+  const camT=()=>setCam(type==='c'?[0,13,11]:[0,6.5,19],[0,0,0]);
+  const setType=async t=>{type=t;items.forEach(build1);items.forEach((it,i)=>it.g.position.copy(lay(i,items.length)));relink(false);await place(true);relink(true);camT();};
+  [14,8,21,5].forEach(v=>items.push(newItem(v)));place(false);relink(false);
+  const trav=target=>{const st=[];items.forEach((it,i)=>{st.push({text:'actual apunta al nodo '+hex(it.addr)+' (dato '+it.v+')'+(target==null?'.':'. '+(it.v===target?'Coincide con '+target+'.':'No coincide con '+target+'.')),
+     run(){if(i===0)showCur(items[0]);cursorTo(it.g.position);paint(dcell(it),target!=null&&it.v===target?C.act:C.vis,.6);}});});
+   let s=st;if(target!=null){const k=items.findIndex(it=>it.v===target);if(k>=0)s=st.slice(0,k+1);}
+   if(target==null||items.every(it=>it.v!==target))s.push({text:type==='c'?'actual vuelve a la cabeza: el recorrido termina tras una vuelta.':'actual vale null: se llegó al final'+(target!=null?' y '+target+' no está en la lista.':'.'),run(){cursorTo(type==='c'?head.g.position:nul.g.position);}});
+   return s;};
+  const walk=async upto=>{showCur(items[0]);for(let i=0;i<=upto;i++){await cursorTo(items[i].g.position,.25);}};
+  const drop=async(it,idx)=>{items.splice(idx,0,it);it.g.position.copy(lay(idx,items.length)).add(new V3(0,3,0));it.g.scale.copy(tiny);await Promise.all([scl(it.g,one,.5,ease.back),place(true)]);};
+  const cap=()=>{if(items.length>=CAP){setMsg('La escena admite hasta '+CAP+' nodos.');return true;}return false;};
+  return {main:g,
+   step(st){if(st===3)return;camT();if(st===2)setMsg('Lista con '+items.length+' nodos.');},
+   ctrls(st){if(st===0||st===3)return[];const seg={t:'seg',opts:[['s','Simple'],['d','Doble'],['c','Circular']],get:()=>type,set:v=>{resetCol();clearAlgo();setType(v);}};if(st===1)return[seg];
+    return[seg,{t:'num',id:'v',l:'valor',val:30,min:0,max:99},
+     {t:'btn',l:'Insertar al inicio',cls:'p',f:async()=>{if(cap())return;resetCol();const it=newItem(num('v',0));await drop(it,0);relink(true);setMsg('Nodo '+hex(it.addr)+': su siguiente apunta al antiguo primer nodo y cabeza apunta al nuevo. Dos asignaciones, sin mover datos.');}},
+     {t:'btn',l:'Insertar al final',f:async()=>{if(cap())return;resetCol();if(items.length){setMsg('Se recorre la lista hasta el último nodo.');await walk(items.length-1);}const it=newItem(num('v',0));await drop(it,items.length);relink(true);resetCol();
+       setMsg('El último nodo ahora apunta al nuevo'+(type==='c'?', y el nuevo apunta a la cabeza.':'.')+' Llegar al final costó '+(items.length-1)+' pasos.');}},
+     {t:'btn',l:'Eliminar valor',f:async()=>{const v=num('v',0);resetCol();clearAlgo();updP();const k=items.findIndex(it=>it.v===v);if(!items.length){setMsg('La lista está vacía.');return;}
+       await walk(k<0?items.length-1:k);if(k<0){setMsg('El valor '+v+' no está en la lista.');resetCol();return;}
+       const it=items[k];await paint(dcell(it),C.act,.8,.25);setMsg(k===0?'cabeza pasa a apuntar al segundo nodo.':'El nodo anterior pasa a apuntar al nodo siguiente de '+v+'.');await wait(500);
+       await scl(it.g,tiny,.4);items.splice(k,1);disp(it.g);resetCol();relink(false);await place(true);relink(true);}},
+     {t:'btn',l:'Recorrer',f:()=>algo(trav(null),resetCol,'Recorrido desde la cabeza.')},
+     {t:'btn',l:'Buscar valor',f:()=>algo(trav(num('v',0)),resetCol,'Búsqueda secuencial de '+num('v',0)+' desde la cabeza.')},
+     {t:'player'}];}};}
+});
+
+/* ===================== 4. PILAS ===================== */
+slides.push({id:'pilas',name:'Pilas (LIFO)',tabs:['Problema','Memoria','Operaciones','Costo'],floor:-.1,q:'¿Cómo deshago lo último que hice?',qy:5.6,
+ cams:[[[0,7,14.5],[0,1.7,0]]],
+ text:['<p>Deshacer, volver atrás en el navegador y las llamadas a funciones comparten una regla: lo último que entra es lo primero que sale. Se le llama LIFO, Last In First Out.</p><p>Una pila solo permite tocar un extremo, el tope, como una pila de platos.</p>',
+  '<p>Se implementa sobre un arreglo con un entero tope que marca la última posición ocupada, o sobre una lista enlazada cuya cabeza es el tope.</p><p>Push escribe en la posición tope + 1. Pop lee la posición tope y la libera moviendo el entero.</p>',
+  '<p>Push apila un elemento y pop retira el del tope. Con el arreglo lleno, push produce desbordamiento. Con la pila vacía, pop no tiene qué devolver.</p>',
+  '<p>Push, pop y consultar el tope cuestan O(1) porque solo tocan el extremo. Buscar un valor cualquiera cuesta O(n), porque obliga a sacar elementos.</p>'],
+ code:[null,null,'// Java, pila sobre arreglo\nvoid push(int v) {\n    if (tope == datos.length - 1) throw new IllegalStateException("pila llena");\n    datos[++tope] = v;\n}\nint pop() { return datos[tope--]; }',null],
+ cost:[{n:'push',o:'1'},{n:'pop',o:'1'},{n:'Consultar\nel tope',o:'1'},{n:'Buscar\nun valor',o:'n'},{n:'Ampliar un\narreglo lleno',o:'n'}],
+ build(){
+  const g=new T.Group();R.add(g);const CAP=8,PX=-7,CX=i=>-3.2+i*1.55,PY=k=>.3+k*.52;
+  const items=[];
+  for(let i=0;i<CAP;i++){const p=box(1.4,.2,1.4,C.mem);p.position.set(CX(i),0,0);g.add(p);L(g,'['+i+']',.34,CX(i),.05,1.2,{c:'#c0cde4'});L(g,hex(0x5000+i*4),.26,CX(i),.05,1.75,{c:'#7f95b8'});}
+  L(g,'Pila de platos',.5,PX,.05,2.3,{c:'#d6e3f7'});L(g,'Arreglo en memoria',.5,CX(3.5),.05,2.8,{c:'#d6e3f7'});
+  const base=disc(1.9,.12,C.mem);base.position.set(PX,0,0);g.add(base);
+  const col=k=>new T.Color().setHSL(.55+k*.032,.72,.58).getHex();
+  const mkP=(v,k)=>{const p=new T.Group(),d=disc(1.5,.42,col(k));p.add(d);p.userData.d=d;L(p,String(v),.42,0,0,1.6,{c:'#05121c',bg:'rgba(255,255,255,.82)',w:'800'});return p;};
+  const mkC=(v)=>{const c=new T.Group(),b=box(1.35,.8,1.35,C.dato);b.position.y=.5;c.add(b);c.userData.b=b;L(c,String(v),.5,0,.5,0,{c:'#05121c',w:'800'});return c;};
+  const add=(v,k,ready)=>{const p=mkP(v,k),c=mkC(v);p.position.set(PX,ready?PY(k):7,0);c.position.set(CX(k),ready?0:3,0);g.add(p,c);const it={v,p,c};items.push(it);return it;};
+  [4,9,2].forEach((v,k)=>add(v,k,true));
+  // marcadores del tope
+  const mv={y:PY(2),x:CX(2)};const m1=new Arrow(C.ptr,.09),m2=new Arrow(C.ptr,.09),l1=lab('tope',.46,{bg:'rgba(251,191,36,.92)',c:'#201600',w:'700'}),l2=lab('tope = 2',.46,{bg:'rgba(251,191,36,.92)',c:'#201600',w:'700'});
+  g.add(m1.g,m2.g,l1,l2);
+  UPD.push(()=>{m1.set(new V3(PX+3.7,mv.y,0),new V3(PX+1.65,mv.y,0));l1.position.set(PX+4.5,mv.y,0);m2.set(new V3(mv.x,3.0,0),new V3(mv.x,1.0,0));l2.position.set(mv.x,3.45,0);});
+  const setTop=t=>{const y=PY(Math.max(t,0)),x=CX(t);l2.userData.set('tope = '+t);const fy=mv.y,fx=mv.x;return tw(.5,e=>{mv.y=fy+(y-fy)*e;mv.x=fx+(x-fx)*e;});};
+  const stat=()=>setMsg('Pila con '+items.length+' elementos, tope = '+(items.length-1)+'.');
+  return {main:g,step(st){if(st===2)stat();},
+   ctrls(st){if(st!==2)return[];return[{t:'num',id:'v',l:'valor',val:7,min:0,max:99},
+    {t:'btn',l:'Push',cls:'p',f:async()=>{const n=items.length;if(n>=CAP){setMsg('Pila llena: push produce desbordamiento (stack overflow).');return;}const v=num('v',0),it=add(v,n,false);
+      await Promise.all([move(it.p,new V3(PX,PY(n),0),.6,ease.out),move(it.c,new V3(CX(n),0,0),.6,ease.out),setTop(n)]);setMsg('push('+v+'): tope = '+n+'. Se escribe datos['+n+'] = '+v+'.');}},
+    {t:'btn',l:'Pop',f:async()=>{const n=items.length;if(!n){setMsg('Pila vacía: pop no tiene qué devolver (subdesbordamiento).');return;}const it=items[n-1];
+      await Promise.all([paint(it.p.userData.d,C.act,.7,.25),paint(it.c.userData.b,C.act,.7,.25)]);
+      await Promise.all([move(it.p,it.p.position.clone().add(new V3(0,3.5,0)),.5),fade(it.p,0,.5),scl(it.c,tiny,.4),setTop(n-2)]);items.pop();disp(it.p);disp(it.c);setMsg('pop() devuelve '+it.v+'. tope = '+(n-2)+'.');}},
+    {t:'btn',l:'Tope',f:async()=>{const n=items.length;if(!n){setMsg('Pila vacía: no hay tope.');return;}const it=items[n-1];paint(it.c.userData.b,C.vis,.6,.25);await paint(it.p.userData.d,C.vis,.6,.25);setMsg('El tope vale '+it.v+'. Se lee sin retirarlo.');await wait(700);paint(it.p.userData.d,col(n-1),.07);paint(it.c.userData.b,C.dato,.07);}}];}};}
+});
+
+/* ===================== 5. COLAS ===================== */
+slides.push({id:'colas',name:'Colas (FIFO)',tabs:['Problema','Memoria','Operaciones','Costo'],floor:-.1,q:'¿Quién llegó primero?',qy:5.2,
+ cams:[[[0,13,16],[0,0,1.2]]],
+ text:['<p>Una fila de atención, la impresión de documentos y los procesos que esperan CPU se atienden por orden de llegada. El primero que entra es el primero que sale, FIFO, First In First Out.</p>',
+  '<p>Con un arreglo circular, dos índices recorren el bloque. Frente marca el próximo en salir y final marca la próxima posición libre.</p><p>Al pasar de la última casilla el índice vuelve a la 0 mediante el módulo, así que nadie se desplaza al salir.</p>',
+  '<p>Enqueue agrega al final y dequeue retira del frente. Con el arreglo lleno enqueue falla. Con la cola vacía dequeue no tiene qué devolver.</p>',
+  '<p>Enqueue y dequeue cuestan O(1) con índices circulares. Si el arreglo desplazara a todos tras cada dequeue, costaría O(n).</p>'],
+ code:[null,null,'// Java, cola circular sobre arreglo\nvoid enqueue(int v) {\n    datos[(frente + tam) % datos.length] = v;\n    tam++;\n}\nint dequeue() {\n    int v = datos[frente];\n    frente = (frente + 1) % datos.length;\n    tam--;\n    return v;\n}',null],
+ cost:[{n:'enqueue',o:'1'},{n:'dequeue',o:'1'},{n:'dequeue con\ndesplazamiento',o:'n'},{n:'Buscar\nun valor',o:'n'}],
+ build(){
+  const g=new T.Group();R.add(g);const N=6,RZ=3.4,RR=2.7,QX=k=>(k-2.5)*2.1,th=k=>-Math.PI/2+k*2*Math.PI/N,cpos=k=>new V3(RR*Math.cos(th(k)),0,RZ+RR*Math.sin(th(k)));
+  for(let k=0;k<N;k++){const p=box(1.5,.2,1.5,C.mem);p.position.copy(cpos(k));g.add(p);L(g,String(k),.34,p.position.x,.35,p.position.z+.9,{c:'#c0cde4'});L(g,hex(0x6000+k*4),.22,p.position.x,.05,p.position.z-.95,{c:'#7f95b8'});}
+  L(g,'Fila de personas',.5,0,.05,-1.9,{c:'#d6e3f7'});L(g,'Arreglo circular',.5,-6.4,.05,RZ,{c:'#d6e3f7'});
+  L(g,'frente',.4,QX(0)-1.8,.05,-1.9,{c:'#fbbf24'});L(g,'final',.4,QX(5)+1.8,.05,-1.9,{c:'#c084fc'});
+  const col=k=>new T.Color().setHSL(.74-k*.02,.55,.62).getHex();let cc=0;
+  const mkP=v=>{const p=new T.Group(),b=disc(.5,1.1,col(cc++)),h=ball(.42,0xfde0c8);b.position.y=.55;h.position.y=1.6;p.add(b,h);p.userData.b=b;p.userData.h=h;L(p,String(v),.55,0,2.5,0,{w:'800',bg:'rgba(10,22,44,.8)'});return p;};
+  const mkC=v=>{const c=new T.Group(),b=box(1.35,.8,1.35,C.dato);b.position.y=.5;c.add(b);c.userData.b=b;L(c,String(v),.5,0,.5,0,{c:'#05121c',w:'800'});return c;};
+  let f=0;const items=[];
+  const add=(v,drop)=>{const k=items.length,p=mkP(v),c=mkC(v);p.position.set(QX(k),drop?5:0,-3.6);c.position.copy(cpos((f+k)%N));if(drop)c.scale.copy(tiny);g.add(p,c);const it={v,p,c};items.push(it);return it;};
+  [8,3,5].forEach(v=>add(v,false));
+  const mv={f:0,r:3};const fa=new Arrow(C.ptr,.09),ra=new Arrow(C.nuevo,.09),fl=lab('frente',.44,{bg:'rgba(251,191,36,.92)',c:'#201600',w:'700'}),rl=lab('final',.44,{bg:'rgba(192,132,252,.95)',c:'#12041f',w:'700'});
+  g.add(fa.g,ra.g,fl,rl);
+  UPD.push(()=>{const a=th(mv.f),b=th(mv.r),c0=new V3(0,0,RZ),da=new V3(Math.cos(a),0,Math.sin(a)),db=new V3(Math.cos(b),0,Math.sin(b));
+   const pa=c0.clone().addScaledVector(da,RR);fa.set(pa.clone().add(new V3(0,3.0,0)),pa.clone().add(new V3(0,1.05,0)));fl.position.copy(pa).add(new V3(0,3.5,0));
+   const pb=c0.clone().addScaledVector(db,RR);ra.set(pb.clone().addScaledVector(db,2.6).add(new V3(0,.6,0)),pb.clone().addScaledVector(db,1.0).add(new V3(0,.6,0)));rl.position.copy(pb).addScaledVector(db,3.3).add(new V3(0,.6,0));});
+  const setM=(nf,nr)=>{const f0=mv.f,r0=mv.r;return tw(.55,e=>{mv.f=f0+(nf-f0)*e;mv.r=r0+(nr-r0)*e;});};
+  const stat=()=>setMsg('frente = '+f%N+', final = '+(f+items.length)%N+', elementos = '+items.length+' de '+N+'.');
+  return {main:g,step(st){if(st===2)stat();},
+   ctrls(st){if(st!==2)return[];return[{t:'num',id:'v',l:'valor',val:6,min:0,max:99},
+    {t:'btn',l:'Enqueue',cls:'p',f:async()=>{const n=items.length;if(n>=N){setMsg('Cola llena: enqueue no tiene espacio.');return;}const v=num('v',0),it=add(v,true);
+      await Promise.all([move(it.p,new V3(QX(n),0,-3.6),.6,ease.out),scl(it.c,one,.5,ease.back),setM(f,f+n+1)]);setMsg('enqueue('+v+'): se escribe en datos['+(f+n)%N+']. final avanza a '+(f+n+1)%N+'.');}},
+    {t:'btn',l:'Dequeue',f:async()=>{const n=items.length;if(!n){setMsg('Cola vacía: dequeue no tiene qué devolver.');return;}const it=items[0];
+      await Promise.all([paint(it.p.userData.b,C.act,.7,.25),paint(it.c.userData.b,C.act,.7,.25)]);items.shift();
+      await Promise.all([move(it.p,new V3(QX(0)-3.5,0,-3.6),.6),fade(it.p,0,.6),scl(it.c,tiny,.4),setM(f+1,f+n),...items.map((o,k)=>move(o.p,new V3(QX(k),0,-3.6),.6))]);f++;disp(it.p);disp(it.c);
+      setMsg('dequeue() devuelve '+it.v+'. frente avanza a '+f%N+'. Los demás no se mueven en memoria.');}},
+    {t:'btn',l:'Frente',f:async()=>{if(!items.length){setMsg('Cola vacía: no hay frente.');return;}const it=items[0];paint(it.c.userData.b,C.vis,.6,.25);await paint(it.p.userData.b,C.vis,.6,.25);setMsg('El frente vale '+it.v+'. Se lee sin retirarlo.');await wait(700);paint(it.p.userData.b,C.dato,.07);paint(it.c.userData.b,C.dato,.07);}}];}};}
+});
+
+/* ===================== 6 y 7. ARBOLES BST y AVL ===================== */
+function treeSlide(avl){
+ const T0=4,DX=1.7,DY=1.9;
+ const common={floor:-60,tabs:['Problema','Memoria','Operaciones','Costo'],cams:[[[0,3,16],[0,2,0]]]};
+ return Object.assign(common,avl?{
+  id:'avl',name:'Árboles AVL',q:'¿Cómo evito que el árbol se degenere?',qy:6,
+  text:['<p>Un árbol de búsqueda corriente puede quedar en forma de lista si los datos llegan ordenados. El árbol AVL se corrige solo: después de cada inserción verifica que las alturas de los dos hijos de cada nodo difieran en 1 como máximo.</p>',
+   '<p>Cada nodo agrega un campo de altura al dato y a los dos punteros. El factor de balance es la altura del hijo izquierdo menos la del derecho, y debe valer -1, 0 o 1.</p>',
+   '<p>Si un factor llega a 2 o -2, se rota. Izquierda-izquierda pide una rotación simple a la derecha y derecha-derecha una simple a la izquierda. Izquierda-derecha rota primero a la izquierda sobre el hijo y luego a la derecha. Derecha-izquierda es el caso simétrico.</p><p>Una rotación cambia unos pocos punteros y conserva el orden inorden.</p>',
+   '<p>La altura nunca supera cerca de 1.44 log n, así que buscar, insertar y eliminar cuestan O(log n) en el peor caso. Cada inserción hace a lo sumo una rotación, y una rotación cuesta O(1).</p>'],
+  code:[null,null,'// Java: rotacion simple a la derecha\nNodo rotarDer(Nodo z) {\n    Nodo y = z.izq;\n    z.izq = y.der;\n    y.der = z;\n    actualizarAltura(z);\n    actualizarAltura(y);\n    return y;\n}',null],
+  cost:[{n:'Buscar',o:'logn'},{n:'Insertar\n(con rotación)',o:'logn'},{n:'Eliminar',o:'logn'},{n:'Una\nrotación',o:'1'},{n:'Recorrido\ncompleto',o:'n'}]
+ }:{
+  id:'bst',name:'Árboles binarios de búsqueda',q:'¿Cómo busco entre un millón de datos sin mirarlos todos?',qy:6,
+  text:['<p>Buscar en una lista cuesta n comparaciones. Un árbol binario de búsqueda ordena los datos al insertarlos: a la izquierda de cada nodo van los menores y a la derecha los mayores.</p><p>Cada comparación descarta un subárbol completo.</p>',
+   '<p>Cada nodo guarda su dato y dos punteros, izquierdo y derecho, que valen null cuando no hay hijo. El programa solo conserva la raíz.</p>',
+   '<p>Insertar y buscar descienden desde la raíz comparando. Inorden entrega los datos ordenados, preorden visita la raíz primero, postorden la visita al final y por niveles recorre de arriba hacia abajo con una cola.</p><p>Si los datos llegan ya ordenados, el árbol se degenera en una lista.</p>',
+   '<p>Con el árbol equilibrado, buscar e insertar cuestan O(log n): un millón de datos se resuelven en unos 20 pasos. Si se degenera en lista, la altura es n y el costo pasa a O(n). Recorrer todo el árbol es O(n).</p>'],
+  code:[null,null,'// Java: insertar en un BST\nNodo insertar(Nodo n, int v) {\n    if (n == null) return new Nodo(v);\n    if (v < n.dato) n.izq = insertar(n.izq, v);\n    else if (v > n.dato) n.der = insertar(n.der, v);\n    return n;\n}',null],
+  cost:[{n:'Buscar\n(equilibrado)',o:'logn'},{n:'Insertar\n(equilibrado)',o:'logn'},{n:'Buscar\n(degenerado)',o:'n'},{n:'Recorrido\ncompleto',o:'n'}]
+ },{build(){
+  const g=new T.Group(),tg=new T.Group(),mg=new T.Group();R.add(g);g.add(tg,mg);mg.visible=false;
+  let root=null,idc=0;const all=[],edges=new Map();
+  const hh=n=>n?n.h:0,fbv=n=>hh(n.lc)-hh(n.rc),upd=n=>{n.h=1+Math.max(hh(n.lc),hh(n.rc));},
+   hgt=n=>n?1+Math.max(hgt(n.lc),hgt(n.rc)):0;
+  const mkN=v=>{const gr=new T.Group(),s=ball(.62,C.dato);gr.add(s);L(gr,String(v),.5,0,0,.66,{c:'#04141f',w:'800'});const fb=avl?L(gr,'FB 0',.3,0,-1.05,0,{c:'#bdf5d0',w:'700'}):null;
+   const n={v,lc:null,rc:null,h:1,id:idc++,g:gr,s,fb,r:.62};tg.add(gr);all.push(n);return n;};
+  const lbl=()=>{if(!avl)return;all.forEach(n=>{const f=fbv(n);n.fb.userData.o.c=Math.abs(f)>1?'#ff9aa8':'#bdf5d0';n.fb.userData.set('FB '+(f>0?'+':'')+f);});};
+  const stats=()=>setState(root?'n = '+all.length+'<br>altura = '+hgt(root):'');
+  const pos=()=>{let i=0,md=0;const m=new Map();(function rec(n,d){if(!n)return;rec(n.lc,d+1);m.set(n,new V3(i++,T0-d*DY,0));md=Math.max(md,d);rec(n.rc,d+1);})(root,0);
+   const c=i;m.forEach(p=>p.x=(p.x-(c-1)/2)*DX);return {m,c,md};};
+  const frame=()=>{const {c,md}=pos();cam.g.r=clamp(Math.max((c-1)*DX*.6,md*DY*1.1,7)+7,12,46);cam.g.t.set(0,T0-md*DY/2,0);};
+  const layout=async anim=>{const {m}=pos(),ents=[...m.entries()];if(!anim){ents.forEach(e=>e[0].g.position.copy(e[1]));frame();return;}
+   const f=ents.map(e=>e[0].g.position.clone());frame();await tw(.65,t=>ents.forEach((e,i)=>e[0].g.position.lerpVectors(f[i],e[1],t)));};
+  const sync=grow=>{const want=new Map();all.forEach(n=>{if(n.lc)want.set(n.id+'L',[n,n.lc]);if(n.rc)want.set(n.id+'R',[n,n.rc]);});
+   edges.forEach((l,k)=>{const w=want.get(k);if(!w||l.b!==w[1]||l.a!==w[0]){l.remove();edges.delete(k);}});
+   want.forEach((w,k)=>{if(!edges.has(k)){const l=new Link(w[0],w[1],{parent:tg,cone:false,rad:.06,color:C.edge});edges.set(k,l);if(grow)l.grow(.5);}});};
+  const col=n=>paint(n.s,C.dato,.07,.2);
+  const clear=()=>{[...edges.values()].forEach(l=>l.remove());edges.clear();all.forEach(n=>disp(n.g));all.length=0;root=null;setState('');};
+  const replace=(p,o,w)=>{if(!p)root=w;else if(p.lc===o)p.lc=w;else p.rc=w;};
+  const rotR=(z,p)=>{const y=z.lc;z.lc=y.rc;y.rc=z;replace(p,z,y);upd(z);upd(y);return y;};
+  const rotL=(z,p)=>{const y=z.rc;z.rc=y.lc;y.lc=z;replace(p,z,y);upd(z);upd(y);return y;};
+  const W=(mode,ms)=>mode===0?wait(ms):mode===1?wait(40):Promise.resolve();
+  async function insert(v,mode){mode=mode||0;
+   if(!root){root=mkN(v);root.g.scale.copy(tiny);await layout(false);if(mode<2){await scl(root.g,one,.4,ease.back);}else root.g.scale.copy(one);setMsg('El árbol estaba vacío: '+v+' es la raíz.');stats();lbl();return;}
+   const path=[];let n=root;
+   for(;;){path.push(n);if(mode<2)paint(n.s,C.act,.6,.15);if(v===n.v){setMsg(v+' ya existe: no se repiten claves.');await W(mode,500);path.forEach(col);return;}
+    const left=v<n.v;setMsg(v+(left?' &lt; ':' &gt; ')+n.v+': se baja por la '+(left?'izquierda':'derecha')+'.');await W(mode,560);const nx=left?n.lc:n.rc;if(!nx){const c=mkN(v);if(left)n.lc=c;else n.rc=c;c.g.position.copy(n.g.position);c.g.scale.copy(tiny);break;}n=nx;}
+   sync(mode<2);path.forEach(col);const nn=all[all.length-1];
+   if(mode<2)await Promise.all([scl(nn.g,one,.5,ease.back),layout(true)]);else{nn.g.scale.copy(one);await layout(false);}
+   for(let i=path.length-1;i>=0;i--)upd(path[i]);lbl();
+   if(!avl){setMsg('Se inserta '+v+' como hoja. Altura del árbol: '+hgt(root)+'.');stats();return;}
+   let zi=-1;for(let i=path.length-1;i>=0;i--)if(Math.abs(fbv(path[i]))>1){zi=i;break;}
+   if(zi<0){setMsg('Se inserta '+v+'. Todos los factores de balance están entre -1 y 1.');stats();return;}
+   const z=path[zi],p=zi>0?path[zi-1]:null,y=fbv(z)>1?z.lc:z.rc,kind=fbv(z)>1?(fbv(y)>=0?'LL':'LR'):(fbv(y)<=0?'RR':'RL');
+   if(mode<2){paint(z.s,C.act,.8,.2);paint(y.s,C.ptr,.7,.2);}
+   const nm={LL:'izquierda-izquierda: rotación simple a la derecha sobre '+z.v,RR:'derecha-derecha: rotación simple a la izquierda sobre '+z.v,LR:'izquierda-derecha: rotación a la izquierda sobre '+y.v+' y luego a la derecha sobre '+z.v,RL:'derecha-izquierda: rotación a la derecha sobre '+y.v+' y luego a la izquierda sobre '+z.v};
+   setMsg('Desbalance en '+z.v+' (factor '+(fbv(z)>0?'+':'')+fbv(z)+'). Caso '+nm[kind]+'.');await W(mode,1500);
+   const step=async()=>{sync(mode<2);lbl();await layout(mode<2);};
+   if(kind==='LL')rotR(z,p);else if(kind==='RR')rotL(z,p);
+   else if(kind==='LR'){rotL(y,z);await step();await W(mode,500);rotR(z,p);}else{rotR(y,z);await step();await W(mode,500);rotL(z,p);}
+   await step();for(let i=zi-1;i>=0;i--)upd(path[i]);lbl();all.forEach(col);
+   setMsg('Árbol rebalanceado. Altura: '+hgt(root)+'. Los factores vuelven al rango -1 a 1.');stats();}
+  const seq=async(arr,mode)=>{for(const v of arr)await insert(v,mode);};
+  const EX=[50,30,70,20,40,60,80];let built=false;
+  // memoria
+  {const F=avl?[{t:'p',s:'izq'},{t:'d',s:'',big:1},{t:'d',s:'h',w:1.1},{t:'p',s:'der'}]:[{t:'p',s:'izq'},{t:'d',s:'',big:1},{t:'p',s:'der'}];
+   const rec=(v,h,l,r,a,p)=>{const f=F.map(x=>Object.assign({},x));f.forEach(x=>{if(x.t==='d'&&x.big)x.s=String(v);else if(x.t==='d')x.s='h='+h;if(x.s==='izq'&&!l){x.t='n';x.s='null';}if(x.s==='der'&&!r){x.t='n';x.s='null';}});const o=mkRec(f,{addr:a});o.g.position.copy(p);mg.add(o.g);return o;};
+   const rt=rec(50,2,1,1,'0x7A10',new V3(0,3,0)),a=rec(30,1,0,0,'0x8C48',new V3(-5.5,-.3,.8)),b=rec(70,1,0,0,'0x7F20',new V3(5.5,-1,-.8)),
+    hd=mkRec([{t:'p',s:'raíz',w:1.4}],{h:.8});hd.g.position.set(-5.2,4.6,0);mg.add(hd.g);
+   const L0=new Link(rt,a,{parent:mg,fo:new V3(rt.cells[0].x,0,0)}),R0=new Link(rt,b,{parent:mg,fo:new V3(rt.cells[rt.cells.length-1].x,0,0)}),H0=new Link(hd,rt,{parent:mg});}
+  return {main:g,
+   step(st){if(st===3)return;if(!built){built=true;seq(EX,2);}const mem=st===1;tg.visible=!mem;mg.visible=mem;
+    if(mem)setCam([0,5,17],[0,1.2,0]);else{setCam([0,3,16],[0,2,0]);frame();}
+    if(st===2){stats();setMsg('Inserta valores o recorre el árbol.');}},
+   ctrls(st){if(st!==2)return[];const trav=k=>()=>{const out=[],steps=[];let seqn=[];
+      if(k==='niveles'){const q=root?[root]:[];const rows=[];while(q.length){const n=q.shift();seqn.push(n);rows.push(q.map(x=>x.v).concat(n.lc?[n.lc.v]:[]).concat(n.rc?[n.rc.v]:[]));if(n.lc)q.push(n.lc);if(n.rc)q.push(n.rc);}seqn.rows=rows;}
+      else{(function rec(n){if(!n)return;if(k==='pre')seqn.push(n);rec(n.lc);if(k==='in')seqn.push(n);rec(n.rc);if(k==='post')seqn.push(n);})(root);}
+      let prev=null;const names={in:'Inorden: izquierdo, raíz, derecho',pre:'Preorden: raíz, izquierdo, derecho',post:'Postorden: izquierdo, derecho, raíz',niveles:'Por niveles: de arriba hacia abajo con una cola'};
+      seqn.forEach((n,i)=>steps.push({text:'Visita '+n.v+'.',run(){if(prev)paint(prev.s,C.vis,.5,.2);paint(n.s,C.act,.8,.2);prev=n;out.push(n.v);
+        setState('Salida: '+out.join(', ')+(k==='niveles'?'<br>Cola: '+(seqn.rows[i].join(', ')||'vacía'):''));}}));
+      steps.push({text:'Recorrido completo: '+out.length+' nodos visitados.',run(){if(prev)paint(prev.s,C.vis,.5,.2);}});
+      algo(steps,()=>{out.length=0;prev=null;all.forEach(col);stats();},root?names[k]+'.':'El árbol está vacío.');};
+    return[{t:'num',id:'v',l:'valor',val:45,min:0,max:99,enter:()=>{clearAlgo();updP();all.forEach(col);return insert(num('v',0),0);}},
+     {t:'btn',l:'Insertar',cls:'p',f:()=>{clearAlgo();updP();all.forEach(col);return insert(num('v',0),0);}},
+     {t:'btn',l:'Aleatorio',f:()=>{clearAlgo();updP();all.forEach(col);let v;do{v=1+Math.floor(Math.random()*99);}while(all.some(n=>n.v===v));return insert(v,0);}},
+     {t:'btn',l:'1 a 7 en orden',f:async()=>{clearAlgo();updP();clear();for(let v=1;v<=7;v++)await insert(v,1);setMsg(avl?'Siete inserciones ascendentes: altura '+hgt(root)+'. Las rotaciones mantienen el árbol equilibrado.':'Siete inserciones ascendentes: altura '+hgt(root)+' con 7 nodos. El árbol es una lista y buscar cuesta O(n).');}},
+     {t:'btn',l:'Ejemplo',f:async()=>{clearAlgo();updP();clear();await seq(EX,2);setMsg('Ejemplo equilibrado: 7 nodos, altura '+hgt(root)+'.');}},
+     {t:'btn',l:'Vaciar',f:()=>{clearAlgo();updP();clear();setMsg('Árbol vacío.');}},
+     {t:'sep'},{t:'btn',l:'Inorden',f:trav('in')},{t:'btn',l:'Preorden',f:trav('pre')},{t:'btn',l:'Postorden',f:trav('post')},{t:'btn',l:'Por niveles',f:trav('niveles')},{t:'player'}];}};}});
+}
+slides.push(treeSlide(false));
+slides.push(treeSlide(true));
+
+/* ===================== 8. GRAFOS ===================== */
+slides.push({id:'grafos',name:'Grafos',tabs:['Problema','Memoria','Operaciones','Costo'],floor:-3.6,q:'¿Cómo represento rutas y relaciones?',qy:4.8,
+ cams:[[[0,4,16],[0,0,0]]],
+ text:['<p>Los mapas, las redes sociales y las redes de computadores son relaciones entre elementos que no forman una jerarquía. Un grafo guarda vértices y aristas, y las aristas pueden llevar un peso, como una distancia.</p>',
+  '<p>Hay dos formas habituales. La lista de adyacencia guarda, para cada vértice, sus vecinos y ocupa O(V + E). La matriz de adyacencia guarda una tabla de V x V y ocupa O(V^2), pero responde en O(1) si existe una arista.</p>',
+  '<p>BFS explora por capas con una cola y encuentra el camino con menos aristas. DFS se adentra todo lo posible con una pila antes de retroceder. Dijkstra elige siempre el vértice de menor distancia conocida y relaja las aristas de sus vecinos. Exige pesos no negativos.</p>',
+  '<p>BFS y DFS cuestan O(V + E). Dijkstra con cola de prioridad, un montículo, cuesta O((V + E) log V).</p>'],
+ code:[null,null,'# Python: BFS sobre lista de adyacencia\ncola = deque([s]); visto = {s}\nwhile cola:\n    u = cola.popleft()\n    for v in ady[u]:\n        if v not in visto:\n            visto.add(v); cola.append(v)',null],
+ cost:[{n:'BFS',o:'V+E'},{n:'DFS',o:'V+E'},{n:'Dijkstra\n(montículo)',o:'(V+E)logV'},{n:'Espacio\n(matriz)',o:'V2'},{n:'Espacio\n(lista)',o:'V+E'}],
+ build(){
+  const g=new T.Group();R.add(g);const N='ABCDEF',P=[[-6,0,0],[-3,2.4,-1.8],[-3,-2.4,1.8],[1.4,2.2,1.4],[1.4,-2.4,-1.4],[5.8,0,0]];
+  const E=[[0,1,4],[0,2,2],[1,2,1],[1,3,5],[2,3,8],[2,4,10],[3,4,2],[3,5,6],[4,5,3]];
+  const adj=N.split('').map(()=>[]);E.forEach(e=>{adj[e[0]].push([e[1],e[2]]);adj[e[1]].push([e[0],e[2]]);});adj.forEach(a=>a.sort((x,y)=>x[0]-y[0]));
+  const ei=(a,b)=>E.findIndex(e=>(e[0]===a&&e[1]===b)||(e[0]===b&&e[1]===a));
+  const ng=P.map((p,i)=>{const gr=new T.Group(),s=ball(.68,C.dato);gr.add(s);L(gr,N[i],.62,0,0,.7,{c:'#04141f',w:'800'});gr.position.set(...p);g.add(gr);return {g:gr,s,r:.68};});
+  const le=E.map(e=>{const l=new Link(ng[e[0]],ng[e[1]],{parent:g,cone:false,rad:.07,color:C.edge}),m=new V3().addVectors(ng[e[0]].g.position,ng[e[1]].g.position).multiplyScalar(.5);L(g,String(e[2]),.46,m.x,m.y+.05,m.z,{bg:'rgba(10,22,44,.88)',c:'#fbbf24',w:'800'});return l;});
+  const NC=[C.dato,C.ptr,C.act,C.vis],EC=[C.edge,C.ptr,C.vis];
+  const show=(ns,es)=>{ns.forEach((s,i)=>paint(ng[i].s,NC[s],s?.6:.07,.25));es.forEach((s,k)=>le[k].ar.paint(EC[s],s?.5:.25));};
+  const snap=(text,ns,es,html)=>({text,run(){show(ns,es);setState(html);}});
+  const none=()=>N.split('').map(()=>0),enone=()=>E.map(()=>0);
+  const list=a=>a.map(x=>N[x]).join(', ')||'vacía';
+  const bfs=s=>{const st=[],seen=new Set([s]),q=[s],order=[],ns=none(),es=enone();ns[s]=1;
+   while(q.length){const u=q.shift();order.push(u);ns[u]=2;const add=[];adj[u].forEach(([v])=>{if(!seen.has(v)){seen.add(v);q.push(v);ns[v]=1;es[ei(u,v)]=2;add.push(v);}});
+    st.push(snap('Sale '+N[u]+' de la cola.'+(add.length?' Se encolan '+list(add)+'.':' No hay vecinos nuevos.'),ns.slice(),es.slice(),'Cola: ['+list(q)+']<br>Visitados: '+list(order)));ns[u]=3;}
+   st.push(snap('BFS termina. Orden de visita: '+list(order)+'.',ns.slice(),es.slice(),'Cola: [vacía]<br>Visitados: '+list(order)));return st;};
+  const dfs=s=>{const st=[],vis=new Set(),stk=[[s,-1]],order=[],ns=none(),es=enone();ns[s]=1;
+   while(stk.length){const [u,p]=stk.pop();if(vis.has(u))continue;vis.add(u);order.push(u);if(p>=0)es[ei(p,u)]=2;ns[u]=2;const add=[];
+    for(let k=adj[u].length-1;k>=0;k--){const v=adj[u][k][0];if(!vis.has(v)){stk.push([v,u]);if(ns[v]===0)ns[v]=1;add.push(v);}}
+    st.push(snap('Sale '+N[u]+' de la pila y se marca visitado.'+(add.length?' Se apilan '+list(add)+'.':' No hay vecinos nuevos.'),ns.slice(),es.slice(),'Pila (tope a la derecha): ['+stk.map(e=>N[e[0]]).join(', ')+']<br>Visitados: '+list(order)));ns[u]=3;}
+   st.push(snap('DFS termina. Orden de visita: '+list(order)+'.',ns.slice(),es.slice(),'Pila: [vacía]<br>Visitados: '+list(order)));return st;};
+  const dij=s=>{const st=[],n=N.length,dist=Array(n).fill(Infinity),prev=Array(n).fill(-1),done=Array(n).fill(false);dist[s]=0;
+   const view=(u)=>{const ns=none(),es=enone();for(let i=0;i<n;i++)ns[i]=done[i]?3:(dist[i]<Infinity?1:0);if(u!=null)ns[u]=2;for(let v=0;v<n;v++)if(prev[v]>=0)es[ei(prev[v],v)]=done[v]?2:1;
+    let h='<table><tr class="h"><th></th><th>dist</th><th>previo</th></tr>';for(let i=0;i<n;i++)h+='<tr'+(done[i]?' class="g"':'')+'><td>'+N[i]+'</td><td>'+(dist[i]===Infinity?'inf':dist[i])+'</td><td>'+(prev[i]<0?'-':N[prev[i]])+'</td></tr>';return [ns,es,h+'</table>'];};
+   for(;;){let u=-1;for(let i=0;i<n;i++)if(!done[i]&&dist[i]<Infinity&&(u<0||dist[i]<dist[u]))u=i;if(u<0)break;done[u]=true;const rel=[];
+    adj[u].forEach(([v,w])=>{if(!done[v]&&dist[u]+w<dist[v]){dist[v]=dist[u]+w;prev[v]=u;rel.push(N[v]+' = '+dist[v]);}});
+    const [ns,es,h]=view(u);st.push(snap('Se fija '+N[u]+' con distancia '+dist[u]+'.'+(rel.length?' Mejoras: '+rel.join(', ')+'.':' Sin mejoras.'),ns,es,h));}
+   const [ns,es,h]=view(null);st.push(snap('Dijkstra termina. Las aristas verdes forman el árbol de caminos mínimos desde '+N[s]+'.',ns,es,h));return st;};
+  const initial=(kind,s)=>()=>{show(none().map((x,i)=>i===s?1:0),enone());
+   setState(kind==='dij'?'<table><tr class="h"><th></th><th>dist</th><th>previo</th></tr>'+N.split('').map((c,i)=>'<tr><td>'+c+'</td><td>'+(i===s?0:'inf')+'</td><td>-</td></tr>').join('')+'</table>':(kind==='bfs'?'Cola: [':'Pila: [')+N[s]+']<br>Visitados: vacía');};
+  const memo=()=>{let h='<div class="h">Lista de adyacencia</div>'+adj.map((a,i)=>N[i]+': '+a.map(x=>N[x[0]]+'('+x[1]+')').join(', ')).join('<br>');
+   h+='<div class="h" style="margin-top:6px">Matriz de adyacencia (peso, 0 sin arista)</div><table><tr class="h"><th></th>'+N.split('').map(c=>'<th>'+c+'</th>').join('')+'</tr>';
+   for(let i=0;i<N.length;i++){h+='<tr><td class="h">'+N[i]+'</td>';for(let j=0;j<N.length;j++){const k=ei(i,j);h+='<td>'+(k<0?0:E[k][2])+'</td>';}h+='</tr>';}return h+'</table>';};
+  const run3=(kind)=>()=>{const s=N.indexOf(val('o')||'A'),f=kind==='bfs'?bfs:kind==='dfs'?dfs:dij;
+   algo(f(s),initial(kind,s),{bfs:'BFS desde '+N[s]+': cola FIFO, explora por capas.',dfs:'DFS desde '+N[s]+': pila LIFO, explora en profundidad.',dij:'Dijkstra desde '+N[s]+': siempre se fija el vértice de menor distancia.'}[kind]);};
+  return {main:g,step(st){if(st===1)setState(memo());},
+   ctrls(st){if(st!==2)return[];return[{t:'sel',id:'o',l:'Origen',opts:N.split('')},{t:'btn',l:'BFS',cls:'p',f:run3('bfs')},{t:'btn',l:'DFS',f:run3('dfs')},{t:'btn',l:'Dijkstra',f:run3('dij')},{t:'player'}];}};}
+});
+
+/* ===================== 9. TABLA HASH ===================== */
+slides.push({id:'hash',name:'Tabla hash',tabs:['Problema','Memoria','Operaciones','Costo'],floor:-9,q:'¿Cómo encuentro un dato al instante, por su clave?',qy:4.6,
+ cams:[[[0,1,19],[0,-2.6,0]]],
+ text:['<p>Buscar por clave en un arreglo o en un árbol cuesta n o log n comparaciones. Una tabla hash calcula la posición directamente a partir de la clave y salta a ella.</p>',
+  '<p>Es un arreglo de m cubetas más una función hash que convierte la clave en un índice entre 0 y m - 1. Aquí h(clave) = (suma de códigos ASCII) mod 7.</p><p>Dos claves distintas pueden caer en la misma cubeta, y eso se llama colisión. En el encadenamiento, cada cubeta guarda una lista enlazada con todas las claves que le tocaron.</p>',
+  '<p>Insertar, buscar y eliminar calculan h(clave), van a la cubeta y recorren su cadena. Si la clave ya existe, no se duplica.</p>',
+  '<p>Con una buena función hash y un factor de carga n/m acotado, insertar, buscar y eliminar cuestan O(1) en promedio. Si todas las claves caen en una cubeta, la cadena tiene n nodos y el costo pasa a O(n). El orden de las claves se pierde.</p>'],
+ code:[null,null,'// Java: buscar en una tabla con encadenamiento\nint i = Math.floorMod(clave.hashCode(), cubetas.length);\nfor (Nodo n = cubetas[i]; n != null; n = n.sig) {\n    if (n.clave.equals(clave)) return n.valor;\n}\nreturn null;',null],
+ cost:[{n:'Insertar\n(promedio)',o:'1'},{n:'Buscar\n(promedio)',o:'1'},{n:'Eliminar\n(promedio)',o:'1'},{n:'Cualquiera\n(peor caso)',o:'n'}],
+ build(){
+  const g=new T.Group();R.add(g);const M=7,bx=i=>(i-3)*3.1,cy=j=>-(j+1)*1.9;
+  const hf=k=>[...k].reduce((a,c)=>a+c.charCodeAt(0),0)%M;
+  const form=k=>'h("'+k+'") = ('+[...k].map(c=>c.charCodeAt(0)).join('+')+') mod '+M+' = '+[...k].reduce((a,c)=>a+c.charCodeAt(0),0)+' mod '+M+' = '+hf(k);
+  const bk=[],chains=Array.from({length:M},()=>[]),lks=Array.from({length:M},()=>[]);
+  for(let i=0;i<M;i++){const gr=new T.Group(),b=box(2.3,.9,1.1,C.dim);gr.add(b);gr.position.set(bx(i),0,0);g.add(gr);const lb=L(gr,'null',.32,0,0,.62,{c:'#c0cde4',w:'700'});L(gr,'['+i+']',.44,0,.95,0,{c:'#ffffff',w:'700'});bk.push({g:gr,b,lb,half:new V3(1.15,.45,.55)});}
+  const fill=i=>{const f=chains[i].length>0;paint(bk[i].b,f?C.ptr:C.dim,.07,.25);bk[i].lb.userData.o.c=f?'#201600':'#c0cde4';bk[i].lb.userData.set(f?'sig':'null');};
+  const mkNode=k=>{const r=mkRec([{t:'d',s:k,w:1.7,big:1,fs:.34},{t:'p',s:'sig',w:.9}],{h:.9});g.add(r.g);return r;};
+  const relink=i=>{lks[i].forEach(l=>l.remove());lks[i]=[];const c=chains[i],sx=.85;if(c.length)lks[i].push(new Link(bk[i],c[0],{parent:g}));
+   for(let j=0;j<c.length-1;j++)lks[i].push(new Link(c[j],c[j+1],{parent:g,fo:new V3(sx,0,0),to:new V3(sx,0,0)}));return lks[i];};
+  const nodeAt=(i,j)=>new V3(bx(i),cy(j),0);
+  const stats=()=>{const n=chains.reduce((a,c)=>a+c.length,0);setState('n = '+n+' claves<br>m = '+M+' cubetas<br>factor de carga = '+(n/M).toFixed(2));};
+  const addSilent=k=>{const i=hf(k);if(chains[i].some(x=>x.key===k))return;const r=mkNode(k);r.key=k;r.g.position.copy(nodeAt(i,chains[i].length));chains[i].push(r);relink(i);fill(i);};
+  ['ana','luis','eva','pedro','juan','omar'].forEach(addSilent);
+  const dcol=r=>r.cells[0].m;
+  const token=k=>{const t=lab(k,.6,{bg:'rgba(192,132,252,.95)',c:'#12041f',w:'800'});t.position.set(0,3.4,0);g.add(t);return t;};
+  const reset=()=>chains.forEach(c=>c.forEach(r=>paint(dcol(r),C.dato,.07,.1)));
+  const getKey=()=>String(val('k')||'').trim().toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8);
+  const toBucket=async(k)=>{const i=hf(k),t=token(k);setMsg(form(k)+'.');await move(t,new V3(bx(i),2.2,0),.7);return {i,t};};
+  const walk=async(i,k)=>{for(let j=0;j<chains[i].length;j++){await paint(dcol(chains[i][j]),C.act,.6,.2);setMsg('Compara "'+chains[i][j].key+'" con "'+k+'".');await wait(450);if(chains[i][j].key===k){await paint(dcol(chains[i][j]),C.vis,.7,.2);return j;}paint(dcol(chains[i][j]),C.dato,.07,.2);}return -1;};
+  return {main:g,step(st){if(st===3)return;stats();if(st===2)setMsg('Tabla con '+M+' cubetas. Las claves de ejemplo ya incluyen colisiones.');},
+   ctrls(st){if(st!==2)return[];const ins=async()=>{const k=getKey();if(!k){setMsg('Escribe una clave de letras o números.');return;}reset();const {i,t}=await toBucket(k);
+     if(chains[i].length){await paint(bk[i].b,C.act,.7,.25);setMsg('Colisión: la cubeta '+i+' ya contiene '+chains[i].map(x=>'"'+x.key+'"').join(', ')+'. Se recorre la cadena y se agrega "'+k+'" al final.');await wait(900);
+      const j=await walk(i,k);if(j>=0){setMsg('"'+k+'" ya existe en la cadena: no se duplica.');disp(t);await wait(700);reset();fill(i);return;}}
+     else setMsg('La cubeta '+i+' está vacía: se crea el primer nodo de su cadena.');
+     const r=mkNode(k);r.key=k;const j=chains[i].length;r.g.position.copy(nodeAt(i,j));r.g.scale.copy(tiny);chains[i].push(r);
+     await Promise.all([scl(r.g,one,.5,ease.back),fade(t,0,.5)]);disp(t);relink(i).forEach(l=>l.grow(.4));fill(i);stats();
+     setMsg('Insertado "'+k+'" en la cubeta '+i+', posición '+j+' de la cadena.');};
+    return[{t:'txt',id:'k',l:'clave',val:'sofia',max:8,enter:ins},{t:'btn',l:'Insertar',cls:'p',f:ins},
+     {t:'btn',l:'Buscar',f:async()=>{const k=getKey();if(!k)return;reset();const {i,t}=await toBucket(k);await wait(300);
+       if(!chains[i].length){setMsg('La cubeta '+i+' está vacía: "'+k+'" no está en la tabla.');}else{const j=await walk(i,k);setMsg(j>=0?'Encontrado "'+k+'" tras '+(j+1)+' comparaciones en la cadena de la cubeta '+i+'.':'"'+k+'" no está: se recorrió toda la cadena de la cubeta '+i+'.');}
+       await fade(t,0,.3);disp(t);}},
+     {t:'btn',l:'Eliminar',f:async()=>{const k=getKey();if(!k)return;reset();const {i,t}=await toBucket(k);const j=chains[i].length?await walk(i,k):-1;await fade(t,0,.3);disp(t);
+       if(j<0){setMsg('"'+k+'" no está en la tabla.');return;}const r=chains[i][j];await paint(dcol(r),C.act,.8,.2);await scl(r.g,tiny,.4);chains[i].splice(j,1);disp(r.g);relink(i);
+       await Promise.all(chains[i].map((x,q)=>move(x.g,nodeAt(i,q),.4)));fill(i);stats();setMsg('Eliminado "'+k+'" de la cubeta '+i+'. El nodo anterior apunta ahora al siguiente.');}}];}};}
+});
+
+/* ===================== 10. CIERRE ===================== */
+slides.push({id:'cierre',name:'Comparación y elección',tabs:['Complejidades','Cuándo elegir'],floor:-.02,
+ cams:[[[0,24,13],[-1.2,0,.4]]],
+ text:['<p>Costo típico de cada operación por estructura. Las barras verdes son O(1), las turquesa O(log n) y las ámbar O(n).</p><p>El BST y la tabla hash llegan a O(n) en el peor caso, y el AVL conserva O(log n). En el arreglo, insertar al final cuesta O(1), y en la lista, eliminar un nodo con su referencia también.</p>',
+  '<ul><li>Acceso por posición: arreglo.</li><li>Inserciones y borrados frecuentes: lista enlazada.</li><li>Deshacer o recursión: pila. Turnos: cola.</li><li>Orden y búsqueda: AVL, o BST si los datos llegan mezclados.</li><li>Clave exacta: tabla hash.</li><li>Relaciones y rutas: grafo.</li></ul>'],
+ build(){
+  const g=new T.Group();R.add(g);
+  const rows=[['Arreglo',['1','n','n','n'],'Acceso por posición, tamaño conocido y pocas inserciones en el medio. Ejemplos: notas de un curso, matrices, imágenes.'],
+   ['Lista enlazada',['n','n','1','1'],'Muchas inserciones y eliminaciones, y un tamaño que cambia. Ejemplos: lista de reproducción, historial de cambios.'],
+   ['Pila / cola',['1','n','1','1'],'La pila sirve para deshacer, recursión y evaluar expresiones. La cola, para turnos, impresión y procesos por orden de llegada.'],
+   ['BST (promedio)',['logn','logn','logn','logn'],'Datos con orden y búsquedas por rango. Si llegan casi ordenados, se degenera y pasa a O(n).'],
+   ['AVL',['logn','logn','logn','logn'],'Lo mismo que el BST con O(log n) garantizado en el peor caso, a cambio de las rotaciones.'],
+   ['Tabla hash (promedio)',['1','1','1','1'],'Búsqueda por clave exacta sin necesidad de orden. Ejemplos: diccionarios, cachés, conteo de palabras.']];
+  const cols=['Acceso','Búsqueda','Inserción','Eliminación'],bars=[];
+  rows.forEach((r,i)=>{const rb=[];r[1].forEach((o,j)=>{const h=OH[o]*.55,b=box(2.0,h,1.8,OC[o]);b.position.set((j-1.5)*3.1,h/2,(i-2.5)*2.5);g.add(b);rb.push({b,c:OC[o]});L(g,OL[o],.5,b.position.x,h+.65,b.position.z,{w:'700'});});bars.push(rb);L(g,r[0],.5,-8.4,.05,(i-2.5)*2.5,{c:'#d6e3f7',w:'700'});});
+  cols.forEach((c,j)=>L(g,c,.5,(j-1.5)*3.1,.05,8.0,{c:'#d6e3f7',w:'700'}));
+  const focus=k=>bars.forEach((rb,i)=>rb.forEach(x=>paint(x.b,k<0||k===i?x.c:C.dim,k===i?.5:.07,.3)));
+  return {main:g,step(st){focus(-1);if(st===1)setMsg('');},
+   ctrls(st){if(st!==1)return[];return[...rows.map((r,i)=>({t:'btn',l:r[0].replace(' (promedio)',''),f:()=>{focus(i);setMsg(r[2]);}})),
+    {t:'btn',l:'Grafo',f:()=>{focus(-1);setMsg('Relaciones entre elementos y rutas mínimas. Ejemplos: mapas, redes sociales, dependencias entre tareas.');}},{t:'btn',l:'Todas',cls:'p',f:()=>{focus(-1);setMsg('');}}];}};}
+});
+
+/* ---------- arranque ---------- */
+slides.forEach((s,i)=>{const b=document.createElement('button');b.title=s.name;b.setAttribute('aria-label',s.name);b.innerHTML='<i></i>';b.onclick=()=>go(i,0);$('#prog').append(b);});
+const fromHash=()=>{const m=/^#(\d+)\.(\d+)/.exec(location.hash);return m?[clamp(+m[1],0,slides.length-1),+m[2]]:[0,0];};
+let last=performance.now();
+function frame(now){requestAnimationFrame(frame);if(document.hidden){last=now;return;}const dt=Math.min(.05,(now-last)/1000);last=now;
+ stepTw(dt);for(const f of UPD)f(dt);for(const l of LINKS)l.update();stepCam(dt);renderer.render(scene,camera);}
+resize();
+{const h=fromHash();buildSlide(h[0],clamp(h[1],0,slides[h[0]].tabs.length-1));cam.r=cam.g.r;cam.ph=cam.g.ph;cam.th=cam.g.th;cam.t.copy(cam.g.t);}
+addEventListener('hashchange',()=>{const h=fromHash();go(h[0],clamp(h[1],0,slides[h[0]].tabs.length-1));});
+requestAnimationFrame(frame);
+window.__esd={go,slides,cam};
+})();
+</script>
+</body>
+</html>

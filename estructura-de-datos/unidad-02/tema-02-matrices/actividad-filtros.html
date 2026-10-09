@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Filtros de imagen como operaciones entre matrices</title>
+<meta name="description" content="Actividad práctica: construir filtros de imagen con matrices en Python, predecir su costo, medirlo y decidir con cifras propias.">
+<style>
+:root{
+  --bg:#f4f6fb;--surface:#ffffff;--surface2:#f0f3fa;--ink:#13172b;--muted:#586079;--line:#dfe3ef;
+  --brand:#2f5bea;--brand-ink:#ffffff;--brand-soft:#e5ebff;
+  --pos:#178a5a;--pos-soft:#dff4ea;--neg:#d1403a;--neg-soft:#fde7e6;
+  --warn:#c9741b;--warn-soft:#fff0dc;--vio:#7447d8;--vio-soft:#eee7ff;
+  --shadow:0 1px 2px rgba(20,28,60,.06),0 8px 24px rgba(20,28,60,.07);
+  --mono:ui-monospace,"Cascadia Code","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  --sans:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --radius:16px;
+}
+:root[data-theme="dark"]{
+  --bg:#0d1020;--surface:#161a31;--surface2:#1d2240;--ink:#e8ebf8;--muted:#9aa2c0;--line:#292f50;
+  --brand:#7d9bff;--brand-ink:#0d1020;--brand-soft:#1f2b5c;
+  --pos:#4ed39b;--pos-soft:#163a2e;--neg:#ff7d75;--neg-soft:#42201f;
+  --warn:#ffb066;--warn-soft:#46301a;--vio:#b595ff;--vio-soft:#2d2354;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--brand)}
+code{font-family:var(--mono);background:var(--surface2);border:1px solid var(--line);padding:.05em .38em;border-radius:6px;font-size:.88em}
+b,strong{font-weight:650}
+.mono{font-family:var(--mono)}.muted{color:var(--muted)}.small{font-size:.88rem}
+
+/* navegación */
+#nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+#nav .in{max-width:980px;margin:0 auto;padding:10px 20px;display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
+#nav .in::-webkit-scrollbar{display:none}
+#nav a{white-space:nowrap;text-decoration:none;color:var(--muted);font-weight:600;font-size:.9rem;padding:6px 12px;border-radius:99px;border:1px solid transparent}
+#nav a:hover{color:var(--brand)}
+#nav a.on{background:var(--brand-soft);color:var(--brand)}
+#nav .sp{flex:1}
+#nav button{border:1px solid var(--line);background:var(--surface);border-radius:10px;height:34px;min-width:34px}
+#bar{position:fixed;top:0;left:0;height:3px;background:var(--brand);width:0;z-index:30}
+
+main{max-width:980px;margin:0 auto;padding:0 20px 80px}
+header.hero{padding:56px 0 20px}
+.kicker{display:inline-flex;font-family:var(--mono);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);background:var(--brand-soft);padding:4px 12px;border-radius:99px}
+h1{font-size:clamp(2rem,4.6vw,3.1rem);line-height:1.1;margin:.4em 0 .25em;letter-spacing:-.02em}
+h1 span{color:var(--brand)}
+.sub{font-size:1.2rem;color:var(--muted);margin:0 0 .8em}
+h2{font-size:clamp(1.5rem,2.8vw,2rem);line-height:1.2;margin:2.4em 0 .5em;letter-spacing:-.015em;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+h2 .ph{font-family:var(--mono);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--brand-ink);background:var(--brand);padding:4px 11px;border-radius:99px}
+h3{font-size:1.15rem;margin:1.6em 0 .4em}
+p{margin:.6em 0}
+ul,ol{padding-left:1.25em;margin:.5em 0}
+li{margin:.35em 0}
+.lead{font-size:1.14rem;color:var(--muted);max-width:68ch}
+
+/* bloques */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);margin:16px 0}
+.card h3{margin-top:.2em}
+.call{border-radius:14px;padding:12px 16px;border:1px solid;display:flex;gap:12px;align-items:flex-start;margin:16px 0}
+.call .ic{flex:none;min-width:24px;height:24px;padding:0 6px;border-radius:99px;display:grid;place-items:center;font:800 .8rem var(--mono);background:var(--brand);color:var(--brand-ink);margin-top:1px}.call p{margin:0}
+.call.ok .ic{background:var(--pos)}.call.warn .ic{background:var(--warn)}
+.call.info{background:var(--brand-soft);border-color:color-mix(in srgb,var(--brand) 35%,transparent)}
+.call.ok{background:var(--pos-soft);border-color:color-mix(in srgb,var(--pos) 35%,transparent)}
+.call.warn{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+.tag{display:inline-block;font-size:.78rem;font-weight:650;padding:2px 9px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);color:var(--muted)}
+.tag.b{background:var(--brand-soft);color:var(--brand);border-color:transparent}
+.tag.g{background:var(--pos-soft);color:var(--pos);border-color:transparent}
+.tag.o{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:11px;padding:7px 14px;font-weight:600}
+.btn:hover{border-color:var(--brand);color:var(--brand)}
+.btn.pri{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.btn.pri:hover{filter:brightness(1.08);color:var(--brand-ink)}
+.goal{list-style:none;padding:0;margin:.4em 0}
+.goal li{position:relative;padding-left:30px;margin:.6em 0}
+.goal li::before{content:"";position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:var(--pos-soft)}
+.goal li::after{content:"";position:absolute;left:7px;top:6px;width:5px;height:9px;border:solid var(--pos);border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+
+/* preguntas numeradas */
+ol.q{list-style:none;counter-reset:q;padding:0}
+ol.q>li{counter-increment:q;position:relative;padding:12px 16px 12px 56px;margin:12px 0;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+ol.q>li::before{content:counter(q);position:absolute;left:14px;top:12px;width:30px;height:30px;border-radius:9px;background:var(--brand-soft);color:var(--brand);font-weight:800;display:grid;place-items:center}
+ol.q>li>b:first-child{display:block;margin-bottom:2px}
+ol.steps{list-style:none;counter-reset:s;padding:0}
+ol.steps>li{counter-increment:s;position:relative;padding-left:46px;margin:.9em 0}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--brand);color:var(--brand-ink);font-weight:800;display:grid;place-items:center}
+
+/* tablas */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin:14px 0}
+table.t{width:100%;border-collapse:collapse;font-size:.92rem}
+table.t th,table.t td{padding:9px 11px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.t th{font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);background:var(--surface2)}
+table.t tr:last-child td{border-bottom:0}
+td.fill{min-width:84px;background:repeating-linear-gradient(0deg,transparent,transparent 31px,var(--line) 32px);outline:none;cursor:text}
+td.fill:focus{background:var(--brand-soft)}
+.hint{font-size:.85rem;color:var(--muted);margin-top:-6px}
+
+/* matrices estáticas */
+.mx{display:inline-grid;gap:3px;--cs:44px;vertical-align:top}
+.mx.sm{--cs:32px}
+.mx .c{width:var(--cs);height:var(--cs);display:grid;place-items:center;border-radius:7px;font-family:var(--mono);font-size:calc(var(--cs)*.34);font-weight:600;border:1px solid rgba(128,128,150,.3)}
+.mx.sm .c{font-size:calc(var(--cs)*.38)}
+.mx .c.win{box-shadow:0 0 0 2.5px var(--brand);z-index:2}
+.mx .c.ctr{box-shadow:0 0 0 3.5px var(--vio);z-index:3}
+.mx .c.pos{background:var(--pos-soft);color:var(--pos)}
+.mx .c.neg{background:var(--neg-soft);color:var(--neg)}
+.mx .c.zer{background:var(--surface2);color:var(--muted)}
+.mx .c.org{background:var(--warn-soft)}
+.opr{font-size:1.8rem;font-weight:700;color:var(--muted);align-self:center}
+.mxwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.mxwrap .cap{font-size:.82rem;color:var(--muted);text-align:center;max-width:24ch;line-height:1.3}
+.flow{display:flex;flex-wrap:wrap;gap:14px 12px;justify-content:center;align-items:center}
+.figure{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 16px;margin:16px 0;box-shadow:var(--shadow)}
+.figcap{font-size:.9rem;color:var(--muted);text-align:center;margin:14px auto 0;max-width:70ch}
+.res .eq,.eq{font-family:var(--mono);background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:.88rem}
+.eq .r,.r{color:var(--pos);font-weight:800}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.two .box{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;text-align:center;font-size:.92rem}
+.big{font-size:1.5rem;font-weight:800;color:var(--brand);font-family:var(--mono)}
+
+/* código */
+pre.code{background:#0f1428;color:#dbe3ff;border-radius:0 0 14px 14px;padding:14px 16px;font-family:var(--mono);font-size:.84rem;line-height:1.55;overflow:auto;margin:0;border:1px solid #232b52;border-top:0;max-height:340px;tab-size:4}
+pre.code.open{max-height:none}
+pre.code .k{color:#ff9ac1}pre.code .s{color:#9de2a6}pre.code .c{color:#7f8bb8}pre.code .f{color:#8cc2ff}pre.code .m{color:#ffcf8a}
+pre.snip{background:#0f1428;color:#dbe3ff;border-radius:14px;padding:14px 16px;font-family:var(--mono);font-size:.86rem;line-height:1.55;overflow:auto;border:1px solid #232b52;margin:12px 0}
+pre.snip .k{color:#ff9ac1}pre.snip .s{color:#9de2a6}pre.snip .c{color:#7f8bb8}pre.snip .f{color:#8cc2ff}pre.snip .m{color:#ffcf8a}
+.codebox{margin:20px 0;border-radius:16px;box-shadow:var(--shadow)}
+.cb-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px 16px 0 0;padding:12px 16px}
+.cb-btns{display:flex;gap:8px;flex-wrap:wrap}
+.cb-more{width:100%;border-radius:0 0 14px 14px;border-top:0;background:var(--surface2)}
+.codebox.open .cb-more{display:none}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.25s;z-index:40;font-weight:600}
+.toast.on{opacity:1;transform:translateX(-50%)}
+footer.end{margin-top:60px;text-align:center;color:var(--muted);font-size:.9rem}
+.tip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.tip>div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:.93rem}
+.tip b{display:block;color:var(--brand);margin-bottom:2px}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+@media (max-width:760px){
+  body{font-size:16px}
+  .two,.tip,.cols2{grid-template-columns:1fr}
+  .mx{--cs:36px}.mx.sm{--cs:28px}
+  main{padding:0 14px 60px}
+  ol.q>li{padding-left:50px}
+}
+@media print{#nav,#bar,.cb-btns,.cb-more{display:none}pre.code{max-height:none}body{background:#fff}.card,.figure{box-shadow:none}}
+
+.tag.sq::before{content:"";display:inline-block;width:.62em;height:.62em;border-radius:2px;background:currentColor;margin-right:6px}
+.tag.sq.out::before{background:transparent;border:2px dashed currentColor}
+
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<nav id="nav"><div class="in">
+  <a href="#proposito" data-s="proposito">Propósito</a>
+  <a href="#problema" data-s="problema">El problema</a>
+  <a href="#fase1" data-s="fase1">1. Predicción</a>
+  <a href="#fase2" data-s="fase2">2. Construcción</a>
+  <a href="#fase3" data-s="fase3">3. Contraste</a>
+  <a href="#fase4" data-s="fase4">4. Decisión</a>
+  <a href="#codigo" data-s="codigo">Código</a>
+  <span class="sp"></span>
+  <button id="theme" aria-label="Cambiar tema" title="Cambiar tema">Tema</button>
+</div></nav>
+
+<main>
+<header class="hero" id="inicio">
+  <span class="kicker">Estructuras fijas, Matrices</span>
+  <h1>Filtros de imagen como <span>operaciones entre matrices</span></h1>
+  <p class="sub">Predecir, medir y decidir</p>
+  <p class="lead">Una fotografía en escala de grises es una matriz de números enteros, y casi todo lo que hace un programa de edición (desenfocar, afilar, detectar bordes, quitar ruido) es una operación entre esa matriz y otra mucho más pequeña. En esta actividad va a construir esas operaciones, pero lo más valioso es lo que hace alrededor: decir de antemano cuánto va a costar cada una, medirlo y explicar por qué su predicción acertó o falló.</p>
+  <div class="call info"><span class="ic">i</span><p>¿Quiere ver cómo se mueve cada filtro antes de empezar? Abra la <a href="explicacion-filtros.html"><b>explicación interactiva</b></a>: tiene animaciones, ejemplos y diagramas de cada filtro.</p></div>
+</header>
+
+<section id="proposito">
+  <h2>Propósito</h2>
+  <div class="card">
+    <p style="margin-top:0">Al terminar usted será capaz de:</p>
+    <ul class="goal">
+      <li><b>Representar</b> una imagen como matriz y explicar qué calcula cada familia de filtros.</li>
+      <li><b>Contar</b>, a partir del algoritmo, cuántos píxeles se procesan y cuántas operaciones se hacen, y anticipar cómo crece el tiempo cuando la imagen crece.</li>
+      <li><b>Estimar</b> la memoria que ocupa una matriz y la que necesita un algoritmo mientras trabaja, no solo la del resultado.</li>
+      <li><b>Contrastar</b> una predicción con una medición y explicar la diferencia con una hipótesis que se pueda probar.</li>
+      <li><b>Decidir</b> entre dos implementaciones con cifras propias, y reconocer cuándo otra estructura o herramienta es la mejor opción.</li>
+    </ul>
+  </div>
+  <div class="tip">
+    <div><b>Primero prediga</b>Complete la Fase 1 antes de ejecutar un solo filtro y no la corrija después: los errores se explican en la Fase 3.</div>
+    <div><b>Un error bien explicado vale más</b>Una predicción equivocada con una buena explicación enseña más que una acertada sin ella.</div>
+    <div><b>Trabajen en pareja</b>Los dos deben poder explicar cualquier parte del código y de las respuestas.</div>
+  </div>
+</section>
+
+<section id="problema">
+  <h2>El problema</h2>
+
+  <h3>De la imagen a la matriz</h3>
+  <p>Una imagen en escala de grises es una matriz de enteros de 0 (negro) a 255 (blanco). En Python es una lista de listas: <code>img[i][j]</code> es el píxel de la fila <code>i</code>, columna <code>j</code>. El código base ya trae las funciones para leer una imagen, guardarla y mostrarla, y una imagen de prueba que siempre es la misma: un degradado, un cuadrado claro, un círculo oscuro y un 3 % de píxeles sueltos blancos o negros (ruido).</p>
+
+  <h3>Qué hace un filtro</h3>
+  <p>Un filtro calcula una imagen nueva, píxel por píxel. Lo que cambia entre un filtro y otro es <b>de dónde saca los datos</b> para calcular cada píxel nuevo. Hay tres familias:</p>
+  <div class="tw"><table class="t">
+    <thead><tr><th>Filtro</th><th>Familia</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr><td><b>Negativo</b></td><td><span class="tag b">Punto a punto</span></td><td>Invierte claros y oscuros (ya viene programado como ejemplo)</td></tr>
+      <tr><td><b>Promedio 3 × 3 y 5 × 5</b></td><td><span class="tag g">Vecindad con núcleo</span></td><td>Desenfoca y suaviza el ruido</td></tr>
+      <tr><td><b>Realce</b></td><td><span class="tag g">Vecindad con núcleo</span></td><td>Acentúa los detalles</td></tr>
+      <tr><td><b>Sobel</b></td><td><span class="tag g">Vecindad con núcleo (dos núcleos)</span></td><td>Marca los bordes</td></tr>
+      <tr><td><b>Gauss 5 × 5</b></td><td><span class="tag g">Vecindad con núcleo</span></td><td>Desenfoque suave; puede hacerse en dos pasadas</td></tr>
+      <tr><td><b>Mediana 3 × 3</b></td><td><span class="tag o">Vecindad no lineal</span></td><td>Elimina píxeles sueltos sin desenfocar tanto</td></tr>
+    </tbody></table></div>
+
+  <h3>Ventana, núcleo y divisor</h3>
+  <p>En los filtros «con núcleo», la ventana de la imagen se multiplica celda a celda por una matriz pequeña de pesos (el <b>núcleo</b>), se suman los productos y la suma se divide entre un <b>divisor</b>. El resultado se escribe en la posición del centro de la ventana.</p>
+  
+<div class="figure">
+  <div class="flow">
+    <div class="mxwrap"><div class="mx " style="grid-template-columns:repeat(5,var(--cs))"><div class="c" style="background:rgb(5,5,5);color:#f5f7ff">5</div><div class="c" style="background:rgb(15,15,15);color:#f5f7ff">15</div><div class="c" style="background:rgb(25,25,25);color:#f5f7ff">25</div><div class="c" style="background:rgb(35,35,35);color:#f5f7ff">35</div><div class="c" style="background:rgb(45,45,45);color:#f5f7ff">45</div><div class="c" style="background:rgb(15,15,15);color:#f5f7ff">15</div><div class="c win" style="background:rgb(10,10,10);color:#f5f7ff">10</div><div class="c win" style="background:rgb(20,20,20);color:#f5f7ff">20</div><div class="c win" style="background:rgb(30,30,30);color:#f5f7ff">30</div><div class="c" style="background:rgb(55,55,55);color:#f5f7ff">55</div><div class="c" style="background:rgb(25,25,25);color:#f5f7ff">25</div><div class="c win" style="background:rgb(40,40,40);color:#f5f7ff">40</div><div class="c ctr win" style="background:rgb(50,50,50);color:#f5f7ff">50</div><div class="c win" style="background:rgb(60,60,60);color:#f5f7ff">60</div><div class="c" style="background:rgb(65,65,65);color:#f5f7ff">65</div><div class="c" style="background:rgb(35,35,35);color:#f5f7ff">35</div><div class="c win" style="background:rgb(70,70,70);color:#f5f7ff">70</div><div class="c win" style="background:rgb(80,80,80);color:#f5f7ff">80</div><div class="c win" style="background:rgb(90,90,90);color:#f5f7ff">90</div><div class="c" style="background:rgb(75,75,75);color:#f5f7ff">75</div><div class="c" style="background:rgb(45,45,45);color:#f5f7ff">45</div><div class="c" style="background:rgb(55,55,55);color:#f5f7ff">55</div><div class="c" style="background:rgb(65,65,65);color:#f5f7ff">65</div><div class="c" style="background:rgb(75,75,75);color:#f5f7ff">75</div><div class="c" style="background:rgb(85,85,85);color:#f5f7ff">85</div></div><div class="cap">Parche de 5 × 5<br>(ventana de 3 × 3 en azul)</div></div>
+    <div class="opr">×</div>
+    <div class="mxwrap"><div class="mx " style="grid-template-columns:repeat(3,var(--cs))"><div class="c pos">1</div><div class="c pos">1</div><div class="c pos">1</div><div class="c pos">1</div><div class="c pos">1</div><div class="c pos">1</div><div class="c pos">1</div><div class="c pos">1</div><div class="c pos">1</div></div><div class="cap">Núcleo promedio</div></div>
+    <div class="opr">=</div>
+    <div class="res"><div class="eq">(10 + 20 + 30 + 40 + 50 + 60 + 70 + 80 + 90) // 9<br>= 450 // 9 = <b class="r">50</b></div></div>
+  </div>
+  <div class="flow" style="margin-top:14px">
+    <div class="mxwrap"><div class="mx " style="grid-template-columns:repeat(5,var(--cs))"><div class="c" style="background:rgb(5,5,5);color:#f5f7ff">5</div><div class="c" style="background:rgb(15,15,15);color:#f5f7ff">15</div><div class="c" style="background:rgb(25,25,25);color:#f5f7ff">25</div><div class="c" style="background:rgb(35,35,35);color:#f5f7ff">35</div><div class="c" style="background:rgb(45,45,45);color:#f5f7ff">45</div><div class="c" style="background:rgb(15,15,15);color:#f5f7ff">15</div><div class="c win" style="background:rgb(10,10,10);color:#f5f7ff">10</div><div class="c win" style="background:rgb(20,20,20);color:#f5f7ff">20</div><div class="c win" style="background:rgb(30,30,30);color:#f5f7ff">30</div><div class="c" style="background:rgb(55,55,55);color:#f5f7ff">55</div><div class="c" style="background:rgb(25,25,25);color:#f5f7ff">25</div><div class="c win" style="background:rgb(40,40,40);color:#f5f7ff">40</div><div class="c ctr win" style="background:rgb(50,50,50);color:#f5f7ff">50</div><div class="c win" style="background:rgb(60,60,60);color:#f5f7ff">60</div><div class="c" style="background:rgb(65,65,65);color:#f5f7ff">65</div><div class="c" style="background:rgb(35,35,35);color:#f5f7ff">35</div><div class="c win" style="background:rgb(70,70,70);color:#f5f7ff">70</div><div class="c win" style="background:rgb(80,80,80);color:#f5f7ff">80</div><div class="c win" style="background:rgb(90,90,90);color:#f5f7ff">90</div><div class="c" style="background:rgb(75,75,75);color:#f5f7ff">75</div><div class="c" style="background:rgb(45,45,45);color:#f5f7ff">45</div><div class="c" style="background:rgb(55,55,55);color:#f5f7ff">55</div><div class="c" style="background:rgb(65,65,65);color:#f5f7ff">65</div><div class="c" style="background:rgb(75,75,75);color:#f5f7ff">75</div><div class="c" style="background:rgb(85,85,85);color:#f5f7ff">85</div></div><div class="cap">El mismo parche</div></div>
+    <div class="opr">×</div>
+    <div class="mxwrap"><div class="mx " style="grid-template-columns:repeat(3,var(--cs))"><div class="c neg">-1</div><div class="c zer">0</div><div class="c pos">1</div><div class="c neg">-2</div><div class="c zer">0</div><div class="c pos">2</div><div class="c neg">-1</div><div class="c zer">0</div><div class="c pos">1</div></div><div class="cap">Núcleo Sobel X</div></div>
+    <div class="opr">=</div>
+    <div class="res"><div class="eq">−10 + 30 − 80 + 120 − 70 + 90<br>= <b class="r">80</b> &nbsp;(÷ 1)</div></div>
+  </div>
+  <p class="figcap">Se multiplica celda a celda la ventana por el núcleo, se suman los productos y se divide entre el divisor. El resultado se escribe en la posición del <b>centro</b> de la ventana.</p>
+</div>
+  <p>Los núcleos ya están definidos en el código base como parejas <code>(pesos, divisor)</code>, por ejemplo <code>PROMEDIO_3</code>, <code>REALCE</code>, <code>SOBEL_X</code>, <code>SOBEL_Y</code> y <code>GAUSS_5</code>. Use siempre división entera (<code>//</code>). Así una sola función sirve para todos: <code>convolucion(img, *PROMEDIO_3)</code>.</p>
+
+  <h3>El filtro separable</h3>
+  <p>Es un truco de costo. Si la matriz de pesos es una columna por una fila, la ventana de k × k puede reemplazarse por <b>dos pasadas de k pesos</b>, guardando el resultado de la primera en una matriz intermedia.</p>
+  
+<div class="figure">
+  <div class="flow">
+    <div class="mxwrap"><div class="mx sm" style="grid-template-columns:repeat(1,var(--cs))"><div class="c pos">1</div><div class="c pos">4</div><div class="c pos">6</div><div class="c pos">4</div><div class="c pos">1</div></div><div class="cap">columna</div></div>
+    <div class="opr">×</div>
+    <div class="mxwrap"><div class="mx sm" style="grid-template-columns:repeat(5,var(--cs))"><div class="c pos">1</div><div class="c pos">4</div><div class="c pos">6</div><div class="c pos">4</div><div class="c pos">1</div></div><div class="cap">fila</div></div>
+    <div class="opr">=</div>
+    <div class="mxwrap"><div class="mx sm" style="grid-template-columns:repeat(5,var(--cs))"><div class="c pos">1</div><div class="c pos">4</div><div class="c pos">6</div><div class="c pos">4</div><div class="c pos">1</div><div class="c pos">4</div><div class="c pos">16</div><div class="c pos">24</div><div class="c pos">16</div><div class="c pos">4</div><div class="c pos">6</div><div class="c pos">24</div><div class="c pos">36</div><div class="c pos">24</div><div class="c pos">6</div><div class="c pos">4</div><div class="c pos">16</div><div class="c pos">24</div><div class="c pos">16</div><div class="c pos">4</div><div class="c pos">1</div><div class="c pos">4</div><div class="c pos">6</div><div class="c pos">4</div><div class="c pos">1</div></div><div class="cap">núcleo gauss 5 × 5<br>(suma 256)</div></div>
+  </div>
+  <div class="two">
+    <div class="box"><b>Directo</b><br>una ventana de 5 × 5<br><span class="big">25</span> multiplicaciones por píxel</div>
+    <div class="box"><b>Separable</b><br>una pasada horizontal y una vertical, con una matriz intermedia<br><span class="big">5 + 5</span> multiplicaciones por píxel</div>
+  </div>
+  <p class="figcap">Como el núcleo es «columna × fila», filtrar en dos pasadas da el mismo resultado. La primera pasada guarda sus valores en una matriz intermedia del tamaño de la imagen.</p>
+</div>
+
+  <h3>Los bordes</h3>
+  <p>Cerca de la orilla, la ventana se sale de la imagen. En esta actividad todos los filtros de vecindad siguen la misma regla: <b>el resultado tiene el mismo tamaño que la imagen</b> y los <code>r = k // 2</code> píxeles más externos se copian de la original. La excepción es Sobel, cuya franja queda en 0 (piense por qué copiarla no tendría sentido).</p>
+  
+<div class="figure">
+  <div class="flow">
+    <div class="mxwrap"><div class="mx sm" style="grid-template-columns:repeat(7,var(--cs))"><div class="c org"></div><div class="c org"></div><div class="c org"></div><div class="c org"></div><div class="c org"></div><div class="c org"></div><div class="c org"></div><div class="c org"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c org"></div><div class="c org"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c org"></div><div class="c org"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c org"></div><div class="c org"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c org"></div><div class="c org"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c pos"></div><div class="c org"></div><div class="c org"></div><div class="c org"></div><div class="c org"></div><div class="c org"></div><div class="c org"></div><div class="c org"></div><div class="c org"></div></div><div class="cap">Imagen de 7 × 7 con núcleo 3 × 3<br>r = 3 // 2 = 1</div></div>
+    <div class="res" style="max-width:300px">
+      <p style="margin:0 0 6px"><span class="tag g sq">verde</span> la ventana cabe: se calcula.</p>
+      <p style="margin:0 0 6px"><span class="tag o sq">naranja</span> la ventana se sale: la franja de borde.</p>
+      <p style="margin:0">Se calculan <b>(n − 2r)²</b> píxeles; el resto se copia de la original. Con Sobel la franja queda en 0.</p>
+    </div>
+  </div>
+</div>
+
+  <h3>Lo que va a construir</h3>
+  <p>Cuatro funciones en la plantilla de trabajo. Cada una trae su descripción y la regla del borde:</p>
+  <div class="tw"><table class="t">
+    <thead><tr><th>Función</th><th>Cubre estos filtros</th></tr></thead>
+    <tbody>
+      <tr><td><code>convolucion(img, kernel, divisor=1)</code></td><td>promedio 3 × 3, promedio 5 × 5, realce, Sobel X, Sobel Y y gauss 5 × 5 directo</td></tr>
+      <tr><td><code>mediana(img, k=3)</code></td><td>mediana 3 × 3</td></tr>
+      <tr><td><code>bordes_sobel(img)</code></td><td>Sobel completo: <code>abs(Gx) + abs(Gy)</code></td></tr>
+      <tr><td><code>convolucion_separable(img, pesos)</code></td><td>gauss 5 × 5 en dos pasadas</td></tr>
+    </tbody></table></div>
+  <p>El código base incluye un filtro ya resuelto, <code>negativo</code>, para que vea el patrón esperado: el resultado se crea con filas independientes y la entrada no se toca.</p>
+<pre class="snip"><span class="k">def</span> <span class="f">negativo</span>(img):
+    alto, ancho = <span class="f">len</span>(img), <span class="f">len</span>(img[<span class="m">0</span>])
+    resultado = [[<span class="m">0</span>] * ancho <span class="k">for</span> _ <span class="k">in</span> <span class="f">range</span>(alto)]   <span class="c"># filas independientes</span>
+    <span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(alto):
+        <span class="k">for</span> j <span class="k">in</span> <span class="f">range</span>(ancho):
+            resultado[i][j] = <span class="m">255</span> - img[i][j]
+    <span class="k">return</span> resultado</pre>
+</section>
+
+<section id="fase1">
+  <h2><span class="ph">Fase 1</span> Predicción</h2>
+  <p class="lead">Sin ejecutar ningún filtro. Puede usar papel, calculadora y leer el código, pero no ejecutarlo.</p>
+
+  <h3>A, Individual</h3>
+  <p>Cada integrante responde con sus propias palabras, antes de hablar con su pareja:</p>
+  <ol class="q">
+    <li><b>Contar píxeles y multiplicaciones.</b> En una imagen de 8 × 8, ¿a cuántos píxeles se les calcula un valor nuevo con un núcleo de 3 × 3? ¿Y con uno de 5 × 5? ¿Cuántas multiplicaciones se hacen en total en cada caso?</li>
+    <li><b>Una fórmula.</b> ¿Cuántas multiplicaciones hace el promedio 3 × 3 sobre una imagen de n × n? Si el lado se duplica, ¿por cuánto se multiplica el tiempo y por qué?</li>
+    <li><b>Una apuesta.</b> De los siete filtros de la tabla, ¿cuál cree que será el más lento y cuál el más rápido? ¿Cuántas veces más lento será el promedio 5 × 5 que el 3 × 3?</li>
+  </ol>
+
+  <h3>B, En pareja</h3>
+  <p>Comparen sus respuestas. Donde difieran, discutan hasta que cada uno pueda explicar la respuesta del otro y anoten en qué punto divergían. Después completen juntos la tabla (se puede escribir directamente en ella; queda guardada en este navegador). Las multiplicaciones con n = 8 se cuentan a mano, siguiendo el algoritmo que escribirían.</p>
+  <div class="tw"><table class="t"><thead><tr><th>Filtro</th><th>Píxeles que se calculan (lado n)</th><th>Multiplicaciones por píxel</th><th>Multiplicaciones totales con n = 8</th><th>Matrices del tamaño de la imagen vivas en el punto más alto</th><th>Tiempo predicho (× promedio 3 × 3)</th></tr></thead><tbody><tr><td><b>Promedio 3 × 3</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill">1</td></tr><tr><td><b>Promedio 5 × 5</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Realce 3 × 3</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Sobel (Gx, Gy y combinar)</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Mediana 3 × 3</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Gauss 5 × 5 directo</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Gauss 5 × 5 separable</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr></tbody></table></div>
+  <p class="hint">Sobel: cuente solo las dos convoluciones y diga aparte qué más se hace. Mediana: ¿qué hace en vez de multiplicar? Separable: la primera pasada procesa todas las filas, pero solo las columnas donde caben los k pesos.</p>
+
+  <h3>C, Memoria</h3>
+  <p>Una matriz de 512 × 512 en Python es una lista de 512 filas, y cada fila es una lista de 512 referencias. En una máquina de 64 bits una referencia ocupa 8 bytes y una lista guarda además unos 56 bytes de encabezado.</p>
+  <ol class="q">
+    <li>¿Cuántos bytes ocupa la estructura (listas y referencias) de una matriz de 512 × 512? Exprese el resultado también en KiB.</li>
+    <li>Cada celda apunta a un objeto entero. Python reutiliza un único objeto para cada entero entre −5 y 256, pero crea objetos nuevos (de 28 a 32 bytes cada uno) para los demás. ¿En cuál de los siete filtros espera que el resultado contenga enteros fuera de ese rango? ¿Qué le pasaría a la memoria que queda ocupada al terminar?</li>
+    <li>La herramienta de medición informa dos cifras: el <b>pico</b> (lo máximo que la función tuvo vivo en algún instante) y lo <b>retenido</b> (lo que sigue vivo al terminar). Prediga para cada filtro si serán casi iguales o muy distintos, y por qué.</li>
+  </ol>
+
+  <h3>D, Entradas inadecuadas</h3>
+  <p>Escriba qué cree que hará <code>convolucion</code> en cada caso: ¿lanza un error, devuelve algo, o se ejecuta sin quejarse y devuelve un resultado equivocado?</p>
+  <ul><li>Una imagen de 2 × 2 y un núcleo de 3 × 3.</li><li>Un núcleo de lado par (4 × 4).</li><li>Una lista vacía como imagen.</li></ul>
+</section>
+
+<section id="fase2">
+  <h2><span class="ph">Fase 2</span> Construcción y medición</h2>
+
+  <h3>Preparación</h3>
+  <div class="cols2">
+    <div class="card" style="margin:6px 0"><h3 style="margin-top:0"><span class="tag g">Opción A</span> Google Colab</h3>
+      <ol class="steps">
+        <li>Abra un cuaderno nuevo en <b>colab.research.google.com</b>.</li>
+        <li>Copie el <a href="#codigo"><b>bloque A</b></a> en una celda y ejecútela.</li>
+        <li>Copie el <b>bloque B</b> en otra celda. Ahí escribirá sus funciones (vuelva a ejecutar la celda cada vez que las cambie).</li>
+        <li>En una celda nueva ejecute <code>probar_entorno()</code>. Si crea <code>prueba.png</code> y muestra unas líneas de medición, todo funciona.</li>
+      </ol></div>
+    <div class="card" style="margin:6px 0"><h3 style="margin-top:0"><span class="tag b">Opción B</span> Editor en su equipo</h3>
+      <ol class="steps">
+        <li>Instale Pillow: <code>pip install pillow</code>.</li>
+        <li>Guarde el bloque A como <code>filtros_base.py</code> y el bloque B como <code>filtros_estudiante.py</code>, en la misma carpeta (los botones de «Descargar» lo hacen por usted).</li>
+        <li>Ejecute <code>python filtros_base.py</code>. Debe crear <code>prueba.png</code> y mostrar una línea de medición.</li>
+      </ol></div>
+  </div>
+  <p>El código base no se modifica; todo lo suyo va en la plantilla. La imagen <code>muestra.png</code> (512 × 512) se genera con <code>crear_muestra()</code>, o puede usar una foto propia con <code>cargar_imagen</code>.</p>
+
+  <h3>Cómo se mide</h3>
+  <p>El código base trae dos herramientas, una de tiempo y una de memoria. Lea su descripción antes de usarlas: lo que cada una devuelve es parte de lo que debe poder explicar.</p>
+  <ul>
+    <li><code>medir_tiempo</code> repite la función y se queda con el <b>mejor</b> tiempo, porque las interrupciones del equipo solo pueden sumar tiempo, nunca restarlo.</li>
+    <li><code>medir_memoria</code> devuelve el <b>pico</b> y lo <b>retenido</b>. Como vuelve el programa mucho más lento, nunca se mide tiempo y memoria en la misma ejecución.</li>
+    <li><code>medir(nombre, filtro, *args)</code> usa ambas sobre los lados 64, 128, 256 y 512 y muestra una línea por tamaño.</li>
+    <li><code>Contador</code> sirve para contar operaciones en una <b>copia</b> de su función y con imágenes pequeñas (contar también cuesta tiempo).</li>
+  </ul>
+  <div class="call warn"><span class="ic">!</span><p><b>Mediciones limpias.</b> Cierre los demás programas pesados, no mida durante una videollamada y anote el equipo (o «Colab») y la versión de Python. Dos mediciones que difieren menos de un 10 % no permiten concluir nada.</p></div>
+
+  <h3>Paso a paso</h3>
+  <ol class="steps">
+    <li><b>Trace a mano antes de programar.</b> Con el parche de 5 × 5 del diagrama (<code>PARCHE_EJEMPLO</code>), calcule el valor del píxel central para el promedio 3 × 3 y para Sobel X. Debe obtener 50 y 80. Si no, aún no entendió el recorrido; resuélvalo antes de escribir código.</li>
+    <li><b>Escriba las cuatro funciones, en este orden:</b> <code>convolucion</code>, <code>mediana</code>, <code>bordes_sobel</code> (puede reutilizar <code>convolucion</code>) y <code>convolucion_separable</code>. Después de cada una, active las pruebas de la plantilla: compare con su cálculo a mano, ejecute <code>comprobar_contrato</code> y mire la imagen de salida con <code>mostrar</code>. Si algo se ve mal, la imagen suele decir dónde. El separable debe dar un resultado <b>idéntico</b> al de <code>convolucion(img, *GAUSS_5)</code>.</li>
+    <li><b>Cuente.</b> Haga copias de sus funciones que cuenten con <code>Contador</code> y ejecútelas sobre <code>crear_imagen_prueba(8)</code>. Compare con la columna «multiplicaciones con n = 8» de la Fase 1 y anote cualquier diferencia, junto con la convención que usó para contar lecturas y sumas.</li>
+    <li><b>Mida.</b> Ejecute <code>medir(...)</code> para los siete filtros (están al final de la plantilla). Repita las mediciones de tiempo dos veces y copie los resultados a las tablas.</li>
+    <li><b>Entradas inadecuadas.</b> Ejecute ahora los tres casos de la Fase 1 sobre su <code>convolucion</code> y anote el resultado real.</li>
+  </ol>
+
+  <h3>Tablas de resultados</h3>
+  <p><b>Tiempo</b> (segundos, mejor de 3 repeticiones)</p>
+  <div class="tw"><table class="t"><thead><tr><th>Filtro</th><th>lado 64</th><th>lado 128</th><th>lado 256</th><th>lado 512</th><th>Razón 512 / 256</th></tr></thead><tbody><tr><td><b>Promedio 3 × 3</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Promedio 5 × 5</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Realce 3 × 3</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Sobel (Gx, Gy y combinar)</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Mediana 3 × 3</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Gauss 5 × 5 directo</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Gauss 5 × 5 separable</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr></tbody></table></div>
+  <p><b>Memoria</b> (KiB). Para la última columna tome como referencia el retenido del promedio 3 × 3 con lado 512, que equivale a una matriz de 512 × 512 que ya existe.</p>
+  <div class="tw"><table class="t"><thead><tr><th>Filtro</th><th>Pico (512)</th><th>Retenido (512)</th><th>Pico (512) ÷ retenido de la imagen de entrada</th></tr></thead><tbody><tr><td><b>Promedio 3 × 3</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Promedio 5 × 5</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Realce 3 × 3</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Sobel (Gx, Gy y combinar)</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Mediana 3 × 3</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Gauss 5 × 5 directo</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr><tr><td><b>Gauss 5 × 5 separable</b></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr></tbody></table></div>
+</section>
+
+<section id="fase3">
+  <h2><span class="ph">Fase 3</span> Contraste entre teoría y experimento</h2>
+  <p class="lead">Responda con sus hojas de la Fase 1 y las tablas de la Fase 2 a la vista. Donde se equivocó, corrija marcando el cambio y explique la causa.</p>
+  <ol class="q">
+    <li><b>Predicción contra medición.</b> Para cada filtro compare el tiempo relativo que predijo con el medido y marque las diferencias mayores al 25 %. Elija dos y proponga una hipótesis para cada una. Pruebe al menos una con un experimento corto (cambiar un parámetro, medir otra cosa) y diga si la confirmó.</li>
+    <li><b>Crecimiento.</b> Al duplicar el lado, ¿por cuánto se multiplicó el tiempo? ¿Coincide con su predicción? Exprese el resultado en función del número de píxeles y también del lado.</li>
+    <li><b>Dos tamaños de núcleo.</b> La razón teórica entre el promedio 5 × 5 y el 3 × 3 es 25 / 9. ¿Qué razón midió? ¿Qué parte del trabajo de cada píxel no depende del tamaño del núcleo?</li>
+    <li><b>El separable.</b> Pasó de 25 multiplicaciones por píxel a 10. ¿Cuántas veces más rápido resultó? ¿Qué precio pagó en memoria? Señale en su tabla dónde se ve y explique de dónde sale.</li>
+    <li><b>Qué mide contar multiplicaciones.</b> La mediana no multiplica. ¿Es por eso más rápida que el promedio? Compare con lo medido y diga qué enseña sobre usar un solo contador para predecir.</li>
+    <li><b>Retenido contra pico.</b> Hay filtros cuyo resultado retiene más memoria que otros, aunque tienen el mismo tamaño. Identifíquelos y explique la causa con lo que sabe de los enteros en Python.</li>
+    <li><b>Entradas inadecuadas.</b> Compare lo que predijo con lo que ocurrió. ¿Qué es más peligroso para quien usa la función: que falle con un error o que devuelva un resultado equivocado sin avisar? Escriba la comprobación (una o dos líneas) que agregaría para evitar el problema.</li>
+    <li><b>Composición.</b> Aplique <code>bordes_sobel(img)</code> y <code>bordes_sobel(mediana(img))</code> sobre la imagen de prueba y compare las dos salidas. ¿Qué diferencia hay y por qué? ¿Cuánto cuesta el segundo en tiempo, según sus tablas?</li>
+  </ol>
+</section>
+
+<section id="fase4">
+  <h2><span class="ph">Fase 4</span> Decisión de ingeniería</h2>
+  <p class="lead">Use sus propias cifras y escriba los cálculos.</p>
+  <ol class="q">
+    <li><b>Fotografías de 12 megapíxeles.</b> Una empresa recibe fotos de 4000 × 3000 y debe aplicar a cada una un desenfoque gauss de 5 × 5. Con sus mediciones, estime cuánto tardaría cada implementación (directa y separable) por imagen y cuánta memoria extra necesitaría en el pico. ¿Cuál elige y qué dato nuevo le haría cambiar de decisión?</li>
+    <li><b>Video en tiempo real.</b> Un sistema debe detectar bordes con Sobel sobre video de 1920 × 1080 a 30 cuadros por segundo. ¿Cuántos píxeles por segundo hay que procesar? ¿Cuánto tarda su <code>bordes_sobel</code> por cuadro? ¿Por cuánto tendría que mejorar? ¿Se logra afinando su código en Python o hace falta cambiar de herramienta? ¿Por qué?</li>
+    <li><b>Su propio código.</b> Con lo que midió, ¿qué función de su archivo cambiaría primero y qué cambio propone? Justifíquelo con una cifra de sus tablas. No hace falta implementarlo.</li>
+  </ol>
+
+  <div class="card" style="background:linear-gradient(135deg,var(--brand-soft),var(--vio-soft))">
+    <h3 style="margin-top:0">Reto de cierre (opcional)</h3>
+    <p style="margin-bottom:0">El bloque C trae <code>convolucion_numpy</code>, la misma convolución sobre un arreglo de NumPy; no hay que escribirla. Mida el promedio 3 × 3 con lado 512 en su versión y en la de NumPy y calcule la razón. Después mida cuánto del tiempo de <code>convolucion_numpy</code> se va solo en convertir la lista de listas en arreglo (<code>numpy.array(img)</code>). ¿Qué dice ese resultado sobre la decisión de mantener los datos en una lista de listas?</p>
+  </div>
+
+  <h3>Al terminar debe tener</h3>
+  <ul class="goal">
+    <li>Las respuestas de las Fases 1, 3 y 4, con la Fase 1 hecha <b>antes</b> de medir.</li>
+    <li>Las tablas de la Fase 2, con el equipo y la versión de Python usados.</li>
+    <li>Sus cuatro funciones y las copias que cuentan operaciones.</li>
+    <li>Las imágenes de salida del promedio 3 × 3, Sobel, mediana y gauss separable sobre <code>muestra.png</code>.</li>
+  </ul>
+</section>
+
+<section id="codigo">
+  <h2>Código para copiar y pegar</h2>
+  <p class="lead">Cada bloque se copia con un clic y funciona tal cual en Google Colab (una celda por bloque, en orden) o guardado como archivo en su equipo.</p>
+  <div class="call info"><span class="ic">i</span><p><b>En Colab:</b> ejecute primero el bloque A y después el B. Las pruebas del bloque B están comentadas: quite el <code>#</code> de una prueba a la vez, a medida que termina cada función.</p></div>
+  
+<div class="codebox" id="box-code-base">
+  <div class="cb-head">
+    <div><span class="tag b">Bloque A</span> <b>Código base</b> <span class="mono muted small">× filtros_base.py, 338 líneas</span><div class="small muted">No se modifica. Trae la conversión imagen y matriz, los núcleos, las herramientas de medición y un filtro de ejemplo.</div></div>
+    <div class="cb-btns"><button class="btn pri" data-copy="code-base">Copiar código</button><button class="btn" data-dl="code-base" data-name="filtros_base.py">Descargar .py</button></div>
+  </div>
+  <pre class="code" id="code-base" tabindex="0"><span class="s">&quot;&quot;&quot;
+filtros_base.py
+Código base de la actividad &quot;Filtros de imagen como operaciones entre matrices&quot;.
+
+Este código NO se modifica. Contiene:
+  1. Imagen &lt;-&gt; matriz: cargar_imagen, guardar_imagen, crear_imagen_prueba, crear_muestra, mostrar
+  2. Núcleos (kernels) listos para usar
+  3. Medición: medir_tiempo, medir_memoria, bytes_matriz, medir
+  4. Verificación: son_iguales, diferencia_maxima, comprobar_contrato
+  5. Conteo de operaciones: Contador
+  6. Un filtro de ejemplo ya implementado: negativo
+
+Requiere Pillow (en Google Colab ya viene instalado; en su equipo:  pip install pillow).
+Para comprobar que todo funciona:  probar_entorno()
+&quot;&quot;&quot;</span>
+
+<span class="k">import</span> random
+<span class="k">import</span> sys
+<span class="k">import</span> time
+<span class="k">import</span> tracemalloc
+
+<span class="k">from</span> PIL <span class="k">import</span> Image
+
+
+<span class="c"># ----------------------------------------------------------------------</span>
+<span class="c"># 1. Imagen &lt;-&gt; matriz</span>
+<span class="c">#    Una imagen en escala de grises es una matriz de enteros 0..255:</span>
+<span class="c">#    0 = negro, 255 = blanco. Aquí la matriz es una lista de listas:</span>
+<span class="c">#    img[i][j] es el píxel de la fila i, columna j.</span>
+<span class="c"># ----------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="f">cargar_imagen</span>(ruta, lado=<span class="k">None</span>):
+    <span class="s">&quot;&quot;&quot;Lee un archivo de imagen y lo devuelve como matriz (lista de listas).
+
+    La convierte a escala de grises (&#x27;L&#x27;). Si se indica `lado`, la
+    redimensiona a un cuadrado lado x lado.
+    &quot;&quot;&quot;</span>
+    imagen = Image.<span class="f">open</span>(ruta).<span class="f">convert</span>(<span class="s">&quot;L&quot;</span>)
+    <span class="k">if</span> lado <span class="k">is</span> <span class="k">not</span> <span class="k">None</span>:
+        imagen = imagen.<span class="f">resize</span>((lado, lado))
+    ancho, alto = imagen.size
+    datos = imagen.<span class="f">tobytes</span>()  <span class="c"># ancho*alto bytes seguidos, fila tras fila</span>
+    <span class="k">return</span> [<span class="f">list</span>(datos[i * ancho:(i + <span class="m">1</span>) * ancho]) <span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(alto)]
+
+
+<span class="k">def</span> <span class="f">guardar_imagen</span>(matriz, ruta):
+    <span class="s">&quot;&quot;&quot;Convierte una matriz en imagen y la guarda en `ruta` (por ejemplo &#x27;salida.png&#x27;).
+
+    Los valores fuera de 0..255 se recortan: lo menor que 0 queda en 0 y
+    lo mayor que 255 queda en 255.
+    &quot;&quot;&quot;</span>
+    alto, ancho = <span class="f">len</span>(matriz), <span class="f">len</span>(matriz[<span class="m">0</span>])
+    datos = <span class="f">bytearray</span>()
+    <span class="k">for</span> fila <span class="k">in</span> matriz:
+        <span class="k">for</span> valor <span class="k">in</span> fila:
+            datos.<span class="f">append</span>(<span class="m">0</span> <span class="k">if</span> valor &lt; <span class="m">0</span> <span class="k">else</span> <span class="m">255</span> <span class="k">if</span> valor &gt; <span class="m">255</span> <span class="k">else</span> <span class="f">int</span>(valor))
+    Image.<span class="f">frombytes</span>(<span class="s">&quot;L&quot;</span>, (ancho, alto), <span class="f">bytes</span>(datos)).<span class="f">save</span>(ruta)
+
+
+<span class="k">def</span> <span class="f">mostrar</span>(matriz, escala=<span class="m">1</span>):
+    <span class="s">&quot;&quot;&quot;Muestra una matriz como imagen.
+
+    En Google Colab o Jupyter la imagen aparece debajo de la celda; en un editor
+    se abre con el visor del sistema. `escala` agranda la imagen (útil si es pequeña).
+    &quot;&quot;&quot;</span>
+    alto, ancho = <span class="f">len</span>(matriz), <span class="f">len</span>(matriz[<span class="m">0</span>])
+    datos = <span class="f">bytes</span>(<span class="m">0</span> <span class="k">if</span> v &lt; <span class="m">0</span> <span class="k">else</span> <span class="m">255</span> <span class="k">if</span> v &gt; <span class="m">255</span> <span class="k">else</span> <span class="f">int</span>(v) <span class="k">for</span> fila <span class="k">in</span> matriz <span class="k">for</span> v <span class="k">in</span> fila)
+    imagen = Image.<span class="f">frombytes</span>(<span class="s">&quot;L&quot;</span>, (ancho, alto), datos)
+    <span class="k">if</span> escala != <span class="m">1</span>:
+        imagen = imagen.<span class="f">resize</span>((ancho * escala, alto * escala), Image.NEAREST)
+    <span class="k">try</span>:
+        <span class="f">get_ipython</span>()                       <span class="c"># solo existe dentro de Colab / Jupyter</span>
+    <span class="k">except</span> NameError:
+        imagen.<span class="f">show</span>()
+        <span class="k">return</span>
+    <span class="k">from</span> IPython.display <span class="k">import</span> display
+    <span class="f">display</span>(imagen)
+
+
+<span class="k">def</span> <span class="f">crear_imagen_prueba</span>(lado, semilla=<span class="m">7</span>):
+    <span class="s">&quot;&quot;&quot;Genera una imagen sintética lado x lado (siempre la misma para un lado dado).
+
+    Trae un degradado suave, un cuadrado claro, un círculo oscuro y un 3 % de
+    ruido &quot;sal y pimienta&quot; (píxeles sueltos en 0 o 255). Sirve para que cada
+    filtro deje un efecto visible y para medir sin depender de una foto.
+    &quot;&quot;&quot;</span>
+    azar = random.<span class="f">Random</span>(semilla)
+    imagen = [[<span class="m">0</span>] * lado <span class="k">for</span> _ <span class="k">in</span> <span class="f">range</span>(lado)]     <span class="c"># filas independientes</span>
+    <span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(lado):
+        <span class="k">for</span> j <span class="k">in</span> <span class="f">range</span>(lado):
+            valor = (i + j) * <span class="m">120</span> // (<span class="m">2</span> * lado) + <span class="m">40</span>
+            <span class="k">if</span> lado // <span class="m">4</span> &lt;= i &lt; lado // <span class="m">2</span> <span class="k">and</span> lado // <span class="m">4</span> &lt;= j &lt; lado // <span class="m">2</span>:
+                valor = <span class="m">230</span>
+            dx, dy = j - <span class="m">3</span> * lado // <span class="m">4</span>, i - <span class="m">3</span> * lado // <span class="m">4</span>
+            <span class="k">if</span> dx * dx + dy * dy &lt; (lado // <span class="m">6</span>) ** <span class="m">2</span>:
+                valor = <span class="m">20</span>
+            <span class="k">if</span> azar.<span class="f">random</span>() &lt; <span class="m">0.03</span>:
+                valor = <span class="m">0</span> <span class="k">if</span> azar.<span class="f">random</span>() &lt; <span class="m">0.5</span> <span class="k">else</span> <span class="m">255</span>
+            imagen[i][j] = valor
+    <span class="k">return</span> imagen
+
+
+<span class="k">def</span> <span class="f">crear_muestra</span>(ruta=<span class="s">&quot;muestra.png&quot;</span>):
+    <span class="s">&quot;&quot;&quot;Guarda la imagen de prueba de 512 x 512 como archivo (la &#x27;muestra.png&#x27; de la actividad).&quot;&quot;&quot;</span>
+    <span class="f">guardar_imagen</span>(<span class="f">crear_imagen_prueba</span>(<span class="m">512</span>), ruta)
+    <span class="k">return</span> ruta
+
+
+<span class="c"># ----------------------------------------------------------------------</span>
+<span class="c"># 2. Núcleos (kernels)</span>
+<span class="c">#    Cada uno es una pareja (matriz_de_pesos, divisor). El resultado de</span>
+<span class="c">#    sumar los productos se divide (división entera //) entre el divisor.</span>
+<span class="c"># ----------------------------------------------------------------------</span>
+
+PROMEDIO_3 = ([[<span class="m">1</span>, <span class="m">1</span>, <span class="m">1</span>],
+               [<span class="m">1</span>, <span class="m">1</span>, <span class="m">1</span>],
+               [<span class="m">1</span>, <span class="m">1</span>, <span class="m">1</span>]], <span class="m">9</span>)
+
+PROMEDIO_5 = ([[<span class="m">1</span>] * <span class="m">5</span> <span class="k">for</span> _ <span class="k">in</span> <span class="f">range</span>(<span class="m">5</span>)], <span class="m">25</span>)
+
+REALCE = ([[<span class="m">0</span>, -<span class="m">1</span>, <span class="m">0</span>],
+           [-<span class="m">1</span>, <span class="m">5</span>, -<span class="m">1</span>],
+           [<span class="m">0</span>, -<span class="m">1</span>, <span class="m">0</span>]], <span class="m">1</span>)
+
+SOBEL_X = ([[-<span class="m">1</span>, <span class="m">0</span>, <span class="m">1</span>],
+            [-<span class="m">2</span>, <span class="m">0</span>, <span class="m">2</span>],
+            [-<span class="m">1</span>, <span class="m">0</span>, <span class="m">1</span>]], <span class="m">1</span>)
+
+SOBEL_Y = ([[-<span class="m">1</span>, -<span class="m">2</span>, -<span class="m">1</span>],
+            [<span class="m">0</span>, <span class="m">0</span>, <span class="m">0</span>],
+            [<span class="m">1</span>, <span class="m">2</span>, <span class="m">1</span>]], <span class="m">1</span>)
+
+<span class="c"># Desenfoque &quot;gaussiano&quot; (aproximado con enteros). Su matriz de pesos es el</span>
+<span class="c"># producto de un vector fila por un vector columna: por eso se puede aplicar</span>
+<span class="c"># en dos pasadas (ver el diagrama del filtro separable).</span>
+<span class="c"># GAUSS_5 == PESOS_GAUSS_5 (columna) x PESOS_GAUSS_5 (fila).</span>
+PESOS_GAUSS_5 = [<span class="m">1</span>, <span class="m">4</span>, <span class="m">6</span>, <span class="m">4</span>, <span class="m">1</span>]
+GAUSS_5 = ([[a * b <span class="k">for</span> b <span class="k">in</span> PESOS_GAUSS_5] <span class="k">for</span> a <span class="k">in</span> PESOS_GAUSS_5], <span class="m">256</span>)
+
+<span class="c"># Parche de 5 x 5 del diagrama &quot;Un píxel nuevo = suma de (peso x píxel)&quot;.</span>
+<span class="c"># La ventana de 3 x 3 del centro vale 10, 20, ..., 90. Sirve para comprobar a</span>
+<span class="c"># mano su convolucion(): el píxel central del resultado es PARCHE_EJEMPLO[2][2].</span>
+PARCHE_EJEMPLO = [[<span class="m">5</span>, <span class="m">15</span>, <span class="m">25</span>, <span class="m">35</span>, <span class="m">45</span>],
+                  [<span class="m">15</span>, <span class="m">10</span>, <span class="m">20</span>, <span class="m">30</span>, <span class="m">55</span>],
+                  [<span class="m">25</span>, <span class="m">40</span>, <span class="m">50</span>, <span class="m">60</span>, <span class="m">65</span>],
+                  [<span class="m">35</span>, <span class="m">70</span>, <span class="m">80</span>, <span class="m">90</span>, <span class="m">75</span>],
+                  [<span class="m">45</span>, <span class="m">55</span>, <span class="m">65</span>, <span class="m">75</span>, <span class="m">85</span>]]
+
+
+<span class="c"># ----------------------------------------------------------------------</span>
+<span class="c"># 3. Medición</span>
+<span class="c"># ----------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="f">medir_tiempo</span>(funcion, *args, repeticiones=<span class="m">3</span>):
+    <span class="s">&quot;&quot;&quot;Ejecuta funcion(*args) varias veces. Devuelve (resultado, mejor_tiempo_s).
+
+    Se queda con el MEJOR tiempo: el equipo suele tener interrupciones
+    ajenas al programa, y esas solo pueden sumar tiempo, nunca restarlo.
+    &quot;&quot;&quot;</span>
+    mejor = <span class="f">float</span>(<span class="s">&quot;inf&quot;</span>)
+    resultado = <span class="k">None</span>
+    <span class="k">for</span> _ <span class="k">in</span> <span class="f">range</span>(repeticiones):
+        inicio = time.<span class="f">perf_counter</span>()
+        resultado = <span class="f">funcion</span>(*args)
+        fin = time.<span class="f">perf_counter</span>()
+        mejor = <span class="f">min</span>(mejor, fin - inicio)
+    <span class="k">return</span> resultado, mejor
+
+
+<span class="k">def</span> <span class="f">medir_memoria</span>(funcion, *args):
+    <span class="s">&quot;&quot;&quot;Ejecuta funcion(*args) una vez con tracemalloc activado.
+
+    Devuelve (resultado, pico_bytes, retenido_bytes):
+      pico_bytes     = el máximo de memoria adicional que la función tuvo
+                       viva en algún instante de su ejecución.
+      retenido_bytes = la memoria que sigue viva cuando la función termina
+                       (básicamente, el resultado).
+
+    OJO: tracemalloc vuelve el programa mucho más lento. Nunca mida tiempo
+    y memoria en la misma ejecución.
+    &quot;&quot;&quot;</span>
+    tracemalloc.<span class="f">start</span>()
+    base, _ = tracemalloc.<span class="f">get_traced_memory</span>()
+    resultado = <span class="f">funcion</span>(*args)
+    actual, pico = tracemalloc.<span class="f">get_traced_memory</span>()
+    tracemalloc.<span class="f">stop</span>()
+    <span class="k">return</span> resultado, pico - base, actual - base
+
+
+<span class="k">def</span> <span class="f">bytes_matriz</span>(matriz, incluir_enteros=<span class="k">False</span>):
+    <span class="s">&quot;&quot;&quot;Bytes que ocupa una lista de listas, según sys.getsizeof.
+
+    Cuenta la lista externa y cada fila. Si incluir_enteros es True, suma
+    además cada objeto entero distinto (por identidad) que contiene.
+    &quot;&quot;&quot;</span>
+    total = sys.<span class="f">getsizeof</span>(matriz) + <span class="f">sum</span>(sys.<span class="f">getsizeof</span>(fila) <span class="k">for</span> fila <span class="k">in</span> matriz)
+    <span class="k">if</span> incluir_enteros:
+        vistos = {}
+        <span class="k">for</span> fila <span class="k">in</span> matriz:
+            <span class="k">for</span> valor <span class="k">in</span> fila:
+                vistos[<span class="f">id</span>(valor)] = valor
+        total += <span class="f">sum</span>(sys.<span class="f">getsizeof</span>(v) <span class="k">for</span> v <span class="k">in</span> vistos.<span class="f">values</span>())
+    <span class="k">return</span> total
+
+
+LADOS = [<span class="m">64</span>, <span class="m">128</span>, <span class="m">256</span>, <span class="m">512</span>]
+
+
+<span class="k">def</span> <span class="f">medir</span>(nombre, filtro, *args, lados=LADOS, repeticiones=<span class="m">3</span>):
+    <span class="s">&quot;&quot;&quot;Mide un filtro sobre imágenes de prueba de cada lado y muestra una línea por tamaño.
+
+    `filtro` es una función que recibe la imagen (matriz) como primer
+    argumento y devuelve la matriz resultado: filtro(img, *args).
+    &quot;&quot;&quot;</span>
+    <span class="k">for</span> lado <span class="k">in</span> lados:
+        imagen = <span class="f">crear_imagen_prueba</span>(lado)
+        _, tiempo = <span class="f">medir_tiempo</span>(filtro, imagen, *args, repeticiones=repeticiones)
+        _, pico, retenido = <span class="f">medir_memoria</span>(filtro, imagen, *args)
+        <span class="f">print</span>(<span class="s">f&quot;{nombre:28} lado={lado:&gt;4} ({lado * lado:&gt;7} px)  &quot;</span>
+              <span class="s">f&quot;{tiempo:9.4f} s   pico {pico / 1024:9.1f} KiB   &quot;</span>
+              <span class="s">f&quot;retenido {retenido / 1024:9.1f} KiB&quot;</span>)
+    <span class="f">print</span>()
+
+
+<span class="c"># ----------------------------------------------------------------------</span>
+<span class="c"># 4. Verificación</span>
+<span class="c"># ----------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="f">son_iguales</span>(a, b):
+    <span class="s">&quot;&quot;&quot;True si las dos matrices tienen las mismas dimensiones y los mismos valores.&quot;&quot;&quot;</span>
+    <span class="k">return</span> a == b
+
+
+<span class="k">def</span> <span class="f">diferencia_maxima</span>(a, b):
+    <span class="s">&quot;&quot;&quot;Mayor diferencia absoluta entre celdas correspondientes de dos matrices del mismo tamaño.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="f">len</span>(a) != <span class="f">len</span>(b) <span class="k">or</span> <span class="f">len</span>(a[<span class="m">0</span>]) != <span class="f">len</span>(b[<span class="m">0</span>]):
+        <span class="k">raise</span> <span class="f">ValueError</span>(<span class="s">&quot;las matrices no tienen las mismas dimensiones&quot;</span>)
+    <span class="k">return</span> <span class="f">max</span>(<span class="f">abs</span>(x - y) <span class="k">for</span> fa, fb <span class="k">in</span> <span class="f">zip</span>(a, b) <span class="k">for</span> x, y <span class="k">in</span> <span class="f">zip</span>(fa, fb))
+
+
+<span class="k">def</span> <span class="f">comprobar_contrato</span>(filtro, *args, r=<span class="m">1</span>, borde=<span class="s">&quot;copia&quot;</span>):
+    <span class="s">&quot;&quot;&quot;Revisa tres reglas que deben cumplir los filtros de vecindad de esta actividad:
+      1) el resultado tiene las mismas dimensiones que la imagen,
+      2) el filtro no modifica la imagen de entrada,
+      3) la franja de borde (ancho r) queda como se pidió: borde=&quot;copia&quot; exige que
+         sea idéntica a la imagen original; borde=&quot;cero&quot; exige que valga 0.
+
+    Muestra OK o qué falla. NO comprueba que los valores del interior sean
+    correctos: eso se verifica con sus cálculos a mano y con el parche de ejemplo.
+    Ejemplo:  comprobar_contrato(convolucion, *PROMEDIO_5, r=2)
+    &quot;&quot;&quot;</span>
+    lado = <span class="m">16</span>
+    img = <span class="f">crear_imagen_prueba</span>(lado)
+    copia = [fila[:] <span class="k">for</span> fila <span class="k">in</span> img]
+    resultado = <span class="f">filtro</span>(img, *args)
+    problemas = []
+    <span class="k">if</span> <span class="f">len</span>(resultado) != lado <span class="k">or</span> <span class="f">any</span>(<span class="f">len</span>(fila) != lado <span class="k">for</span> fila <span class="k">in</span> resultado):
+        problemas.<span class="f">append</span>(<span class="s">&quot;las dimensiones del resultado no coinciden con las de la imagen&quot;</span>)
+    <span class="k">else</span>:
+        esperado = (<span class="k">lambda</span> i, j: copia[i][j]) <span class="k">if</span> borde == <span class="s">&quot;copia&quot;</span> <span class="k">else</span> (<span class="k">lambda</span> i, j: <span class="m">0</span>)
+        <span class="k">if</span> <span class="f">any</span>(resultado[i][j] != <span class="f">esperado</span>(i, j)
+               <span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(lado) <span class="k">for</span> j <span class="k">in</span> <span class="f">range</span>(lado)
+               <span class="k">if</span> i &lt; r <span class="k">or</span> i &gt;= lado - r <span class="k">or</span> j &lt; r <span class="k">or</span> j &gt;= lado - r):
+            problemas.<span class="f">append</span>(<span class="s">&quot;la franja de borde no quedó como se pidió (&quot;</span> + borde + <span class="s">&quot;)&quot;</span>)
+    <span class="k">if</span> img != copia:
+        problemas.<span class="f">append</span>(<span class="s">&quot;el filtro modificó la imagen de entrada&quot;</span>)
+    <span class="k">if</span> problemas:
+        <span class="k">for</span> p <span class="k">in</span> problemas:
+            <span class="f">print</span>(<span class="s">&quot;FALLA:&quot;</span>, p)
+    <span class="k">else</span>:
+        <span class="f">print</span>(<span class="s">&quot;OK: dimensiones, entrada intacta y borde correcto&quot;</span>)
+    <span class="k">return</span> <span class="k">not</span> problemas
+
+
+<span class="c"># ----------------------------------------------------------------------</span>
+<span class="c"># 5. Conteo de operaciones</span>
+<span class="c"># ----------------------------------------------------------------------</span>
+
+<span class="k">class</span> Contador:
+    <span class="s">&quot;&quot;&quot;Cuenta operaciones. Úselo en una COPIA de su función y con imágenes pequeñas.
+
+    Convención (escríbala en su reporte):
+      lecturas         = cada vez que se lee una celda de una matriz (la imagen o una intermedia)
+      multiplicaciones = cada &#x27;*&#x27; entre valores de la imagen y pesos
+      sumas            = cada &#x27;+&#x27; o &#x27;+=&#x27; que acumula valores
+      ordenamientos    = cada vez que se ordena una lista (por ejemplo, en la mediana)
+
+    Contar también cuesta tiempo: por eso no se mide tiempo con la versión
+    que cuenta. Ejemplo:  c = Contador();  ...;  c.multiplicaciones += 1
+    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="f">__init__</span>(self):
+        self.lecturas = <span class="m">0</span>
+        self.multiplicaciones = <span class="m">0</span>
+        self.sumas = <span class="m">0</span>
+        self.ordenamientos = <span class="m">0</span>
+
+    <span class="k">def</span> <span class="f">__repr__</span>(self):
+        <span class="k">return</span> (<span class="s">f&quot;lecturas={self.lecturas}  multiplicaciones={self.multiplicaciones}  &quot;</span>
+                <span class="s">f&quot;sumas={self.sumas}  ordenamientos={self.ordenamientos}&quot;</span>)
+
+
+<span class="c"># ----------------------------------------------------------------------</span>
+<span class="c"># 6. Filtro de ejemplo ya implementado: punto a punto</span>
+<span class="c"># ----------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="f">negativo</span>(img):
+    <span class="s">&quot;&quot;&quot;Cada píxel del resultado depende SOLO del píxel que está en su misma posición.&quot;&quot;&quot;</span>
+    alto, ancho = <span class="f">len</span>(img), <span class="f">len</span>(img[<span class="m">0</span>])
+    resultado = [[<span class="m">0</span>] * ancho <span class="k">for</span> _ <span class="k">in</span> <span class="f">range</span>(alto)]   <span class="c"># filas independientes</span>
+    <span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(alto):
+        <span class="k">for</span> j <span class="k">in</span> <span class="f">range</span>(ancho):
+            resultado[i][j] = <span class="m">255</span> - img[i][j]
+    <span class="k">return</span> resultado
+
+
+<span class="c"># ----------------------------------------------------------------------</span>
+<span class="c"># Comprobación rápida del entorno</span>
+<span class="c"># ----------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="f">probar_entorno</span>():
+    <span class="s">&quot;&quot;&quot;Genera una imagen de prueba, la guarda, la vuelve a leer y mide el filtro negativo.&quot;&quot;&quot;</span>
+    imagen = <span class="f">crear_imagen_prueba</span>(<span class="m">128</span>)
+    <span class="f">print</span>(<span class="s">&quot;Imagen de prueba:&quot;</span>, <span class="f">len</span>(imagen), <span class="s">&quot;filas x&quot;</span>, <span class="f">len</span>(imagen[<span class="m">0</span>]), <span class="s">&quot;columnas&quot;</span>)
+    <span class="f">guardar_imagen</span>(imagen, <span class="s">&quot;prueba.png&quot;</span>)
+    leida = <span class="f">cargar_imagen</span>(<span class="s">&quot;prueba.png&quot;</span>)
+    <span class="f">print</span>(<span class="s">&quot;Se guardó y se volvió a leer igual:&quot;</span>, <span class="f">son_iguales</span>(imagen, leida))
+    <span class="f">guardar_imagen</span>(<span class="f">negativo</span>(imagen), <span class="s">&quot;prueba_negativo.png&quot;</span>)
+    <span class="f">print</span>(<span class="s">&quot;Se generaron prueba.png y prueba_negativo.png.&quot;</span>)
+    <span class="f">print</span>()
+    <span class="f">medir</span>(<span class="s">&quot;negativo&quot;</span>, negativo)
+
+
+<span class="k">try</span>:
+    <span class="f">get_ipython</span>()
+<span class="k">except</span> NameError:
+    <span class="k">if</span> __name__ == <span class="s">&quot;__main__&quot;</span>:      <span class="c"># python filtros_base.py</span>
+        <span class="f">probar_entorno</span>()
+</pre>
+  <button class="btn cb-more" data-more="code-base">Mostrar todo el código</button>
+</div>
+
+<div class="codebox" id="box-code-est">
+  <div class="cb-head">
+    <div><span class="tag b">Bloque B</span> <b>Plantilla de trabajo</b> <span class="mono muted small">× filtros_estudiante.py, 99 líneas</span><div class="small muted">Aquí se escriben las cuatro funciones. Se ejecuta después del código base.</div></div>
+    <div class="cb-btns"><button class="btn pri" data-copy="code-est">Copiar código</button><button class="btn" data-dl="code-est" data-name="filtros_estudiante.py">Descargar .py</button></div>
+  </div>
+  <pre class="code" id="code-est" tabindex="0"><span class="s">&quot;&quot;&quot;
+filtros_estudiante.py
+Archivo de trabajo de la actividad &quot;Filtros de imagen como operaciones entre matrices&quot;.
+
+Aquí se escriben las cuatro funciones de filtro. El código base no se modifica.
+Las pruebas de la sección final están comentadas: active una por una, a medida que
+termina cada función.
+&quot;&quot;&quot;</span>
+
+<span class="k">try</span>:
+    <span class="k">from</span> filtros_base <span class="k">import</span> *      <span class="c"># cargar_imagen, medir, PROMEDIO_3, ...</span>
+<span class="k">except</span> ImportError:
+    <span class="k">pass</span>    <span class="c"># En Colab o en un cuaderno: ejecute antes la celda con el código base</span>
+
+
+<span class="c"># ----------------------------------------------------------------------</span>
+<span class="c"># Reglas comunes (el &quot;contrato&quot; de los filtros de vecindad):</span>
+<span class="c">#   * El resultado tiene EXACTAMENTE las mismas dimensiones que la imagen.</span>
+<span class="c">#   * La imagen de entrada NO se modifica.</span>
+<span class="c">#   * Los r = k // 2 píxeles más externos (la franja de borde), donde el núcleo</span>
+<span class="c">#     no cabe, se copian tal cual de la imagen original.</span>
+<span class="c">#     Excepción: bordes_sobel deja esa franja en 0.</span>
+<span class="c">#   * Los pesos y el divisor llegan como parámetros: la misma función</span>
+<span class="c">#     sirve para promedio 3x3, promedio 5x5, realce, Sobel X, Sobel Y y gauss 5x5.</span>
+<span class="c"># ----------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="f">convolucion</span>(img, kernel, divisor=<span class="m">1</span>):
+    <span class="s">&quot;&quot;&quot;Aplica el núcleo `kernel` (matriz k x k, k impar) a cada píxel interior.
+
+    nuevo[i][j] = (suma de kernel[a][b] * img[i - r + a][j - r + b]) // divisor
+    Use división entera (//). Ejemplo de llamada:  convolucion(img, *PROMEDIO_3)
+    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="f">NotImplementedError</span>(<span class="s">&quot;escriba convolucion&quot;</span>)
+
+
+<span class="k">def</span> <span class="f">mediana</span>(img, k=<span class="m">3</span>):
+    <span class="s">&quot;&quot;&quot;Cada píxel interior pasa a valer la mediana de su vecindad k x k.
+
+    La mediana de una lista ordenada de longitud impar es el elemento del medio.
+    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="f">NotImplementedError</span>(<span class="s">&quot;escriba mediana&quot;</span>)
+
+
+<span class="k">def</span> <span class="f">bordes_sobel</span>(img):
+    <span class="s">&quot;&quot;&quot;Detector de bordes: |Gx| + |Gy| en cada píxel interior.
+
+    Gx es la convolución con SOBEL_X y Gy con SOBEL_Y. Puede reutilizar su
+    convolucion(). La franja de borde (1 píxel) queda en 0.
+    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="f">NotImplementedError</span>(<span class="s">&quot;escriba bordes_sobel&quot;</span>)
+
+
+<span class="k">def</span> <span class="f">convolucion_separable</span>(img, pesos):
+    <span class="s">&quot;&quot;&quot;Aplica el núcleo pesos (columna) x pesos (fila) en DOS pasadas:
+    primero horizontal (guardando una matriz intermedia) y luego vertical.
+
+    El resultado debe ser idéntico al de convolucion(img, *GAUSS_5) cuando
+    pesos = PESOS_GAUSS_5. El divisor es sum(pesos) ** 2.
+    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="f">NotImplementedError</span>(<span class="s">&quot;escriba convolucion_separable&quot;</span>)
+
+
+<span class="c"># ----------------------------------------------------------------------</span>
+<span class="c"># Pruebas. Active (quite el # inicial) solo las que ya pueda ejecutar.</span>
+<span class="c"># ----------------------------------------------------------------------</span>
+
+<span class="k">if</span> __name__ == <span class="s">&quot;__main__&quot;</span>:      <span class="c"># en Colab: ejecute esta celda cuando quiera probar</span>
+    <span class="c"># --- Paso 1: ¿su convolucion() da lo que usted calculó a mano? ---------</span>
+    <span class="c"># El píxel central del parche del diagrama (PARCHE_EJEMPLO[2][2]):</span>
+    <span class="c"># print(convolucion(PARCHE_EJEMPLO, *PROMEDIO_3)[2][2])    # compare con su cálculo a mano</span>
+    <span class="c"># print(convolucion(PARCHE_EJEMPLO, *SOBEL_X)[2][2])</span>
+
+    <span class="c"># --- Paso 2: las tres reglas comunes ------------------------------------</span>
+    <span class="c"># comprobar_contrato(convolucion, *PROMEDIO_3, r=1)</span>
+    <span class="c"># comprobar_contrato(convolucion, *PROMEDIO_5, r=2)</span>
+    <span class="c"># comprobar_contrato(mediana, 3, r=1)</span>
+    <span class="c"># comprobar_contrato(bordes_sobel, r=1, borde=&quot;cero&quot;)</span>
+    <span class="c"># comprobar_contrato(convolucion_separable, PESOS_GAUSS_5, r=2)</span>
+
+    <span class="c"># --- Paso 3: el separable debe dar lo mismo que el directo --------------</span>
+    <span class="c"># prueba = crear_imagen_prueba(32)</span>
+    <span class="c"># print(son_iguales(convolucion(prueba, *GAUSS_5), convolucion_separable(prueba, PESOS_GAUSS_5)))</span>
+
+    <span class="c"># --- Paso 4: mire el resultado ------------------------------------------</span>
+    <span class="c"># crear_muestra()                                   # genera muestra.png (solo la primera vez)</span>
+    <span class="c"># imagen = cargar_imagen(&quot;muestra.png&quot;, lado=256)</span>
+    <span class="c"># mostrar(convolucion(imagen, *PROMEDIO_3))</span>
+    <span class="c"># guardar_imagen(convolucion(imagen, *PROMEDIO_3), &quot;salida_promedio3.png&quot;)</span>
+    <span class="c"># mostrar(bordes_sobel(imagen))</span>
+
+    <span class="c"># --- Paso 5: medición (hágala con el equipo sin otras tareas pesadas) ---</span>
+    <span class="c"># medir(&quot;promedio 3x3&quot;, convolucion, *PROMEDIO_3)</span>
+    <span class="c"># medir(&quot;promedio 5x5&quot;, convolucion, *PROMEDIO_5)</span>
+    <span class="c"># medir(&quot;realce 3x3&quot;, convolucion, *REALCE)</span>
+    <span class="c"># medir(&quot;sobel&quot;, bordes_sobel)</span>
+    <span class="c"># medir(&quot;mediana 3x3&quot;, mediana, 3)</span>
+    <span class="c"># medir(&quot;gauss 5x5 directo&quot;, convolucion, *GAUSS_5)</span>
+    <span class="c"># medir(&quot;gauss 5x5 separable&quot;, convolucion_separable, PESOS_GAUSS_5)</span>
+    <span class="k">pass</span>
+</pre>
+  <button class="btn cb-more" data-more="code-est">Mostrar todo el código</button>
+</div>
+
+<div class="codebox" id="box-code-np">
+  <div class="cb-head">
+    <div><span class="tag b">Bloque C</span> <b>Reto de cierre con NumPy (opcional)</b> <span class="mono muted small">× extra_numpy.py, 28 líneas</span><div class="small muted">Solo se usa en el reto final; requiere NumPy (en Colab ya viene instalado).</div></div>
+    <div class="cb-btns"><button class="btn pri" data-copy="code-np">Copiar código</button><button class="btn" data-dl="code-np" data-name="extra_numpy.py">Descargar .py</button></div>
+  </div>
+  <pre class="code" id="code-np" tabindex="0"><span class="s">&quot;&quot;&quot;
+extra_numpy.py  (reto de cierre, opcional)
+La misma convolución, pero sobre un arreglo de NumPy en lugar de una lista de listas.
+No hay que escribirla: se usa como &quot;caja negra&quot; para medir y comparar con la suya.
+
+Requiere:  pip install numpy
+&quot;&quot;&quot;</span>
+
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+
+<span class="k">def</span> <span class="f">convolucion_numpy</span>(img, kernel, divisor=<span class="m">1</span>):
+    <span class="s">&quot;&quot;&quot;Igual que convolucion(img, kernel, divisor), pero devuelve un arreglo de NumPy.
+
+    Convierte la lista de listas a un bloque contiguo (int32) y suma, para cada
+    posición (da, db) del núcleo, la imagen desplazada multiplicada por su peso.
+    &quot;&quot;&quot;</span>
+    a = np.<span class="f">array</span>(img, dtype=np.int32)
+    k = <span class="f">len</span>(kernel)
+    r = k // <span class="m">2</span>
+    alto, ancho = a.shape
+    suma = np.<span class="f">zeros</span>((alto - <span class="m">2</span> * r, ancho - <span class="m">2</span> * r), dtype=np.int32)
+    <span class="k">for</span> da <span class="k">in</span> <span class="f">range</span>(k):
+        <span class="k">for</span> db <span class="k">in</span> <span class="f">range</span>(k):
+            suma += kernel[da][db] * a[da:alto - <span class="m">2</span> * r + da, db:ancho - <span class="m">2</span> * r + db]
+    resultado = a.<span class="f">copy</span>()
+    resultado[r:alto - r, r:ancho - r] = suma // divisor
+    <span class="k">return</span> resultado
+</pre>
+  <button class="btn cb-more" data-more="code-np">Mostrar todo el código</button>
+</div>
+</section>
+
+<footer class="end"><a href="#inicio">Volver al inicio</a></footer>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script>
+(function () {
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var toast = $('#toast'), tm;
+  function say(t) { toast.textContent = t; toast.classList.add('on'); clearTimeout(tm); tm = setTimeout(function () { toast.classList.remove('on'); }, 1800); }
+
+  /* copiar / descargar / expandir código */
+  function legacyCopy(txt) {
+    return new Promise(function (ok, no) {
+      var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy') ? ok() : no(); } catch (e) { no(e); }
+      document.body.removeChild(ta);
+    });
+  }
+  function copyText(txt) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(txt).catch(function () { return legacyCopy(txt); });
+    return legacyCopy(txt);
+  }
+  $$('[data-copy]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = $('#' + b.dataset.copy).innerText.replace(/\n$/, '') + '\n';
+      copyText(t).then(function () { say('Código copiado. Péguelo en su editor o en una celda de Colab.'); b.textContent = 'Copiado'; setTimeout(function () { b.textContent = 'Copiar código'; }, 2000); })
+        .catch(function () { var r = document.createRange(); r.selectNodeContents($('#' + b.dataset.copy)); var s = getSelection(); s.removeAllRanges(); s.addRange(r); say('Seleccionado: presione Ctrl + C para copiar'); });
+    });
+  });
+  $$('[data-dl]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = $('#' + b.dataset.dl).innerText.replace(/\n$/, '') + '\n';
+      var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'text/x-python;charset=utf-8' })); a.download = b.dataset.name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(a.href); }, 500);
+    });
+  });
+  $$('[data-more]').forEach(function (b) {
+    b.addEventListener('click', function () { $('#' + b.dataset.more).classList.add('open'); b.parentElement.classList.add('open'); });
+  });
+
+  /* tablas que se pueden rellenar aquí mismo (se guardan en el navegador) */
+  $$('td.fill').forEach(function (td, i) {
+    td.contentEditable = 'true'; td.spellcheck = false;
+    try { var v = localStorage.getItem('act-fill-' + i); if (v) td.textContent = v; } catch (e) { }
+    td.addEventListener('input', function () { try { localStorage.setItem('act-fill-' + i, td.textContent); } catch (e) { } });
+  });
+
+  /* navegación */
+  var links = $$('#nav a[data-s]'), secs = links.map(function (a) { return $('#' + a.dataset.s); });
+  function spy() {
+    var y = window.scrollY + 120, cur = 0;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= y) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+    var h = document.documentElement.scrollHeight - innerHeight;
+    $('#bar').style.width = (h > 0 ? scrollY / h * 100 : 0) + '%';
+  }
+  addEventListener('scroll', spy, { passive: true }); spy();
+
+  /* tema */
+  $('#theme').addEventListener('click', function () {
+    var r = document.documentElement, dark = r.dataset.theme === 'dark';
+    r.dataset.theme = dark ? 'light' : 'dark'; try { localStorage.setItem('act-theme', r.dataset.theme); } catch (e) { }
+  });
+  try { var t = localStorage.getItem('act-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) { }
+})();
+
+</script>
+</body>
+</html>
