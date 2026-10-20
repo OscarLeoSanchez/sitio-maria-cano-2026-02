@@ -1,0 +1,752 @@
+---
+title: "Tema 2. Bases de datos, tipos y restricciones"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+
+::: {.tabla-scroll}
+
+|        |                                                |
+|--------|------------------------------------------------|
+| Unidad | Unidad 4. Lenguaje SQL                         |
+| Tema   | Tema 2. Bases de datos, tipos y restricciones  |
+
+:::
+
+:::
+
+[Abrir la presentación del tema](presentacion-interactiva.html){.btn-curso}
+
+Antes de guardar un solo dato hay que decidir dónde viven las tablas y qué valores acepta cada columna. Este tema responde las dos preguntas sobre MySQL 8.4: cómo se crea, se elige y se borra una base de datos sin que el script falle, y cómo se eligen el tipo y las restricciones de cada columna para que el servidor rechace los datos que no sirven. Al final cargas el caso de ventas, que acompaña toda la unidad. Las sentencias se ejecutaron en MySQL 8.4.11, con la imagen oficial `mysql:8.4` de Docker, y las salidas son capturas reales. En tu equipo el resultado puede variar según la instalación.
+
+## Crear y administrar la base de datos
+
+### Crear, elegir y comprobar
+
+Un servidor MySQL guarda varias *bases de datos*. Cada una es un contenedor con nombre donde viven las tablas, y MySQL también le dice *esquema*. Un servidor recién instalado ya trae cuatro bases propias: `information_schema`, `mysql`, `performance_schema` y `sys`. `CREATE DATABASE` crea la base y `USE` la deja como base activa. `DATABASE()` devuelve la base activa, o `NULL` si todavía no ejecutaste `USE`.
+
+```sql
+CREATE DATABASE tienda;
+SHOW DATABASES;
+USE tienda;
+SELECT DATABASE();
+```
+
+```text
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
+| tienda             |
++--------------------+
++------------+
+| DATABASE() |
++------------+
+| tienda     |
++------------+
+```
+
+Para usar una tabla de otra base sin cambiar la activa se escribe `base.tabla`, por ejemplo `ventas.cliente`.
+
+### Crear otra vez: IF NOT EXISTS
+
+Si la base ya existe, `CREATE DATABASE` rechaza la sentencia con el error 1007 y deja la base intacta. En un script ese error corta la ejecución, salvo que el cliente se lance con `--force`. La cláusula `IF NOT EXISTS` convierte el error en un aviso de nivel `Note`, que se consulta con `SHOW WARNINGS`:
+
+```sql
+CREATE DATABASE tienda;
+CREATE DATABASE IF NOT EXISTS tienda;
+SHOW WARNINGS;
+```
+
+```text
+ERROR 1007 (HY000): Can't create database 'tienda'; database exists
++-------+------+-------------------------------------------------+
+| Level | Code | Message                                         |
++-------+------+-------------------------------------------------+
+| Note  | 1007 | Can't create database 'tienda'; database exists |
++-------+------+-------------------------------------------------+
+```
+
+Un script con esa cláusula se puede ejecutar cuantas veces haga falta sin error. A esa propiedad se le llama *idempotencia*, y por eso `esquema.sql` empieza con `CREATE DATABASE IF NOT EXISTS ventas`.
+
+### Mayúsculas en los nombres
+
+La variable `lower_case_table_names` decide si los nombres de bases y tablas distinguen mayúsculas, y su valor depende del sistema del servidor:
+
+::: {.tabla-scroll}
+
+| Sistema del servidor | Valor | Los nombres |
+|---|---|---|
+| Linux y Docker | 0 | distinguen mayúsculas |
+| Windows | 1 | no distinguen |
+| macOS | 2 | no distinguen |
+
+:::
+
+```sql
+SHOW VARIABLES LIKE 'lower_case_table_names';
+USE Tienda;
+```
+
+```text
++------------------------+-------+
+| Variable_name          | Value |
++------------------------+-------+
+| lower_case_table_names | 0     |
++------------------------+-------+
+ERROR 1049 (42000): Unknown database 'Tienda'
+```
+
+Un script que funciona en Windows puede fallar en un servidor Linux, así que escribe los nombres en minúsculas y siempre con el mismo formato.
+
+### Borrar una base: DROP DATABASE
+
+`DROP DATABASE` elimina la base con todas sus tablas y sus datos, y no tiene vuelta atrás. Si borras la base activa, `DATABASE()` vuelve a `NULL` y debes elegir otra con `USE`. Borrar una base que ya no existe produce el error 1008. Con `IF EXISTS` la sentencia pasa, y a diferencia de `CREATE DATABASE IF NOT EXISTS` ni siquiera deja un aviso:
+
+```sql
+DROP DATABASE tienda;
+DROP DATABASE tienda;
+DROP DATABASE IF EXISTS tienda;
+SELECT @@warning_count AS avisos;
+```
+
+```text
+ERROR 1008 (HY000): Can't drop database 'tienda'; database doesn't exist
++--------+
+| avisos |
++--------+
+|      0 |
++--------+
+```
+
+### Juego de caracteres y collation
+
+Un *juego de caracteres* define cuántos bytes ocupa cada carácter. El valor por defecto de MySQL 8.4 es `utf8mb4`, que usa de uno a cuatro. `CHAR_LENGTH` cuenta caracteres y `LENGTH` cuenta bytes. La *collation* decide cuándo dos textos son iguales. El nombre por defecto, `utf8mb4_0900_ai_ci`, se lee por partes: `utf8mb4` es el juego de caracteres, `0900` la versión de las reglas Unicode, `ai` ignora los acentos (*accent insensitive*) y `ci` ignora las mayúsculas (*case insensitive*). La variante `as_cs` distingue ambas cosas.
+
+```sql
+SELECT 'canción' AS texto, CHAR_LENGTH('canción') AS caracteres, LENGTH('canción') AS bytes;
+SELECT 'a' = 'á' AS tilde_ignorada, 'A' = 'a' AS mayuscula_ignorada;
+SELECT 'a' = 'á' COLLATE utf8mb4_0900_as_cs AS tilde_distinguida, 'A' = 'a' COLLATE utf8mb4_0900_as_cs AS mayuscula_distinguida;
+```
+
+```text
++----------+------------+-------+
+| texto    | caracteres | bytes |
++----------+------------+-------+
+| canción  |          7 |     8 |
++----------+------------+-------+
++----------------+--------------------+
+| tilde_ignorada | mayuscula_ignorada |
++----------------+--------------------+
+|              1 |                  1 |
++----------------+--------------------+
++-------------------+-----------------------+
+| tilde_distinguida | mayuscula_distinguida |
++-------------------+-----------------------+
+|                 0 |                     0 |
++-------------------+-----------------------+
+```
+
+La ó ocupa dos bytes, así que `canción` tiene siete caracteres y ocho bytes. Con la collation por defecto, buscar `Bogota` encuentra también `Bogotá`. Una collation solo funciona con su juego de caracteres: en una conexión abierta en `latin1`, la consulta con `as_cs` falla con `ERROR 1253 (42000): COLLATION 'utf8mb4_0900_as_cs' is not valid for CHARACTER SET 'latin1'`.
+
+### Una base con otro juego de caracteres
+
+`CREATE DATABASE` acepta `CHARACTER SET` y `COLLATE`. Sin ellos, la base hereda los valores del servidor. En `latin1` cada carácter ocupa un byte y solo existen los caracteres de Europa occidental, así que `canción` cabe y un texto japonés no. La prueba usa una *tabla temporal*, que desaparece al cerrar la sesión, y `HEX` para ver los bytes guardados. Los dos caracteres japoneses de "Japón" se construyen a partir de sus bytes para que el ejemplo no dependa del teclado:
+
+```sql
+CREATE DATABASE prueba_latin1 CHARACTER SET latin1;
+USE prueba_latin1;
+CREATE TEMPORARY TABLE texto_latin1 (texto VARCHAR(20));
+INSERT INTO texto_latin1 VALUES ('canción');
+SELECT texto, HEX(texto) AS hex, CHAR_LENGTH(texto) AS caracteres, LENGTH(texto) AS bytes FROM texto_latin1;
+INSERT INTO texto_latin1 VALUES (CONVERT(X'E697A5E69CAC' USING utf8mb4));
+DROP DATABASE prueba_latin1;
+```
+
+```text
++----------+----------------+------------+-------+
+| texto    | hex            | caracteres | bytes |
++----------+----------------+------------+-------+
+| canción  | 63616E6369F36E |          7 |     7 |
++----------+----------------+------------+-------+
+ERROR 1366 (HY000): Incorrect string value: '\xE6\x97\xA5\xE6\x9C\xAC' for column 'texto' at row 1
+```
+
+La ó es el byte `F3`, uno solo. MySQL rechaza los caracteres japoneses porque no existen en `latin1`, y el mensaje muestra los bytes que no supo guardar.
+
+### Conexión y base con el mismo juego
+
+`SET NAMES` le dice al servidor en qué juego de caracteres llegan los datos de la conexión. Si la conexión declara `latin1` pero el programa envía UTF-8, el servidor guarda bytes equivocados sin dar ningún error:
+
+```sql
+CREATE DATABASE prueba_utf8 CHARACTER SET utf8mb4;
+USE prueba_utf8;
+CREATE TEMPORARY TABLE texto_utf8 (texto VARCHAR(20));
+INSERT INTO texto_utf8 VALUES ('canción');
+SET NAMES latin1;
+INSERT INTO texto_utf8 VALUES ('canción');
+SET NAMES utf8mb4;
+SELECT HEX(texto) AS hex, CHAR_LENGTH(texto) AS caracteres, LENGTH(texto) AS bytes FROM texto_utf8;
+```
+
+```text
++----------------------+------------+-------+
+| hex                  | caracteres | bytes |
++----------------------+------------+-------+
+| 63616E6369C3B36E     |          7 |     8 |
+| 63616E6369C383C2B36E |          8 |    10 |
++----------------------+------------+-------+
+```
+
+La segunda fila tiene un carácter de más. El cliente envió la ó como los bytes `C3 B3`, el servidor creyó que eran dos caracteres `latin1` y los convirtió a UTF-8 por separado, así que al leer el texto aparecen dos símbolos extraños donde iba la ó. Para evitarlo, la base y la conexión usan el mismo juego, `utf8mb4`.
+
+## La carga del caso ventas
+
+El caso se instala con tres archivos de la carpeta [`sql`](../sql/esquema.sql). [`esquema.sql`](../sql/esquema.sql) crea la base y las seis tablas, [`datos.sql`](../sql/datos.sql) las llena con 5 categorías, 18 productos, 10 clientes, 8 empleados, 25 pedidos y 56 líneas de detalle, y [`reiniciar.sql`](../sql/reiniciar.sql) las borra para empezar de nuevo. Desde la consola `mysql`, `SOURCE` ejecuta un archivo. Desde el sistema operativo se logra lo mismo con la redirección `<`, que envía el archivo a la entrada del cliente: `mysql -u root -p < esquema.sql`.
+
+```sql
+SOURCE esquema.sql
+SOURCE datos.sql
+USE ventas;
+SHOW TABLES;
+```
+
+```text
++------------------+
+| Tables_in_ventas |
++------------------+
+| categoria        |
+| cliente          |
+| detalle_pedido   |
+| empleado         |
+| pedido           |
+| producto         |
++------------------+
+```
+
+`esquema.sql` usa `IF NOT EXISTS` en cada sentencia, así que se puede repetir sin error ni pérdida de datos. `datos.sql` no es idempotente: ejecutarlo con la base ya cargada repite las claves primarias y falla en el primer `INSERT`.
+
+```text
+ERROR 1062 (23000) at line 8: Duplicate entry '1' for key 'categoria.PRIMARY'
+```
+
+Para volver al estado limpio ejecuta, en este orden, `reiniciar.sql`, `esquema.sql` y `datos.sql`.
+
+## Tipos de datos
+
+### Leer el tipo de una columna
+
+El *tipo de dato* de una columna dice qué valores caben en ella, y `DESCRIBE` lo muestra junto con las restricciones:
+
+```sql
+DESCRIBE producto;
+```
+
+```text
++--------------+---------------+------+-----+---------+----------------+
+| Field        | Type          | Null | Key | Default | Extra          |
++--------------+---------------+------+-----+---------+----------------+
+| id_producto  | int           | NO   | PRI | NULL    | auto_increment |
+| nombre       | varchar(100)  | NO   |     | NULL    |                |
+| precio       | decimal(10,2) | NO   |     | NULL    |                |
+| stock        | int           | NO   |     | 0       |                |
+| id_categoria | int           | YES  | MUL | NULL    |                |
++--------------+---------------+------+-----+---------+----------------+
+```
+
+`Null` en `NO` indica que la columna no admite `NULL`. `Key` en `PRI` marca la clave primaria, y `MUL` marca una columna con índice que admite repetidos, como una clave foránea. `Default` es el valor que se guarda cuando la fila nueva omite la columna. El caso usa cinco familias de tipos:
+
+::: {.tabla-scroll}
+
+| Familia | Tipo en ventas | Columnas |
+|---|---|---|
+| Entero | `INT` | los identificadores, `stock`, `cantidad` |
+| Decimal exacto | `DECIMAL(10,2)` | `precio`, `salario`, `precio_unitario` |
+| Texto | `VARCHAR(60)` a `VARCHAR(150)` | `nombre`, `correo`, `ciudad`, `cargo` |
+| Fecha | `DATE` | `fecha`, `fecha_registro`, `fecha_ingreso` |
+| Lista cerrada | `ENUM` | `pedido.estado` |
+
+:::
+
+### Enteros
+
+Cada tipo entero tiene un rango fijo según los bytes que ocupa. `INTEGER` es un sinónimo de `INT`. Si un valor no cabe, MySQL rechaza la fila en lugar de recortar el número.
+
+::: {.tabla-scroll}
+
+| Tipo | Bytes | Mínimo | Máximo |
+|---|---|---|---|
+| `TINYINT` | 1 | -128 | 127 |
+| `SMALLINT` | 2 | -32768 | 32767 |
+| `INT` | 4 | -2147483648 | 2147483647 |
+| `BIGINT` | 8 | -9223372036854775808 | 9223372036854775807 |
+
+:::
+
+```sql
+CREATE TEMPORARY TABLE entero_demo (n INT);
+INSERT INTO entero_demo VALUES (2147483647);
+INSERT INTO entero_demo VALUES (2147483648);
+```
+
+```text
+ERROR 1264 (22003): Out of range value for column 'n' at row 1
+```
+
+### Decimales: DECIMAL frente a DOUBLE
+
+`DECIMAL(M,D)` guarda un número exacto con `M` dígitos en total y `D` decimales. `DOUBLE` y `FLOAT` guardan aproximaciones en binario, y por eso 0.1 más 0.2 no da exactamente 0.3. La prueba usa columnas, porque el literal `0.1 + 0.2` ya es `DECIMAL` y da 0.3 exacto:
+
+```sql
+CREATE TEMPORARY TABLE prueba_tipos (
+  a_double DOUBLE, b_double DOUBLE,
+  a_decimal DECIMAL(10,2), b_decimal DECIMAL(10,2));
+INSERT INTO prueba_tipos VALUES (0.1, 0.2, 0.1, 0.2);
+SELECT a_double + b_double AS suma_double,
+       a_double + b_double = 0.3 AS igual_double,
+       a_decimal + b_decimal AS suma_decimal,
+       a_decimal + b_decimal = 0.3 AS igual_decimal
+FROM prueba_tipos;
+```
+
+```text
++---------------------+--------------+--------------+---------------+
+| suma_double         | igual_double | suma_decimal | igual_decimal |
++---------------------+--------------+--------------+---------------+
+| 0.30000000000000004 |            0 |         0.30 |             1 |
++---------------------+--------------+--------------+---------------+
+```
+
+Para dinero y para cantidades que se suman y se comparan usa `DECIMAL`, como `precio`, `salario` y `precio_unitario`. `DOUBLE` sirve para mediciones donde una diferencia diminuta no importa, y `FLOAT` funciona como `DOUBLE` con menos precisión. Un texto en una columna decimal también se rechaza, con `ERROR 1366 (HY000): Incorrect decimal value: 'abc' for column 'precio' at row 1`.
+
+### Texto: CHAR, VARCHAR y TEXT
+
+::: {.tabla-scroll}
+
+| Tipo | Longitud | Uso |
+|---|---|---|
+| `CHAR(M)` | fija, hasta 255 | códigos de largo fijo |
+| `VARCHAR(M)` | variable | nombres, correos, ciudades |
+| `TEXT` | hasta 65.535 bytes | descripciones largas |
+
+:::
+
+En `CHAR(M)` y `VARCHAR(M)`, la `M` cuenta caracteres, no bytes. La palabra `ñandú` tiene cinco caracteres y ocupa siete bytes, y cabe en un `VARCHAR(5)`. `Bogotá` tiene seis caracteres y no cabe. Que el servidor rechace el dato en vez de recortarlo depende del `sql_mode`, y el valor por defecto de 8.4 incluye `STRICT_TRANS_TABLES`. Con el modo vacío, el mismo `INSERT` recorta el texto y solo deja un aviso:
+
+```sql
+CREATE TEMPORARY TABLE texto_demo (codigo VARCHAR(5));
+INSERT INTO texto_demo VALUES ('ñandú');
+SELECT codigo, CHAR_LENGTH(codigo) AS caracteres, LENGTH(codigo) AS bytes FROM texto_demo;
+INSERT INTO texto_demo VALUES ('Bogotá');
+SET SESSION sql_mode = '';
+INSERT INTO texto_demo VALUES ('Bogotá');
+SHOW WARNINGS;
+SELECT codigo FROM texto_demo;
+SET SESSION sql_mode = DEFAULT;
+```
+
+```text
++---------+------------+-------+
+| codigo  | caracteres | bytes |
++---------+------------+-------+
+| ñandú   |          5 |     7 |
++---------+------------+-------+
+ERROR 1406 (22001): Data too long for column 'codigo' at row 1
++---------+------+---------------------------------------------+
+| Level   | Code | Message                                     |
++---------+------+---------------------------------------------+
+| Warning | 1265 | Data truncated for column 'codigo' at row 1 |
++---------+------+---------------------------------------------+
++---------+
+| codigo  |
++---------+
+| ñandú   |
+| Bogot   |
++---------+
+```
+
+Sin el modo estricto el dato queda mal guardado y nadie se entera si no lee los avisos. Deja el `sql_mode` por defecto: un error al insertar es preferible a un dato recortado.
+
+### Fechas, BOOLEAN y ENUM
+
+::: {.tabla-scroll}
+
+| Tipo | Guarda | Rango |
+|---|---|---|
+| `DATE` | fecha | '1000-01-01' a '9999-12-31' |
+| `DATETIME` | fecha y hora | '1000-01-01 00:00:00' a '9999-12-31 23:59:59' |
+| `TIMESTAMP` | fecha y hora en UTC | '1970-01-01 00:00:01' a '2038-01-19 03:14:07' |
+
+:::
+
+En ventas, `pedido.fecha` y `cliente.fecha_registro` son `DATE`, con formato `'AAAA-MM-DD'`. Una fecha imposible se rechaza con `ERROR 1292 (22007): Incorrect date value: '2026-13-01' for column 'fecha_registro' at row 1`, y `CAST('2026-02-30' AS DATE)` devuelve `NULL` con un aviso. Una fecha guardada como `VARCHAR` no recibe esta protección, como muestra el ejercicio 4. `BOOLEAN` es un alias de `TINYINT(1)`, y `TRUE` y `FALSE` son otros nombres de 1 y 0. `ENUM` limita la columna a una lista cerrada de textos, como `pedido.estado`. Guarda la posición de cada valor, así que ordena por la posición declarada y no por el alfabeto, y `estado + 0` revela esa posición:
+
+```sql
+SELECT DISTINCT estado, estado + 0 AS posicion FROM pedido ORDER BY estado;
+INSERT INTO pedido (fecha, estado, id_cliente, id_empleado) VALUES ('2026-10-20', 'devuelto', 1, 4);
+```
+
+```text
++-----------+----------+
+| estado    | posicion |
++-----------+----------+
+| pendiente |        1 |
+| pagado    |        2 |
+| enviado   |        3 |
+| cancelado |        4 |
++-----------+----------+
+ERROR 1265 (01000): Data truncated for column 'estado' at row 1
+```
+
+### NULL, la ausencia de valor
+
+`NULL` significa que no hay valor. No equivale a `0` ni al texto vacío `''`. En `cliente`, Pedro y Marta no tienen correo, y Diego y Valentina no tienen ciudad. Comparar con `NULL` da `NULL`, incluso `NULL = NULL`, así que la ausencia se pregunta con `IS NULL`: `WHERE correo = NULL` devuelve 0 filas y `WHERE correo IS NULL` devuelve las 2 que no tienen correo.
+
+```sql
+SELECT NULL = NULL AS igual, NULL IS NULL AS es_nulo, '' IS NULL AS vacio_es_nulo, 0 IS NULL AS cero_es_nulo;
+```
+
+```text
++-------+---------+---------------+--------------+
+| igual | es_nulo | vacio_es_nulo | cero_es_nulo |
++-------+---------+---------------+--------------+
+|  NULL |       1 |             0 |            0 |
++-------+---------+---------------+--------------+
+```
+
+## Restricciones
+
+Una *restricción* rechaza ciertos valores aunque el tipo de la columna los acepte. El servidor las vigila en cada `INSERT` y en cada `UPDATE`, venga el dato del programa que venga.
+
+::: {.tabla-scroll}
+
+| Restricción | Qué hace | Dónde está en ventas |
+|---|---|---|
+| `NOT NULL` | rechaza la ausencia de valor | `categoria.nombre`, `producto.precio` |
+| `DEFAULT` | completa el dato omitido | `producto.stock`, `pedido.estado` |
+| `UNIQUE` | rechaza un valor repetido | `cliente.correo`, `categoria.nombre` |
+| `PRIMARY KEY` | rechaza repetidos y `NULL` | el identificador de cada tabla |
+| `AUTO_INCREMENT` | numera las filas nuevas | los identificadores |
+| `CHECK` | rechaza una condición falsa | `precio >= 0`, `stock >= 0` |
+
+:::
+
+### NOT NULL y DEFAULT
+
+Una categoría sin nombre no sirve, así que `categoria.nombre` es `NOT NULL`. Un `NULL` explícito produce el error 1048, y omitir la columna produce el error 1364 cuando no tiene `DEFAULT`. `DEFAULT` completa el dato omitido, y la función `DEFAULT()` consulta el valor. Cuando el valor por defecto es una expresión, como la fecha del servidor en `cliente.fecha_registro`, va entre paréntesis: `DEFAULT (CURRENT_DATE)` funciona y `DEFAULT CURRENT_DATE` da el error de sintaxis 1064.
+
+```sql
+INSERT INTO categoria (nombre) VALUES (NULL);
+INSERT INTO categoria (id_categoria) VALUES (99);
+SELECT DEFAULT(stock) AS stock_por_defecto FROM producto LIMIT 1;
+```
+
+```text
+ERROR 1048 (23000): Column 'nombre' cannot be null
+ERROR 1364 (HY000): Field 'nombre' doesn't have a default value
++-------------------+
+| stock_por_defecto |
++-------------------+
+|                 0 |
++-------------------+
+```
+
+### UNIQUE y PRIMARY KEY
+
+`UNIQUE` impide que dos filas tengan el mismo valor en la columna. La *clave primaria* identifica cada fila y combina dos garantías: no admite repetidos ni `NULL`. Los dos casos producen el error 1062, y el mensaje nombra la tabla y la restricción. Una clave primaria puede ser compuesta: en `detalle_pedido` la forman `id_pedido` e `id_producto`, y por eso un producto aparece una sola vez en cada pedido. `UNIQUE` sí admite varios `NULL`, porque dos ausencias no son el mismo valor, y Pedro y Marta comparten un correo `NULL` sin conflicto.
+
+```sql
+INSERT INTO cliente (nombre, correo) VALUES ('Ana María', 'ana@email.com');
+INSERT INTO categoria (id_categoria, nombre) VALUES (1, 'Nueva');
+```
+
+```text
+ERROR 1062 (23000): Duplicate entry 'ana@email.com' for key 'cliente.correo'
+ERROR 1062 (23000): Duplicate entry '1' for key 'categoria.PRIMARY'
+```
+
+### AUTO_INCREMENT
+
+`AUTO_INCREMENT` numera las filas nuevas: si omites el identificador, MySQL toma el siguiente número. Los números no se reutilizan, y un `INSERT` que falla puede gastar uno. En esta prueba, el primer `INSERT` repite un nombre y falla, y el segundo funciona:
+
+```sql
+INSERT INTO categoria (nombre) VALUES ('Audio');
+INSERT INTO categoria (nombre) VALUES ('Hogar');
+SELECT id_categoria, nombre FROM categoria WHERE nombre = 'Hogar';
+```
+
+```text
+ERROR 1062 (23000): Duplicate entry 'Audio' for key 'categoria.nombre'
++--------------+--------+
+| id_categoria | nombre |
++--------------+--------+
+|            7 | Hogar  |
++--------------+--------+
+```
+
+Tras cargar `datos.sql`, el siguiente identificador de `categoria` era el 6. El `INSERT` fallido por clave única lo reservó, y `Hogar` recibió el 7. Un hueco en la numeración es normal y no indica pérdida de datos. No todos los errores gastan un número:
+
+::: {.tabla-scroll}
+
+| Error del `INSERT` | ¿Gasta un número? |
+|---|---|
+| 1062 por una columna `UNIQUE` | sí |
+| 1452 por una clave foránea inexistente | sí |
+| 1062 por una clave primaria dada a mano | no |
+| 1048, 3819 y 1406 | no |
+
+:::
+
+### CHECK
+
+`CHECK` valida una regla de negocio escrita como condición, y MySQL 8.4 nombra la restricción violada. El nombre `chk_producto_precio` viene de `esquema.sql`, donde se escribió `CONSTRAINT chk_producto_precio CHECK (precio >= 0)`. Sin nombre propio, MySQL inventa uno, como `check_demo_chk_1`. Una condición que resulta `NULL` no se considera violada, así que una columna con `CHECK (v >= 0)` acepta `NULL`. Por eso `precio` lleva `NOT NULL` junto con `CHECK`: la primera cierra la puerta a la ausencia de valor y la segunda a los negativos.
+
+```sql
+INSERT INTO producto (nombre, precio, stock, id_categoria) VALUES ('Prueba', -5, 1, 1);
+CREATE TEMPORARY TABLE check_demo (v INT CHECK (v >= 0));
+INSERT INTO check_demo VALUES (-1);
+INSERT INTO check_demo VALUES (NULL);
+SELECT v FROM check_demo;
+```
+
+```text
+ERROR 3819 (HY000): Check constraint 'chk_producto_precio' is violated.
+ERROR 3819 (HY000): Check constraint 'check_demo_chk_1' is violated.
++------+
+| v    |
++------+
+| NULL |
++------+
+```
+
+## Ejercicios
+
+### Ejercicio 1. Crear ventas y comprobar que existe
+
+Completa la sentencia que crea la base `ventas` con `utf8mb4` y la collation por defecto, y la que comprueba que existe.
+
+```sql
+CREATE DATABASE IF NOT EXISTS ____
+  CHARACTER SET ____ COLLATE ____;
+SHOW DATABASES LIKE '____';
+```
+
+::: {.callout-note collapse="true"}
+## Solución
+
+```sql
+CREATE DATABASE IF NOT EXISTS ventas CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+SHOW DATABASES LIKE 'ventas';
+```
+
+```text
++-------------------+
+| Database (ventas) |
++-------------------+
+| ventas            |
++-------------------+
+```
+:::
+
+### Ejercicio 2. Un encabezado que parte de cero
+
+Escribe las sentencias con que empieza el script `tienda.sql` para que siempre parta de una base `tienda` nueva, con `utf8mb4`, y la deje activa.
+
+::: {.callout-note collapse="true"}
+## Solución
+
+`DROP DATABASE IF EXISTS` no falla la primera vez, cuando la base no existe, y deja el terreno limpio las veces siguientes.
+
+```sql
+DROP DATABASE IF EXISTS tienda;
+CREATE DATABASE tienda
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_0900_ai_ci;
+USE tienda;
+SELECT DATABASE();
+```
+
+```text
++------------+
+| DATABASE() |
++------------+
+| tienda     |
++------------+
+```
+:::
+
+### Ejercicio 3. Tipo y restricción de cada columna
+
+Una biblioteca guarda de cada libro el ISBN de 13 caracteres, que no se repite; el título, obligatorio; el año, obligatorio; el precio con dos decimales, obligatorio y nunca negativo; y si está disponible, con sí por defecto. Escribe la sentencia que crea la tabla `libro`.
+
+::: {.callout-note collapse="true"}
+## Solución
+
+El ISBN identifica el libro, así que es la clave primaria. El año cabe en un `SMALLINT` y el precio, por ser dinero, en un `DECIMAL`.
+
+```sql
+CREATE TEMPORARY TABLE libro (
+    isbn        CHAR(13)      NOT NULL,
+    titulo      VARCHAR(200)  NOT NULL,
+    anio        SMALLINT      NOT NULL,
+    precio      DECIMAL(8,2)  NOT NULL,
+    disponible  BOOLEAN       NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (isbn),
+    CHECK (precio >= 0)
+);
+SHOW COLUMNS FROM libro;
+```
+
+```text
++------------+--------------+------+-----+---------+-------+
+| Field      | Type         | Null | Key | Default | Extra |
++------------+--------------+------+-----+---------+-------+
+| isbn       | char(13)     | NO   | PRI | NULL    | NULL  |
+| titulo     | varchar(200) | NO   |     | NULL    | NULL  |
+| anio       | smallint     | NO   |     | NULL    | NULL  |
+| precio     | decimal(8,2) | NO   |     | NULL    | NULL  |
+| disponible | tinyint(1)   | NO   |     | 1       | NULL  |
++------------+--------------+------+-----+---------+-------+
+```
+:::
+
+### Ejercicio 4. Tres errores de tipo
+
+La tabla se crea sin error y rechaza uno de los dos `INSERT`. Encuentra las tres columnas con un tipo mal elegido.
+
+```sql
+CREATE TEMPORARY TABLE producto_malo (
+    id_producto  INT PRIMARY KEY,
+    nombre       INT,
+    precio       FLOAT,
+    fecha_alta   VARCHAR(10)
+);
+INSERT INTO producto_malo VALUES (1, 'Mouse', 80000, '2026-10-20');
+INSERT INTO producto_malo VALUES (1, 7, 80000.1, '31/12/2026');
+SELECT * FROM producto_malo;
+```
+
+::: {.callout-note collapse="true"}
+## Solución
+
+`nombre` debe ser `VARCHAR(100)`, porque un entero no guarda texto. `precio` debe ser `DECIMAL(10,2)`, porque `FLOAT` aproxima. `fecha_alta` debe ser `DATE`, porque un `VARCHAR` acepta cualquier texto, incluida una fecha como `31/12/2026`. El primer `INSERT` falla por el tipo de `nombre`, y el segundo entra completo.
+
+```text
+ERROR 1366 (HY000): Incorrect integer value: 'Mouse' for column 'nombre' at row 1
++-------------+--------+---------+------------+
+| id_producto | nombre | precio  | fecha_alta |
++-------------+--------+---------+------------+
+|           1 |      7 | 80000.1 | 31/12/2026 |
++-------------+--------+---------+------------+
+```
+:::
+
+### Ejercicio 5. Cinco sentencias, cinco efectos
+
+Este es el reto. La base `pruebas` no existe, y se ejecutan estas sentencias en orden. Antes de abrir la solución, escribe qué hace cada una: si crea o borra la base, si da error y si deja un aviso.
+
+```sql
+CREATE DATABASE IF NOT EXISTS pruebas;   -- 1
+CREATE DATABASE IF NOT EXISTS pruebas;   -- 2
+CREATE DATABASE pruebas;                 -- 3
+DROP DATABASE IF EXISTS pruebas;         -- 4
+DROP DATABASE pruebas;                   -- 5
+```
+
+::: {.callout-note collapse="true"}
+## Solución del reto
+
+La 1 crea la base sin aviso. La 2 no cambia nada y deja el aviso `Note 1007`. La 3 da el error 1007 porque la base ya existe. La 4 borra la base sin aviso. La 5 da el error 1008 porque la base ya no existe. Los avisos se leen con `SELECT @@warning_count` después de la 1 y la 4, y con `SHOW WARNINGS` después de la 2:
+
+```text
++--------+
+| avisos |
++--------+
+|      0 |
++--------+
++-------+------+--------------------------------------------------+
+| Level | Code | Message                                          |
++-------+------+--------------------------------------------------+
+| Note  | 1007 | Can't create database 'pruebas'; database exists |
++-------+------+--------------------------------------------------+
+ERROR 1007 (HY000): Can't create database 'pruebas'; database exists
++--------+
+| avisos |
++--------+
+|      0 |
++--------+
+ERROR 1008 (HY000): Can't drop database 'pruebas'; database doesn't exist
+```
+:::
+
+## Referencia rápida
+
+```sql
+CREATE DATABASE [IF NOT EXISTS] nombre [CHARACTER SET juego] [COLLATE collation];
+DROP DATABASE [IF EXISTS] nombre;
+USE nombre;                       -- elige la base activa
+SELECT DATABASE();                -- ¿cuál es la base activa?
+SHOW DATABASES;  SHOW WARNINGS;  DESCRIBE tabla;
+SOURCE archivo.sql                -- ejecuta un archivo desde la consola
+
+CREATE TABLE tabla (
+    id      INT           NOT NULL AUTO_INCREMENT,
+    nombre  VARCHAR(100)  NOT NULL,
+    correo  VARCHAR(150),
+    precio  DECIMAL(10,2) NOT NULL,
+    stock   INT           NOT NULL DEFAULT 0,
+    alta    DATE          NOT NULL DEFAULT (CURRENT_DATE),
+    PRIMARY KEY (id),
+    UNIQUE (correo),
+    CONSTRAINT chk_tabla_precio CHECK (precio >= 0)
+);
+```
+
+::: {.tabla-scroll}
+
+| Error | Causa |
+|---|---|
+| 1007 y 1008 | crear una base que existe, o borrar una que no existe |
+| 1048 y 1364 | `NULL` explícito, o columna omitida sin `DEFAULT`, en una columna `NOT NULL` |
+| 1062 | valor repetido en una clave primaria o en una columna `UNIQUE` |
+| 3819 | condición `CHECK` violada |
+| 1264, 1265, 1292 y 1406 | número fuera de rango, valor fuera del `ENUM`, fecha imposible y texto demasiado largo |
+| 1366 | valor del tipo equivocado, o caracteres que el juego no conoce |
+
+:::
+
+## Lista de verificación
+
+- [ ] Creo una base con `CREATE DATABASE IF NOT EXISTS`, la elijo con `USE` y la borro con `DROP DATABASE IF EXISTS`.
+- [ ] Escribo un script que se puede repetir sin errores.
+- [ ] Explico qué hacen el juego de caracteres y la collation, y por qué la conexión y la base usan `utf8mb4`.
+- [ ] Cargo el caso ventas con `esquema.sql` y `datos.sql`, y vuelvo al estado limpio con `reiniciar.sql`.
+- [ ] Elijo `INT`, `DECIMAL`, `VARCHAR`, `DATE` o `ENUM` según el dato, y no uso `FLOAT` para dinero.
+- [ ] Distingo `NULL` del cero y del texto vacío, y lo pregunto con `IS NULL`.
+- [ ] Uso `NOT NULL`, `DEFAULT`, `UNIQUE`, `PRIMARY KEY`, `CHECK` y `AUTO_INCREMENT`, y reconozco el error que produce cada una.
+
+## Referencias
+
+Manual de referencia de MySQL 8.4, con la sección entre paréntesis.
+
+- [CREATE DATABASE](https://dev.mysql.com/doc/refman/8.4/en/create-database.html) (15.1.12), [DROP DATABASE](https://dev.mysql.com/doc/refman/8.4/en/drop-database.html) (15.1.24), [USE](https://dev.mysql.com/doc/refman/8.4/en/use.html) (15.8.4) y [SHOW WARNINGS](https://dev.mysql.com/doc/refman/8.4/en/show-warnings.html) (15.7.7.42).
+- [Ejecutar sentencias desde un archivo de texto](https://dev.mysql.com/doc/refman/8.4/en/mysql-batch-commands.html) (6.5.1.5) y [comandos del cliente mysql](https://dev.mysql.com/doc/refman/8.4/en/mysql-commands.html) (6.5.1.2).
+- [Mayúsculas en los identificadores](https://dev.mysql.com/doc/refman/8.4/en/identifier-case-sensitivity.html) (11.2.3).
+- Juegos de caracteres: [del servidor](https://dev.mysql.com/doc/refman/8.4/en/charset-server.html) (12.3.2), [de la base](https://dev.mysql.com/doc/refman/8.4/en/charset-database.html) (12.3.3), [nombres de collation](https://dev.mysql.com/doc/refman/8.4/en/charset-collation-names.html) (12.3.1) y [SET NAMES](https://dev.mysql.com/doc/refman/8.4/en/set-names.html) (15.7.6.3).
+- [Modos SQL del servidor](https://dev.mysql.com/doc/refman/8.4/en/sql-mode.html) (7.1.11).
+- Tipos: [sintaxis de los tipos numéricos](https://dev.mysql.com/doc/refman/8.4/en/numeric-type-syntax.html) (13.1.1), [enteros](https://dev.mysql.com/doc/refman/8.4/en/integer-types.html) (13.1.2), [DATE, DATETIME y TIMESTAMP](https://dev.mysql.com/doc/refman/8.4/en/datetime.html) (13.2.2), [ENUM](https://dev.mysql.com/doc/refman/8.4/en/enum.html) (13.3.5) y [requisitos de almacenamiento](https://dev.mysql.com/doc/refman/8.4/en/storage-requirements.html) (13.7).
+- [Problemas con valores de punto flotante](https://dev.mysql.com/doc/refman/8.4/en/problems-with-float.html) (B.3.4.8) y [trabajar con valores NULL](https://dev.mysql.com/doc/refman/8.4/en/working-with-null.html) (5.3.4.6).
+- [CREATE TABLE](https://dev.mysql.com/doc/refman/8.4/en/create-table.html) (15.1.20), [restricciones CHECK](https://dev.mysql.com/doc/refman/8.4/en/create-table-check-constraints.html) (15.1.20.6) y [AUTO_INCREMENT](https://dev.mysql.com/doc/refman/8.4/en/example-auto-increment.html) (5.6.9).
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería.
+Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado, y las salidas de SQL se ejecutaron en MySQL 8.4.11.
+:::

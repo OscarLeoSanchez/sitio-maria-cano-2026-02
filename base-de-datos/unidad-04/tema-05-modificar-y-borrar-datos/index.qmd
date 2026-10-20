@@ -1,0 +1,758 @@
+---
+title: "Tema 5. Modificar y borrar datos"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+
+::: {.tabla-scroll}
+
+|        |                                  |
+|--------|----------------------------------|
+| Unidad | Unidad 4. Lenguaje SQL           |
+| Tema   | Tema 5. Modificar y borrar datos |
+
+:::
+
+:::
+
+[Abrir la presentación del tema](presentacion-interactiva.html){.btn-curso}
+
+La base `ventas` ya tiene sus datos, y en el trabajo real esos datos cambian: un precio sube, un cliente pide que lo borren, un pedido se cancela. La pregunta de este tema es cómo cambiar o borrar una fila sin tocar las demás, y qué hacer cuando la sentencia sale mal. La respuesta tiene cuatro piezas. `UPDATE` y `DELETE` con un `WHERE` preciso hacen el cambio. Las claves foráneas con su cláusula `ON DELETE` deciden qué borrados se permiten. `TRUNCATE` y `DROP` vacían o eliminan una tabla entera. Y las transacciones te dejan ensayar un cambio y deshacerlo antes de que sea definitivo.
+
+La presentación proyecta el recorrido en clase y esta guía lo explica con más detalle. Todas las sentencias y salidas se ejecutaron en MySQL 8.4.11 sobre el caso `ventas`, y los errores aparecen como los imprime una sesión interactiva del cliente `mysql`. Los ejemplos que cambian datos van entre `START TRANSACTION` y `ROLLBACK`, así la base queda como estaba y puedes repetirlos; la sección 5 explica por qué funciona.
+
+## Punto de partida
+
+Tres archivos dejan la base cargada: [reiniciar.sql](../sql/reiniciar.sql) borra las tablas, [esquema.sql](../sql/esquema.sql) las crea y [datos.sql](../sql/datos.sql) las llena. El comando `SOURCE` del cliente `mysql` ejecuta un archivo de sentencias. Ejecútalos en este orden, también cuando quieras volver al estado limpio después de un ejercicio:
+
+```sql
+SOURCE reiniciar.sql;
+SOURCE esquema.sql;
+SOURCE datos.sql;
+```
+
+Con la base recién cargada, `categoria` tiene 5 filas, `producto` 18, `cliente` 10, `empleado` 8, `pedido` 25 y `detalle_pedido` 56. Para este tema importan las seis claves foráneas del esquema y la acción `ON DELETE` de cada una. La tabla hija contiene la clave foránea y la tabla padre es la que esa clave referencia.
+
+::: {.tabla-scroll}
+
+| Restricción | Tabla hija | Tabla padre | `ON DELETE` |
+|---|---|---|---|
+| `fk_producto_categoria` | `producto` | `categoria` | `RESTRICT` |
+| `fk_pedido_cliente` | `pedido` | `cliente` | `RESTRICT` |
+| `fk_pedido_empleado` | `pedido` | `empleado` | `RESTRICT` |
+| `fk_detalle_pedido` | `detalle_pedido` | `pedido` | `CASCADE` |
+| `fk_detalle_producto` | `detalle_pedido` | `producto` | `RESTRICT` |
+| `fk_empleado_jefe` | `empleado` | `empleado` | `SET NULL` |
+
+:::
+
+## 1. Cambiar filas con UPDATE
+
+`UPDATE` cambia los valores de las columnas de filas que ya existen. Junto con `INSERT` y `DELETE` forma parte del DML, las sentencias que manipulan los datos y no la estructura. Tiene tres partes: la tabla que cambia, las asignaciones de `SET` y el `WHERE` que elige las filas.
+
+```sql
+UPDATE tabla                    -- la tabla que cambia
+SET columna1 = expresion1,      -- cada columna recibe un valor nuevo
+    columna2 = expresion2
+WHERE condicion;                -- solo las filas que cumplen la condición
+```
+
+La expresión puede usar el valor actual de la fila, como en `precio = precio * 1.10`. Antes de cambiar nada conviene mirar qué filas elige el `WHERE`: un `SELECT` con la misma condición las muestra, y si no son las esperadas corriges la condición sin haber cambiado nada. Después del cambio, `ROW_COUNT()` devuelve cuántas filas cambió la última sentencia `INSERT`, `UPDATE` o `DELETE`.
+
+El ejemplo sube un 10 % el precio de los cinco productos de la categoría 1 (Periféricos). El primer `SELECT` es el previo, el segundo comprueba el resultado y el `ROLLBACK` deja los precios como estaban:
+
+```sql
+SELECT id_producto, nombre, precio
+FROM producto WHERE id_categoria = 1;
+
+START TRANSACTION;
+UPDATE producto
+SET precio = precio * 1.10
+WHERE id_categoria = 1;
+SELECT ROW_COUNT();
+SELECT id_producto, nombre, precio
+FROM producto WHERE id_categoria = 1;
+ROLLBACK;
+```
+
+```text
++-------------+-------------+-----------+
+| id_producto | nombre      | precio    |
++-------------+-------------+-----------+
+|           1 | Mouse       |  80000.00 |
+|           3 | Teclado     | 150000.00 |
+|           5 | Webcam HD   | 180000.00 |
+|           6 | Mouse gamer | 120000.00 |
+|           7 | Hub USB     |  60000.00 |
++-------------+-------------+-----------+
++-------------+
+| ROW_COUNT() |
++-------------+
+|           5 |
++-------------+
++-------------+-------------+-----------+
+| id_producto | nombre      | precio    |
++-------------+-------------+-----------+
+|           1 | Mouse       |  88000.00 |
+|           3 | Teclado     | 165000.00 |
+|           5 | Webcam HD   | 198000.00 |
+|           6 | Mouse gamer | 132000.00 |
+|           7 | Hub USB     |  66000.00 |
++-------------+-------------+-----------+
+```
+
+`ROW_COUNT()` cuenta las filas cuyo valor cambió de verdad. Si repites una asignación que no modifica nada, la sentencia se ejecuta sin error y el conteo es 0. Lo mismo ocurre cuando el `WHERE` no encuentra ninguna fila, por ejemplo con `WHERE id_producto = 999`. El `UPDATE` también puede fallar, y entonces ninguna fila cambia. Dos fallas frecuentes son escribir mal una columna y violar una restricción `CHECK`:
+
+```sql
+UPDATE producto SET stok = 5 WHERE id_producto = 1;
+UPDATE producto SET stock = -1 WHERE id_producto = 1;
+```
+
+```text
+ERROR 1054 (42S22): Unknown column 'stok' in 'field list'
+ERROR 3819 (HY000): Check constraint 'chk_producto_stock' is violated.
+```
+
+## 2. Borrar filas con DELETE
+
+`DELETE` borra filas de una tabla. La tabla, sus columnas y sus restricciones siguen existiendo, aunque se queden sin filas. El `WHERE` elige las filas que salen.
+
+```sql
+DELETE FROM tabla        -- la tabla de la que salen las filas
+WHERE condicion;         -- solo las filas que cumplen la condición
+```
+
+El ejemplo borra el producto 18, la Base refrigerante, que nunca se vendió y por eso ninguna línea de pedido lo referencia. Los tres resultados son las filas que borró el `DELETE`, el conteo después del borrado y el conteo después del `ROLLBACK`, que muestra que la fila volvió:
+
+```sql
+START TRANSACTION;
+DELETE FROM producto WHERE id_producto = 18;
+SELECT ROW_COUNT();
+SELECT COUNT(*) FROM producto WHERE id_producto = 18;
+ROLLBACK;
+SELECT COUNT(*) FROM producto WHERE id_producto = 18;
+```
+
+```text
++-------------+
+| ROW_COUNT() |
++-------------+
+|           1 |
++-------------+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
++----------+
+| COUNT(*) |
++----------+
+|        1 |
++----------+
+```
+
+Si el producto tuviera líneas de pedido, el borrado fallaría por la clave foránea; la sección 6 muestra ese caso.
+
+## 3. El peligro de la sentencia sin WHERE
+
+Sin `WHERE`, `UPDATE` cambia todas las filas de la tabla y `DELETE` borra todas. MySQL no pregunta nada: en el modo por defecto ejecuta la sentencia tal como la escribiste. Un `WHERE` omitido y un `WHERE` mal escrito producen el mismo daño, y por eso el `SELECT` previo y la transacción de ensayo valen la pena incluso cuando la sentencia parece sencilla.
+
+Este `UPDATE` olvida su `WHERE` y deja los 18 productos con precio 0. El ensayo lo deshace y el segundo conteo vuelve a 0 productos con ese precio:
+
+```sql
+START TRANSACTION;
+UPDATE producto SET precio = 0;
+SELECT COUNT(*) FROM producto WHERE precio = 0;
+ROLLBACK;
+SELECT COUNT(*) FROM producto WHERE precio = 0;
+```
+
+```text
++----------+
+| COUNT(*) |
++----------+
+|       18 |
++----------+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+```
+
+Con `DELETE FROM detalle_pedido;` ocurre lo mismo en la tabla que guarda las 56 líneas de todos los pedidos: dentro de la transacción el conteo cae a 0 y, tras el `ROLLBACK`, vuelve a 56. El `ROLLBACK` solo ayuda cuando hay una transacción abierta. Sin ella, la sentencia ya es definitiva cuando termina (sección 5).
+
+## 4. sql_safe_updates: una red para los descuidos
+
+`sql_safe_updates` es una variable de sesión que, cuando vale 1, hace que MySQL rechace un `UPDATE` o un `DELETE` cuyo `WHERE` no use una columna clave y que no lleve `LIMIT`. El rechazo es el error 1175. En la consola `mysql` la variable vale 0. MySQL Workbench la activa por defecto, así que el error 1175 aparece con frecuencia en esa herramienta.
+
+```sql
+SET sql_safe_updates = 1;
+UPDATE producto SET precio = 0
+WHERE nombre = 'Mouse';
+DELETE FROM producto;
+SET sql_safe_updates = 0;
+```
+
+```text
+ERROR 1175 (HY000): You are using safe update mode and you tried to update a table without a WHERE that uses a KEY column.
+ERROR 1175 (HY000): You are using safe update mode and you tried to update a table without a WHERE that uses a KEY column.
+```
+
+El `UPDATE` filtra por `nombre`, que no es una columna clave, y el `DELETE` no tiene `WHERE`. Los dos fallan y ninguna fila cambia. Con la variable en 1, estas sentencias sí pasan: la primera filtra por la clave primaria y las otras dos llevan `LIMIT 1`. Cada una cambia una fila:
+
+```sql
+SET sql_safe_updates = 1;
+START TRANSACTION;
+UPDATE producto SET precio = 85000 WHERE id_producto = 1;
+SELECT ROW_COUNT();
+UPDATE producto SET precio = 0 WHERE nombre = 'Mouse' LIMIT 1;
+SELECT ROW_COUNT();
+DELETE FROM detalle_pedido LIMIT 1;
+SELECT ROW_COUNT();
+ROLLBACK;
+SET sql_safe_updates = 0;
+```
+
+```text
++-------------+
+| ROW_COUNT() |
++-------------+
+|           1 |
++-------------+
++-------------+
+| ROW_COUNT() |
++-------------+
+|           1 |
++-------------+
++-------------+
+| ROW_COUNT() |
++-------------+
+|           1 |
++-------------+
+```
+
+Esta red tiene huecos. `LIMIT 1` cumple la regla sin decir cuál fila cambia ni cuál se borra, y un `WHERE` sobre una columna clave cumple la regla aunque alcance toda la tabla. Con la variable en 1, este `DELETE` filtra por `id_pedido`, que forma parte de la clave primaria, y borra las 56 líneas:
+
+```sql
+SET sql_safe_updates = 1;
+START TRANSACTION;
+DELETE FROM detalle_pedido WHERE id_pedido >= 101;
+SELECT ROW_COUNT();
+ROLLBACK;
+```
+
+```text
++-------------+
+| ROW_COUNT() |
++-------------+
+|          56 |
++-------------+
+```
+
+La variable frena los descuidos más comunes, pero no sustituye al `SELECT` previo ni a la transacción de ensayo. Si Workbench te rechaza una sentencia legítima, usa una columna clave en el `WHERE`, agrega `LIMIT` o ejecuta `SET sql_safe_updates = 0;` en tu sesión.
+
+## 5. Transacciones de ensayo
+
+Una *transacción* es un grupo de sentencias que se confirman juntas o se deshacen juntas. Su ciclo tiene tres momentos:
+
+::: {.tabla-scroll}
+
+| Sentencia | Qué hace |
+|---|---|
+| `START TRANSACTION` | Abre la transacción. Desde aquí tus cambios son provisionales y solo los ve tu sesión |
+| `COMMIT` | Cierra la transacción y confirma los cambios: quedan definitivos |
+| `ROLLBACK` | Cierra la transacción y deshace los cambios: la base vuelve al estado del `START TRANSACTION` |
+
+:::
+
+El ensayo consiste en abrir la transacción, hacer el cambio, comprobar el resultado y cerrar con `ROLLBACK`. Este ejemplo borra las dos líneas del pedido 101 y las recupera. Dentro de la transacción el conteo es 0 y después del `ROLLBACK` vuelve a 2:
+
+```sql
+START TRANSACTION;
+DELETE FROM detalle_pedido WHERE id_pedido = 101;
+SELECT COUNT(*) FROM detalle_pedido WHERE id_pedido = 101;
+ROLLBACK;
+SELECT COUNT(*) FROM detalle_pedido WHERE id_pedido = 101;
+```
+
+```text
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
++----------+
+| COUNT(*) |
++----------+
+|        2 |
++----------+
+```
+
+Cuando el resultado es el esperado, cierras con `COMMIT` en lugar de `ROLLBACK`, y desde ese momento no hay vuelta atrás. El siguiente ejemplo usa una tabla de prueba, `prueba_tx`, para no tocar `ventas`. Después del `COMMIT`, el `ROLLBACK` no tiene nada que deshacer y la tabla queda vacía:
+
+```sql
+CREATE TABLE prueba_tx (id INT PRIMARY KEY, nota VARCHAR(20));
+INSERT INTO prueba_tx VALUES (1, 'a'), (2, 'b');
+SELECT COUNT(*) FROM prueba_tx;
+START TRANSACTION;
+DELETE FROM prueba_tx;
+COMMIT;
+ROLLBACK;
+SELECT COUNT(*) FROM prueba_tx;
+```
+
+```text
++----------+
+| COUNT(*) |
++----------+
+|        2 |
++----------+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+```
+
+Fuera de una transacción, el cliente `mysql` trabaja en modo *autocommit*: cada sentencia suelta se confirma sola en cuanto termina. La variable `@@autocommit` vale 1 y por eso un `ROLLBACK` sin `START TRANSACTION` previo no recupera nada. El ejemplo repite el borrado sin abrir la transacción y limpia la tabla de prueba al final:
+
+```sql
+INSERT INTO prueba_tx VALUES (1, 'a'), (2, 'b');
+SELECT @@autocommit;
+DELETE FROM prueba_tx;
+ROLLBACK;
+SELECT COUNT(*) FROM prueba_tx;
+DROP TABLE prueba_tx;
+```
+
+```text
++--------------+
+| @@autocommit |
++--------------+
+|            1 |
++--------------+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+```
+
+La rutina de trabajo con cualquier cambio sobre datos queda así:
+
+1. Escribe un `SELECT` con el `WHERE` que usará el cambio y revisa que las filas sean las esperadas.
+2. Abre la transacción con `START TRANSACTION`.
+3. Ejecuta el `UPDATE` o el `DELETE` con ese mismo `WHERE` y mira `ROW_COUNT()`.
+4. Comprueba el resultado con otro `SELECT`.
+5. Cierra con `COMMIT` si todo coincide y con `ROLLBACK` si algo no cuadra.
+
+Una transacción abierta mantiene bloqueadas las filas que tocó hasta que la cierres, así que no la dejes abierta mientras haces otra cosa. Si la sesión termina sin `COMMIT`, MySQL deshace los cambios.
+
+## 6. ON DELETE: qué pasa con las filas hijas
+
+Una clave foránea liga cada fila hija con una fila padre. Cuando borras la fila padre, la cláusula `ON DELETE` decide qué ocurre con las hijas. Una fila hija cuya clave foránea apunta a un padre que ya no existe se llama fila huérfana, y las tres acciones de la tabla evitan que aparezca.
+
+::: {.tabla-scroll}
+
+| Acción | Qué hace al borrar el padre | Dónde la usa `ventas` |
+|---|---|---|
+| `RESTRICT` | Rechaza el borrado mientras existan hijas | Al borrar clientes, empleados, productos y categorías |
+| `CASCADE` | Borra también las hijas | Al borrar un pedido, sus líneas |
+| `SET NULL` | Deja la clave foránea de las hijas en `NULL` | Al borrar a un jefe, sus subordinados |
+
+:::
+
+Si no escribes `ON DELETE`, MySQL aplica `NO ACTION`, que en InnoDB equivale a `RESTRICT`. `SET NULL` exige que la columna hija admita `NULL`.
+
+### RESTRICT
+
+El cliente 1 tiene cinco pedidos. Intentar borrarlo choca con `fk_pedido_cliente`:
+
+```sql
+SELECT COUNT(*) FROM pedido WHERE id_cliente = 1;
+START TRANSACTION;
+DELETE FROM cliente WHERE id_cliente = 1;
+ROLLBACK;
+```
+
+```text
++----------+
+| COUNT(*) |
++----------+
+|        5 |
++----------+
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`ventas`.`pedido`, CONSTRAINT `fk_pedido_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE RESTRICT)
+```
+
+El mensaje trae lo necesario para corregir: la tabla hija (`ventas`.`pedido`), el nombre de la restricción (`fk_pedido_cliente`), la columna y la acción (`ON DELETE RESTRICT`). El error rechaza solo esa sentencia; la transacción sigue abierta y el `ROLLBACK` la cierra. Para borrar a un cliente con pedidos hay que tratar primero las filas hijas, como en el Ejercicio 4.
+
+### CASCADE
+
+`fk_detalle_pedido` borra las líneas junto con el pedido, porque una línea no tiene sentido sin su pedido. El pedido 101 tiene dos líneas. Después de borrarlo, el conteo de sus líneas da 0, y el `ROLLBACK` las devuelve:
+
+```sql
+SELECT COUNT(*) FROM detalle_pedido WHERE id_pedido = 101;
+START TRANSACTION;
+DELETE FROM pedido WHERE id_pedido = 101;
+SELECT COUNT(*) FROM detalle_pedido WHERE id_pedido = 101;
+ROLLBACK;
+```
+
+```text
++----------+
+| COUNT(*) |
++----------+
+|        2 |
++----------+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+```
+
+Un solo `DELETE` borró dos filas de otra tabla sin mencionarla. Por eso `CASCADE` pide cautela: antes de borrar un padre, cuenta cuántas filas dependen de él, porque el borrado puede alcanzar mucho más de lo que ves en la sentencia.
+
+### SET NULL
+
+`fk_empleado_jefe` apunta a la misma tabla: `id_jefe` guarda el `id_empleado` del jefe. Camila Torres (empleado 3) no tiene pedidos, y los empleados 7 y 8 la tienen como jefa. Al borrarla, sus dos subordinados quedan con `id_jefe` en `NULL`:
+
+```sql
+START TRANSACTION;
+DELETE FROM empleado WHERE id_empleado = 3;
+SELECT id_empleado, nombre, id_jefe FROM empleado;
+ROLLBACK;
+```
+
+```text
++-------------+-------------------+---------+
+| id_empleado | nombre            | id_jefe |
++-------------+-------------------+---------+
+|           1 | Gloria Restrepo   |    NULL |
+|           2 | Andrés Vélez      |       1 |
+|           4 | Felipe Arias      |       2 |
+|           5 | Natalia Ruiz      |       2 |
+|           6 | Sebastián Gómez   |       2 |
+|           7 | Daniela Ocampo    |    NULL |
+|           8 | Mateo Giraldo     |    NULL |
++-------------+-------------------+---------+
+```
+
+El empleado 2, Andrés Vélez, no sirve para esta demostración. Aunque `fk_empleado_jefe` fuera a dejar a sus subordinados sin jefe, el pedido 114 lo referencia con `fk_pedido_empleado`, que es `RESTRICT`, y esa restricción gana:
+
+```sql
+DELETE FROM empleado WHERE id_empleado = 2;
+```
+
+```text
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`ventas`.`pedido`, CONSTRAINT `fk_pedido_empleado` FOREIGN KEY (`id_empleado`) REFERENCES `empleado` (`id_empleado`) ON DELETE RESTRICT)
+```
+
+Cuando una fila es padre en varias claves foráneas, el borrado solo procede si todas las restricciones lo permiten.
+
+## 7. DELETE, TRUNCATE y DROP
+
+Los tres eliminan datos y se confunden con facilidad. `DELETE` borra filas y se puede deshacer. `TRUNCATE TABLE` vacía la tabla de golpe y no admite `WHERE`. `DROP TABLE` elimina la tabla completa, con su estructura.
+
+::: {.tabla-scroll}
+
+| | `DELETE` | `TRUNCATE TABLE` | `DROP TABLE` |
+|---|---|---|---|
+| Qué elimina | Las filas que elige el `WHERE`, o todas | Todas las filas | La tabla, con estructura y filas |
+| Admite `WHERE` | Sí | No | No |
+| Familia | DML | DDL | DDL |
+| `ROLLBACK` | Deshace el borrado dentro de una transacción | No deshace: hace commit implícito | No deshace: hace commit implícito |
+| Contador `AUTO_INCREMENT` | Sigue donde estaba | Vuelve a 1 | Desaparece con la tabla |
+| Si otra tabla la referencia | Depende de `ON DELETE` | Error 1701 | Error 3730 |
+
+:::
+
+DDL (lenguaje de definición de datos) agrupa las sentencias que definen estructura. Estas sentencias hacen un *commit implícito*: confirman la transacción abierta antes de ejecutarse, así que el `ROLLBACK` posterior no tiene nada que deshacer.
+
+### El contador AUTO_INCREMENT
+
+La tabla de prueba `prueba_ids` tiene un `id` autoincremental. Tras vaciarla con `DELETE`, la siguiente fila recibe el 4, porque el contador no retrocede. Tras vaciarla con `TRUNCATE TABLE`, el contador vuelve a 1:
+
+```sql
+CREATE TABLE prueba_ids (id INT AUTO_INCREMENT PRIMARY KEY, nota VARCHAR(20));
+INSERT INTO prueba_ids (nota) VALUES ('a'), ('b'), ('c');
+DELETE FROM prueba_ids;
+INSERT INTO prueba_ids (nota) VALUES ('d');
+SELECT * FROM prueba_ids;
+TRUNCATE TABLE prueba_ids;
+INSERT INTO prueba_ids (nota) VALUES ('e');
+SELECT * FROM prueba_ids;
+```
+
+```text
++----+------+
+| id | nota |
++----+------+
+|  4 | d    |
++----+------+
++----+------+
+| id | nota |
++----+------+
+|  1 | e    |
++----+------+
+```
+
+### TRUNCATE y el ROLLBACK
+
+La tabla ya contiene la fila `e`. Se agregan dos filas más y se compara qué recupera el `ROLLBACK` después de un `DELETE` y después de un `TRUNCATE TABLE`. El primer conteo es previo, el segundo viene del `DELETE` con `ROLLBACK` y el tercero del `TRUNCATE TABLE` con `ROLLBACK`:
+
+```sql
+INSERT INTO prueba_ids (nota) VALUES ('f'), ('g');
+SELECT COUNT(*) FROM prueba_ids;
+START TRANSACTION;
+DELETE FROM prueba_ids;
+ROLLBACK;
+SELECT COUNT(*) FROM prueba_ids;
+START TRANSACTION;
+TRUNCATE TABLE prueba_ids;
+ROLLBACK;
+SELECT COUNT(*) FROM prueba_ids;
+DROP TABLE prueba_ids;
+```
+
+```text
++----------+
+| COUNT(*) |
++----------+
+|        3 |
++----------+
++----------+
+| COUNT(*) |
++----------+
+|        3 |
++----------+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+```
+
+Tras `DELETE` y `ROLLBACK` la tabla conserva sus 3 filas, y tras `TRUNCATE TABLE` y `ROLLBACK` queda vacía. `DROP TABLE` se comporta igual: dentro de una transacción, el `ROLLBACK` no devuelve la tabla.
+
+```sql
+CREATE TABLE prueba_drop (id INT PRIMARY KEY);
+INSERT INTO prueba_drop VALUES (1);
+START TRANSACTION;
+DROP TABLE prueba_drop;
+ROLLBACK;
+SELECT COUNT(*) FROM prueba_drop;
+```
+
+```text
+ERROR 1146 (42S02): Table 'ventas.prueba_drop' doesn't exist
+```
+
+### Cuando otra tabla la referencia
+
+Una tabla que otra tabla referencia con una clave foránea no se vacía con `TRUNCATE TABLE` ni se elimina con `DROP TABLE`. `producto` es referenciada por `detalle_pedido`, así que `TRUNCATE TABLE producto` falla con el error 1701 y la tabla conserva sus 18 filas. `cliente` es referenciada por `pedido`, así que `DROP TABLE cliente` falla con el error 3730:
+
+```sql
+TRUNCATE TABLE producto;
+SELECT COUNT(*) FROM producto;
+DROP TABLE cliente;
+```
+
+```text
+ERROR 1701 (42000): Cannot truncate a table referenced in a foreign key constraint (`ventas`.`detalle_pedido`, CONSTRAINT `fk_detalle_producto`)
++----------+
+| COUNT(*) |
++----------+
+|       18 |
++----------+
+ERROR 3730 (HY000): Cannot drop table 'cliente' referenced by a foreign key constraint 'fk_pedido_cliente' on table 'pedido'.
+```
+
+## Errores frecuentes
+
+::: {.tabla-scroll}
+
+| Síntoma | Causa | Qué hacer |
+|---|---|---|
+| Se cambiaron o borraron todas las filas | `UPDATE` o `DELETE` sin `WHERE` | `SELECT` previo con el mismo `WHERE` y transacción de ensayo |
+| `ROLLBACK` no recupera nada | No había transacción abierta y rige el autocommit | Abrir con `START TRANSACTION` antes de cambiar |
+| `ROLLBACK` no recupera nada | Ya se ejecutó `COMMIT` | Comprobar con un `SELECT` antes del `COMMIT` |
+| `ROLLBACK` no recupera nada | Hubo un `TRUNCATE` o un `DROP`, que hacen commit implícito | Usar `DELETE` con `WHERE` dentro de una transacción |
+| Error 1175 | `sql_safe_updates` está activo y el `WHERE` no usa una clave | Usar una columna clave, agregar `LIMIT` o desactivar la variable en la sesión |
+| Error 1451 | Se borra un padre que tiene hijas con `RESTRICT` | Tratar primero las hijas, o decidir si el negocio pide `CASCADE` |
+| Error 1701 | `TRUNCATE TABLE` sobre una tabla referenciada | Borrar con `DELETE` en el orden que permiten las claves |
+| Un `DELETE` borró más filas de las previstas | `CASCADE` sin contar las hijas | Contar las filas hijas antes de borrar |
+
+:::
+
+## Ejercicios
+
+Resuelve cada ejercicio sobre la base recién cargada. Trabaja dentro de una transacción y deja la base como estaba.
+
+### Ejercicio 1. Subir un 10 % una categoría
+
+Sube un 10 % el precio de los productos de la categoría 4 (Audio) y comprueba el resultado.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 1
+
+Un `SELECT` antes, el `UPDATE` con el mismo `WHERE` y otro `SELECT` después, todo dentro de una transacción:
+
+```sql
+START TRANSACTION;
+SELECT id_producto, nombre, precio
+FROM producto WHERE id_categoria = 4;
+UPDATE producto SET precio = precio * 1.10
+WHERE id_categoria = 4;
+SELECT id_producto, nombre, precio
+FROM producto WHERE id_categoria = 4;
+ROLLBACK;
+```
+
+::: {.tabla-scroll}
+
+| Producto | Antes | Después |
+|---|---:|---:|
+| Audífonos | 200000.00 | 220000.00 |
+| Parlante bluetooth | 180000.00 | 198000.00 |
+| Micrófono USB | 250000.00 | 275000.00 |
+| Barra de sonido | 500000.00 | 550000.00 |
+
+:::
+
+:::
+
+### Ejercicio 2. Borrar al cliente sin pedidos
+
+Valentina (cliente 10) todavía no hizo ningún pedido. Comprueba que es así, bórrala y verifica que quedan 9 clientes.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 2
+
+Primero el conteo de sus pedidos y después el `DELETE` dentro de una transacción:
+
+```sql
+SELECT COUNT(*) FROM pedido WHERE id_cliente = 10;
+START TRANSACTION;
+DELETE FROM cliente WHERE id_cliente = 10;
+SELECT COUNT(*) FROM cliente;
+ROLLBACK;
+```
+
+El primer conteo da 0 y el segundo da 9. Sin pedidos, ninguna clave foránea apunta al cliente 10, así que `RESTRICT` no interviene y no queda ninguna fila huérfana.
+:::
+
+### Ejercicio 3. Predecir tres DELETE
+
+Decide qué hace cada `DELETE`: si funciona, qué borra además de la fila indicada, y si falla, con qué error y por qué. Cada sentencia se evalúa sobre la base recién cargada.
+
+::: {.tabla-scroll}
+
+| Sentencia | Tu predicción |
+|---|---|
+| A. `DELETE FROM pedido WHERE id_pedido = 114;` | <label><input type="checkbox"> Funciona</label> <label><input type="checkbox"> Falla</label> |
+| B. `DELETE FROM empleado WHERE id_empleado = 2;` | <label><input type="checkbox"> Funciona</label> <label><input type="checkbox"> Falla</label> |
+| C. `DELETE FROM producto WHERE id_producto = 8;` | <label><input type="checkbox"> Funciona</label> <label><input type="checkbox"> Falla</label> |
+
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 3
+
+A funciona: borra el pedido 114 y, por `CASCADE`, su única línea; el conteo de líneas del pedido 114 después del borrado es 0. B falla porque el pedido 114 todavía apunta al empleado 2 (`fk_pedido_empleado`). C falla porque el producto 8 aparece en líneas de pedido (`fk_detalle_producto`). Los errores son:
+
+```text
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`ventas`.`pedido`, CONSTRAINT `fk_pedido_empleado` FOREIGN KEY (`id_empleado`) REFERENCES `empleado` (`id_empleado`) ON DELETE RESTRICT)
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`ventas`.`detalle_pedido`, CONSTRAINT `fk_detalle_producto` FOREIGN KEY (`id_producto`) REFERENCES `producto` (`id_producto`) ON DELETE RESTRICT)
+```
+
+Si A se ejecuta antes que B, el pedido 114 ya no existe y B también funciona.
+:::
+
+### Ejercicio 4. Borrar un historial completo
+
+Carlos (cliente 2) pide que borren todo su historial: el cliente, sus pedidos y las líneas de esos pedidos. Comprueba los conteos en cada paso. Recuerda que el orden importa.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 4
+
+Se cuentan sus pedidos y se intenta borrar al cliente primero, para ver la clave foránea en acción. Luego se borran los pedidos, que arrastran sus líneas por `CASCADE`, y al final se borra al cliente:
+
+```sql
+START TRANSACTION;
+SELECT COUNT(*) FROM pedido WHERE id_cliente = 2;
+DELETE FROM cliente WHERE id_cliente = 2;
+DELETE FROM pedido WHERE id_cliente = 2;
+SELECT ROW_COUNT();
+SELECT COUNT(*) FROM detalle_pedido;
+DELETE FROM cliente WHERE id_cliente = 2;
+SELECT COUNT(*) FROM cliente;
+ROLLBACK;
+SELECT COUNT(*) FROM detalle_pedido;
+```
+
+1. Carlos tiene 4 pedidos.
+2. El primer `DELETE FROM cliente` falla por `RESTRICT` con el error 1451.
+3. Borrar sus pedidos cambia 4 filas y, por `CASCADE`, sus líneas: quedan 48 de las 56.
+4. Con los pedidos fuera, el cliente se borra y quedan 9.
+5. Tras el `ROLLBACK`, las 56 líneas vuelven.
+:::
+
+## Referencia rápida de sintaxis
+
+```sql
+UPDATE tabla SET columna = expresion [, columna = expresion] WHERE condicion;
+DELETE FROM tabla WHERE condicion;
+TRUNCATE TABLE tabla;                -- vacía la tabla, reinicia AUTO_INCREMENT, no se deshace
+DROP TABLE tabla;                    -- elimina la tabla completa, no se deshace
+
+START TRANSACTION;                   -- abre la transacción
+COMMIT;                              -- confirma los cambios
+ROLLBACK;                            -- deshace los cambios
+
+SELECT ROW_COUNT();                  -- filas que cambió la última sentencia
+SELECT @@autocommit;                 -- 1 en el cliente mysql
+SET sql_safe_updates = 1;            -- rechaza UPDATE y DELETE sin clave ni LIMIT (error 1175)
+```
+
+## Lista de verificación
+
+Al terminar este tema debes poder:
+
+- [ ] Escribir un `UPDATE` y un `DELETE` con un `WHERE` que alcance solo las filas previstas.
+- [ ] Revisar las filas afectadas con un `SELECT` previo y confirmar el efecto con `ROW_COUNT()`.
+- [ ] Explicar qué cambia o qué borra una sentencia sin `WHERE`.
+- [ ] Decir cuándo `sql_safe_updates` rechaza una sentencia, qué error produce y por qué no sustituye al `SELECT` previo.
+- [ ] Ensayar un cambio con `START TRANSACTION` y `ROLLBACK`, y confirmarlo con `COMMIT`.
+- [ ] Explicar por qué un `ROLLBACK` no recupera nada en autocommit, después de un `COMMIT` o después de un `TRUNCATE`.
+- [ ] Predecir si un `DELETE` funciona, qué arrastra y qué error produce, según `RESTRICT`, `CASCADE` o `SET NULL`.
+- [ ] Distinguir `DELETE`, `TRUNCATE TABLE` y `DROP TABLE` por lo que eliminan, su efecto sobre `AUTO_INCREMENT` y su relación con el `ROLLBACK`.
+
+## Referencias
+
+Manual de referencia de MySQL 8.4 (Oracle):
+
+- [15.2.17 UPDATE Statement](https://dev.mysql.com/doc/refman/8.4/en/update.html)
+- [15.2.2 DELETE Statement](https://dev.mysql.com/doc/refman/8.4/en/delete.html)
+- [15.1.37 TRUNCATE TABLE Statement](https://dev.mysql.com/doc/refman/8.4/en/truncate-table.html)
+- [15.1.20.5 FOREIGN KEY Constraints](https://dev.mysql.com/doc/refman/8.4/en/create-table-foreign-keys.html), sección de acciones referenciales.
+- [15.3.1 START TRANSACTION, COMMIT, and ROLLBACK Statements](https://dev.mysql.com/doc/refman/8.4/en/commit.html)
+- [15.3.3 Statements That Cause an Implicit Commit](https://dev.mysql.com/doc/refman/8.4/en/implicit-commit.html)
+- [17.7.2.2 autocommit, Commit, and Rollback](https://dev.mysql.com/doc/refman/8.4/en/innodb-autocommit-commit-rollback.html)
+- [15.2.13 SELECT Statement](https://dev.mysql.com/doc/refman/8.4/en/select.html)
+- [14.15 Information Functions](https://dev.mysql.com/doc/refman/8.4/en/information-functions.html), donde está `ROW_COUNT()`.
+- [6.5.1.5 Executing SQL Statements from a Text File](https://dev.mysql.com/doc/refman/8.4/en/mysql-batch-commands.html)
+- [6.5.1.6 mysql Client Tips](https://dev.mysql.com/doc/refman/8.4/en/mysql-tips.html), opción `safe-updates`.
+- [Server Error Message Reference](https://dev.mysql.com/doc/mysql-errors/8.4/en/server-error-reference.html)
+
+Manual de MySQL Workbench: [SQL Editor Preferences](https://dev.mysql.com/doc/workbench/en/wb-preferences-sql-editor.html), donde se configura el modo de actualización segura.
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. Las salidas de SQL son capturas reales tomadas en MySQL 8.4.11 durante la preparación del material.
+:::

@@ -1,0 +1,463 @@
+---
+title: "Tema 3. Crear tablas"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+
+::: {.tabla-scroll}
+
+|        |                                  |
+|--------|----------------------------------|
+| Unidad | Unidad 4. Lenguaje SQL           |
+| Tema   | Tema 3. Crear tablas             |
+
+:::
+
+:::
+
+[Abrir la presentación del tema](presentacion-interactiva.html){.btn-curso}
+
+La base `ventas` ya existe y está vacía, y el modelo del caso tiene seis entidades: categoría, cliente, empleado, producto, pedido y detalle de pedido. Este tema responde cómo se convierten esas entidades en tablas que MySQL hace cumplir, y en qué orden se crean para que ninguna sentencia falle por apuntar a una tabla que todavía no existe. Las salidas son de MySQL 8.4.11 y pueden variar según la instalación de quien las ejecute. Los errores aparecen como los imprime una sesión interactiva. El script completo está en [esquema.sql](../sql/esquema.sql).
+
+## Claves foráneas: una columna que apunta a otra tabla
+
+Una clave foránea es una columna cuyos valores tienen que existir en otra tabla. En `ventas`, `producto.id_categoria` guarda el número de una categoría, y MySQL rechaza cualquier producto cuyo número no corresponda a una fila de `categoria`. La tabla que contiene la clave foránea es la tabla hija y la tabla a la que apunta es la tabla padre. La garantía de que ninguna clave foránea apunta a una fila inexistente se llama *integridad referencial*.
+
+```sql
+CONSTRAINT fk_producto_categoria          -- nombre de la regla; sale en los mensajes de error
+    FOREIGN KEY (id_categoria)            -- columna de la tabla hija que apunta
+    REFERENCES categoria (id_categoria)   -- tabla y columna de la tabla padre
+    ON DELETE RESTRICT                    -- qué pasa con las hijas si se borra el padre
+```
+
+MySQL crea un índice sobre la columna de la clave foránea si no existe, y por eso `SHOW CREATE TABLE` muestra más adelante líneas `KEY` que el script no escribió. Un error frecuente es declarar la columna hija con un tipo distinto al de la columna referenciada.
+
+### ON DELETE: qué pasa con las filas hijas
+
+La cláusula `ON DELETE` decide qué hace MySQL con las filas hijas cuando se borra la fila padre. Con `RESTRICT` rechaza el borrado mientras existan hijas, con `CASCADE` borra también las hijas y con `SET NULL` deja `NULL` en su clave foránea, lo que exige que la columna admita `NULL`. Si omites la cláusula, MySQL aplica `NO ACTION`, que en InnoDB equivale a `RESTRICT`. El caso `ventas` usa seis claves foráneas con tres acciones:
+
+::: {.tabla-scroll}
+
+| Clave foránea | Acción | Razón |
+|---|---|---|
+| `pedido.id_cliente` | `RESTRICT` | El historial de ventas de un cliente no se pierde |
+| `pedido.id_empleado` | `RESTRICT` | El historial de un vendedor no se pierde |
+| `producto.id_categoria` | `RESTRICT` | No se borra una categoría que tiene productos |
+| `detalle_pedido.id_producto` | `RESTRICT` | Un producto vendido no desaparece |
+| `detalle_pedido.id_pedido` | `CASCADE` | Las líneas no existen sin su pedido |
+| `empleado.id_jefe` | `SET NULL` | Si el jefe sale, su equipo queda sin jefe |
+
+:::
+
+Un error frecuente es usar `CASCADE` por comodidad, porque un solo `DELETE` puede borrar mucho más de lo previsto.
+
+### ON UPDATE: si cambia la clave del padre
+
+`ON UPDATE` actúa cuando cambia el valor de la clave que las hijas referencian. En un ensayo con las tablas descartables `ensayo_padre` (con la fila 1) y `ensayo_hijo` (con una fila que apunta al 1), `UPDATE ensayo_padre SET id = 10 WHERE id = 1;` falla si la clave foránea no tiene la cláusula. Como nadie le puso nombre a la restricción, MySQL la llamó `ensayo_hijo_ibfk_1`:
+
+```text
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`ventas`.`ensayo_hijo`, CONSTRAINT `ensayo_hijo_ibfk_1` FOREIGN KEY (`id_padre`) REFERENCES `ensayo_padre` (`id`))
+```
+
+Si la clave foránea de `ensayo_hijo` termina en `ON UPDATE CASCADE`, el mismo `UPDATE` funciona y la hija sigue a la clave del padre: `SELECT * FROM ensayo_hijo` devuelve la fila `(1, 10)`.
+
+## Orden de creación
+
+Una tabla depende de otra cuando tiene una clave foránea que la referencia, y se crea después de todas las que referencia, igual que la cimentación de un edificio se construye antes que los pisos. Las seis tablas de `ventas` se ordenan por niveles, y dentro de un nivel el orden da igual:
+
+::: {.tabla-scroll}
+
+| Nivel | Tabla | Referencia a |
+|---|---|---|
+| 0 | `categoria`, `cliente` | Ninguna |
+| 0 | `empleado` | Sí misma (`id_jefe`) |
+| 1 | `producto` | `categoria` |
+| 1 | `pedido` | `cliente` y `empleado` |
+| 2 | `detalle_pedido` | `pedido` y `producto` |
+
+:::
+
+Si creas `pedido`, con su clave foránea hacia `cliente`, en una base vacía, MySQL no encuentra `cliente` y rechaza la sentencia completa:
+
+```text
+ERROR 1824 (HY000): Failed to open the referenced table 'cliente'
+```
+
+Una prueba en una base aparte creó las seis tablas en orden alfabético, con `IF NOT EXISTS`. La primera en fallar fue `detalle_pedido`, con `ERROR 1824 (HY000): Failed to open the referenced table 'pedido'`, porque `pedido` todavía no existía. Las demás sentencias sí se ejecutaron, así que `SHOW TABLES` listó cinco tablas y faltó `detalle_pedido`.
+
+## Primera tabla: categoria
+
+`categoria` no depende de ninguna otra tabla, así que se crea primero:
+
+```sql
+CREATE TABLE IF NOT EXISTS categoria (
+    id_categoria  INT          NOT NULL AUTO_INCREMENT,
+    nombre        VARCHAR(100) NOT NULL,
+    PRIMARY KEY (id_categoria),
+    UNIQUE (nombre)
+) ENGINE = InnoDB;
+```
+
+- **`IF NOT EXISTS`.** La sentencia no falla si la tabla ya existe.
+- **`AUTO_INCREMENT`.** MySQL entrega el identificador con un contador por tabla que empieza en 1 y sube de uno en uno. Solo una columna por tabla puede tenerlo y debe estar indexada. Si un `INSERT` escribe el id a mano, el contador sigue desde el mayor valor: tras cargar las cinco categorías del caso, el siguiente id es el 6.
+- **`PRIMARY KEY`.** Identifica cada fila: su valor no se repite ni queda vacío.
+- **`UNIQUE`.** Dos categorías no comparten nombre. Los `NULL` no cuentan como iguales, así que una columna `UNIQUE` que admite `NULL` acepta varios.
+- **`ENGINE = InnoDB`.** Elige el motor de almacenamiento, el componente de MySQL que guarda la tabla.
+
+`DESCRIBE categoria` lista una fila por columna con su tipo, si admite `NULL`, su clave y su valor por defecto. `id_categoria` sale como `int`, `NO`, `PRI` y `auto_increment`, y `nombre` como `varchar(100)`, `NO` y `UNI`. En la columna `Key`, `PRI` es la clave primaria, `UNI` un `UNIQUE` y `MUL` un índice que admite valores repetidos, como el de una clave foránea.
+
+`IF NOT EXISTS` solo pregunta si hay una tabla con ese nombre y no compara su estructura. Con `categoria` ya creada, `CREATE TABLE IF NOT EXISTS categoria (id INT);` no da error ni cambia la tabla, y `DESCRIBE` sigue mostrando el resultado de arriba. Lo único que queda es una nota, que `SHOW WARNINGS` muestra como `Note 1050 Table 'categoria' already exists`. Un script con `IF NOT EXISTS` en cada sentencia es idempotente, porque se puede ejecutar varias veces y deja el mismo resultado. Un error frecuente es creer que `IF NOT EXISTS` actualiza la tabla.
+
+## Segunda tabla: cliente y el DEFAULT con paréntesis
+
+```sql
+CREATE TABLE IF NOT EXISTS cliente (
+    id_cliente      INT          NOT NULL AUTO_INCREMENT,
+    nombre          VARCHAR(100) NOT NULL,
+    correo          VARCHAR(150),
+    ciudad          VARCHAR(80),
+    fecha_registro  DATE         NOT NULL DEFAULT (CURRENT_DATE),
+    PRIMARY KEY (id_cliente),
+    UNIQUE (correo)
+) ENGINE = InnoDB;
+```
+
+`DEFAULT` es el valor que toma una columna cuando el `INSERT` no le da uno. `correo` y `ciudad` admiten `NULL`: en los datos del caso, dos de los diez clientes no tienen correo, y `UNIQUE (correo)` acepta a los dos. Una expresión como valor por defecto va entre paréntesis. Si escribes la línea de `fecha_registro` como `DATE NOT NULL DEFAULT CURRENT_DATE`, MySQL no entiende la sentencia:
+
+```text
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'CURRENT_DATE,
+    PRIMARY KEY (id_cliente),
+    UNIQUE (correo)
+) ENGINE = InnoD' at line 6
+```
+
+El número 1064 es el código de MySQL, `42000` el SQLSTATE y el resto el mensaje. MySQL señala dónde dejó de entender, que es `CURRENT_DATE`, y el `at line 6` final forma parte del mensaje. Un error frecuente es leer solo el primer renglón del error, cuando la pista está en el trozo que sigue a `near`.
+
+## Tercera tabla: empleado se apunta a sí misma
+
+Una clave foránea puede apuntar a la clave primaria de la misma tabla, lo que se llama autorreferencia. En `empleado`, `id_jefe` guarda el `id_empleado` del jefe. La gerente no tiene jefe, así que su `id_jefe` es `NULL`, y por eso la columna no lleva `NOT NULL`, que es lo que `SET NULL` exige:
+
+```sql
+CREATE TABLE IF NOT EXISTS empleado (
+    id_empleado    INT           NOT NULL AUTO_INCREMENT,
+    nombre         VARCHAR(100)  NOT NULL,
+    cargo          VARCHAR(60)   NOT NULL,
+    salario        DECIMAL(10,2) NOT NULL,
+    fecha_ingreso  DATE          NOT NULL,
+    id_jefe        INT,
+    PRIMARY KEY (id_empleado),
+    CONSTRAINT fk_empleado_jefe
+        FOREIGN KEY (id_jefe) REFERENCES empleado (id_empleado)
+        ON DELETE SET NULL
+) ENGINE = InnoDB;
+```
+
+## Cuarta tabla: producto y CHECK
+
+`CHECK` es una restricción con una condición que toda fila debe cumplir. La tabla `producto` completa se escribe en el Ejercicio 1, con `precio DECIMAL(10,2) NOT NULL`, `stock INT NOT NULL DEFAULT 0` y dos reglas, `CONSTRAINT chk_producto_precio CHECK (precio >= 0)` y `CONSTRAINT chk_producto_stock CHECK (stock >= 0)`. Si una fila no cumple, el error 3819 nombra la restricción: `Check constraint 'chk_producto_precio' is violated.` Un error frecuente es suponer que `CHECK` rechaza los `NULL`. Solo rechaza las filas donde la condición es falsa, y una columna con `CHECK (v >= 0)` acepta `NULL`.
+
+## Quinta tabla: pedido y ENUM
+
+`ENUM` es un tipo de columna que solo acepta uno de los valores de una lista fija. El orden de la lista fija la posición de cada valor, y `DEFAULT 'pendiente'` llena el estado cuando el `INSERT` no lo escribe:
+
+```sql
+CREATE TABLE IF NOT EXISTS pedido (
+    id_pedido    INT  NOT NULL AUTO_INCREMENT,
+    fecha        DATE NOT NULL,
+    estado       ENUM('pendiente', 'pagado', 'enviado', 'cancelado')
+                 NOT NULL DEFAULT 'pendiente',
+    id_cliente   INT  NOT NULL,
+    id_empleado  INT  NOT NULL,
+    PRIMARY KEY (id_pedido),
+    CONSTRAINT fk_pedido_cliente
+        FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente)
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_pedido_empleado
+        FOREIGN KEY (id_empleado) REFERENCES empleado (id_empleado)
+        ON DELETE RESTRICT
+) ENGINE = InnoDB;
+```
+
+Un error frecuente es agregar un estado nuevo sin cambiar el `ENUM`, porque entonces el `INSERT` falla.
+
+## Sexta tabla: detalle_pedido y la clave compuesta
+
+Un pedido lleva varios productos y un producto aparece en varios pedidos. Esa relación muchos a muchos se guarda en una tabla intermedia con dos claves foráneas. Su clave primaria usa las dos columnas a la vez, y es la combinación la que no se repite:
+
+```sql
+CREATE TABLE IF NOT EXISTS detalle_pedido (
+    id_pedido        INT           NOT NULL,
+    id_producto      INT           NOT NULL,
+    cantidad         INT           NOT NULL,
+    precio_unitario  DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (id_pedido, id_producto),
+    CONSTRAINT chk_detalle_cantidad CHECK (cantidad > 0),
+    CONSTRAINT chk_detalle_precio   CHECK (precio_unitario >= 0),
+    CONSTRAINT fk_detalle_pedido
+        FOREIGN KEY (id_pedido) REFERENCES pedido (id_pedido)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_detalle_producto
+        FOREIGN KEY (id_producto) REFERENCES producto (id_producto)
+        ON DELETE RESTRICT
+) ENGINE = InnoDB;
+```
+
+Un error frecuente es poner la clave primaria solo en `id_pedido`, porque entonces un pedido no podría tener dos productos. Esta prueba corre dentro de una transacción que termina en `ROLLBACK` y no deja datos. Antes de las sentencias que se muestran, insertó una categoría, dos productos (el 1 y el 2), un cliente, una empleada y el pedido 101:
+
+```sql
+START TRANSACTION;
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES (101, 1, 2, 80000);
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES (101, 1, 1, 80000);
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES (101, 2, 0, 900000);
+DELETE FROM producto WHERE id_producto = 1;
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES (101, 2, 1, 900000);
+SELECT COUNT(*) FROM detalle_pedido WHERE id_pedido = 101;
+DELETE FROM pedido WHERE id_pedido = 101;
+SELECT COUNT(*) FROM detalle_pedido WHERE id_pedido = 101;
+ROLLBACK;
+```
+
+```text
+ERROR 1062 (23000): Duplicate entry '101-1' for key 'detalle_pedido.PRIMARY'
+ERROR 3819 (HY000): Check constraint 'chk_detalle_cantidad' is violated.
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`ventas`.`detalle_pedido`, CONSTRAINT `fk_detalle_producto` FOREIGN KEY (`id_producto`) REFERENCES `producto` (`id_producto`) ON DELETE RESTRICT)
+```
+
+La segunda línea con el par (101, 1) repite la clave compuesta y da el 1062. La cantidad 0 viola `chk_detalle_cantidad`. Borrar el producto 1, que ya está en una línea, lo bloquea `RESTRICT` con el 1451. Al borrar el pedido 101 caen sus dos líneas por `CASCADE`: el primer `COUNT(*)` devuelve 2 y el segundo 0.
+
+## El motor InnoDB
+
+Las claves foráneas solo se cumplen si la tabla usa un motor que las implementa. En MySQL 8.4 el motor por defecto es InnoDB, como confirma `SELECT @@default_storage_engine;`, y el script lo escribe de todos modos para dejarlo explícito. Con otro motor, como MyISAM, MySQL acepta la declaración de la clave foránea y no la hace cumplir. Repetido el ensayo del padre y el hijo con `ENGINE = MyISAM` en las dos tablas, `INSERT INTO ensayo_hijo VALUES (1, 99);` guarda la fila hija (1, 99), que apunta a un padre inexistente.
+
+Con las dos tablas en InnoDB, el mismo `INSERT` falla:
+
+```text
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`ventas`.`ensayo_hijo`, CONSTRAINT `ensayo_hijo_ibfk_1` FOREIGN KEY (`id_padre`) REFERENCES `ensayo_padre` (`id`))
+```
+
+Un error frecuente es crear tablas con otro motor y creer que las claves foráneas protegen los datos.
+
+## Inspeccionar las tablas
+
+`SHOW` es la familia de sentencias que pide a MySQL información sobre su propio estado. `SHOW TABLES` comprueba que el script creó las seis tablas: `categoria`, `cliente`, `detalle_pedido`, `empleado`, `pedido` y `producto`, en orden alfabético y bajo el encabezado `Tables_in_ventas`. `DESCRIBE producto;` muestra las columnas con el mismo formato que `DESCRIBE categoria`, y `id_categoria` sale con `MUL` porque la clave foránea creó un índice que admite repetidos.
+
+`SHOW CREATE TABLE pedido\G` devuelve la sentencia con la que MySQL guarda la tabla. El `\G` muestra cada fila en vertical. Estas son sus últimas líneas, donde las dos líneas `KEY` son los índices que MySQL creó para las claves foráneas:
+
+```text
+  PRIMARY KEY (`id_pedido`),
+  KEY `fk_pedido_cliente` (`id_cliente`),
+  KEY `fk_pedido_empleado` (`id_empleado`),
+  CONSTRAINT `fk_pedido_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_pedido_empleado` FOREIGN KEY (`id_empleado`) REFERENCES `empleado` (`id_empleado`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+```
+
+## ALTER TABLE: cambiar una tabla que ya existe
+
+`ALTER TABLE` es una sentencia DDL, de las que definen la estructura, igual que `CREATE` y `DROP`. Las sentencias DML (`INSERT`, `UPDATE`, `DELETE`) trabajan con las filas. Varias operaciones de `ALTER TABLE` se pueden separar con comas en una sola sentencia. `ALTER TABLE cliente ADD COLUMN telefono VARCHAR(20);` agrega una columna al final, y `DESCRIBE cliente` muestra además cómo guarda MySQL el `DEFAULT (CURRENT_DATE)`, como `curdate()`:
+
+```text
++----------------+--------------+------+-----+-----------+-------------------+
+| Field          | Type         | Null | Key | Default   | Extra             |
++----------------+--------------+------+-----+-----------+-------------------+
+| id_cliente     | int          | NO   | PRI | NULL      | auto_increment    |
+| nombre         | varchar(100) | NO   |     | NULL      |                   |
+| correo         | varchar(150) | YES  | UNI | NULL      |                   |
+| ciudad         | varchar(80)  | YES  |     | NULL      |                   |
+| fecha_registro | date         | NO   |     | curdate() | DEFAULT_GENERATED |
+| telefono       | varchar(20)  | YES  |     | NULL      |                   |
++----------------+--------------+------+-----+-----------+-------------------+
+```
+
+`MODIFY COLUMN` cambia la definición completa de una columna, así que repite el tipo y todo lo que la columna debe conservar. Después de `ALTER TABLE cliente MODIFY COLUMN telefono VARCHAR(30);`, `SHOW COLUMNS FROM cliente LIKE 'telefono'` lista las columnas igual que `DESCRIBE`, y el `LIKE` deja solo la que tiene ese nombre: una fila con `telefono`, `varchar(30)`, `YES` en `Null` y `NULL` como valor por defecto.
+
+`ADD CONSTRAINT` agrega una regla a una tabla ya creada. Después de agregarla, un empleado con salario 0 deja de caber:
+
+```sql
+ALTER TABLE empleado
+    ADD CONSTRAINT chk_empleado_salario CHECK (salario > 0);
+INSERT INTO empleado (nombre, cargo, salario, fecha_ingreso)
+VALUES ('Prueba', 'Vendedor', 0, '2026-01-01');
+```
+
+```text
+ERROR 3819 (HY000): Check constraint 'chk_empleado_salario' is violated.
+```
+
+`ALTER TABLE cliente DROP COLUMN telefono;` borra la columna y los datos que tenía, y `ALTER TABLE empleado DROP CONSTRAINT chk_empleado_salario;` quita solo la regla. Un error frecuente es ejecutar `DROP COLUMN` sin una copia, porque esos datos no se recuperan. Otro es pasar a `NOT NULL` una columna que ya tiene `NULL` en alguna fila, que falla con `ERROR 1138 (22004): Invalid use of NULL value`.
+
+## DROP TABLE: borrar en orden inverso
+
+Mientras una clave foránea apunte a una tabla, MySQL no la borra. `DROP TABLE cliente;` con `pedido` en pie responde:
+
+```text
+ERROR 3730 (HY000): Cannot drop table 'cliente' referenced by a foreign key constraint 'fk_pedido_cliente' on table 'pedido'.
+```
+
+Primero caen las tablas que apuntan a otras y al final las referenciadas, que es el orden inverso al de creación. Con una sentencia `DROP TABLE IF EXISTS` por tabla, en el orden `detalle_pedido`, `pedido`, `producto`, `empleado`, `cliente` y `categoria`, no aparece ningún error y `SHOW TABLES` ya no devuelve filas.
+
+`IF EXISTS` convierte el error de una tabla inexistente en un aviso, que `SHOW WARNINGS` muestra. Un error frecuente es usar `DROP TABLE` sin `IF EXISTS` en un script que se repite, porque la segunda vez falla. Con `DROP TABLE IF EXISTS tabla_que_no_existe;` el aviso es `Note 1051 Unknown table 'ventas.tabla_que_no_existe'`.
+
+## Ejercicios
+
+### Ejercicio 1. Escribir producto
+
+La tabla `producto` guarda un id que reparte el motor, un nombre obligatorio de hasta 100 caracteres, un precio decimal de 10 dígitos con 2 decimales, obligatorio y no negativo, un stock entero, obligatorio, no negativo y con valor inicial 0, y una categoría opcional. Si se borra una categoría que tiene productos, la base lo impide. Escribe la sentencia completa con `IF NOT EXISTS`.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 1
+
+```sql
+CREATE TABLE IF NOT EXISTS producto (
+    id_producto   INT           NOT NULL AUTO_INCREMENT,
+    nombre        VARCHAR(100)  NOT NULL,
+    precio        DECIMAL(10,2) NOT NULL,
+    stock         INT           NOT NULL DEFAULT 0,
+    id_categoria  INT,
+    PRIMARY KEY (id_producto),
+    CONSTRAINT chk_producto_precio CHECK (precio >= 0),
+    CONSTRAINT chk_producto_stock  CHECK (stock >= 0),
+    CONSTRAINT fk_producto_categoria
+        FOREIGN KEY (id_categoria) REFERENCES categoria (id_categoria)
+        ON DELETE RESTRICT
+) ENGINE = InnoDB;
+```
+
+Dos `CHECK`, una clave foránea con `RESTRICT` y el motor InnoDB. `id_categoria` no lleva `NOT NULL` porque la categoría es opcional.
+:::
+
+### Ejercicio 2. Depurar tres creaciones
+
+Este script tiene un error por sentencia y las seis tablas ya existen. Di el error de cada sentencia, en orden, y corrígela.
+
+```sql
+CREATE TABLE vendedor (
+    id_vendedor    INT  NOT NULL AUTO_INCREMENT,
+    fecha_ingreso  DATE NOT NULL DEFAULT CURRENT_DATE,
+    PRIMARY KEY (id_vendedor)
+) ENGINE = InnoDB;
+CREATE TABLE devolucion (
+    id_devolucion  INT NOT NULL AUTO_INCREMENT,  id_pedido  INT NOT NULL,
+    PRIMARY KEY (id_devolucion),
+    FOREIGN KEY (id_pedido) REFERENCES pedidos (id_pedido)
+) ENGINE = InnoDB;
+CREATE TABLE etiqueta (
+    id_etiqueta  INT NOT NULL AUTO_INCREMENT,  texto  VARCHAR(40) NOT NULL
+) ENGINE = InnoDB;
+```
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 2
+
+```text
+ERROR 1824 (HY000): Failed to open the referenced table 'pedidos'
+ERROR 1075 (42000): Incorrect table definition; there can be only one auto column and it must be defined as a key
+```
+
+En `vendedor` el error es el 1064, porque `DEFAULT CURRENT_DATE` va sin paréntesis, y se corrige a `DEFAULT (CURRENT_DATE)`. En `devolucion`, la tabla `pedidos` no existe y se corrige a `REFERENCES pedido (id_pedido)`. En `etiqueta`, una columna `AUTO_INCREMENT` debe ser clave y se agrega `PRIMARY KEY (id_etiqueta)`.
+:::
+
+### Ejercicio 3. Leer detalle_pedido
+
+Con las claves y reglas de `detalle_pedido`, responde qué combinación de columnas no se repite, qué pasa con las líneas si se borra su pedido, qué pasa si se borra un producto que aparece en una línea y qué error da una línea con cantidad 0.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 3
+
+La pareja (`id_pedido`, `id_producto`) no se repite, y repetirla da el error 1062 (`Duplicate entry '101-1' for key 'detalle_pedido.PRIMARY'`). Con `ON DELETE CASCADE`, borrar el pedido borra sus líneas. Con `ON DELETE RESTRICT`, borrar un producto vendido se rechaza con el error 1451. La línea con cantidad 0 viola `chk_detalle_cantidad` y da el error 3819.
+:::
+
+### Ejercicio 4. Pasar la Unidad 3 al esquema nuevo
+
+La Unidad 3 dejó `producto` en SQL estándar, con `id_producto INTEGER PRIMARY KEY`, `precio DECIMAL(10,2)` y `stock INTEGER` sin `NOT NULL` ni `DEFAULT`, y una clave foránea hacia `categoria`. Con una sola sentencia `ALTER TABLE`, haz que el id lo reparta el motor, que `precio` y `stock` sean obligatorios, que `stock` valga 0 por defecto y que ninguno de los dos sea negativo. Las filas que ya tiene la tabla no traen `NULL` en `precio` ni en `stock`.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 4
+
+```sql
+ALTER TABLE producto
+    MODIFY COLUMN id_producto INT NOT NULL AUTO_INCREMENT,
+    MODIFY COLUMN precio DECIMAL(10,2) NOT NULL,
+    MODIFY COLUMN stock INT NOT NULL DEFAULT 0,
+    ADD CONSTRAINT chk_producto_precio CHECK (precio >= 0),
+    ADD CONSTRAINT chk_producto_stock CHECK (stock >= 0);
+```
+
+Después del `ALTER`, `DESCRIBE producto` da el mismo resultado que en la sección de inspección: `id_producto` con `auto_increment`, `precio` y `stock` con `NO` en `Null`, y `0` como `Default` de `stock`. Si una fila tuviera `NULL` en `precio` o en `stock`, el cambio a `NOT NULL` fallaría con el error 1138.
+:::
+
+### Ejercicio 5. El esquema completo, dos veces
+
+Escribe `esquema.sql` completo. Debe crear la base si no existe, seleccionarla y crear las seis tablas en un orden que funcione, y poder ejecutarse dos veces seguidas sin error. Justifica por qué la segunda ejecución no falla.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 5
+
+Cada sentencia lleva su `IF NOT EXISTS` y las tablas siguen el orden de los niveles de dependencia. El script empieza así y continúa con los `CREATE TABLE IF NOT EXISTS` de `categoria`, `cliente`, `empleado`, `producto`, `pedido` y `detalle_pedido`, con las definiciones de las secciones anteriores:
+
+```sql
+CREATE DATABASE IF NOT EXISTS ventas
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_0900_ai_ci;
+USE ventas;
+```
+
+Ejecutado dos veces seguidas, el script no da ningún error y `SHOW TABLES` sigue mostrando las seis tablas. La segunda ejecución no falla porque cada `CREATE TABLE IF NOT EXISTS` convierte el error 1050 en una nota, y `CREATE DATABASE IF NOT EXISTS` hace lo mismo con la base.
+:::
+
+## Referencia rápida de sintaxis
+
+```sql
+CREATE TABLE IF NOT EXISTS nombre_tabla (
+    columna  TIPO  [NOT NULL] [DEFAULT valor | DEFAULT (expresion)] [AUTO_INCREMENT],
+    PRIMARY KEY (columna [, columna]),
+    UNIQUE (columna),
+    CONSTRAINT chk_nombre CHECK (condicion),
+    CONSTRAINT fk_nombre FOREIGN KEY (columna) REFERENCES tabla_padre (columna)
+        [ON DELETE RESTRICT | CASCADE | SET NULL] [ON UPDATE RESTRICT | CASCADE | SET NULL]
+) ENGINE = InnoDB;
+ALTER TABLE t ADD COLUMN c TIPO;  ALTER TABLE t DROP COLUMN c;
+ALTER TABLE t MODIFY COLUMN c TIPO [NOT NULL] [DEFAULT valor];
+ALTER TABLE t ADD CONSTRAINT nombre CHECK (condicion);  ALTER TABLE t DROP CONSTRAINT nombre;
+DROP TABLE [IF EXISTS] t;
+SHOW TABLES;  DESCRIBE t;  SHOW CREATE TABLE t\G
+```
+
+## Lista de verificación
+
+Al terminar el tema puedes:
+
+- [ ] Nombrar la tabla padre y la tabla hija de una clave foránea y escribir la cláusula `FOREIGN KEY ... REFERENCES`
+- [ ] Ordenar las seis tablas de `ventas` por niveles de dependencia y explicar el error 1824
+- [ ] Escribir un `CREATE TABLE IF NOT EXISTS` con `AUTO_INCREMENT`, `PRIMARY KEY`, `UNIQUE` y `ENGINE = InnoDB`
+- [ ] Escribir un `DEFAULT (CURRENT_DATE)` con paréntesis y reconocer el error 1064 cuando faltan
+- [ ] Elegir entre `RESTRICT`, `CASCADE` y `SET NULL` para una clave foránea y justificar la elección
+- [ ] Declarar una clave primaria compuesta y una restricción `CHECK`
+- [ ] Verificar una tabla con `SHOW TABLES`, `DESCRIBE` y `SHOW CREATE TABLE`
+- [ ] Cambiar una tabla con `ALTER TABLE` y borrar las tablas en orden inverso
+
+## Referencias
+
+- [15.1.20 CREATE TABLE Statement](https://dev.mysql.com/doc/refman/8.4/en/create-table.html)
+- [15.1.20.5 FOREIGN KEY Constraints](https://dev.mysql.com/doc/refman/8.4/en/create-table-foreign-keys.html)
+- [15.1.20.6 CHECK Constraints](https://dev.mysql.com/doc/refman/8.4/en/create-table-check-constraints.html)
+- [13.6 Data Type Default Values](https://dev.mysql.com/doc/refman/8.4/en/data-type-defaults.html)
+- [13.3.5 The ENUM Type](https://dev.mysql.com/doc/refman/8.4/en/enum.html)
+- [5.6.9 Using AUTO_INCREMENT](https://dev.mysql.com/doc/refman/8.4/en/example-auto-increment.html)
+- [15.1.9 ALTER TABLE Statement](https://dev.mysql.com/doc/refman/8.4/en/alter-table.html)
+- [15.1.32 DROP TABLE Statement](https://dev.mysql.com/doc/refman/8.4/en/drop-table.html)
+- [17.1 Introduction to InnoDB](https://dev.mysql.com/doc/refman/8.4/en/innodb-introduction.html)
+- [15.8.1 DESCRIBE Statement](https://dev.mysql.com/doc/refman/8.4/en/describe.html)
+- [15.7.7.39 SHOW TABLES Statement](https://dev.mysql.com/doc/refman/8.4/en/show-tables.html)
+- [15.7.7.11 SHOW CREATE TABLE Statement](https://dev.mysql.com/doc/refman/8.4/en/show-create-table.html)
+- [15.7.7.6 SHOW COLUMNS Statement](https://dev.mysql.com/doc/refman/8.4/en/show-columns.html)
+- [Server Error Message Reference](https://dev.mysql.com/doc/mysql-errors/8.4/en/server-error-reference.html)
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado, y las salidas de SQL se ejecutaron en MySQL 8.4.11.
+:::

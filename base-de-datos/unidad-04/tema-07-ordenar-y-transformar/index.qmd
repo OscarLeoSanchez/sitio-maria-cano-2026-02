@@ -1,0 +1,564 @@
+---
+title: "Tema 7. Ordenar y transformar"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+
+::: {.tabla-scroll}
+
+|        |                                           |
+|--------|-------------------------------------------|
+| Unidad | Unidad 4. Lenguaje SQL                    |
+| Tema   | Tema 7. Ordenar y transformar             |
+
+:::
+
+:::
+
+[Abrir la presentación del tema](presentacion-interactiva.html){.btn-curso}
+
+Un `SELECT` con su `WHERE` devuelve las filas que cumplen el filtro, pero no dice en qué orden llegan, no limita cuántas llegan y las muestra tal como están guardadas. Este tema responde a tres preguntas: cómo se ordena y se corta un resultado, en qué orden evalúa MySQL las cláusulas de una consulta, y cómo se calculan y se deciden valores dentro de la propia consulta con funciones, `IFNULL`, `COALESCE` y `CASE`. La presentación se proyecta en clase y esta guía la lees después, con la explicación completa y los ejercicios resueltos.
+
+Todos los ejemplos usan el caso `ventas`, que se carga con [esquema.sql](../sql/esquema.sql) y [datos.sql](../sql/datos.sql). Las salidas son capturas reales de MySQL 8.4.11 en un contenedor Docker. Estas son las tablas que se consultan:
+
+::: {.tabla-scroll}
+
+| Tabla | Columnas |
+|---|---|
+| `producto` | `id_producto` int, `nombre` varchar(100), `precio` decimal(10,2), `stock` int, `id_categoria` int |
+| `cliente` | `id_cliente` int, `nombre` varchar(100), `correo` varchar(150), `ciudad` varchar(80), `fecha_registro` date |
+| `pedido` | `id_pedido` int, `fecha` date, `estado` enum('pendiente','pagado','enviado','cancelado'), `id_cliente` int, `id_empleado` int |
+| `empleado` | `id_empleado`, `nombre`, `id_jefe`, entre otras |
+
+:::
+
+## Sin ORDER BY no hay orden
+
+Una tabla es un conjunto de filas y un conjunto no tiene primera ni última fila. Cuando una consulta no pide orden, MySQL devuelve las filas en el que le resulte más cómodo, y ese orden puede cambiar con los datos, con los índices o con la versión del servidor. Las cinco categorías se insertaron con los ids 1 a 5, pero esta consulta las devuelve en el orden alfabético del nombre.
+
+```sql
+SELECT * FROM categoria;
+```
+
+```text
++--------------+--------------+
+| id_categoria | nombre       |
++--------------+--------------+
+|            5 | Accesorios   |
+|            4 | Audio        |
+|            3 | Fotografía   |
+|            2 | Pantallas    |
+|            1 | Periféricos  |
++--------------+--------------+
+```
+
+La cláusula `ORDER BY` ordena las filas del resultado y es la única forma de garantizar un orden. Con `SELECT * FROM categoria ORDER BY id_categoria;` las filas salen del 1 (Periféricos) al 5 (Accesorios).
+
+## ORDER BY con una o varias columnas
+
+`ORDER BY` va después de `WHERE` y antes de `LIMIT`. Esta es la sintaxis que cubre todo el tema.
+
+```sql
+SELECT columnas
+FROM tabla
+[WHERE condicion]
+ORDER BY columna1 [ASC | DESC], columna2 [ASC | DESC]
+[LIMIT cantidad [OFFSET saltar]];
+```
+
+`ASC` ordena de menor a mayor y es el valor por defecto, así que se puede omitir. `DESC` ordena de mayor a menor. Cada columna lleva su propio `ASC` o `DESC`. Con varias columnas, el segundo criterio solo actúa entre las filas que empatan en el primero. Los textos se ordenan según la colación del servidor, `utf8mb4_0900_ai_ci`, que al comparar trata `a` y `á` como iguales.
+
+Esta consulta agrupa los productos por categoría y, dentro de cada una, muestra primero los más caros. En la categoría 1 el orden es Webcam HD (180000), Teclado, Mouse gamer, Mouse y Hub USB (60000).
+
+```sql
+SELECT id_producto, nombre, id_categoria, precio
+FROM producto
+ORDER BY id_categoria, precio DESC;
+```
+
+## Dónde quedan los NULL
+
+Diego y Valentina no tienen ciudad, así que su valor es `NULL`, un dato que falta. Para `ORDER BY`, `NULL` es el menor de todos los valores: en orden ascendente queda al principio y en orden descendente queda al final. En la consulta siguiente, `id_cliente` al final del orden fija la posición entre clientes de la misma ciudad.
+
+```sql
+SELECT id_cliente, nombre, ciudad
+FROM cliente
+ORDER BY ciudad, id_cliente;
+```
+
+```text
++------------+-----------+-----------+
+| id_cliente | nombre    | ciudad    |
++------------+-----------+-----------+
+|          9 | Diego     | NULL      |
+|         10 | Valentina | NULL      |
+|          2 | Carlos    | Bogotá    |
+|          5 | Sara      | Bogotá    |
+|          8 | Marta     | Bogotá    |
+|          3 | Laura     | Cali      |
+|          6 | Pedro     | Cali      |
+|          1 | Ana       | Medellín  |
+|          4 | Juan      | Medellín  |
+|          7 | Carlos    | Medellín  |
++------------+-----------+-----------+
+```
+
+Con `ORDER BY ciudad DESC, id_cliente` el orden se invierte entre ciudades: primero Medellín (ids 1, 4 y 7), luego Cali, Bogotá y al final Diego y Valentina.
+
+## Un ENUM se ordena por su posición
+
+La columna `pedido.estado` es un `ENUM`, un tipo que solo acepta los valores de su lista. MySQL guarda cada valor como la posición que ocupa en la lista, y `ORDER BY` ordena por esa posición, no por el alfabeto. `DISTINCT` deja cada valor una sola vez.
+
+```sql
+SELECT DISTINCT estado FROM pedido ORDER BY estado;
+```
+
+```text
++-----------+
+| estado    |
++-----------+
+| pendiente |
+| pagado    |
+| enviado   |
+| cancelado |
++-----------+
+```
+
+Para ordenar alfabéticamente se convierte el valor a texto, con `SELECT DISTINCT CAST(estado AS CHAR) AS estado_texto FROM pedido ORDER BY estado_texto;`. El resultado es cancelado, enviado, pagado y pendiente.
+
+## LIMIT corta después de ordenar
+
+`LIMIT n` conserva las primeras `n` filas del resultado. Se aplica al final, después de ordenar, así que `ORDER BY` y `LIMIT` juntos responden preguntas del tipo "los N primeros". Sin `ORDER BY`, `LIMIT` corta en un orden que MySQL no garantiza.
+
+```sql
+SELECT nombre, stock
+FROM producto
+ORDER BY stock
+LIMIT 2;
+```
+
+El resultado es Monitor 27 pulgadas (stock 0) y Cámara réflex (stock 2).
+
+El orden de las cláusulas es fijo. Escribir `LIMIT` antes de `ORDER BY` produce un error de sintaxis, como el del Ejercicio 3.
+
+### Cuando el corte cae en un empate
+
+Cámara y Barra de sonido cuestan 500000. Si el corte de `LIMIT` cae entre las dos, MySQL elige una sin avisar y sin definir cuál. Con `LIMIT 6` entra una de las dos y con `LIMIT 7` entran las dos. El resultado siguiente salió en un servidor recién iniciado, y en otro servidor la fila 6 puede ser la Cámara.
+
+```sql
+SELECT id_producto, nombre, precio
+FROM producto
+ORDER BY precio DESC LIMIT 6;
+```
+
+```text
++-------------+---------------------+------------+
+| id_producto | nombre              | precio     |
++-------------+---------------------+------------+
+|          10 | Cámara réflex       | 2500000.00 |
+|           8 | Monitor 27 pulgadas | 1400000.00 |
+|           2 | Monitor             |  900000.00 |
+|           9 | Pantalla portátil   |  750000.00 |
+|          12 | Lente 50 mm         |  650000.00 |
+|          16 | Barra de sonido     |  500000.00 |
++-------------+---------------------+------------+
+```
+
+Un error frecuente es suponer que `LIMIT 1` devuelve siempre el mismo producto cuando hay empate en el primer lugar. La solución es agregar al final del `ORDER BY` una columna única, como el identificador, que rompa todos los empates.
+
+## OFFSET y la paginación
+
+`OFFSET s` salta las primeras `s` filas antes de contar las `n` de `LIMIT`. Sirve para mostrar el resultado por páginas. Con páginas de tamaño `t`, la página `p` usa `OFFSET = (p - 1) x t`. MySQL también acepta la forma `LIMIT s, n`, que equivale a `LIMIT n OFFSET s`.
+
+```sql
+SELECT id_producto, nombre
+FROM producto
+ORDER BY id_producto
+LIMIT 5 OFFSET 5;
+```
+
+Esta consulta devuelve la página 2 de cinco filas: Mouse gamer, Hub USB, Monitor 27 pulgadas, Pantalla portátil y Cámara réflex (ids 6 a 10). Con 18 productos, la página 4 (`OFFSET 15`) trae solo tres: Barra de sonido, Cable HDMI y Base refrigerante.
+
+### Paginar sin desempate repite y omite filas
+
+Si el orden tiene empates, cada consulta de página puede resolverlos de una forma distinta. Con páginas de tres filas, la página 2 usa `OFFSET 3` y la página 3 usa `OFFSET 6`.
+
+```sql
+SELECT id_producto, nombre, precio
+FROM producto
+ORDER BY precio DESC
+LIMIT 3 OFFSET 3;
+```
+
+En el servidor donde se capturó, la página 2 fue Pantalla portátil, Lente 50 mm y Barra de sonido (id 16). La página 3, con `OFFSET 6`, fue Barra de sonido (id 16), Micrófono USB y Audífonos. Barra de sonido apareció en las dos páginas y Cámara (id 4) no apareció en ninguna.
+
+Agregar `id_producto` al final del orden elimina el problema, porque ya no queda ningún empate.
+
+```sql
+SELECT id_producto, nombre, precio
+FROM producto
+ORDER BY precio DESC, id_producto
+LIMIT 3 OFFSET 3;
+```
+
+Ahora la página 2 es Pantalla portátil, Lente 50 mm y Cámara (id 4), la página 3 es Barra de sonido, Micrófono USB y Audífonos, y el resultado es el mismo en cualquier servidor.
+
+## El orden lógico de una consulta
+
+Las cláusulas se escriben en un orden, pero MySQL las evalúa en otro. `SELECT` se escribe primero y se evalúa después de `FROM` y `WHERE`, porque las filas tienen que existir antes de que se calculen las columnas.
+
+1. `FROM` toma la tabla.
+2. `WHERE` filtra las filas.
+3. `SELECT` calcula las columnas y los alias.
+4. `ORDER BY` ordena.
+5. `LIMIT` corta.
+
+Entre `WHERE` y `SELECT` se evalúan `GROUP BY` y `HAVING`, que se estudian en un tema posterior, y `DISTINCT` se aplica justo después de `SELECT`. El orden lógico es un modelo para razonar, y MySQL puede ejecutar los pasos de otra manera mientras el resultado sea el mismo. De ese modelo sale una regla práctica: un alias definido en el `SELECT` todavía no existe cuando se evalúa `WHERE`, pero ya existe cuando se evalúa `ORDER BY`.
+
+```sql
+SELECT nombre,
+       precio * 0.9 AS precio_oferta
+FROM producto
+WHERE stock > 10
+ORDER BY precio_oferta DESC
+LIMIT 2;
+```
+
+```text
++--------------------+---------------+
+| nombre             | precio_oferta |
++--------------------+---------------+
+| Audífonos          |    180000.000 |
+| Parlante bluetooth |    162000.000 |
++--------------------+---------------+
+```
+
+El alias funciona en `ORDER BY`. El resultado tiene tres decimales porque multiplicar un `DECIMAL(10,2)` por `0.9` suma los decimales de los dos factores. Si se usa el mismo alias en el `WHERE` (`WHERE precio_oferta > 150000`), MySQL responde con un error.
+
+```text
+ERROR 1054 (42S22) at line 136: Unknown column 'precio_oferta' in 'where clause'
+```
+
+El `at line 136` es la línea del archivo que se ejecutó y no aparece en la consola interactiva. La corrección es repetir la expresión en el filtro, con `WHERE precio * 0.9 > 150000`. El manual describe este caso en la sección B.3.4.4, citada al final.
+
+## Funciones de fila
+
+Una *función de fila* recibe los valores de una fila y devuelve un valor para esa fila. Una *función de agregación*, como `SUM`, junta los valores de varias filas en uno solo y aparece al final del tema. Las funciones de fila se escriben en el `SELECT`, en el `WHERE` o en el `ORDER BY`. Esta tabla reúne las de texto, números y fechas con resultados reales.
+
+::: {.tabla-scroll}
+
+| Función | Qué hace | Ejemplo y resultado |
+|---|---|---|
+| `CONCAT(a, b, ...)` | Une textos. Un argumento `NULL` vuelve `NULL` todo el resultado | `CONCAT('Contacto: ', correo)` da `Contacto: ana@email.com`, y `NULL` para Pedro y Marta, que no tienen correo |
+| `UPPER(t)`, `LOWER(t)` | Cambian las mayúsculas y conservan las tildes | `UPPER('Bogotá')` da `BOGOTÁ`, `LOWER('MEDELLÍN')` da `medellín` |
+| `LENGTH(t)`, `CHAR_LENGTH(t)` | Cuentan bytes y letras. En `utf8mb4` la `á` ocupa dos bytes | `LENGTH('Bogotá')` da 7 y `CHAR_LENGTH('Bogotá')` da 6 |
+| `SUBSTRING(t, inicio, largo)` | Toma `largo` letras desde `inicio`. La primera posición es la 1, y con 0 devuelve un texto vacío | `SUBSTRING('Medellín', 1, 4)` da `Mede` |
+| `ROUND(n, d)` | Redondea a `d` decimales, o al entero si se omite `d` | `ROUND(2.567, 2)` da 2.57 y `ROUND(2.5)` da 3 |
+| `CEIL(n)`, `FLOOR(n)` | Suben al entero siguiente o bajan al anterior, también con negativos | `CEIL(2.4)` da 3, `FLOOR(2.4)` da 2, `CEIL(-2.4)` da -2 y `FLOOR(-2.4)` da -3 |
+| `DATEDIFF(fin, inicio)` | Días entre dos fechas, negativos si se escriben al revés | `DATEDIFF('2026-12-25', '2026-12-01')` da 24 y con los argumentos invertidos da -24 |
+| `DATE_FORMAT(f, formato)` | Presenta la fecha con `%d` día, `%m` mes y `%Y` año de cuatro cifras | Para el pedido 101, `DATE_FORMAT(fecha, '%d/%m/%Y')` da `20/09/2026` |
+| `YEAR(f)`, `MONTH(f)` | Extraen el año y el mes | Para el pedido 101, `YEAR` da 2026 y `MONTH` da 9 |
+| `DATE_ADD(f, INTERVAL n DAY)` | Suma una duración a una fecha | El pedido 101 (2026-09-20) más 30 días da `2026-10-20` |
+
+:::
+
+Los nombres que producen `%W` y `%M` salen en inglés por defecto: `DATE_FORMAT('2026-10-19', '%W %M')` da `Monday October`. `CURDATE()` devuelve la fecha del servidor y `NOW()` la fecha y la hora, así que cambian cada día, y por eso los ejemplos de `DATEDIFF` usan fechas escritas a mano. La consulta `SELECT fecha, DATE_ADD(fecha, INTERVAL 30 DAY) AS vence FROM pedido WHERE id_pedido IN (101, 114, 125);` devuelve `2026-10-20` para el pedido 101, `2026-11-12` para el 114 y `2026-11-18` para el 125. El operador `IN` conserva las filas cuyo id está en la lista.
+
+Para filtrar un mes de un año concreto conviene un rango, como `fecha >= '2026-09-01' AND fecha < '2026-10-01'`, porque `MONTH(fecha) = 9` acepta septiembre de cualquier año. Una aplicación habitual de `ROUND` es el precio con IVA del 19 %: `ROUND(precio * 1.19)` da 95200 para el Mouse y 1071000 para el Monitor.
+
+## Decidir dentro de la consulta
+
+`IFNULL(valor, reemplazo)` devuelve el valor si no es `NULL` y el reemplazo si lo es. Evita el `NULL` en la presentación de los datos, y también corrige el problema de `CONCAT`: `CONCAT('Contacto: ', IFNULL(correo, 'sin correo'))` nunca devuelve `NULL`.
+
+```sql
+SELECT nombre, correo, IFNULL(correo, 'sin correo') AS contacto
+FROM cliente;
+```
+
+Para Pedro y Marta, la columna `contacto` dice `sin correo`. Para los demás repite el correo.
+
+`COALESCE(a, b, c, ...)` devuelve el primer argumento que no es `NULL`, con la cantidad de argumentos que se necesite. Con dos argumentos hace lo mismo que `IFNULL`. En el ejemplo, Gloria no tiene jefe (`id_jefe` es `NULL`), así que el responsable es ella misma, con el valor 1.
+
+```sql
+SELECT id_empleado, nombre, id_jefe,
+       COALESCE(id_jefe, id_empleado) AS responsable
+FROM empleado;
+```
+
+### CASE buscado
+
+`CASE` evalúa condiciones en orden y devuelve el resultado de la primera que sea verdadera. Si ninguna lo es, devuelve el `ELSE`, o `NULL` cuando no hay `ELSE`. Por eso el orden de los `WHEN` importa, y la condición más estricta va primero.
+
+```sql
+SELECT nombre, stock,
+       CASE
+         WHEN stock = 0 THEN 'agotado'
+         WHEN stock < 5 THEN 'pocas unidades'
+         ELSE 'disponible'
+       END AS disponibilidad
+FROM producto;
+```
+
+El Monitor 27 pulgadas (stock 0) sale `agotado`. Cámara réflex, Cámara, Lente 50 mm, Monitor y Barra de sonido (stock entre 2 y 4) salen `pocas unidades`. Los otros doce salen `disponible`, incluida la Pantalla portátil con stock 5.
+
+### CASE simple
+
+Cuando todas las condiciones comparan la misma expresión con un valor, el `CASE` simple la escribe una sola vez después de `CASE`.
+
+```sql
+SELECT id_pedido, estado,
+       CASE estado
+         WHEN 'pendiente' THEN 'por cobrar'
+         WHEN 'pagado' THEN 'listo'
+         WHEN 'enviado' THEN 'en camino'
+         ELSE 'anulado'
+       END AS leyenda
+FROM pedido
+WHERE id_pedido IN (101, 102, 105, 114);
+```
+
+El pedido 101 sale `por cobrar`, el 102 `listo`, el 105 `en camino` y el 114, que está cancelado, cae en el `ELSE` y sale `anulado`.
+
+### Contar con SUM(CASE ...)
+
+`SUM` es una función de agregación: suma varias filas y devuelve un solo valor. Con `CASE`, cada fila aporta 1 si cumple la condición y 0 si no, y la suma cuenta solo las filas que interesan.
+
+```sql
+SELECT SUM(CASE WHEN precio >= 700000 THEN 1 ELSE 0 END) AS caros,
+       SUM(CASE WHEN precio < 700000 THEN 1 ELSE 0 END) AS accesibles
+FROM producto;
+```
+
+```text
++-------+------------+
+| caros | accesibles |
++-------+------------+
+|     4 |         14 |
++-------+------------+
+```
+
+## Ejercicios
+
+Resuelve cada ejercicio antes de abrir su solución. Las salidas de las soluciones son las que devolvió MySQL.
+
+### Ejercicio 1. Los cinco más caros
+
+Escribe la consulta que muestre el id, el nombre y el precio de los cinco productos más caros.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 1
+
+```sql
+SELECT id_producto, nombre, precio
+FROM producto
+ORDER BY precio DESC
+LIMIT 5;
+```
+
+El resultado es Cámara réflex, Monitor 27 pulgadas, Monitor, Pantalla portátil y Lente 50 mm. El corte cae entre 650000 y 500000, así que no hay empate en el borde y el resultado es estable.
+:::
+
+### Ejercicio 2. Página 3 con desempate
+
+Los productos se muestran de cinco en cinco, del más caro al más barato y con desempate por `id_producto`. Calcula el `OFFSET` de la página 3 y escribe la consulta.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 2
+
+El `OFFSET` es (3 - 1) x 5 = 10, porque se saltan las dos primeras páginas.
+
+```sql
+SELECT id_producto, nombre, precio
+FROM producto
+ORDER BY precio DESC, id_producto
+LIMIT 5 OFFSET 10;
+```
+
+El resultado es Parlante bluetooth (180000), Teclado (150000), Mouse gamer (120000), Trípode (120000) y Mouse (80000). Mouse gamer y Trípode empatan, y `id_producto` fija que el 6 vaya antes que el 11.
+:::
+
+### Ejercicio 3. Cláusulas en el orden equivocado
+
+Esta consulta debería mostrar los cinco productos más caros, pero MySQL responde con un error. Lee el mensaje y corrígela.
+
+```sql
+SELECT nombre, precio
+FROM producto
+LIMIT 5
+ORDER BY precio DESC;
+```
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 3
+
+```text
+ERROR 1064 (42000) at line 166: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ORDER BY precio DESC' at line 4
+```
+
+El `at line 166` es la línea del archivo que se ejecuta y no aparece en la consola. El `at line 4` del final es la línea de la sentencia donde MySQL dejó de entender. `LIMIT` va al final, porque primero se ordena y después se corta.
+
+```sql
+SELECT nombre, precio
+FROM producto
+ORDER BY precio DESC
+LIMIT 5;
+```
+
+La consulta corregida devuelve las mismas cinco filas del Ejercicio 1, sin la columna `id_producto`.
+:::
+
+### Ejercicio 4. Los clientes sin ciudad al final
+
+Lista los clientes por ciudad, pero con los que no tienen ciudad al final. Pista: `ciudad IS NULL` vale 1 si la ciudad falta y 0 si existe.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 4
+
+```sql
+SELECT id_cliente, nombre, ciudad
+FROM cliente
+ORDER BY ciudad IS NULL, ciudad, id_cliente;
+```
+
+El primer criterio vale 0 para las filas con ciudad y 1 para las que no tienen, así que las que tienen ciudad van antes. Después ordena por ciudad y, al final, por id. El resultado empieza con Carlos, Sara y Marta (Bogotá) y termina con Diego y Valentina.
+:::
+
+### Ejercicio 5. Antigüedad en días
+
+Muestra cada cliente con los días que lleva registrado al 31 de diciembre de 2026, del más antiguo al más reciente.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 5
+
+```sql
+SELECT nombre, fecha_registro,
+       DATEDIFF('2026-12-31', fecha_registro) AS dias
+FROM cliente
+ORDER BY dias DESC;
+```
+
+Ana (2024-02-10) lleva 1055 días, Carlos (2024-05-22) 953, Laura 849, Juan 715, Sara 610, Pedro 499, el segundo Carlos 424, Marta 292, Diego 213 y Valentina 107. El alias `dias` sirve en el `ORDER BY` porque se evalúa después del `SELECT`.
+:::
+
+### Ejercicio 6. Pedidos por estado
+
+Escribe una consulta que cuente en una sola fila los pedidos de cada estado, con las columnas `pendientes`, `pagados`, `enviados` y `cancelados`.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 6
+
+```sql
+SELECT SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) AS pendientes,
+       SUM(CASE WHEN estado = 'pagado' THEN 1 ELSE 0 END) AS pagados,
+       SUM(CASE WHEN estado = 'enviado' THEN 1 ELSE 0 END) AS enviados,
+       SUM(CASE WHEN estado = 'cancelado' THEN 1 ELSE 0 END) AS cancelados
+FROM pedido;
+```
+
+```text
++------------+---------+----------+------------+
+| pendientes | pagados | enviados | cancelados |
++------------+---------+----------+------------+
+|          3 |      14 |        7 |          1 |
++------------+---------+----------+------------+
+```
+:::
+
+### Ejercicio 7. Nadie sale barato
+
+Esta consulta debería etiquetar los productos como barato, medio o caro, pero el Mouse (80000) sale como medio y ningún producto sale barato. Corrígela.
+
+```sql
+SELECT nombre, precio,
+       CASE
+         WHEN precio < 700000 THEN 'medio'
+         WHEN precio < 150000 THEN 'barato'
+         ELSE 'caro'
+       END AS rango
+FROM producto;
+```
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 7
+
+`CASE` devuelve el resultado de la primera condición verdadera. Con 80000, `precio < 700000` ya es verdadera y la segunda condición nunca se evalúa, de modo que los 18 productos salen como `medio` o `caro`. La condición más estricta va primero. Con el orden corregido, el Mouse y el Mouse gamer (120000) salen `barato`.
+:::
+
+### Ejercicio 8. Reto: CASE o COALESCE
+
+Reescribe este `CASE` con `COALESCE` y explica cuándo no se puede hacer.
+
+```sql
+SELECT id_cliente,
+       CASE WHEN ciudad IS NULL THEN 'sin ciudad' ELSE ciudad END AS ciudad
+FROM cliente;
+```
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 8
+
+```sql
+SELECT id_cliente,
+       COALESCE(ciudad, 'sin ciudad') AS ciudad
+FROM cliente;
+```
+
+Los dos devuelven lo mismo: la ciudad de cada cliente y `sin ciudad` para Diego y Valentina. `COALESCE` solo reemplaza `NULL`, así que no sirve cuando la condición es otra, como `WHEN stock = 0` o `WHEN precio < 150000`, ni cuando hay que distinguir un texto vacío de un `NULL`.
+:::
+
+## Referencia rápida
+
+::: {.tabla-scroll}
+
+| Necesito | Sintaxis |
+|---|---|
+| Ordenar y cortar | `ORDER BY col1 [ASC \| DESC], col2 [ASC \| DESC] LIMIT n OFFSET s` |
+| Paginar | `ORDER BY ..., col_unica LIMIT t OFFSET (p - 1) x t` |
+| Texto | `CONCAT`, `UPPER`, `LOWER`, `LENGTH`, `CHAR_LENGTH`, `SUBSTRING(t, inicio, largo)` |
+| Números | `ROUND(n, decimales)`, `CEIL(n)`, `FLOOR(n)` |
+| Fechas | `DATEDIFF(fin, inicio)`, `DATE_FORMAT(f, '%d/%m/%Y')`, `YEAR(f)`, `MONTH(f)`, `DATE_ADD(f, INTERVAL n DAY)` |
+| Reemplazar `NULL` | `IFNULL(valor, reemplazo)`, `COALESCE(a, b, ...)` |
+| Decidir | `CASE WHEN condicion THEN r ... ELSE r END` y `CASE expr WHEN v THEN r ... ELSE r END` |
+| Contar por condición | `SUM(CASE WHEN condicion THEN 1 ELSE 0 END)` |
+
+:::
+
+## Lista de verificación
+
+Al terminar el tema debes poder hacer lo siguiente.
+
+- [ ] Explicar por qué una consulta sin `ORDER BY` no garantiza ningún orden.
+- [ ] Predecir dónde quedan los `NULL` con `ASC` y con `DESC`, y mandarlos al final con `ORDER BY col IS NULL, col`.
+- [ ] Obtener los N primeros con `ORDER BY` y `LIMIT`, y reconocer cuándo el corte cae en un empate.
+- [ ] Calcular el `OFFSET` de una página y agregar una columna única al final del orden para paginar sin repetir ni omitir filas.
+- [ ] Ordenar las cláusulas según el orden lógico y explicar por qué un alias no sirve en `WHERE`.
+- [ ] Usar las funciones de texto, numéricas y de fecha del tema, y prever el efecto de un `NULL`.
+- [ ] Elegir entre `IFNULL`, `COALESCE` y `CASE` según la decisión que debe tomar la consulta.
+- [ ] Contar filas por condición con `SUM(CASE ...)`.
+
+## Referencias
+
+Manual de referencia de MySQL 8.4:
+
+- [15.2.13 SELECT Statement](https://dev.mysql.com/doc/refman/8.4/en/select.html)
+- [5.3.4.4 Sorting Rows](https://dev.mysql.com/doc/refman/8.4/en/sorting-rows.html)
+- [10.2.1.16 ORDER BY Optimization](https://dev.mysql.com/doc/refman/8.4/en/order-by-optimization.html)
+- [10.2.1.19 LIMIT Query Optimization](https://dev.mysql.com/doc/refman/8.4/en/limit-optimization.html)
+- [13.3.5 The ENUM Type](https://dev.mysql.com/doc/refman/8.4/en/enum.html)
+- [14.10 Cast Functions and Operators](https://dev.mysql.com/doc/refman/8.4/en/cast-functions.html)
+- [14.8 String Functions and Operators](https://dev.mysql.com/doc/refman/8.4/en/string-functions.html)
+- [14.6.2 Mathematical Functions](https://dev.mysql.com/doc/refman/8.4/en/mathematical-functions.html)
+- [14.7 Date and Time Functions](https://dev.mysql.com/doc/refman/8.4/en/date-and-time-functions.html)
+- [14.5 Flow Control Functions](https://dev.mysql.com/doc/refman/8.4/en/flow-control-functions.html)
+- [14.19.1 Aggregate Function Descriptions](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html)
+- [5.3.4.6 Working with NULL Values](https://dev.mysql.com/doc/refman/8.4/en/working-with-null.html)
+- [B.3.4.4 Problems with Column Aliases](https://dev.mysql.com/doc/refman/8.4/en/problems-with-alias.html)
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado, y las salidas de SQL se ejecutaron en MySQL 8.4.11. El orden entre filas empatadas puede variar según el servidor.
+:::

@@ -1,0 +1,457 @@
+---
+title: "Tema 4. Insertar datos"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+
+::: {.tabla-scroll}
+
+|        |                                  |
+|--------|----------------------------------|
+| Unidad | Unidad 4. Lenguaje SQL           |
+| Tema   | Tema 4. Insertar datos           |
+
+:::
+
+:::
+
+[Abrir la presentación del tema](presentacion-interactiva.html){.btn-curso}
+
+Una tabla recién creada está vacía. Este tema responde tres preguntas: cómo entra la primera fila, cómo decide MySQL si acepta o rechaza cada dato y cómo compruebas que lo guardado es lo que querías guardar. Todo ocurre sobre el caso `ventas`, en MySQL 8.4. La presentación recorre el tema en clase y esta guía lo desarrolla con más explicación, las salidas completas y los ejercicios resueltos. Las salidas son capturas reales de un servidor MySQL 8.4.11 y los errores aparecen como los imprime una sesión interactiva. Si ejecutas un archivo con el cliente `mysql`, el programa añade ` at line N` después del número de error. Los valores que dependen de la fecha del servidor, como `CURRENT_DATE`, cambian de un día a otro.
+
+## El punto de partida: seis tablas vacías
+
+El caso `ventas` tiene seis tablas: `categoria`, `producto`, `cliente`, `empleado`, `pedido` y `detalle_pedido`. Los archivos [esquema.sql](../sql/esquema.sql), [datos.sql](../sql/datos.sql) y [reiniciar.sql](../sql/reiniciar.sql) de la carpeta `sql` de la unidad lo reproducen en tu instalación. Para practicar `INSERT` necesitas las tablas vacías, así que ejecutas `esquema.sql` y dejas `datos.sql` para el final del tema. Si la base ya existía y quieres volver a empezar, ejecutas antes `reiniciar.sql`. `SOURCE` es un comando del cliente `mysql` que ejecuta un archivo de sentencias, con la ruta relativa a la carpeta desde la que abriste el cliente.
+
+```text
+mysql> SOURCE reiniciar.sql
+mysql> SOURCE esquema.sql
+mysql> USE ventas;
+```
+
+## INSERT de una fila
+
+*INSERT* es la sentencia que agrega filas a una tabla. Nombra la tabla, lista las columnas que recibirán valor y entrega los valores en el mismo orden. La lista no incluye `id_categoria` porque esa columna es `AUTO_INCREMENT` y MySQL reparte el número que sigue. Los textos van entre comillas simples.
+
+```sql
+INSERT INTO categoria (nombre) VALUES ('Periféricos');
+--          tabla      columnas         valores
+```
+
+Para comprobar lo guardado usas *SELECT*, que pide datos y devuelve una tabla de resultado. El asterisco pide todas las columnas, y una lista de nombres pide solo esas (`SELECT nombre FROM categoria;` devuelve únicamente la columna `nombre`).
+
+```text
+mysql> SELECT * FROM categoria;
++--------------+--------------+
+| id_categoria | nombre       |
++--------------+--------------+
+|            1 | Periféricos  |
++--------------+--------------+
+```
+
+Un error frecuente es escribir los valores en otro orden que las columnas. Con `(nombre, precio)` y los valores `(80000, 'Mouse')`, MySQL intenta guardar 80000 como nombre y `'Mouse'` como precio, y el texto en una columna decimal produce el error 1366 que verás más adelante.
+
+## Con y sin lista de columnas
+
+La lista de columnas es opcional. Sin ella, MySQL exige un valor para cada columna de la tabla, en el orden en que se declararon.
+
+```text
+mysql> INSERT INTO categoria VALUES (2, 'Pantallas');
+mysql> INSERT INTO categoria VALUES ('Fotografía');
+ERROR 1136 (21S01): Column count doesn't match value count at row 1
+```
+
+La primera sentencia trae dos valores para dos columnas y funciona. La segunda trae uno solo y MySQL la rechaza. Sin lista, cada valor depende de la posición de su columna; con lista, queda ligado a ella por nombre. Si alguien agrega una columna o cambia el orden, los `INSERT` sin lista fallan o guardan cada valor en la columna equivocada, mientras que los `INSERT` con lista siguen funcionando. Por eso conviene escribirla siempre, y además permite omitir las columnas con valor por defecto.
+
+## Varias filas en un INSERT
+
+Después de `VALUES` puedes escribir varios grupos entre paréntesis, separados por comas. El servidor recibe una sola sentencia y guarda todas las filas.
+
+```text
+mysql> INSERT INTO categoria (nombre) VALUES ('Fotografía'), ('Audio'), ('Accesorios');
+mysql> SELECT * FROM categoria;
++--------------+--------------+
+| id_categoria | nombre       |
++--------------+--------------+
+|            5 | Accesorios   |
+|            4 | Audio        |
+|            3 | Fotografía   |
+|            2 | Pantallas    |
+|            1 | Periféricos  |
++--------------+--------------+
+```
+
+La consulta no tiene `ORDER BY`, así que MySQL puede devolver las filas en el orden que le resulte conveniente. Aquí salieron en orden alfabético de `nombre` y no en el orden de inserción. Si necesitas un orden, lo pides con `ORDER BY` (Tema 7).
+
+Un lote es todo o nada. Si una sola fila choca con una restricción, MySQL rechaza la sentencia completa. Con `Audio` repetido, ni `Hogar` ni `Cocina` quedan guardados y `SELECT COUNT(*) FROM categoria;` sigue devolviendo 5:
+
+```text
+mysql> INSERT INTO categoria (nombre) VALUES ('Hogar'), ('Cocina'), ('Audio');
+ERROR 1062 (23000): Duplicate entry 'Audio' for key 'categoria.nombre'
+```
+
+## Comprobar la carga: COUNT(*) y WHERE
+
+`COUNT(*)` es una función de agregación que cuenta las filas del resultado y devuelve un número. `WHERE` deja pasar solo las filas que cumplen una condición, con el texto entre comillas simples y un solo signo igual (`==` produce el error 1064 de sintaxis).
+
+```text
+mysql> SELECT * FROM categoria WHERE nombre = 'Audio';
++--------------+--------+
+| id_categoria | nombre |
++--------------+--------+
+|            4 | Audio  |
++--------------+--------+
+```
+
+`SELECT COUNT(*) FROM categoria;` devuelve 5. Una condición sin coincidencias no produce un error: `SELECT COUNT(*) FROM categoria WHERE nombre = 'Cocina';` devuelve 0, la respuesta correcta a "cuántas categorías se llaman Cocina".
+
+## El orden de carga: primero el padre
+
+Una *clave foránea* es una columna que apunta a la clave de otra tabla. La tabla que la tiene es la hija y la tabla a la que apunta es la padre. En `ventas`, `producto.id_categoria` apunta a `categoria.id_categoria`, así que `categoria` es la padre. MySQL rechaza una fila hija cuyo valor no existe en la padre, y por eso la padre se carga primero. El orden de carga es el mismo orden de creación de las tablas: `categoria`, `cliente` y `empleado`, después `producto` y `pedido`, y al final `detalle_pedido`. Cargar los productos antes que las categorías produce el error 1452, que aparece en la sección de restricciones. Con `categoria` cargada, estos productos entran sin problema:
+
+```text
+mysql> INSERT INTO producto (nombre, precio, stock, id_categoria)
+    -> VALUES ('Mouse', 80000, 20, 1), ('Monitor', 900000, 4, 2), ('Teclado', 150000, 15, 1);
+mysql> SELECT * FROM producto;
++-------------+---------+-----------+-------+--------------+
+| id_producto | nombre  | precio    | stock | id_categoria |
++-------------+---------+-----------+-------+--------------+
+|           1 | Mouse   |  80000.00 |    20 |            1 |
+|           2 | Monitor | 900000.00 |     4 |            2 |
+|           3 | Teclado | 150000.00 |    15 |            1 |
++-------------+---------+-----------+-------+--------------+
+```
+
+### Una tabla que apunta a sí misma
+
+`empleado.id_jefe` apunta a `empleado.id_empleado`: el jefe de un empleado es otra fila de la misma tabla. La regla es la misma, y el jefe se inserta antes que su equipo. Con la tabla vacía, insertar primero a Andrés, cuyo jefe es el empleado 1, falla porque Gloria todavía no existe. Se carga primero a Gloria, que no tiene jefe, y después a Andrés:
+
+```text
+mysql> INSERT INTO empleado (id_empleado, nombre, cargo, salario, fecha_ingreso, id_jefe)
+    -> VALUES (2, 'Andrés Vélez', 'Jefe de ventas', 5500000, '2020-06-15', 1);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`ventas`.`empleado`, CONSTRAINT `fk_empleado_jefe` FOREIGN KEY (`id_jefe`) REFERENCES `empleado` (`id_empleado`) ON DELETE SET NULL)
+```
+
+Después de insertar a Gloria con `id_jefe` en `NULL` y de repetir el `INSERT` de Andrés, la consulta `SELECT id_empleado, nombre, id_jefe FROM empleado;` devuelve a Gloria (id 1, jefe `NULL`) y a Andrés (id 2, jefe 1).
+
+## Lo que no escribes: DEFAULT y NULL
+
+Cuando una columna no aparece en la lista, MySQL le asigna su valor por defecto si lo declara, y `NULL` si no lo declara y la columna admite nulos. *NULL* indica ausencia de valor y es distinto de cero y de la cadena vacía. Si la columna es `NOT NULL` y no tiene valor por defecto, el `INSERT` falla con el error 1364. En `cliente`, `fecha_registro` tiene `DEFAULT (CURRENT_DATE)`, y `correo` y `ciudad` admiten `NULL`. Las palabras `DEFAULT` y `NULL` también se pueden escribir como valores:
+
+```text
+mysql> INSERT INTO cliente (nombre) VALUES ('Ana');
+mysql> INSERT INTO cliente (nombre, correo, ciudad, fecha_registro) VALUES ('Carlos', NULL, 'Bogotá', DEFAULT);
+mysql> SELECT id_cliente, nombre, correo, ciudad FROM cliente WHERE fecha_registro = CURRENT_DATE;
++------------+--------+--------+---------+
+| id_cliente | nombre | correo | ciudad  |
++------------+--------+--------+---------+
+|          1 | Ana    | NULL   | NULL    |
+|          2 | Carlos | NULL   | Bogotá  |
++------------+--------+--------+---------+
+```
+
+`CURRENT_DATE` es la fecha de hoy en el servidor. Las dos filas la tomaron: una por omisión y la otra por la palabra `DEFAULT`.
+
+## AUTO_INCREMENT y LAST_INSERT_ID
+
+Una columna `AUTO_INCREMENT` recibe, en cada fila nueva, un número mayor que el último que repartió. La función `LAST_INSERT_ID()` devuelve el primer id que generó el último `INSERT` de tu sesión, y las demás sesiones no la afectan. Cuando un lote inserta varias filas, devuelve el id de la primera, no el de la última.
+
+```text
+mysql> INSERT INTO cliente (nombre, correo) VALUES ('Laura', 'laura@email.com'), ('Juan', 'juan@email.com');
+mysql> SELECT LAST_INSERT_ID();
+```
+
+La función devuelve 3: Laura recibió el 3 y Juan el 4. Este valor sirve para insertar un registro hijo justo después del padre sin escribir el id a mano, como en el Ejercicio 1.
+
+### Los ids que se gastan
+
+Un `INSERT` que falla puede consumir un id. Sara intenta registrarse con el correo de Laura, que es `UNIQUE`, y MySQL lo rechaza. Su segundo intento, con un correo nuevo, funciona:
+
+```text
+mysql> INSERT INTO cliente (nombre, correo) VALUES ('Sara', 'laura@email.com');
+ERROR 1062 (23000): Duplicate entry 'laura@email.com' for key 'cliente.correo'
+mysql> INSERT INTO cliente (nombre, correo) VALUES ('Sara', 'sara@email.com');
+```
+
+Sara quedó con el id 6, así que el intento fallido gastó el id 5. No todos los errores lo hacen. Se midió con una tabla de ensayo que tiene una restricción de cada tipo: tras cada error se insertó una fila válida y se miró su id. Los ids que salieron fueron 1 (la fila inicial), 3, 4, 6, 7, 8 y 9.
+
+Gastan un id el error 1062 por una columna `UNIQUE` repetida y el 1452 por una clave foránea inexistente. No lo gastan el 1062 por una clave primaria repetida con el id escrito a mano, ni el 1048 (`NULL` en `NOT NULL`), el 3819 (`CHECK`) ni el 1406 (dato demasiado largo). Los ids no se reciclan, así que los huecos en la numeración son normales y no indican un fallo. No escribas código que espere ids consecutivos.
+
+## Qué rechaza cada restricción
+
+Cada restricción de una tabla funciona como una puerta: si la fila no cumple, MySQL rechaza la sentencia y la fila no se guarda. El mensaje trae el número del error, el `SQLSTATE` entre paréntesis y un texto que nombra la tabla, la columna o la restricción que falló. El `SQLSTATE` es un código de cinco caracteres que clasifica el error, y 23000 indica una violación de integridad. Leer solo el número no basta, porque el texto dice qué dato debes corregir. MySQL no revisa siempre las puertas en el mismo orden, así que no dependas de él. Las claves repetidas producen el error 1062, con la categoría 1 ya ocupada y el nombre `Periféricos` ya registrado. Una clave foránea sin fila padre produce el 1452. Una columna `NOT NULL` queda vacía de dos maneras: con `NULL` explícito, que da el 1048, o con la columna omitida y sin valor por defecto, que da el 1364. Una condición `CHECK` falsa produce el 3819.
+
+```text
+mysql> INSERT INTO categoria (id_categoria, nombre) VALUES (1, 'Hogar');
+ERROR 1062 (23000): Duplicate entry '1' for key 'categoria.PRIMARY'
+mysql> INSERT INTO categoria (nombre) VALUES ('Periféricos');
+ERROR 1062 (23000): Duplicate entry 'Periféricos' for key 'categoria.nombre'
+mysql> INSERT INTO producto (nombre, precio, stock, id_categoria) VALUES ('Lámpara', 50000, 5, 99);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`ventas`.`producto`, CONSTRAINT `fk_producto_categoria` FOREIGN KEY (`id_categoria`) REFERENCES `categoria` (`id_categoria`) ON DELETE RESTRICT)
+mysql> INSERT INTO producto (nombre, precio, id_categoria) VALUES (NULL, 50000, 1);
+ERROR 1048 (23000): Column 'nombre' cannot be null
+mysql> INSERT INTO producto (precio, id_categoria) VALUES (50000, 1);
+ERROR 1364 (HY000): Field 'nombre' doesn't have a default value
+mysql> INSERT INTO producto (nombre, precio, id_categoria) VALUES ('Lámpara', -5, 1);
+ERROR 3819 (HY000): Check constraint 'chk_producto_precio' is violated.
+mysql> INSERT INTO prueba_check VALUES (NULL);
+mysql> INSERT INTO prueba_check VALUES (-1);
+ERROR 3819 (HY000): Check constraint 'prueba_check_chk_1' is violated.
+```
+
+Con `NULL` la condición de un `CHECK` no es verdadera ni falsa sino desconocida, y el `CHECK` solo rechaza las condiciones falsas. Las dos últimas sentencias usan una tabla de prueba con `v INT CHECK (v >= 0)`: el `NULL` entra, el -1 no, y `SELECT * FROM prueba_check;` devuelve una sola fila con `NULL`. Para exigir que la columna siempre tenga valor, combina `CHECK` con `NOT NULL`. Los cuatro errores siguientes los produce el modo estricto, que se explica enseguida: un texto en una columna decimal, una fecha imposible, un texto más largo que su `VARCHAR` y un valor fuera de la lista de un *ENUM*, que es una columna con una lista cerrada de valores (`estado` solo admite `pendiente`, `pagado`, `enviado` y `cancelado`). `REPEAT('a', 101)` produce un texto de 101 caracteres para una columna `VARCHAR(100)`.
+
+```text
+mysql> INSERT INTO producto (nombre, precio, id_categoria) VALUES ('Lámpara', 'abc', 1);
+ERROR 1366 (HY000): Incorrect decimal value: 'abc' for column 'precio' at row 1
+mysql> INSERT INTO cliente (nombre, fecha_registro) VALUES ('Beto', '2026-13-01');
+ERROR 1292 (22007): Incorrect date value: '2026-13-01' for column 'fecha_registro' at row 1
+mysql> INSERT INTO cliente (nombre) VALUES (REPEAT('a', 101));
+ERROR 1406 (22001): Data too long for column 'nombre' at row 1
+mysql> INSERT INTO pedido (fecha, estado, id_cliente, id_empleado) VALUES ('2026-10-20', 'devuelto', 1, 1);
+ERROR 1265 (01000): Data truncated for column 'estado' at row 1
+```
+
+## El modo estricto
+
+El *modo estricto* convierte los datos inválidos en errores en lugar de ajustarlos en silencio. Lo activa la opción `STRICT_TRANS_TABLES` de la variable `sql_mode`, y `@@sql_mode` lee su valor en tu sesión. Esa opción es parte del valor por defecto de MySQL 8.4:
+
+```text
+mysql> SELECT @@sql_mode;
++-----------------------------------------------------------------------------------------------------------------------+
+| @@sql_mode                                                                                                            |
++-----------------------------------------------------------------------------------------------------------------------+
+| ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION |
++-----------------------------------------------------------------------------------------------------------------------+
+```
+
+Para ver qué cambia sin él, vacía el modo solo en tu sesión, repite el `INSERT` del precio `'abc'` y vuelve al valor por defecto:
+
+```text
+mysql> SET SESSION sql_mode = '';
+mysql> INSERT INTO producto (nombre, precio, id_categoria) VALUES ('Fantasma', 'abc', 1);
+mysql> SHOW WARNINGS;
+Warning | 1366 | Incorrect decimal value: 'abc' for column 'precio' at row 1
+mysql> SET SESSION sql_mode = DEFAULT;
+```
+
+Sin modo estricto, el mismo dato que antes daba el error 1366 solo produce un *aviso*, un mensaje que MySQL emite sin detener la sentencia y que `SHOW WARNINGS` muestra. MySQL guarda la fila con el precio 0.00. Un precio de cero que nadie escribió es un dato corrupto, y por eso conviene trabajar con el modo estricto activo.
+
+## La carga completa: datos.sql
+
+`datos.sql` carga el caso entero y respeta el orden de carga: categorías, productos, clientes, empleados (el jefe antes que su equipo), pedidos y detalle. Para empezar de cero ejecuta, en este orden, `reiniciar.sql`, `esquema.sql` y `datos.sql`. Al terminar, `SELECT COUNT(*)` sobre cada tabla da `categoria` 5, `producto` 18, `cliente` 10, `empleado` 8, `pedido` 25 y `detalle_pedido` 56. El siguiente id de cada tabla ya no es 1. Para verlo, desactivas la caché de estadísticas de MySQL con `SET SESSION information_schema_stats_expiry = 0;` y consultas `SELECT table_name, auto_increment FROM information_schema.tables WHERE table_schema = 'ventas';`. El siguiente id es 6 en `categoria`, 11 en `cliente`, 9 en `empleado`, 126 en `pedido` y 19 en `producto`. `detalle_pedido` no tiene columna `AUTO_INCREMENT`, así que su valor es `NULL`. Los ejercicios parten de esta base recién cargada. Después de uno que cambie datos, vuelve al estado limpio con `reiniciar.sql`, `esquema.sql` y `datos.sql`.
+
+## Ejercicios
+
+### Ejercicio 1. Un pedido con dos líneas
+
+Registra un pedido con fecha 2026-10-20 del cliente 10 y el empleado 4, y sus dos líneas: 2 unidades del producto 1 a 80000 y 1 unidad del producto 7 a 60000. Respeta el orden de carga y no escribas el id del pedido. El estado tampoco se escribe, porque `DEFAULT 'pendiente'` lo completa.
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 1
+
+```sql
+INSERT INTO pedido (fecha, id_cliente, id_empleado) VALUES ('2026-10-20', 10, 4);
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario)
+VALUES (LAST_INSERT_ID(), 1, 2, 80000), (LAST_INSERT_ID(), 7, 1, 60000);
+SELECT * FROM detalle_pedido WHERE id_pedido = 126;
+```
+
+El último `SELECT` devuelve dos filas: `(126, 1, 2, 80000.00)` y `(126, 7, 1, 60000.00)`. El pedido va primero porque `detalle_pedido` lo referencia. `LAST_INSERT_ID()` entrega el id 126 que MySQL repartió al pedido, y las dos líneas lo reutilizan.
+:::
+
+### Ejercicio 2. Predecir cinco INSERT
+
+Decide cuáles de estos cinco `INSERT` funcionan y cuáles fallan. Para cada uno que falle, di el número de error y por qué.
+
+```sql
+INSERT INTO categoria (id_categoria, nombre) VALUES (3, 'Hogar');                                              -- A
+INSERT INTO producto (nombre, precio) VALUES ('Mouse pad', 25000);                                              -- B
+INSERT INTO cliente (nombre, correo) VALUES ('Ana Gómez', 'ana@email.com');                                     -- C
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES (101, 1, 1, 80000);       -- D
+INSERT INTO pedido (fecha, id_cliente, id_empleado) VALUES ('2026-10-21', 99, 4);                               -- E
+```
+
+Marca las que crees que fallan: <label><input type="checkbox"> A</label> <label><input type="checkbox"> B</label> <label><input type="checkbox"> C</label> <label><input type="checkbox"> D</label> <label><input type="checkbox"> E</label>
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 2
+
+A falla con `ERROR 1062 (23000): Duplicate entry '3' for key 'categoria.PRIMARY'`, porque el id 3 ya es de Fotografía. B funciona: `stock` toma su valor por defecto 0 e `id_categoria` queda en `NULL`. C falla con `ERROR 1062 (23000): Duplicate entry 'ana@email.com' for key 'cliente.correo'`. D falla con `ERROR 1062 (23000): Duplicate entry '101-1' for key 'detalle_pedido.PRIMARY'`, porque la pareja `101-1` ya existe en la clave primaria compuesta. E falla con el error 1452 (`fk_pedido_cliente`), porque el cliente 99 no existe. Tras B, la fila queda con `id_producto` 19, `stock` 0 e `id_categoria` `NULL`.
+:::
+
+### Ejercicio 3. Corregir un script de carga
+
+Este script tiene cuatro errores, uno por sentencia. Para cada sentencia, di el error que produce y escribe la corrección.
+
+```sql
+INSERT INTO producto (nombre, precio, stock, id_categoria) VALUES ('Auriculares', -90000, 5, 4);
+INSERT INTO producto (nombre, precio, stock, id_categoria) VALUES ('Cargador', 40000, 10, 99);
+INSERT INTO cliente (correo, ciudad) VALUES ('mateo@email.com', 'Cali');
+INSERT INTO pedido (fecha, estado, id_cliente, id_empleado) VALUES ('2026-10-20', 'devuelto', 1, 4);
+```
+
+::: {.callout-note collapse="true"}
+## Solución del Ejercicio 3
+
+Los errores, en el mismo orden, son el 3819 (`chk_producto_precio`), el 1452 (`fk_producto_categoria`), el 1364 (`Field 'nombre' doesn't have a default value`) y el 1265 (`Data truncated for column 'estado' at row 1`). El precio negativo viola el `CHECK`, y se corrige a 90000. La categoría 99 no existe, y se usa una que exista, por ejemplo la 5. Falta `nombre`, que es `NOT NULL` sin valor por defecto, y se agrega la columna con el valor `'Mateo'`. `'devuelto'` no pertenece al `ENUM`, y se usa `'pagado'`.
+
+```sql
+INSERT INTO producto (nombre, precio, stock, id_categoria) VALUES ('Auriculares', 90000, 5, 4);
+INSERT INTO producto (nombre, precio, stock, id_categoria) VALUES ('Cargador', 40000, 10, 5);
+INSERT INTO cliente (nombre, correo, ciudad) VALUES ('Mateo', 'mateo@email.com', 'Cali');
+INSERT INTO pedido (fecha, estado, id_cliente, id_empleado) VALUES ('2026-10-20', 'pagado', 1, 4);
+```
+
+Con el script corregido, `SELECT COUNT(*) FROM producto;` devuelve 20 y `SELECT COUNT(*) FROM pedido;` devuelve 26.
+:::
+
+### Ejercicio 4. Una jefa y su equipo (reto)
+
+Llega una nueva jefa de ventas: Lucía Pardo, cargo `Jefe de ventas`, salario 5500000, ingreso 2026-10-20, sin jefe. En un solo `INSERT`, agrega dos vendedores que dependen de ella: Tomás Rojas y Paula Mejía, con salario 2800000 y la misma fecha de ingreso. No escribas ningún id y comprueba el resultado. El jefe entra antes que su equipo, y `LAST_INSERT_ID()` entrega su id.
+
+::: {.callout-note collapse="true"}
+## Solución del Reto
+
+```sql
+INSERT INTO empleado (nombre, cargo, salario, fecha_ingreso)
+VALUES ('Lucía Pardo', 'Jefe de ventas', 5500000, '2026-10-20');
+INSERT INTO empleado (nombre, cargo, salario, fecha_ingreso, id_jefe)
+VALUES ('Tomás Rojas', 'Vendedor', 2800000, '2026-10-20', LAST_INSERT_ID()),
+       ('Paula Mejía', 'Vendedor', 2800000, '2026-10-20', LAST_INSERT_ID());
+SELECT id_empleado, nombre, id_jefe FROM empleado WHERE id_empleado > 8;
+```
+
+```text
++-------------+--------------+---------+
+| id_empleado | nombre       | id_jefe |
++-------------+--------------+---------+
+|           9 | Lucía Pardo  |    NULL |
+|          10 | Tomás Rojas  |       9 |
+|          11 | Paula Mejía  |       9 |
++-------------+--------------+---------+
+```
+
+Lucía recibe el id 9 y su `id_jefe` queda en `NULL` porque la columna lo admite. En el segundo `INSERT`, `LAST_INSERT_ID()` todavía vale 9, el id del `INSERT` anterior, así que los dos vendedores apuntan a ella.
+:::
+
+## Opcional: otras formas de insertar
+
+### INSERT ... SELECT: filas desde una consulta
+
+*INSERT ... SELECT* toma sus filas del resultado de una consulta en lugar de una lista de valores, y sirve para copiar datos entre tablas. Las columnas de la lista y las del `SELECT` se emparejan por posición. Este bloque y los dos siguientes parten de la base recién cargada. Aquí se copian a una tabla nueva los productos de la categoría 1:
+
+```text
+mysql> CREATE TABLE producto_lista (id_producto INT, nombre VARCHAR(100), precio DECIMAL(10,2));
+mysql> INSERT INTO producto_lista (id_producto, nombre, precio)
+    -> SELECT id_producto, nombre, precio FROM producto WHERE id_categoria = 1;
+mysql> SELECT * FROM producto_lista;
++-------------+-------------+-----------+
+| id_producto | nombre      | precio    |
++-------------+-------------+-----------+
+|           1 | Mouse       |  80000.00 |
+|           3 | Teclado     | 150000.00 |
+|           5 | Webcam HD   | 180000.00 |
+|           6 | Mouse gamer | 120000.00 |
+|           7 | Hub USB     |  60000.00 |
++-------------+-------------+-----------+
+```
+
+### INSERT IGNORE: el error pasa a aviso
+
+Con `IGNORE`, los errores de la fila se convierten en avisos y la sentencia continúa. Una clave repetida deja la fila sin insertar, y el cliente informa `0 rows affected, 1 warning`. Con un dato inválido, `IGNORE` no lo corrige: MySQL guarda la fila con el valor 0.00 y solo emite el aviso.
+
+```text
+mysql> INSERT IGNORE INTO categoria (id_categoria, nombre) VALUES (1, 'Hogar');
+mysql> SHOW WARNINGS;
+Warning | 1062 | Duplicate entry '1' for key 'categoria.PRIMARY'
+mysql> INSERT IGNORE INTO producto (nombre, precio, id_categoria) VALUES ('Fantasma', 'abc', 1);
+```
+
+El `SELECT id_producto, nombre, precio FROM producto WHERE nombre = 'Fantasma';` posterior devuelve la fila con `id_producto` 19 y `precio` 0.00. Usar `IGNORE` para que un script no falle deja entrar datos incorrectos sin que nadie lo note. Una clave foránea inexistente también se degrada a aviso (el 1452), y la fila no se guarda.
+
+### ON DUPLICATE KEY UPDATE: insertar o actualizar
+
+Si la fila nueva choca con una clave primaria o con una columna `UNIQUE`, `ON DUPLICATE KEY UPDATE` actualiza la fila existente en lugar de fallar. El *alias de fila* es un nombre que se da a la fila nueva con `AS` para usarla en la parte `UPDATE`. El Mouse (id 1) ya existe: su precio pasa a 85000 y se le suman 10 unidades al stock.
+
+```sql
+INSERT INTO producto (id_producto, nombre, precio, stock, id_categoria)
+VALUES (1, 'Mouse', 85000, 10, 1) AS nueva
+ON DUPLICATE KEY UPDATE
+    precio = nueva.precio,
+    stock  = producto.stock + nueva.stock;
+```
+
+La fila del Mouse tenía precio 80000.00 y stock 20, y después del `INSERT` queda con precio 85000.00 y stock 30. Si la fila no choca con ninguna clave, la sentencia se comporta como un `INSERT` normal. La forma antigua, `precio = VALUES(precio)`, sigue funcionando pero está en desuso y `SHOW WARNINGS` informa el aviso 1287 (`'VALUES function' is deprecated`), que recomienda el alias de fila. El alias no emite aviso.
+
+### Ejercicio opcional. Cargar sin duplicar (reto)
+
+La Cámara (id 4) ya existe: su precio pasa a 520000 y se suman 2 unidades a su stock. El Soporte monitor (id 19, 90000, 6 unidades, categoría 2) no existe. Carga los dos con la misma forma de `INSERT`, sin duplicar filas, y justifica el resultado. Usa el alias de fila y no `VALUES()`.
+
+::: {.callout-note collapse="true"}
+## Solución del Reto opcional
+
+```sql
+INSERT INTO producto (id_producto, nombre, precio, stock, id_categoria)
+VALUES (4, 'Cámara', 520000, 2, 3) AS nueva
+ON DUPLICATE KEY UPDATE
+    precio = nueva.precio,
+    stock  = producto.stock + nueva.stock;
+```
+
+Para el Soporte monitor cambia solo la línea del `VALUES`: `VALUES (19, 'Soporte monitor', 90000, 6, 2) AS nueva`. La Cámara queda con precio 520000.00 y stock 5, y el Soporte monitor con precio 90000.00 y stock 6. `SELECT COUNT(*) FROM producto;` devuelve 19. La Cámara chocó con la clave primaria 4 y se actualizó, porque el stock pasó de 3 a 5. El id 19 no existía, así que entró como fila nueva y la tabla pasó de 18 a 19 filas.
+:::
+
+## Referencia rápida de sintaxis
+
+```sql
+INSERT INTO tabla (col1, col2) VALUES (v1, v2), (v3, v4);        -- una fila o varias
+INSERT INTO tabla (col1, col2) SELECT a, b FROM otra WHERE ...;  -- desde una consulta
+INSERT IGNORE INTO tabla (col1) VALUES (v1);                     -- errores de fila a avisos
+INSERT INTO tabla (col1, col2) VALUES (v1, v2) AS nueva
+ON DUPLICATE KEY UPDATE col2 = nueva.col2;                       -- insertar o actualizar
+SELECT LAST_INSERT_ID();      -- primer id generado por el último INSERT de la sesión
+SELECT * FROM tabla WHERE col = 'valor';  SELECT COUNT(*) FROM tabla;  SHOW WARNINGS;
+```
+
+::: {.tabla-scroll}
+
+| Error | Significado |
+|---|---|
+| 1062 | Valor repetido en clave primaria o `UNIQUE` |
+| 1452 | Clave foránea sin fila padre |
+| 1048 y 1364 | `NULL` en una columna `NOT NULL`, o columna omitida sin valor por defecto |
+| 3819 | `CHECK` violado |
+| 1366, 1292, 1406 y 1265 | Tipo incorrecto, fecha imposible, texto demasiado largo y valor fuera del `ENUM` |
+| 1136 | Cantidad de valores distinta de la de columnas |
+
+:::
+
+## Lista de verificación
+
+- [ ] Escribo un `INSERT` con lista de columnas para una fila y para varias, y explico por qué conviene la lista.
+- [ ] Cargo las tablas en el orden de sus claves foráneas, con el jefe antes que su equipo.
+- [ ] Predigo qué valor toma una columna que omito: `DEFAULT`, `NULL` o error.
+- [ ] Uso `LAST_INSERT_ID()` para insertar un registro hijo sin escribir el id del padre.
+- [ ] Sé qué errores gastan un id de `AUTO_INCREMENT` y por qué los huecos son normales.
+- [ ] Leo un mensaje de error de MySQL e identifico la restricción que falló, y explico qué cambia con el modo estricto.
+- [ ] Compruebo una carga con `SELECT`, `COUNT(*)` y `WHERE`.
+
+## Referencias
+
+Todas las secciones son del manual de referencia de MySQL 8.4.
+
+Sentencias: [15.2.7 INSERT](https://dev.mysql.com/doc/refman/8.4/en/insert.html), [15.2.7.1 INSERT ... SELECT](https://dev.mysql.com/doc/refman/8.4/en/insert-select.html), [15.2.7.2 INSERT ... ON DUPLICATE KEY UPDATE](https://dev.mysql.com/doc/refman/8.4/en/insert-on-duplicate.html), [15.2.13 SELECT](https://dev.mysql.com/doc/refman/8.4/en/select.html) y [15.1.20 CREATE TABLE](https://dev.mysql.com/doc/refman/8.4/en/create-table.html).
+
+Restricciones y tipos: [15.1.20.5 FOREIGN KEY](https://dev.mysql.com/doc/refman/8.4/en/create-table-foreign-keys.html), [15.1.20.6 CHECK](https://dev.mysql.com/doc/refman/8.4/en/create-table-check-constraints.html), [13.6 Data Type Default Values](https://dev.mysql.com/doc/refman/8.4/en/data-type-defaults.html), [13.3.5 The ENUM Type](https://dev.mysql.com/doc/refman/8.4/en/enum.html) y [5.6.9 Using AUTO_INCREMENT](https://dev.mysql.com/doc/refman/8.4/en/example-auto-increment.html).
+
+Funciones, modo SQL y errores: [14.19.1 Aggregate Function Descriptions](https://dev.mysql.com/doc/refman/8.4/en/aggregate-functions.html), [14.15 Information Functions](https://dev.mysql.com/doc/refman/8.4/en/information-functions.html), [7.1.11 Server SQL Modes](https://dev.mysql.com/doc/refman/8.4/en/sql-mode.html), [6.5.1.5 Executing SQL Statements from a Text File](https://dev.mysql.com/doc/refman/8.4/en/mysql-batch-commands.html) y [Server Error Message Reference](https://dev.mysql.com/doc/mysql-errors/8.4/en/server-error-reference.html).
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado, y las salidas de MySQL son capturas reales tomadas durante la preparación del material con MySQL 8.4.11.
+:::

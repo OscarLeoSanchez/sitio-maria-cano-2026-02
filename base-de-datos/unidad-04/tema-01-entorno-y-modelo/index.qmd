@@ -1,0 +1,471 @@
+---
+title: "Tema 1. Entorno de trabajo y modelo de datos"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+
+::: {.tabla-scroll}
+
+|        |                                                          |
+|--------|----------------------------------------------------------|
+| Unidad | Unidad 4. Lenguaje SQL                                   |
+| Tema   | Tema 1. Entorno de trabajo y modelo de datos             |
+
+:::
+
+:::
+
+[Abrir la presentación del tema](presentacion-interactiva.html){.btn-curso}
+
+Antes de escribir la primera consulta necesitas un servidor MySQL 8.4 al que puedas conectarte y un mapa de los datos sobre los que vas a preguntar. Este tema responde cómo se instala MySQL, cómo se le envía una sentencia y qué hay detrás de las tablas del caso `ventas`, la base que usas desde el Tema 2 hasta el final de la unidad.
+
+La presentación recorre estos contenidos en clase. Esta guía los explica con más calma, muestra la salida real de cada ejemplo y resuelve los ejercicios. Todas las salidas salieron de MySQL 8.4.11 y pueden variar según el equipo de quien las ejecute.
+
+## El entorno de trabajo
+
+### Un cliente le habla a un servidor
+
+MySQL funciona con dos piezas. El *servidor* (el programa `mysqld`) guarda los datos, recibe cada sentencia, la ejecuta y devuelve el resultado. El *cliente* es el programa donde escribes, ya sea la consola `mysql` o la aplicación gráfica MySQL Workbench. Envía el texto por la red y muestra la respuesta, sin interpretar SQL. La conexión entra por un *puerto*, que en MySQL es el 3306 mientras nadie configure otro. Como los dos clientes solo transportan texto, una sentencia da el mismo resultado en ambos.
+
+### Instalar MySQL 8.4
+
+Hay dos caminos y los dos dejan el mismo servidor escuchando en el puerto 3306. En Windows instalas el servidor como un servicio con el instalador MSI, que es el método que recomienda el manual. Exige Windows de 64 bits y el paquete Visual C++ 2019.
+
+Descarga el MSI desde `dev.mysql.com/downloads` y ejecútalo. Al terminar, el asistente abre MySQL Configurator, y el servidor no arranca hasta que lo configuras. En *Type and Networking* deja el puerto 3306 y en *Accounts and Roles* escribe la contraseña de `root`, que el asistente exige. *Apply Configuration* crea el servicio y arranca el servidor.
+
+Con Docker el servidor corre dentro de un contenedor creado desde la imagen oficial `mysql:8.4`. Necesitas Docker Desktop y un comando. La opción `--name` da nombre al contenedor, `-e` define la contraseña de `root` como variable de entorno, `-p 3306:3306` conecta el puerto del equipo con el del contenedor y `-d` lo deja en segundo plano.
+
+```bash
+docker run --name mysql84 -e MYSQL_ROOT_PASSWORD=curso -p 3306:3306 -d mysql:8.4
+```
+
+El manual de MySQL advierte que escribir la contraseña en la línea de comandos es inseguro. En un contenedor desechable de práctica el riesgo es aceptable, pero no repitas el hábito con un servidor real. Al terminar, `docker rm -fv mysql84` detiene y borra el contenedor (`-f`) y también su volumen de datos (`-v`). Sin `-v` el volumen queda en el disco.
+
+### Conectarse con la consola `mysql`
+
+Con Docker abres la consola dentro del contenedor. Con una instalación en Windows basta `mysql -u root -p --default-character-set=utf8mb4`.
+
+```bash
+docker exec -it mysql84 mysql -u root -p --default-character-set=utf8mb4
+```
+
+::: {.tabla-scroll}
+
+| Opción | Qué indica | Si la omites |
+|---|---|---|
+| `-u root` | Usuario | Windows usa ODBC y Unix usa tu nombre de login |
+| `-p` | Pide la contraseña | No se envía ninguna |
+| `-h 127.0.0.1` | Equipo donde corre el servidor | Se conecta al equipo local |
+| `-P 3306` | Puerto del servidor | Usa el 3306 |
+| `--default-character-set=utf8mb4` | Juego de caracteres de la conexión | Ver el apartado siguiente |
+
+:::
+
+La `-p` minúscula pide la contraseña y la `-P` mayúscula indica el puerto. Confundirlas es un error frecuente. Si la contraseña es correcta aparece el indicador `mysql>`, y desde ahí cada sentencia termina en punto y coma.
+
+### La conexión tiene su propio juego de caracteres
+
+El cliente, la conexión y los resultados usan un juego de caracteres que se configura aparte de la base de datos. La consulta `SELECT @@character_set_client AS cliente, @@character_set_connection AS conexion, @@character_set_results AS resultados;` lo muestra. En la imagen de Docker, la consola abre en `latin1` si omites `--default-character-set=utf8mb4`, y con la opción abre en `utf8mb4`:
+
+```text
++---------+----------+------------+
+| cliente | conexion | resultados |
++---------+----------+------------+
+| latin1  | latin1   | latin1     |
++---------+----------+------------+
++---------+----------+------------+
+| cliente | conexion | resultados |
++---------+----------+------------+
+| utf8mb4 | utf8mb4  | utf8mb4    |
++---------+----------+------------+
+```
+
+Con `latin1` las tildes se corrompen y una sentencia con `COLLATE utf8mb4_0900_as_cs` falla con el error 1253. Por eso todas las conexiones de esta unidad llevan la opción.
+
+### La primera sentencia y los scripts
+
+Con la consola abierta, comprueba que el servidor responde. `VERSION()` es una función que devuelve la versión, `CURRENT_USER()` devuelve la cuenta conectada y `exit` cierra la consola.
+
+```sql
+SELECT VERSION();
+SELECT CURRENT_USER();
+exit
+```
+
+```text
++-----------+
+| VERSION() |
++-----------+
+| 8.4.11    |
++-----------+
++----------------+
+| CURRENT_USER() |
++----------------+
+| root@localhost |
++----------------+
+```
+
+Cuando una tarea necesita varias sentencias, las guardas en un archivo `.sql`, que se llama *script*. Si `saludo.sql` contiene `SELECT VERSION();`, `SELECT CURRENT_USER();` y `SELECT DATABASE();`, dentro de la consola lo ejecutas con `SOURCE saludo.sql`, que busca el archivo en la carpeta desde la que abriste la consola. Si está en otra, escribe la ruta completa con barras `/`. Los dos primeros resultados son los de arriba y el tercero es `NULL`, porque todavía no seleccionaste ninguna base con `USE`. Desde la terminal obtienes lo mismo con una redirección, y si el archivo no empieza con `USE`, indica la base en el comando, por ejemplo `mysql -u root -p ventas < archivo.sql`.
+
+En Workbench creas la conexión con el botón `+` junto a *MySQL Connections*: escribes un nombre, *Hostname* `127.0.0.1`, *Port* `3306` y *Username* `root`, pulsas *Test Connection* y *OK*, y abres la conexión con un clic en su recuadro. En el editor, `Ctrl + Enter` ejecuta la sentencia del cursor y `Ctrl + Shift + Enter` ejecuta todas. En MySQL un *esquema* es lo mismo que una base de datos.
+
+### Un error se lee en seis partes
+
+Cuando una sentencia falla, MySQL responde con una línea que dice qué pasó y dónde. Esta sale al insertar una categoría que ya existe:
+
+```text
+ERROR 1062 (23000) at line 68: Duplicate entry 'Audio' for key 'categoria.nombre'
+```
+
+El mensaje empieza con `ERROR`, que indica que el servidor rechazó la sentencia. Sigue `1062`, el código de error de MySQL, que es el que buscas en el manual, y `(23000)`, el SQLSTATE, que es el código del estándar SQL. La parte `at line 68` dice en qué línea del script ocurrió y falta en la consola interactiva. Al final, `Duplicate entry 'Audio'` indica qué valor se repitió y `for key 'categoria.nombre'` qué restricción lo rechazó.
+
+El error de sintaxis más común es olvidar el punto y coma. MySQL lee dos sentencias seguidas como una sola y se queja donde empieza la segunda, como muestra este error de un archivo con `SELECT VERSION()` seguido de `SELECT DATABASE();`:
+
+```text
+ERROR 1064 (42000) at line 43: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELECT DATABASE()' at line 2
+```
+
+### Si falla la conexión
+
+Dos fallos aparecen con cuentas distintas de `root`. El primero es el *plugin de autenticación*, que decide cómo se comprueba la contraseña de una cuenta. En 8.4 el plugin antiguo, `mysql_native_password`, viene desactivado, y `CREATE USER 'ana'@'%' IDENTIFIED WITH mysql_native_password BY 'clave1';` falla. Una cuenta creada sin indicar plugin usa `caching_sha2_password`. Para un cliente antiguo, el servidor puede arrancar con `--mysql-native-password=ON`, aunque el manual marca ese plugin como obsoleto.
+
+```text
+ERROR 1524 (HY000) at line 51: Plugin 'mysql_native_password' is not loaded
+```
+
+El segundo es el error 2061 en la primera conexión de una cuenta nueva con TLS apagado (`--ssl-mode=DISABLED`). Sin TLS, el servidor necesita entregar su clave pública RSA para recibir la contraseña, y no lo hace mientras esa contraseña no esté en su caché. La caché queda vacía al crear la cuenta, al cambiar su clave, con `RENAME USER` o `FLUSH PRIVILEGES`, y después de reiniciar el servidor. Con `--get-server-public-key` el cliente pide la clave RSA y conecta, y sin apagar TLS también conecta.
+
+```text
+ERROR 2061 (HY000): Authentication plugin 'caching_sha2_password' reported error: Authentication requires secure connection.
+```
+
+## Qué es SQL
+
+### Tablas, filas y claves
+
+Una base relacional guarda los datos en *tablas*, y cada tabla corresponde a una entidad, como los clientes. Una *fila* es un registro, un cliente, y una *columna* es un dato que tienen todas las filas, como el nombre. La *clave primaria* identifica cada fila y no se repite: en `cliente` es `id_cliente`.
+
+```sql
+SELECT id_cliente, nombre, correo, ciudad, fecha_registro FROM cliente WHERE id_cliente <= 3;
+```
+
+```text
++------------+--------+------------------+-----------+----------------+
+| id_cliente | nombre | correo           | ciudad    | fecha_registro |
++------------+--------+------------------+-----------+----------------+
+|          1 | Ana    | ana@email.com    | Medellín  | 2024-02-10     |
+|          2 | Carlos | carlos@email.com | Bogotá    | 2024-05-22     |
+|          3 | Laura  | laura@email.com  | Cali      | 2024-09-03     |
++------------+--------+------------------+-----------+----------------+
+```
+
+Las tablas se vinculan con una *clave foránea*, una columna que guarda la clave primaria de otra tabla. En `pedido`, `id_cliente` apunta a `cliente`. El pedido 101 guarda el 1, así que es de Ana, y el 102 guarda el 2, así que es de Carlos.
+
+```sql
+SELECT id_pedido, fecha, estado, id_cliente FROM pedido WHERE id_pedido <= 102;
+```
+
+```text
++-----------+------------+-----------+------------+
+| id_pedido | fecha      | estado    | id_cliente |
++-----------+------------+-----------+------------+
+|       101 | 2026-09-20 | pendiente |          1 |
+|       102 | 2026-09-21 | pagado    |          2 |
++-----------+------------+-----------+------------+
+```
+
+### SQL describe qué quieres
+
+SQL es un lenguaje *declarativo*: la sentencia describe el resultado y el motor decide cómo obtenerlo. Esta pide el nombre y la ciudad de los clientes de Cali. `SELECT` es la palabra clave que dice qué hacer, `nombre, ciudad` son identificadores (los nombres de las columnas que se piden), `FROM cliente` es la cláusula que dice de qué tabla, `WHERE ciudad = 'Cali'` deja solo las filas que cumplen la condición y el punto y coma cierra la sentencia.
+
+```sql
+SELECT nombre, ciudad
+FROM cliente
+WHERE ciudad = 'Cali';
+```
+
+```text
++--------+--------+
+| nombre | ciudad |
++--------+--------+
+| Laura  | Cali   |
+| Pedro  | Cali   |
++--------+--------+
+```
+
+La tabla tiene diez filas y el resultado trae dos. Las palabras clave no distinguen mayúsculas de minúsculas, así que `SeLeCt 1 + 1;` funciona y devuelve `2`. Aun así, el curso fija una convención para que el código se lea igual en todos los temas: palabras clave en mayúsculas, nombres en minúsculas con guion bajo (`detalle_pedido`), tablas en singular (`cliente`) y claves con `id_` seguido del nombre de la tabla (`id_cliente`).
+
+Un comentario es texto que MySQL ignora. Hay tres formas, y las tres sentencias siguientes devuelven `2`:
+
+```sql
+SELECT 1 + 1; -- guiones y un espacio
+SELECT 1 + 1; # almohadilla
+SELECT 1 /* varias líneas */ + 1;
+```
+
+Los guiones dobles exigen un espacio, un tabulador o un salto de línea después de ellos. Si los pegas a la palabra siguiente, MySQL lee dos signos menos y un identificador:
+
+```sql
+SELECT 2 + 2 --suma
+;
+```
+
+```text
+ERROR 1054 (42S22) at line 94: Unknown column 'suma' in 'field list'
+```
+
+### Un resultado es una tabla
+
+Lo que devuelve un `SELECT` es una tabla nueva. Pedir una sola columna de `cliente` devuelve diez filas, una por cliente:
+
+```sql
+SELECT ciudad FROM cliente;
+```
+
+```text
++-----------+
+| ciudad    |
++-----------+
+| Medellín  |
+| Bogotá    |
+| Cali      |
+| Medellín  |
+| Bogotá    |
+| Cali      |
+| Medellín  |
+| Bogotá    |
+| NULL      |
+| NULL      |
++-----------+
+```
+
+El resultado no elimina repetidos, así que Medellín y Bogotá aparecen tres veces cada una. Diego y Valentina no tienen ciudad registrada, y la celda muestra `NULL`, que significa que no hay valor. Sin una cláusula de orden, MySQL devuelve las filas en el orden que le resulte más cómodo.
+
+### Cinco familias de sentencias
+
+Las sentencias se agrupan según lo que hacen. Algunos textos incluyen `SELECT` dentro de DML. Aquí se separa en DQL porque solo lee y no cambia nada.
+
+::: {.tabla-scroll}
+
+| Familia | Nombre completo | Qué hace | Sentencias |
+|---|---|---|---|
+| DDL | Data Definition Language | Define la estructura | `CREATE`, `ALTER`, `DROP` |
+| DML | Data Manipulation Language | Cambia los datos | `INSERT`, `UPDATE`, `DELETE` |
+| DQL | Data Query Language | Consulta los datos | `SELECT` |
+| DCL | Data Control Language | Da y quita permisos | `GRANT`, `REVOKE` |
+| TCL | Transaction Control Language | Confirma o deshace cambios | `START TRANSACTION`, `COMMIT`, `ROLLBACK` |
+
+:::
+
+## El modelo entidad relación del caso ventas
+
+### Leer la pata de gallo
+
+La Unidad 3 escribía las relaciones como 1:N y N:M. La *pata de gallo* dibuja lo mismo con símbolos junto a cada extremo de la línea. Cada rectángulo es una *entidad*. La *cardinalidad* cuenta cuántas filas de una entidad se relacionan con una fila de la otra, y la *participación* dice si esa relación es obligatoria: el primer símbolo es el mínimo y el segundo, el máximo. Las lecturas posibles son uno y solo uno (1 y 1), cero o uno (0 y 1), cero o muchos (0 y varios) y uno o muchos (1 y varios).
+
+En el diagrama siguiente cada número va junto a la tabla a la que toca y dice cuántas filas de ella acompañan a una fila de la tabla del otro extremo. El `0..N` junto a `pedido` en la línea con `cliente` indica que un cliente tiene cero o muchos pedidos.
+
+::: {.diagrama}
+
+<svg viewBox="0 0 1060 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Modelo ventas con seis tablas. categoria se relaciona con producto, producto con detalle_pedido, detalle_pedido con pedido, pedido con cliente y pedido con empleado. empleado se relaciona consigo misma por id_jefe." font-family="Segoe UI, Inter, system-ui, sans-serif">
+  <g fill="#ffffff" stroke="#d6e3f3" stroke-width="1.5"><rect x="20" y="40" width="140" height="96" rx="10"/><rect x="240" y="40" width="140" height="96" rx="10"/><rect x="460" y="40" width="140" height="96" rx="10"/><rect x="680" y="40" width="140" height="96" rx="10"/><rect x="900" y="40" width="140" height="96" rx="10"/><rect x="680" y="190" width="140" height="78" rx="10"/></g>
+  <path d="M160 88H240M380 88H460M600 88H680M820 88H900M750 136V190M820 215H850V245H820" stroke="#7fa6d6" stroke-width="2" fill="none"/>
+  <g font-family="Consolas, monospace" font-size="14" font-weight="700" fill="#1b2a41" text-anchor="middle"><text x="90" y="62">categoria</text><text x="310" y="62">producto</text><text x="530" y="62">detalle_pedido</text><text x="750" y="62">pedido</text><text x="970" y="62">cliente</text><text x="750" y="212">empleado</text></g>
+  <g font-family="Consolas, monospace" font-size="12" fill="#4a5b70" text-anchor="middle"><text x="90" y="84">PK id_categoria</text><text x="310" y="84">PK id_producto</text><text x="310" y="102">FK id_categoria</text><text x="530" y="84">PK,FK id_pedido</text><text x="530" y="102">PK,FK id_producto</text><text x="750" y="84">PK id_pedido</text><text x="750" y="102">FK id_cliente</text><text x="750" y="120">FK id_empleado</text><text x="970" y="84">PK id_cliente</text><text x="750" y="234">PK id_empleado</text><text x="750" y="252">FK id_jefe</text></g>
+  <g font-size="12" font-weight="700" fill="#4f86c6"><text x="164" y="82">0..1</text><text x="212" y="82">0..N</text><text x="384" y="82">1</text><text x="432" y="82">0..N</text><text x="604" y="82">0..N</text><text x="660" y="82" text-anchor="end">1</text><text x="824" y="82">0..N</text><text x="896" y="82" text-anchor="end">1</text><text x="756" y="152">0..N</text><text x="756" y="184">1</text><text x="858" y="226">jefe 0..1</text><text x="858" y="246">subordinados 0..N</text></g>
+</svg>
+
+:::
+
+### Entidades, claves y vínculos
+
+El caso tiene seis entidades. Cada una es una tabla con su clave primaria, y las claves foráneas indican a qué tabla apunta cada vínculo.
+
+::: {.tabla-scroll}
+
+| Entidad | Clave primaria | Claves foráneas | Apuntan a |
+|---|---|---|---|
+| `categoria` | `id_categoria` | ninguna | ninguna |
+| `producto` | `id_producto` | `id_categoria` | `categoria` |
+| `cliente` | `id_cliente` | ninguna | ninguna |
+| `empleado` | `id_empleado` | `id_jefe` | `empleado` |
+| `pedido` | `id_pedido` | `id_cliente`, `id_empleado` | `cliente`, `empleado` |
+| `detalle_pedido` | `id_pedido`, `id_producto` | `id_pedido`, `id_producto` | `pedido`, `producto` |
+
+:::
+
+La clave foránea vive en el lado de muchos. Un cliente tiene muchos pedidos, así que `id_cliente` va en `pedido`. Poner `id_pedido` en `cliente` obligaría a guardar un solo pedido por cliente. Entre `pedido` y `producto` la relación es de muchos a muchos, porque un pedido lleva varios productos y un producto aparece en muchos pedidos. La tabla intermedia `detalle_pedido` la convierte en dos relaciones de uno a muchos. Su clave primaria combina las dos columnas, y guarda además `cantidad` y `precio_unitario`, el precio al momento de la venta. Por eso en tres líneas de pedido el precio unitario difiere del precio actual del producto.
+
+La tabla `empleado` se relaciona consigo misma. La columna `id_jefe` guarda el `id_empleado` del jefe, y la gerente, que no tiene jefe, la deja en `NULL`. Respecto de la Unidad 3, `empleado` es una tabla nueva.
+
+### Cargar la base ventas
+
+Los archivos [esquema.sql](../sql/esquema.sql) y [datos.sql](../sql/datos.sql) crean la base y la llenan. Descárgalos en una carpeta, abre la consola desde ella y ejecuta lo siguiente. Quedan 5 categorías, 18 productos, 10 clientes, 8 empleados, 25 pedidos y 56 líneas de detalle, y `esquema.sql` se puede ejecutar más de una vez sin error. El Tema 2 explica las sentencias que contiene.
+
+```sql
+SOURCE esquema.sql
+SOURCE datos.sql
+USE ventas;
+SHOW TABLES;
+```
+
+```text
++------------------+
+| Tables_in_ventas |
++------------------+
+| categoria        |
+| cliente          |
+| detalle_pedido   |
+| empleado         |
+| pedido           |
+| producto         |
++------------------+
+```
+
+## Ejercicios
+
+### Ejercicio 1. Conectar y ejecutar un script
+
+Completa el comando para conectarte como `root` al servidor del propio equipo por el puerto 3306, y escribe un archivo `saludo.sql` que muestre la versión, el usuario conectado y la base seleccionada. Ejecútalo con `SOURCE`.
+
+```text
+mysql -u ____ -p -h ____ -P ____
+```
+
+::: {.callout-note collapse="true"}
+## Solución
+
+El comando es `mysql -u root -p -h 127.0.0.1 -P 3306`. El archivo contiene `SELECT VERSION();`, `SELECT CURRENT_USER();` y `SELECT DATABASE();`, cada una con su punto y coma. `SOURCE saludo.sql` devuelve `8.4.11`, `root@localhost` y `NULL`, porque no hay una base seleccionada.
+:::
+
+### Ejercicio 2. Leer cinco errores
+
+Con la base `ventas` cargada, estas cinco líneas salieron de cinco sentencias fallidas. Di qué falló en cada una y escribe una sentencia que la produzca.
+
+```text
+ERROR 1049 (42000) at line 69: Unknown database 'ventass'
+ERROR 1146 (42S02) at line 70: Table 'ventas.productos' doesn't exist
+ERROR 1054 (42S22) at line 71: Unknown column 'preci' in 'field list'
+ERROR 1064 (42000) at line 72: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'producto' at line 1
+ERROR 1062 (23000) at line 68: Duplicate entry 'Audio' for key 'categoria.nombre'
+```
+
+::: {.callout-note collapse="true"}
+## Solución
+
+- 1049, base inexistente: `USE ventass;`.
+- 1146, tabla inexistente: `SELECT * FROM productos;`.
+- 1054, columna inexistente: `SELECT preci FROM producto;`.
+- 1064, error de sintaxis: `SELECT nombre FORM producto;`. MySQL toma `FORM` como un alias de `nombre` y se detiene en `producto`.
+- 1062, valor repetido: `INSERT INTO categoria (nombre) VALUES ('Audio');`, porque la categoría ya existe y `nombre` es única.
+:::
+
+### Ejercicio 3. Clasificar diez sentencias
+
+Indica a qué familia pertenece cada sentencia: DDL, DML, DQL, DCL o TCL.
+
+1. `CREATE DATABASE tienda;`
+2. `INSERT INTO categoria (nombre) VALUES ('Hogar');`
+3. `SELECT nombre FROM producto WHERE stock = 0;`
+4. `GRANT SELECT ON ventas.* TO 'ana'@'%';`
+5. `COMMIT;`
+6. `DROP DATABASE tienda;`
+7. `UPDATE producto SET stock = 25 WHERE id_producto = 1;`
+8. `ROLLBACK;`
+9. `REVOKE SELECT ON ventas.* FROM 'ana'@'%';`
+10. `SELECT * FROM cliente;`
+
+::: {.callout-note collapse="true"}
+## Solución
+
+DDL: 1 y 6. DML: 2 y 7. DQL: 3 y 10. DCL: 4 y 9. TCL: 5 y 8. La sentencia 3 devuelve una fila, `Monitor 27 pulgadas`, el producto con stock cero.
+:::
+
+### Ejercicio 4. Completar las cardinalidades
+
+Completa cada frase con una de estas opciones: uno y solo uno, cero o uno, cero o muchos, uno o muchos.
+
+1. Un cliente realiza ___ pedidos.
+2. Un pedido pertenece a ___ cliente.
+3. Un producto tiene ___ categoría.
+4. Una categoría agrupa ___ productos.
+5. Un empleado tiene ___ jefe.
+6. Un producto aparece en ___ líneas de detalle.
+
+::: {.callout-note collapse="true"}
+## Solución
+
+1. Cero o muchos. Valentina, la cliente 10, no tiene pedidos.
+2. Uno y solo uno. `id_cliente` es `NOT NULL` en `pedido`.
+3. Cero o uno. `id_categoria` admite `NULL` en `producto`.
+4. Cero o muchos.
+5. Cero o uno. La gerente no tiene jefe.
+6. Cero o muchos. El producto 18, `Base refrigerante`, nunca se vendió.
+:::
+
+### Ejercicio 5. Varios empleados atienden un pedido
+
+Hoy cada pedido lo atiende un solo empleado, porque `id_empleado` es una columna de `pedido`. La empresa quiere que varios empleados puedan atender el mismo pedido. Describe el cambio en el modelo.
+
+::: {.callout-note collapse="true"}
+## Solución
+
+Agregar más columnas `id_empleado` a `pedido` limita cuántos empleados caben y complica las consultas. La relación entre pedido y empleado pasa a ser de muchos a muchos, y se resuelve con una tabla intermedia, como `detalle_pedido` con `pedido` y `producto`. `pedido` conserva `id_pedido` como clave primaria y pierde la columna `id_empleado`. La tabla nueva `atiende` lleva `id_pedido` e `id_empleado` como clave primaria compuesta y como dos claves foráneas. Cada fila de `atiende` dice que un empleado atendió un pedido, y un pedido tiene tantas filas como empleados lo atendieron.
+:::
+
+## Referencia rápida
+
+::: {.tabla-scroll}
+
+| Tarea | Sintaxis |
+|---|---|
+| Abrir la consola | `mysql -u root -p -h 127.0.0.1 -P 3306 --default-character-set=utf8mb4` |
+| Versión, cuenta y base actual | `SELECT VERSION();`, `SELECT CURRENT_USER();`, `SELECT DATABASE();` |
+| Ejecutar un archivo en la consola | `SOURCE archivo.sql` |
+| Ejecutar un archivo desde la terminal | `mysql -u root -p ventas < archivo.sql` |
+| Seleccionar una base y listar sus tablas | `USE ventas;` y `SHOW TABLES;` |
+| Comentarios | `-- texto` (con espacio), `# texto`, `/* texto */` |
+| Borrar el contenedor y su volumen | `docker rm -fv mysql84` |
+
+:::
+
+## Lista de verificación
+
+- [ ] Tengo un servidor MySQL 8.4 funcionando, con Windows o con Docker.
+- [ ] Me conecto con la consola `mysql`, distingo `-p` de `-P` y uso `--default-character-set=utf8mb4`.
+- [ ] Ejecuto un archivo de sentencias con `SOURCE` y con `<`.
+- [ ] Leo un mensaje de error y encuentro su código, su SQLSTATE y la restricción que falló.
+- [ ] Clasifico una sentencia en DDL, DML, DQL, DCL o TCL e identifico sus cláusulas.
+- [ ] Leo el modelo `ventas`: entidades, claves primarias, claves foráneas y cardinalidades.
+- [ ] Cargué la base `ventas` y `SHOW TABLES` muestra seis tablas.
+
+## Referencias
+
+Manual de referencia de MySQL 8.4 y herramientas:
+
+- [2.3 Installing MySQL on Microsoft Windows](https://dev.mysql.com/doc/refman/8.4/en/windows-installation.html)
+- [2.5.6.1 Basic Steps for MySQL Server Deployment with Docker](https://dev.mysql.com/doc/refman/8.4/en/docker-mysql-getting-started.html)
+- [2.5.6.2 More Topics on Deploying MySQL Server with Docker](https://dev.mysql.com/doc/refman/8.4/en/docker-mysql-more-topics.html)
+- [6.2.4 Connecting to the MySQL Server Using Command Options](https://dev.mysql.com/doc/refman/8.4/en/connecting.html)
+- [6.5.1.1 mysql Client Options](https://dev.mysql.com/doc/refman/8.4/en/mysql-command-options.html)
+- [6.5.1.2 mysql Client Commands](https://dev.mysql.com/doc/refman/8.4/en/mysql-commands.html)
+- [6.5.1.5 Executing SQL Statements from a Text File](https://dev.mysql.com/doc/refman/8.4/en/mysql-batch-commands.html)
+- [8.4.1.1 Native Pluggable Authentication](https://dev.mysql.com/doc/refman/8.4/en/native-pluggable-authentication.html)
+- [8.4.1.2 Caching SHA-2 Pluggable Authentication](https://dev.mysql.com/doc/refman/8.4/en/caching-sha2-pluggable-authentication.html)
+- [11.7 Comments](https://dev.mysql.com/doc/refman/8.4/en/comments.html)
+- [MySQL 8.4 Error Reference, 2 Server Error Message Reference](https://dev.mysql.com/doc/mysql-errors/8.4/en/server-error-reference.html)
+- [MySQL Workbench Manual, 5.2 Creating A New MySQL Connection (Tutorial)](https://dev.mysql.com/doc/workbench/en/wb-getting-started-tutorial-create-connection.html)
+- [Imagen oficial de MySQL en Docker Hub](https://hub.docker.com/_/mysql) y [docker container rm](https://docs.docker.com/reference/cli/docker/container/rm/)
+
+Libros sobre el modelo entidad relación: Silberschatz, Korth y Sudarshan, *Database System Concepts*, séptima edición. Elmasri y Navathe, *Fundamentals of Database Systems*, séptima edición. Connolly y Begg, *Database Systems: A Practical Approach to Design, Implementation, and Management*, sexta edición.
+
+Tema siguiente: [Tema 2. Bases de datos, tipos y restricciones](../tema-02-bases-de-datos-y-tipos/index.qmd).
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado, y las salidas de SQL se ejecutaron en MySQL 8.4.11.
+:::

@@ -1,0 +1,636 @@
+---
+title: "Tema 6. Seleccionar y filtrar"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+
+::: {.tabla-scroll}
+
+|        |                                      |
+|--------|--------------------------------------|
+| Unidad | Unidad 4. Lenguaje SQL               |
+| Tema   | Tema 6. Seleccionar y filtrar        |
+
+:::
+
+:::
+
+[Abrir la presentación del tema](presentacion-interactiva.html){.btn-curso}
+
+Ya creaste tablas y las llenaste de datos. Este tema responde cómo le pides a MySQL solo lo que necesitas: las columnas que quieres ver y las filas que cumplen una condición. `SELECT` y `FROM` deciden las columnas. `WHERE` decide las filas, e incluye la parte que más confunde al principio, qué hace MySQL cuando un dato falta (`NULL`).
+
+Todas las consultas son de lectura y puedes repetirlas sin alterar los datos. Las salidas salieron de MySQL 8.4 con el caso `ventas` recién cargado. Cuando un resultado trae muchas filas, el texto previo al bloque indica cuántas son y el bloque muestra las primeras.
+
+## El caso ventas
+
+Los ejemplos usan dos tablas. `producto` tiene 18 filas y las columnas `id_producto` (`int`), `nombre` (`varchar(100)`), `precio` (`decimal(10,2)`), `stock` (`int`) e `id_categoria` (`int`). `cliente` tiene 10 filas y las columnas `id_cliente` (`int`), `nombre` (`varchar(100)`), `correo` (`varchar(150)`), `ciudad` (`varchar(80)`) y `fecha_registro` (`date`). Dos clientes no tienen correo y dos no tienen ciudad: esos datos que faltan se guardan como `NULL`.
+
+## SELECT y FROM
+
+`SELECT` lista las columnas que aparecen en el resultado y `FROM` nombra la tabla de donde salen las filas. Es como una hoja de cálculo: `FROM` abre la hoja y `SELECT` decide qué columnas dejas visibles. Las consultas de esta guía llevan las palabras reservadas en mayúscula y una cláusula por línea, una convención de lectura. El punto y coma cierra la sentencia.
+
+```sql
+SELECT nombre, precio FROM producto;
+```
+
+Son 18 filas, una por producto. Estas son las primeras dos.
+
+```text
++---------------------+------------+
+| nombre              | precio     |
++---------------------+------------+
+| Mouse               |   80000.00 |
+| Monitor             |  900000.00 |
++---------------------+------------+
+```
+
+### El asterisco y la lista de columnas
+
+El asterisco `*` pide todas las columnas de la tabla, en el orden en que se declararon. Sirve para explorar una tabla que no conoces. En `correo`, el valor `NULL` marca un dato que falta: Pedro no tiene correo. Son 10 filas y el bloque muestra las primeras seis.
+
+```sql
+SELECT * FROM cliente;
+```
+
+```text
++------------+-----------+---------------------+-----------+----------------+
+| id_cliente | nombre    | correo              | ciudad    | fecha_registro |
++------------+-----------+---------------------+-----------+----------------+
+|          1 | Ana       | ana@email.com       | Medellín  | 2024-02-10     |
+|          2 | Carlos    | carlos@email.com    | Bogotá    | 2024-05-22     |
+|          3 | Laura     | laura@email.com     | Cali      | 2024-09-03     |
+|          4 | Juan      | juan@email.com      | Medellín  | 2025-01-15     |
+|          5 | Sara      | sara@email.com      | Bogotá    | 2025-04-30     |
+|          6 | Pedro     | NULL                | Cali      | 2025-08-19     |
++------------+-----------+---------------------+-----------+----------------+
+```
+
+Cuando ya sabes qué necesitas, nombra las columnas: `SELECT nombre, ciudad FROM cliente;` devuelve solo esas dos y sigue funcionando igual si alguien agrega columnas a la tabla.
+
+### Expresiones, alias y literales
+
+Una *expresión* combina columnas, literales, operadores y funciones, y MySQL la calcula una vez por cada fila. Sin un nombre explícito, el encabezado de la columna es el texto de la expresión.
+
+```sql
+SELECT nombre, precio, precio * 0.9 FROM producto;
+```
+
+Primeras dos filas de las 18.
+
+```text
++---------------------+------------+--------------+
+| nombre              | precio     | precio * 0.9 |
++---------------------+------------+--------------+
+| Mouse               |   80000.00 |    72000.000 |
+| Monitor             |  900000.00 |   810000.000 |
++---------------------+------------+--------------+
+```
+
+Un *alias* es el nombre que le das a una columna o expresión dentro del resultado. Se escribe con `AS` y vale solo para esa consulta: la tabla conserva sus nombres. La tabla `producto` no guarda ningún precio rebajado y el cálculo existe solo en el resultado.
+
+```sql
+SELECT nombre, precio, precio * 0.9 AS precio_oferta FROM producto;
+```
+
+```text
++---------------------+------------+---------------+
+| nombre              | precio     | precio_oferta |
++---------------------+------------+---------------+
+| Mouse               |   80000.00 |     72000.000 |
+| Monitor             |  900000.00 |    810000.000 |
++---------------------+------------+---------------+
+```
+
+Un *literal* es un valor escrito en la consulta, como `'COP'` o `0.9`. MySQL lo repite en cada fila: `SELECT nombre, precio, 'COP' AS moneda FROM producto;` devuelve 18 filas con `COP` en la tercera columna.
+
+### DISTINCT
+
+Hay cinco categorías y 18 productos, así que `SELECT id_categoria FROM producto;` devuelve 18 filas con valores repetidos. `DISTINCT` quita las filas repetidas.
+
+```sql
+SELECT DISTINCT id_categoria FROM producto;
+```
+
+```text
++--------------+
+| id_categoria |
++--------------+
+|            1 |
+|            2 |
+|            3 |
+|            4 |
+|            5 |
++--------------+
+```
+
+`DISTINCT` compara la fila completa que produce el `SELECT`. Los dos clientes llamados Carlos tienen el mismo nombre y ciudades distintas, así que `SELECT DISTINCT nombre FROM cliente` devuelve 9 filas y `SELECT DISTINCT nombre, ciudad FROM cliente` devuelve 10. Para `DISTINCT`, `NULL` cuenta como un valor más: `SELECT DISTINCT ciudad FROM cliente` devuelve cuatro filas (Medellín, Bogotá, Cali y `NULL`), y los dos clientes sin ciudad quedan en una sola.
+
+### Errores frecuentes del SELECT
+
+Un error de MySQL tiene tres partes: el número, el `SQLSTATE` (un código estándar de cinco caracteres) y el mensaje. Al ejecutar un archivo, la consola agrega `at line N`, la línea del archivo; en una sesión interactiva no aparece. El `at line 1` del final del error de sintaxis es otra cosa, la línea de la sentencia donde MySQL dejó de entender.
+
+```sql
+SELEC nombre FROM producto;
+SELECT preci FROM producto;
+SELECT * FROM productos;
+```
+
+Cada sentencia produce un error distinto, en este orden.
+
+```text
+ERROR 1064 (42000) at line 59: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC nombre FROM producto' at line 1
+ERROR 1054 (42S22) at line 61: Unknown column 'preci' in 'field list'
+ERROR 1146 (42S02) at line 63: Table 'ventas.productos' doesn't exist
+```
+
+El 1064 es un error de sintaxis: `SELEC` no existe en el lenguaje, y MySQL cita el texto desde donde dejó de entender. El 1054 nombra la columna y dónde la buscó (`field list` es la lista del `SELECT`). El 1146 nombra la base y la tabla; la tabla se llama `producto`, en singular.
+
+### Ejercicios de SELECT
+
+#### Ejercicio 1. Inventario con alias
+
+Muestra cada producto con su inventario, que es el precio multiplicado por el stock, con el alias `inventario`.
+
+::: {.callout-note collapse="true"}
+## Solución
+
+```sql
+SELECT nombre, precio * stock AS inventario FROM producto;
+```
+
+Devuelve 18 filas. El producto 8 muestra `0.00` porque su stock es 0.
+:::
+
+#### Ejercicio 2. Dos columnas que salen como una
+
+Esta consulta debería mostrar el nombre y el precio, pero el resultado tiene una sola columna. Corrígela.
+
+```sql
+SELECT nombre precio
+FROM producto;
+```
+
+::: {.callout-note collapse="true"}
+## Solución
+
+Falta la coma. Sin ella, MySQL toma `precio` como alias de `nombre`, porque `AS` es opcional, y el resultado trae una sola columna llamada `precio` con los nombres de los productos. La versión corregida es `SELECT nombre, precio FROM producto;`.
+:::
+
+#### Ejercicio 3. Una columna o dos
+
+Sin ejecutarlas, indica cuántas filas devuelve cada consulta y por qué la tercera devuelve más que las otras.
+
+```sql
+SELECT DISTINCT ciudad FROM cliente;
+SELECT DISTINCT nombre FROM cliente;
+SELECT DISTINCT nombre, ciudad FROM cliente;
+```
+
+::: {.callout-note collapse="true"}
+## Solución
+
+Devuelven 4, 9 y 10 filas. Hay cuatro valores de `ciudad` (con `NULL`) y nueve nombres distintos. La tercera compara la pareja completa, y los dos Carlos viven en ciudades distintas, así que ninguna fila se repite.
+:::
+
+## WHERE
+
+`WHERE` filtra filas. Después de `FROM`, MySQL evalúa una condición en cada fila y conserva solo aquellas donde es verdadera. Esa condición se llama *predicado*: se evalúa por fila y da verdadero, falso o desconocido.
+
+```sql
+SELECT id_producto, nombre, precio
+FROM producto
+WHERE precio < 150000;
+```
+
+Son 6 productos. Estos son los primeros tres.
+
+```text
++-------------+-------------------+-----------+
+| id_producto | nombre            | precio    |
++-------------+-------------------+-----------+
+|           1 | Mouse             |  80000.00 |
+|           6 | Mouse gamer       | 120000.00 |
+|           7 | Hub USB           |  60000.00 |
++-------------+-------------------+-----------+
+```
+
+::: {.tabla-scroll}
+
+| Operador | Significado |
+|---|---|
+| `=`, `<>` (o `!=`) | igual, distinto |
+| `<`, `<=`, `>`, `>=` | menor, menor o igual, mayor, mayor o igual |
+| `<=>` | igual que además admite `NULL` en ambos lados |
+| `BETWEEN a AND b` | entre `a` y `b`, extremos incluidos |
+| `IN (v1, v2, ...)` | el valor está en la lista |
+| `LIKE patrón` | el texto cumple el patrón |
+| `IS NULL`, `IS NOT NULL` | el dato falta o existe |
+
+:::
+
+El texto va entre comillas simples; sin comillas, MySQL lee la palabra como el nombre de una columna. La condición admite expresiones, como `WHERE precio * stock > 3000000`. Lo que no admite es un alias del mismo `SELECT`, porque MySQL evalúa el `WHERE` antes de calcular las columnas del resultado.
+
+```sql
+SELECT nombre, precio * stock AS inventario
+FROM producto
+WHERE inventario > 3000000;
+```
+
+```text
+ERROR 1054 (42S22) at line 21: Unknown column 'inventario' in 'where clause'
+```
+
+La solución es repetir la expresión: `WHERE precio * stock > 3000000`, que devuelve Monitor, Pantalla portátil y Cámara réflex.
+
+## AND, OR y NOT
+
+`AND` exige que se cumplan las dos condiciones, `OR` que se cumpla al menos una y `NOT` invierte el resultado. `XOR` es verdadero cuando solo una de las dos lo es. Cuando una condición mezcla operadores, MySQL los evalúa en este orden, de primero a último: `NOT`, `AND`, `XOR`, `OR`. Las comparaciones (`=`, `<`, `LIKE`, `IN`, `IS NULL`) se resuelven antes que todos ellos. Es la lógica de la aritmética, donde la multiplicación va antes que la suma: aquí `AND` hace de multiplicación y `OR` de suma.
+
+Esta consulta pretende traer los clientes de Cali o de Bogotá que tengan correo, y el orden de evaluación la convierte en otra cosa.
+
+```sql
+SELECT id_cliente, nombre, ciudad, correo
+FROM cliente
+WHERE ciudad = 'Cali'
+   OR ciudad = 'Bogotá'
+  AND correo IS NOT NULL;
+```
+
+```text
++------------+--------+---------+------------------+
+| id_cliente | nombre | ciudad  | correo           |
++------------+--------+---------+------------------+
+|          2 | Carlos | Bogotá  | carlos@email.com |
+|          3 | Laura  | Cali    | laura@email.com  |
+|          5 | Sara   | Bogotá  | sara@email.com   |
+|          6 | Pedro  | Cali    | NULL             |
++------------+--------+---------+------------------+
+```
+
+Como `AND` se evalúa primero, la condición se lee `ciudad = 'Cali' OR (ciudad = 'Bogotá' AND correo IS NOT NULL)`. Pedro vive en Cali y no tiene correo, pero entra de todos modos. Los paréntesis cambian el agrupamiento.
+
+```sql
+SELECT id_cliente, nombre, ciudad, correo
+FROM cliente
+WHERE (ciudad = 'Cali' OR ciudad = 'Bogotá')
+  AND correo IS NOT NULL;
+```
+
+```text
++------------+--------+---------+------------------+
+| id_cliente | nombre | ciudad  | correo           |
++------------+--------+---------+------------------+
+|          2 | Carlos | Bogotá  | carlos@email.com |
+|          3 | Laura  | Cali    | laura@email.com  |
+|          5 | Sara   | Bogotá  | sara@email.com   |
++------------+--------+---------+------------------+
+```
+
+Ante la duda, usa paréntesis: cuestan poco y dejan claro qué se agrupa primero.
+
+## Tres valores de verdad
+
+Una comparación en SQL tiene tres resultados posibles: verdadero (`TRUE`), falso (`FALSE`) y desconocido (`UNKNOWN`). El desconocido aparece cuando alguno de los datos comparados es `NULL`, porque MySQL no puede afirmar ni negar la comparación, y lo muestra como `NULL`. Estas son las nueve combinaciones de `AND` y `OR`, evaluadas en MySQL con `TRUE`, `FALSE` y `NULL`.
+
+::: {.tabla-scroll}
+
+| a | b | a AND b | a OR b |
+|---|---|---|---|
+| TRUE | TRUE | TRUE | TRUE |
+| TRUE | FALSE | FALSE | TRUE |
+| TRUE | UNKNOWN | UNKNOWN | TRUE |
+| FALSE | TRUE | FALSE | TRUE |
+| FALSE | FALSE | FALSE | FALSE |
+| FALSE | UNKNOWN | FALSE | UNKNOWN |
+| UNKNOWN | TRUE | UNKNOWN | TRUE |
+| UNKNOWN | FALSE | FALSE | UNKNOWN |
+| UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+
+:::
+
+`AND` da `TRUE` solo si las dos condiciones lo son, y da `FALSE` si una es `FALSE`, aunque la otra sea `UNKNOWN`. `OR` da `TRUE` si alguna lo es. La negación deja el desconocido igual.
+
+```sql
+SELECT NOT TRUE AS no_true, NOT FALSE AS no_false, NOT NULL AS no_unknown;
+```
+
+```text
++---------+----------+------------+
+| no_true | no_false | no_unknown |
++---------+----------+------------+
+|       0 |        1 |       NULL |
++---------+----------+------------+
+```
+
+La consecuencia práctica está en `WHERE`: conserva una fila solo cuando la condición es `TRUE`, y descarta por igual las filas donde da `FALSE` o `UNKNOWN`. Como `NOT UNKNOWN` sigue siendo `UNKNOWN`, negar una comparación con `NULL` tampoco deja pasar la fila.
+
+## NULL
+
+`NULL` representa un dato que falta. No es cero ni una cadena vacía. Cualquier comparación con `NULL` da `UNKNOWN`, incluso comparar `NULL` consigo mismo, salvo con el operador `<=>`.
+
+```sql
+SELECT 1 = NULL AS uno_igual_null, NULL = NULL AS null_igual_null, NULL <=> NULL AS seguro;
+```
+
+```text
++----------------+-----------------+--------+
+| uno_igual_null | null_igual_null | seguro |
++----------------+-----------------+--------+
+|           NULL |            NULL |      1 |
++----------------+-----------------+--------+
+```
+
+Por eso `WHERE ciudad = NULL` nunca es verdadero: devuelve cero filas, sin error ni aviso, aunque dos clientes tengan la ciudad en `NULL`. Para preguntar por un dato que falta se usa `IS NULL`, o `IS NOT NULL` para el caso contrario.
+
+```sql
+SELECT id_cliente, nombre, ciudad
+FROM cliente
+WHERE ciudad IS NULL;
+```
+
+```text
++------------+-----------+--------+
+| id_cliente | nombre    | ciudad |
++------------+-----------+--------+
+|          9 | Diego     | NULL   |
+|         10 | Valentina | NULL   |
++------------+-----------+--------+
+```
+
+`ciudad <=> NULL` devuelve las mismas dos filas, pero es una extensión de MySQL; `IS NULL` funciona en cualquier motor.
+
+### Los NULL también se pierden con `<>` y `NOT LIKE`
+
+Los diez clientes se reparten así: dos viven en Cali, seis en otras ciudades y dos tienen la ciudad en `NULL`. La condición `ciudad <> 'Cali'` parece pedir "todos los que no son de Cali", pero para los dos `NULL` da `UNKNOWN`.
+
+```sql
+SELECT id_cliente, nombre, ciudad
+FROM cliente
+WHERE ciudad <> 'Cali';
+```
+
+Devuelve 6 filas y deja fuera a Diego y a Valentina, los dos con la ciudad en `NULL`. Si también quieres a quienes no tienen ciudad, hay que pedirlo: `WHERE ciudad <> 'Cali' OR ciudad IS NULL` devuelve 8 filas. Lo mismo ocurre con `NOT LIKE`: `correo NOT LIKE '%@gmail.com'` devuelve 6 filas porque los dos clientes con correo `NULL` quedan fuera, y con `OR correo IS NULL` son 8. `NOT IN` se comporta igual, porque equivale a una cadena de `<>` unidos con `AND`.
+
+## BETWEEN
+
+`valor BETWEEN a AND b` equivale a `valor >= a AND valor <= b`: incluye los dos extremos, y el menor va primero. Con los límites invertidos no encuentra ninguna fila. `NOT BETWEEN` niega el intervalo y, como todo `NOT`, deja fuera los `NULL`.
+
+```sql
+SELECT id_pedido, fecha, estado
+FROM pedido
+WHERE fecha BETWEEN '2026-10-17' AND '2026-10-19';
+```
+
+Son 8 pedidos (los ids 118 a 125), y entran los del 17 y los del 19 porque los extremos cuentan.
+
+### La trampa del DATETIME
+
+La columna `fecha` de `pedido` es `DATE`, sin hora. Un `DATETIME` guarda fecha y hora, y ahí `BETWEEN` falla sin avisar: el literal `'2026-10-19'` equivale a las 00:00:00 de ese día, así que un valor de las 10:30 queda después del extremo superior. `TIMESTAMP('2026-10-19 10:30:00')` arma un valor con hora para probarlo.
+
+```sql
+SELECT TIMESTAMP('2026-10-19 10:30:00')
+       BETWEEN '2026-10-17'
+           AND '2026-10-19' AS dentro;
+```
+
+```text
++--------+
+| dentro |
++--------+
+|      0 |
++--------+
+```
+
+El 0 dice que el valor queda fuera, aunque sea del 19 de octubre. La forma segura es cerrar el intervalo con `>=` y `<` contra el día siguiente.
+
+```sql
+SELECT TIMESTAMP('2026-10-19 10:30:00') >= '2026-10-17'
+   AND TIMESTAMP('2026-10-19 10:30:00') < '2026-10-20' AS dentro;
+```
+
+Devuelve 1: el valor queda dentro.
+
+## IN
+
+`IN` pregunta si un valor está en una lista. Cada valor funciona como una igualdad unida con `OR`: `id_categoria IN (2, 3)` equivale a `id_categoria = 2 OR id_categoria = 3`.
+
+```sql
+SELECT id_producto, nombre, id_categoria
+FROM producto
+WHERE id_categoria IN (2, 3);
+```
+
+Son 7 productos: Monitor, Monitor 27 pulgadas y Pantalla portátil (categoría 2), y Cámara, Cámara réflex, Trípode y Lente 50 mm (categoría 3).
+
+## LIKE
+
+`LIKE` compara texto con un patrón. Tiene dos comodines: `%` cubre cero o más caracteres y `_` cubre exactamente uno. El resto del patrón debe coincidir tal cual. Para buscar un `%` o un `_` literal, antepón una barra invertida (`\%`, `\_`).
+
+::: {.tabla-scroll}
+
+| Patrón sobre `nombre` | Productos que encuentra |
+|---|---|
+| `'Mouse%'` | Mouse, Mouse gamer |
+| `'%USB'` | Hub USB, Micrófono USB |
+| `'_ouse'` | Mouse |
+| `'Mouse _____'` | Mouse gamer |
+
+:::
+
+El primero incluye al producto llamado exactamente Mouse, porque `%` admite cero caracteres. Los cinco guiones bajos del último piden cinco caracteres exactos después de `Mouse `, ni más ni menos.
+
+### Mayúsculas y tildes en MySQL
+
+La comparación de texto depende de la *collation* de la columna, la regla que define cuándo dos textos son iguales. La que MySQL 8.4 usa por omisión, `utf8mb4_0900_ai_ci`, ignora las mayúsculas (`ci`, *case insensitive*) y las tildes (`ai`, *accent insensitive*). Esto vale para `=`, `IN`, `LIKE` y `BETWEEN` sobre texto.
+
+```sql
+SELECT 'a' = 'á' AS con_tilde, 'A' = 'a' AS con_mayuscula;
+```
+
+```text
++-----------+---------------+
+| con_tilde | con_mayuscula |
++-----------+---------------+
+|         1 |             1 |
++-----------+---------------+
+```
+
+Por eso `WHERE ciudad = 'bogota'`, en minúscula y sin tilde, encuentra a Carlos, Sara y Marta, los tres clientes de Bogotá. Otros motores, como PostgreSQL, distinguen mayúsculas y tildes al comparar texto. Con MySQL y la collation por omisión no hace falta normalizar el texto en estas búsquedas, pero tampoco puedes distinguir `Cali` de `CALI` con un `=` simple.
+
+### Texto frente a número
+
+Cuando comparas un texto con un número, MySQL convierte el texto a número, y un texto sin dígitos al principio vale 0.
+
+```sql
+SELECT nombre
+FROM producto
+WHERE nombre = 0;
+SHOW WARNINGS;
+```
+
+La consulta devuelve las 18 filas, porque todos los nombres se convierten en 0. No hay error, solo un aviso por fila. Los primeros tres avisos:
+
+```text
++---------+------+---------------------------------------------------------+
+| Level   | Code | Message                                                 |
++---------+------+---------------------------------------------------------+
+| Warning | 1292 | Truncated incorrect DOUBLE value: 'Mouse'               |
+| Warning | 1292 | Truncated incorrect DOUBLE value: 'Monitor'             |
+| Warning | 1292 | Truncated incorrect DOUBLE value: 'Teclado'             |
++---------+------+---------------------------------------------------------+
+```
+
+El código 1292 indica que MySQL truncó un valor al convertirlo. Un texto que empieza con dígitos conserva ese prefijo: `SELECT '10abc' = 10` devuelve 1. Compara cada columna con un valor de su mismo tipo para evitar la conversión. El manual la describe en la sección 14.3.
+
+### Ejercicios de WHERE
+
+#### Ejercicio 4. Clientes de dos ciudades
+
+Lista el id, el nombre y la ciudad de los clientes de Cali o de Medellín, con `IN`.
+
+::: {.callout-note collapse="true"}
+## Solución
+
+```sql
+SELECT id_cliente, nombre, ciudad
+FROM cliente
+WHERE ciudad IN ('Cali', 'Medellín');
+```
+
+Devuelve 5 filas: Ana, Laura, Juan, Pedro y Carlos (el de Medellín).
+:::
+
+#### Ejercicio 5. Precios en un intervalo
+
+Muestra el id, el nombre y el precio de los productos que cuestan entre 100000 y 500000, ambos incluidos.
+
+::: {.callout-note collapse="true"}
+## Solución
+
+```sql
+SELECT id_producto, nombre, precio
+FROM producto
+WHERE precio BETWEEN 100000 AND 500000;
+```
+
+Son 9 productos, porque `BETWEEN` incluye los dos extremos: entran los de 500000 (Cámara y Barra de sonido).
+:::
+
+#### Ejercicio 6. Nombres de cuatro letras
+
+Muestra el id y el nombre de los clientes cuyo nombre tiene exactamente cuatro letras.
+
+::: {.callout-note collapse="true"}
+## Solución
+
+```sql
+SELECT id_cliente, nombre
+FROM cliente
+WHERE nombre LIKE '____';
+```
+
+Cuatro guiones bajos piden cuatro caracteres exactos.
+
+```text
++------------+--------+
+| id_cliente | nombre |
++------------+--------+
+|          4 | Juan   |
+|          5 | Sara   |
++------------+--------+
+```
+:::
+
+#### Ejercicio 7. Leer el mensaje de error
+
+Esta consulta debería mostrar los clientes de Cali, pero MySQL responde con un error. Léelo y corrige la consulta.
+
+```sql
+SELECT id_cliente, nombre
+FROM cliente
+WHERE ciudad = Cali;
+```
+
+```text
+ERROR 1054 (42S22) at line 194: Unknown column 'Cali' in 'where clause'
+```
+
+::: {.callout-note collapse="true"}
+## Solución
+
+Sin comillas, `Cali` es el nombre de una columna y MySQL no la encuentra. El texto va entre comillas simples: `WHERE ciudad = 'Cali'` devuelve a Laura y a Pedro.
+:::
+
+#### Ejercicio 8. Reto: NULL en tres consultas parecidas
+
+Decide cuáles de estas tres condiciones devuelven exactamente las mismas filas de `cliente` y justifica con el comportamiento de `NULL`.
+
+```sql
+-- Consulta 1
+WHERE ciudad <> 'Cali'
+-- Consulta 2
+WHERE NOT (ciudad = 'Cali')
+-- Consulta 3
+WHERE ciudad <> 'Cali' OR ciudad IS NULL
+```
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 8
+
+Las consultas 1 y 2 son equivalentes y devuelven 6 filas. Si `ciudad` es `NULL`, `ciudad = 'Cali'` da `UNKNOWN` y `NOT UNKNOWN` sigue siendo `UNKNOWN`, igual que `ciudad <> 'Cali'`, así que las dos condiciones descartan la fila. La consulta 3 agrega los dos clientes con la ciudad en `NULL` y devuelve 8.
+:::
+
+## Referencia rápida
+
+::: {.tabla-scroll}
+
+| Quiero | Escribo |
+|---|---|
+| Columnas elegidas, o todas | `SELECT col1, col2 FROM tabla;` o `SELECT * FROM tabla;` |
+| Un cálculo con nombre | `SELECT precio * stock AS inventario FROM producto;` |
+| Sin filas repetidas | `SELECT DISTINCT col FROM tabla;` |
+| Filtrar y combinar | `WHERE condición`, con `AND`, `OR`, `NOT` y paréntesis |
+| Dato que falta | `col IS NULL`, `col IS NOT NULL` |
+| Intervalo cerrado | `col BETWEEN a AND b` |
+| Lista de valores | `col IN (v1, v2, v3)` |
+| Patrón de texto | `col LIKE 'Mouse%'`, `col LIKE '_ouse'` |
+
+:::
+
+## Lista de verificación
+
+Al terminar el tema debes poder hacer lo siguiente.
+
+- [ ] Escribir un `SELECT` con lista de columnas, expresiones y alias.
+- [ ] Usar `DISTINCT` y predecir cuántas filas devuelve con una o con dos columnas.
+- [ ] Leer los errores 1064, 1054 y 1146 y decir qué falló en cada uno.
+- [ ] Filtrar con `WHERE` y decidir dónde van los paréntesis al combinar `AND`, `OR` y `NOT`.
+- [ ] Explicar los tres valores de verdad y por qué `WHERE` descarta `UNKNOWN`.
+- [ ] Buscar datos que faltan con `IS NULL` y explicar por qué `= NULL`, `<>` y `NOT LIKE` dejan fuera los `NULL`.
+- [ ] Usar `BETWEEN`, `IN` y `LIKE`, y explicar la trampa de `BETWEEN` con `DATETIME`.
+- [ ] Explicar cómo la collation por omisión afecta las comparaciones de texto en MySQL.
+
+## Referencias
+
+Manual de referencia de MySQL 8.4:
+
+- [15.2.13 SELECT Statement](https://dev.mysql.com/doc/refman/8.4/en/select.html)
+- [14.4.1 Operator Precedence](https://dev.mysql.com/doc/refman/8.4/en/operator-precedence.html)
+- [14.4.2 Comparison Functions and Operators](https://dev.mysql.com/doc/refman/8.4/en/comparison-operators.html)
+- [14.4.3 Logical Operators](https://dev.mysql.com/doc/refman/8.4/en/logical-operators.html)
+- [14.3 Type Conversion in Expression Evaluation](https://dev.mysql.com/doc/refman/8.4/en/type-conversion.html)
+- [5.3.4.6 Working with NULL Values](https://dev.mysql.com/doc/refman/8.4/en/working-with-null.html)
+- [5.3.4.7 Pattern Matching](https://dev.mysql.com/doc/refman/8.4/en/pattern-matching.html)
+- [14.8.1 String Comparison Functions and Operators](https://dev.mysql.com/doc/refman/8.4/en/string-comparison-functions.html)
+- [B.1 Error Message Sources and Elements](https://dev.mysql.com/doc/refman/8.4/en/error-message-elements.html)
+- [B.3.4.3 Problems with NULL Values](https://dev.mysql.com/doc/refman/8.4/en/problems-with-null.html)
+- [B.3.4.1 Case Sensitivity in String Searches](https://dev.mysql.com/doc/refman/8.4/en/case-sensitivity.html)
+
+::: {.pie-doc}
+Base de datos (DBA03). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado. Las salidas de consola son capturas reales de MySQL 8.4 tomadas durante la preparación del material.
+:::
