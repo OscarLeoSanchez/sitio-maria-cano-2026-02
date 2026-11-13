@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>El registro de pedidos que se vuelve lento</title>
+<meta name="description" content="Actividad en parejas: medir, proponer y construir una estructura para un registro de pedidos que debe responder rápido con miles de datos.">
+<style>
+:root{
+  --papel:#FBF8F1;--papel-2:#F3EEE2;--papel-3:#EAE2CF;--blanco:#FFFEFB;--linea:#E4DCC8;--linea-2:#D3C8AE;
+  --tinta:#1F2A24;--tinta-suave:#56615A;--tinta-tenue:#7A837D;
+  --hoja:#2F8F5B;--hoja-claro:#DDF1E4;--hoja-osc:#1E6B43;
+  --maiz:#F2B33D;--maiz-claro:#FFF1CC;--maiz-osc:#855400;
+  --tomate:#E4572E;--tomate-claro:#FFE3DB;--tomate-osc:#AE3714;
+  --cielo:#3B82C4;--cielo-claro:#DCEBF9;--cielo-osc:#1D5A94;
+  --uva:#7A5BC7;--uva-claro:#ECE6FA;--uva-osc:#553A9E;
+  --fuente:"Segoe UI Variable Text","Segoe UI Variable","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  --fuente-titulo:"Segoe UI Variable Display","Segoe UI Variable","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  --mono:"Cascadia Code","Cascadia Mono",Consolas,ui-monospace,"SF Mono",Menlo,monospace;
+  --sombra:0 1px 2px rgba(60,48,20,.05),0 10px 30px -12px rgba(60,48,20,.18);
+  --foco:0 0 0 3px var(--blanco),0 0 0 5.5px var(--cielo);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--tinta);font-family:var(--fuente);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(circle,rgba(70,58,30,.085) 1.1px,transparent 1.6px) 0 0/26px 26px,
+    radial-gradient(1100px 700px at 85% -10%,#FFF7E2 0%,transparent 70%),
+    radial-gradient(900px 600px at -5% 105%,#FFEFC8 0%,transparent 65%),
+    var(--papel);
+  background-attachment:fixed}
+:focus-visible{outline:none;box-shadow:var(--foco);border-radius:8px}
+::selection{background:var(--maiz-claro)}
+main{max-width:980px;margin:0 auto;padding:56px 20px 72px}
+.sup{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--cielo-osc);margin:0 0 14px}
+.sup::before{content:"";width:22px;height:3px;border-radius:2px;background:var(--cielo)}
+h1{font-family:var(--fuente-titulo);font-size:clamp(34px,6vw,58px);line-height:1.04;letter-spacing:-.025em;margin:0 0 10px;font-weight:800}
+em{font-style:normal;background:linear-gradient(transparent 62%,var(--cielo-claro) 62%);color:var(--cielo-osc);padding:0 .08em}
+.sub{font-size:19px;color:var(--tinta-suave);margin:0 0 40px}
+h2{font-family:var(--fuente-titulo);font-size:26px;letter-spacing:-.015em;margin:0 0 4px;font-weight:750}
+h3{font-size:18px;margin:0 0 6px}
+section{margin:0 0 44px}
+.casos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.caso{background:var(--blanco);border:1px solid var(--linea);border-radius:20px;padding:20px 22px;box-shadow:var(--sombra)}
+.caso .letra{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--tinta);color:var(--papel);font-weight:800;margin-bottom:10px}
+.caso h3{font-family:var(--fuente-titulo);font-size:20px}
+.caso p{margin:0;color:var(--tinta-suave)}
+.pasos{list-style:none;padding:0;margin:0;counter-reset:p;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.pasos>li,.archivo,pre.cod{min-width:0;max-width:100%}
+.paso{position:relative;background:var(--blanco);border:1px solid var(--linea);border-radius:20px;padding:22px 24px 22px 74px;box-shadow:var(--sombra)}
+.paso::before{counter-increment:p;content:counter(p);position:absolute;left:20px;top:20px;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:19px;color:#fff;background:var(--c,var(--cielo))}
+.paso[data-c="hoja"]{--c:var(--hoja)}.paso[data-c="maiz"]{--c:#C98A12}.paso[data-c="uva"]{--c:var(--uva)}.paso[data-c="tomate"]{--c:var(--tomate)}
+.paso h2{font-size:22px;margin-bottom:6px}
+.paso h2 small{font-size:15px;font-weight:600;color:var(--tinta-tenue);margin-left:8px}
+.paso p{margin:6px 0}
+.paso ul{margin:8px 0 8px;padding-left:20px}
+.paso li{margin:5px 0}
+.preg{list-style:none;padding:0;margin:10px 0 4px;display:grid;gap:8px}
+.preg li{background:var(--maiz-claro);border-radius:12px;padding:9px 14px;margin:0;font-weight:600;color:#5E3E00}
+code{font-family:var(--mono);font-size:.88em;background:var(--papel-2);border:1px solid var(--linea);padding:0 5px;border-radius:6px;overflow-wrap:anywhere}
+.tarea{display:grid;grid-template-columns:44px minmax(0,1fr);gap:4px 12px;align-items:baseline;padding:8px 0;border-top:1px dashed var(--linea-2)}
+.tarea:first-of-type{border-top:0}
+.tarea b{font-family:var(--fuente-titulo);font-size:19px}
+.archivo{margin-top:16px;border:1px solid var(--linea-2);border-radius:16px;background:var(--blanco);overflow:hidden}
+.archivo>summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:var(--papel-2);cursor:pointer;list-style:none;font-weight:700}
+.archivo>summary::-webkit-details-marker{display:none}
+.archivo>summary .fn{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--tinta-suave)}
+.archivo>summary .acc{margin-left:auto;display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--linea-2);background:var(--blanco);border-radius:10px;padding:6px 12px;font-size:14px;font-weight:700;color:var(--tinta);text-decoration:none;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--cielo-claro);border-color:var(--cielo)}
+.btn svg{width:16px;height:16px}
+pre.cod code{background:none;border:0;padding:0;border-radius:0;font-size:inherit;overflow-wrap:normal}
+pre.cod{margin:0;padding:16px 18px;max-height:520px;overflow:auto;font-family:var(--mono);font-size:13.5px;line-height:1.55;background:var(--blanco);tab-size:4;-webkit-overflow-scrolling:touch}
+.t-com{color:#8C8C7A;font-style:italic}.t-cad{color:#1F7A4A}.t-num{color:#B4521F}.t-kw{color:#7A3FBF;font-weight:600}
+.t-lit{color:#B4521F;font-weight:600}.t-fn{color:#1D5A94}.t-prop{color:#0F6E78}.t-punt{color:#6C6A5E}.t-op{color:#A0442A}
+.nota{margin:14px 0 0;padding:12px 16px;border-radius:14px;background:var(--cielo-claro);color:var(--cielo-osc)}
+.apoyo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.apoyo a.tarjeta{display:block;background:var(--blanco);border:1px solid var(--linea);border-radius:18px;padding:16px 18px;box-shadow:var(--sombra);text-decoration:none;color:inherit;transition:transform .2s,border-color .2s}
+.apoyo a.tarjeta:hover{transform:translateY(-2px);border-color:var(--cielo)}
+.apoyo .t{display:block;font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--cielo-osc);margin-bottom:4px}
+.apoyo .d{color:var(--tinta-suave);font-size:15.5px}
+table{width:100%;border-collapse:separate;border-spacing:0;background:var(--blanco);border:1px solid var(--linea);border-radius:16px;overflow:hidden;font-size:15.5px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--linea);vertical-align:top}
+th{background:var(--papel-2);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-suave)}
+tr:last-child td{border-bottom:0}
+td a{color:var(--cielo-osc);font-weight:700;text-decoration:none;border-bottom:1.5px solid var(--cielo-claro)}
+td a:hover{border-bottom-color:var(--cielo)}
+.pie{margin-top:48px;padding-top:20px;border-top:1px solid var(--linea-2);color:var(--tinta-tenue);font-size:14.5px}
+.pie p{margin:4px 0}
+@media (max-width:760px){
+  main{padding:34px 16px 56px}
+  .casos,.apoyo{grid-template-columns:1fr}
+  .paso{padding:20px 18px 20px 18px}
+  .paso::before{position:static;margin-bottom:10px}
+  .tarea{grid-template-columns:1fr}
+  .archivo>summary .acc{margin-left:0}
+  table{display:block;overflow-x:auto}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.apoyo a.tarjeta{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <p class="sup">Actividad</p>
+  <h1>El registro de pedidos que se <em>vuelve lento</em></h1>
+  <p class="sub">Trabajo en parejas.</p>
+
+  <section aria-labelledby="problema">
+    <h2 id="problema" style="margin-bottom:14px">El problema</h2>
+    <article class="caso" style="margin-bottom:16px">
+      <p>Una tienda en línea guarda cada pedido con un número consecutivo: 1001, 1002, 1003 y así sucesivamente. Los pedidos llegan casi en orden, aunque a veces uno llega tarde y se registra después de otros con número mayor. Hoy hay 2000 pedidos y el registro tiene que seguir respondiendo rápido cuando haya miles más.</p>
+    </article>
+    <div class="casos">
+      <article class="caso"><span class="letra">A</span><h3>Buscar un pedido</h3>
+        <p>El cliente llama y da su número. Hay que encontrar su pedido.</p></article>
+      <article class="caso"><span class="letra">B</span><h3>Listar en orden</h3>
+        <p>Al final del día, el gerente imprime todos los pedidos de menor a mayor número.</p></article>
+      <article class="caso"><span class="letra">C</span><h3>Listar un rango</h3>
+        <p>Para el cierre, el gerente pide solo los pedidos entre dos números, por ejemplo del 1501 al 1600.</p></article>
+      <article class="caso"><span class="letra">D</span><h3>Cancelar un pedido</h3>
+        <p>El cliente se arrepiente. Hay que sacar su pedido del registro sin dañar los demás.</p></article>
+    </div>
+    <p class="nota">Además de las cuatro peticiones, cada pedido nuevo se inserta en el registro.</p>
+  </section>
+
+  <ol class="pasos" style="margin-top:44px">
+    <li class="paso" data-c="cielo" id="mide">
+      <h2>Mide <small>antes de la clase</small></h2>
+      <p>Descarguen el archivo de abajo y ejecútenlo con <code>python pedidos_base.py</code>. Guarda un registro de 2000 pedidos de dos formas que ya conocen, una lista enlazada y un arreglo ordenado, y cuenta los pasos que cuesta cada operación. Un paso es mirar un pedido para compararlo o correr un pedido de lugar. Copien la tabla que sale.</p>
+      <ul class="preg">
+        <li>¿Cuántos pasos cuesta buscar el último pedido en la lista?</li>
+        <li>Cambien <code>N</code> a <code>20_000</code> y, antes de ejecutar, predigan cuántos pasos costará ahora.</li>
+      </ul>
+      <details class="archivo" open>
+        <summary><span>Archivo de partida</span><span class="fn">pedidos_base.py</span>
+          <span class="acc"><button class="btn" type="button" id="copiar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copiar</span></button><a class="btn" href="pedidos_base.py" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/></svg><span>Descargar</span></a></span></summary>
+        <pre class="cod"><code id="cod">"""Actividad: El registro de pedidos que se vuelve lento.
+
+Este archivo NO se modifica. Guarda los pedidos de una tienda de dos formas que ya conoces
+y cuenta cuánto trabajo cuesta cada operación:
+
+  1. ListaPedidos: una lista enlazada simple, siempre ordenada por número de pedido.
+  2. ArregloPedidos: un arreglo (list de Python) siempre ordenado, que busca saltando a la mitad.
+
+Un "paso" es una de dos cosas: mirar un pedido para compararlo, o correr un pedido de lugar.
+
+Para ejecutarlo:  python pedidos_base.py
+Prueba también con N = 20_000 y compara cómo cambian los números.
+Requiere solo la biblioteca estándar de Python.
+"""
+
+N = 2000          # cantidad de pedidos del registro
+PRIMERO = 1001    # número del primer pedido
+ULTIMO = PRIMERO + N        # número del último pedido
+TARDE = PRIMERO + N // 2    # un pedido del medio que llega tarde: el registro ya tiene todos los demás
+
+
+class Nodo:
+    """Un pedido y el enlace al siguiente."""
+
+    def __init__(self, numero):
+        self.numero = numero
+        self.siguiente = None
+
+
+class ListaPedidos:
+    """Lista enlazada simple ordenada de menor a mayor número de pedido."""
+
+    def __init__(self, numeros_ordenados=()):
+        self.cabeza = None
+        self.pasos = 0
+        ultimo = None
+        for numero in numeros_ordenados:  # carga rápida, no cuenta pasos
+            nodo = Nodo(numero)
+            if ultimo is None:
+                self.cabeza = nodo
+            else:
+                ultimo.siguiente = nodo
+            ultimo = nodo
+
+    def buscar(self, numero):
+        actual = self.cabeza
+        while actual is not None:
+            self.pasos += 1
+            if actual.numero == numero:
+                return True
+            if actual.numero &gt; numero:
+                return False
+            actual = actual.siguiente
+        return False
+
+    def insertar(self, numero):
+        anterior, actual = None, self.cabeza
+        while actual is not None and actual.numero &lt; numero:
+            self.pasos += 1
+            anterior, actual = actual, actual.siguiente
+        nuevo = Nodo(numero)
+        nuevo.siguiente = actual
+        if anterior is None:
+            self.cabeza = nuevo
+        else:
+            anterior.siguiente = nuevo
+
+    def cancelar(self, numero):
+        anterior, actual = None, self.cabeza
+        while actual is not None and actual.numero &lt; numero:
+            self.pasos += 1
+            anterior, actual = actual, actual.siguiente
+        if actual is None or actual.numero != numero:
+            return False
+        if anterior is None:
+            self.cabeza = actual.siguiente
+        else:
+            anterior.siguiente = actual.siguiente
+        return True
+
+    def listar(self):
+        salida, actual = [], self.cabeza
+        while actual is not None:
+            self.pasos += 1
+            salida.append(actual.numero)
+            actual = actual.siguiente
+        return salida
+
+    def rango(self, desde, hasta):
+        """Los pedidos con desde &lt;= número &lt;= hasta, en orden."""
+        salida, actual = [], self.cabeza
+        while actual is not None and actual.numero &lt;= hasta:
+            self.pasos += 1
+            if actual.numero &gt;= desde:
+                salida.append(actual.numero)
+            actual = actual.siguiente
+        return salida
+
+
+class ArregloPedidos:
+    """Arreglo ordenado de menor a mayor. Busca saltando a la mitad."""
+
+    def __init__(self, numeros_ordenados=()):
+        self.datos = list(numeros_ordenados)
+        self.pasos = 0
+
+    def _donde(self, numero):
+        """Posición donde está el pedido, o donde tendría que estar si no está."""
+        bajo, alto = 0, len(self.datos)
+        while bajo &lt; alto:
+            self.pasos += 1
+            medio = (bajo + alto) // 2
+            if self.datos[medio] &lt; numero:
+                bajo = medio + 1
+            else:
+                alto = medio
+        return bajo
+
+    def buscar(self, numero):
+        i = self._donde(numero)
+        return i &lt; len(self.datos) and self.datos[i] == numero
+
+    def insertar(self, numero):
+        i = self._donde(numero)
+        self.pasos += len(self.datos) - i  # los pedidos de la derecha corren un lugar
+        self.datos.insert(i, numero)
+
+    def cancelar(self, numero):
+        i = self._donde(numero)
+        if i &gt;= len(self.datos) or self.datos[i] != numero:
+            return False
+        self.pasos += len(self.datos) - i - 1  # los pedidos de la derecha corren un lugar
+        del self.datos[i]
+        return True
+
+    def listar(self):
+        self.pasos += len(self.datos)
+        return list(self.datos)
+
+    def rango(self, desde, hasta):
+        """Los pedidos con desde &lt;= número &lt;= hasta, en orden."""
+        i, salida = self._donde(desde), []
+        while i &lt; len(self.datos) and self.datos[i] &lt;= hasta:
+            self.pasos += 1
+            salida.append(self.datos[i])
+            i += 1
+        return salida
+
+
+# ----------------------------------------------------------------------------
+# Medición: no hace falta leer ni cambiar nada de aquí hacia abajo
+# ----------------------------------------------------------------------------
+OPERACIONES = [
+    ("Buscar el primer pedido", "buscar", (PRIMERO,)),
+    ("Buscar un pedido del medio", "buscar", (TARDE + 1,)),
+    ("Buscar el último pedido", "buscar", (ULTIMO,)),
+    ("Insertar el pedido que llegó tarde", "insertar", (TARDE,)),
+    ("Cancelar el primer pedido", "cancelar", (PRIMERO,)),
+    ("Cancelar un pedido del medio", "cancelar", (TARDE + 1,)),
+    ("Listar todos, ordenados", "listar", ()),
+    ("Listar un rango de 100 pedidos", "rango", (PRIMERO + 500, PRIMERO + 599)),
+]
+
+
+def registro():
+    """Los N pedidos desde PRIMERO hasta ULTIMO, sin el que llega tarde."""
+    return [n for n in range(PRIMERO, ULTIMO + 1) if n != TARDE]
+
+
+def pasos_de(clase, operacion, argumentos):
+    estructura = clase(registro())
+    resultado = getattr(estructura, operacion)(*argumentos)
+    return estructura.pasos, resultado
+
+
+def comprobar():
+    """Las dos estructuras deben dar las mismas respuestas; solo cambia el costo."""
+    for nombre, operacion, argumentos in OPERACIONES:
+        _, de_lista = pasos_de(ListaPedidos, operacion, argumentos)
+        _, de_arreglo = pasos_de(ArregloPedidos, operacion, argumentos)
+        assert de_lista == de_arreglo, f"{nombre}: las respuestas no coinciden"
+
+
+def medicion():
+    comprobar()
+    print(f"Registro de {N} pedidos, del {PRIMERO} al {ULTIMO}. Pasos por operación:\n")
+    print(f"{'Operación':&lt;38}{'Lista enlazada':&gt;16}{'Arreglo ordenado':&gt;20}")
+    for nombre, operacion, argumentos in OPERACIONES:
+        de_lista, _ = pasos_de(ListaPedidos, operacion, argumentos)
+        de_arreglo, _ = pasos_de(ArregloPedidos, operacion, argumentos)
+        print(f"{nombre:&lt;38}{de_lista:&gt;16}{de_arreglo:&gt;20}")
+
+
+if __name__ == "__main__":
+    medicion()
+</code></pre>
+      </details>
+    </li>
+    <li class="paso" data-c="hoja" id="compara">
+      <h2>Compara</h2>
+      <p>Con la tabla delante, respondan:</p>
+      <ul class="preg">
+        <li>¿En qué operaciones gana la lista y en cuáles el arreglo?</li>
+        <li>¿Qué operaciones salen caras en las dos?</li>
+        <li>¿Alguna de las dos cumple las cuatro peticiones del gerente con miles de pedidos?</li>
+      </ul>
+    </li>
+    <li class="paso" data-c="maiz" id="propone">
+      <h2>Propón</h2>
+      <p>Diseñen su propia estructura para que las cuatro peticiones y la inserción cuesten muy pocos pasos. Dibújenla en papel con cajas y flechas; un nodo puede tener más de una referencia. Con el dibujo, expliquen cómo harían cada operación:</p>
+      <div class="tarea"><b>A</b><span>Buscar un pedido por su número.</span></div>
+      <div class="tarea"><b>B</b><span>Listar todos los pedidos, ordenados.</span></div>
+      <div class="tarea"><b>C</b><span>Listar los pedidos de un rango.</span></div>
+      <div class="tarea"><b>D</b><span>Cancelar un pedido.</span></div>
+      <div class="tarea"><b>E</b><span>Insertar un pedido nuevo.</span></div>
+      <p>Anoten también su predicción: ¿cuántos pasos costaría buscar un pedido con 2000 pedidos guardados?</p>
+    </li>
+    <li class="paso" data-c="uva" id="construye">
+      <h2>Construye <small>después de la explicación</small></h2>
+      <p>Con lo que se explica en la presentación, construyan la estructura y sus operaciones: insertar, buscar, listar en orden, listar por rango, mínimo, máximo, altura y cancelar. La altura es la mayor cantidad de pasos que hay que dar desde la entrada de la estructura hasta el pedido más lejano. Cuenten los pasos igual que en el archivo base, para poder comparar.</p>
+    </li>
+    <li class="paso" data-c="tomate" id="mide-otra-vez">
+      <h2>Mide otra vez</h2>
+      <p>Carguen los 2000 pedidos en el orden en que llegaron (1001, 1002, 1003...) y midan la altura y los pasos de cada operación. Comparen con su predicción del tercer paso y con la tabla del primero.</p>
+      <ul class="preg">
+        <li>¿Qué altura salió?</li>
+        <li>¿Por qué salió esa altura con estos datos?</li>
+        <li>Si Python lanza <code>RecursionError</code> antes de terminar de cargar, también es un resultado: anoten cuántos pedidos alcanzó a cargar y expliquen por qué.</li>
+      </ul>
+    </li>
+    <li class="paso" data-c="hoja" id="arregla">
+      <h2>Arregla</h2>
+      <p>Añadan el autoajuste que se explica en la presentación y midan otra vez con los mismos 2000 pedidos.</p>
+      <ul class="preg">
+        <li>¿Qué cambió en la altura y en los pasos de cada operación?</li>
+        <li>¿Cuánto cuesta el autoajuste al insertar?</li>
+      </ul>
+    </li>
+  </ol>
+
+  <section aria-labelledby="sustentacion" style="margin-top:44px">
+    <h2 id="sustentacion" style="margin-bottom:6px">Sustentación</h2>
+    <p style="margin:0 0 14px">Cada pareja explica lo que hizo: su propuesta del tercer paso, qué midió en cada paso y por qué dieron esos números. Para ordenarse, llenen esta tabla con los pasos que cuesta cada operación.</p>
+    <table>
+      <thead><tr><th>Operación</th><th>Lista enlazada</th><th>Arreglo ordenado</th><th>Mi propuesta</th><th>Con autoajuste</th></tr></thead>
+      <tbody>
+        <tr><td>Buscar un pedido</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Insertar un pedido</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Listar en orden</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Listar un rango</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Cancelar un pedido</td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+    <ul class="preg" style="margin-top:14px">
+      <li>¿Cuánto cambia cada costo si el registro crece diez veces?</li>
+      <li>¿Se resuelven las cuatro peticiones del gerente con una sola estructura?</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="apoyo" style="margin-top:44px">
+    <h2 id="apoyo" style="margin-bottom:14px">Material de apoyo</h2>
+    <div class="apoyo">
+      <a class="tarjeta" href="presentacion-interactiva-temas-3-4.html"><span class="t">Presentación</span><span class="d">Árboles de búsqueda y AVL con animaciones paso a paso y el código en Python.</span></a>
+      <a class="tarjeta" href="tema-03-arboles-binarios-busqueda/"><span class="t">Guía del Tema 3</span><span class="d">La estructura de los pasos cuarto y quinto.</span></a>
+      <a class="tarjeta" href="tema-04-arboles-avl/"><span class="t">Guía del Tema 4</span><span class="d">El autoajuste del sexto paso.</span></a>
+    </div>
+    <table>
+      <thead><tr><th>Paso</th><th>Dónde repasarlo en la presentación</th></tr></thead>
+      <tbody>
+        <tr><td>Construye: el nodo y sus dos caminos</td><td><a href="presentacion-interactiva-temas-3-4.html#3">Diapositiva 3</a></td></tr>
+        <tr><td>Construye: buscar e insertar</td><td><a href="presentacion-interactiva-temas-3-4.html#4">Diapositiva 4</a></td></tr>
+        <tr><td>Construye: listar en orden y por rango</td><td><a href="presentacion-interactiva-temas-3-4.html#5">Diapositiva 5</a></td></tr>
+        <tr><td>Construye: cancelar, mínimo y máximo</td><td><a href="presentacion-interactiva-temas-3-4.html#6">Diapositiva 6</a></td></tr>
+        <tr><td>Mide otra vez: la altura y el <code>RecursionError</code></td><td><a href="presentacion-interactiva-temas-3-4.html#7">Diapositiva 7</a></td></tr>
+        <tr><td>Arregla: el factor de balanceo</td><td><a href="presentacion-interactiva-temas-3-4.html#8">Diapositiva 8</a></td></tr>
+        <tr><td>Arregla: las rotaciones</td><td><a href="presentacion-interactiva-temas-3-4.html#9">Diapositiva 9</a> y <a href="presentacion-interactiva-temas-3-4.html#10">10</a></td></tr>
+        <tr><td>Arregla: insertar con autoajuste</td><td><a href="presentacion-interactiva-temas-3-4.html#11">Diapositiva 11</a></td></tr>
+      </tbody>
+    </table>
+    <p class="nota">Las dos guías se leen después de la explicación, no antes.</p>
+  </section>
+
+  <footer class="pie">
+    <p>Estructura de datos (ESD01). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.</p>
+    <p><strong>Transparencia.</strong> La redacción de esta actividad contó con el apoyo de inteligencia artificial, usando el modelo Claude Sonnet 5 de Anthropic. Todo el contenido fue revisado y validado.</p>
+  </footer>
+</main>
+<script>
+  const KW_PY = new Set(('and as assert async await break class continue def del elif else except finally for from global if import in is lambda ' +
+    'nonlocal not or pass raise return try while with yield').split(' '));
+  const LIT_PY = new Set(['True', 'False', 'None', 'self', 'cls']);
+  function tokPy(src) {
+    const out = [];
+    const re = /(#[^\n]*)|("""[\s\S]*?(?:"""|$)|'''[\s\S]*?(?:'''|$)|[fFrRbB]{0,2}"(?:\.|[^"\\n])*"?|[fFrRbB]{0,2}'(?:\.|[^'\\n])*'?)|(\b\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?\b)|([A-Za-z_\u00C0-\u024F][\w\u00C0-\u024F]*)|(==|!=|<=|>=|->|\*\*|\/\/|[-+*\/%=<>@])|([{}()[\]:,.;])|(\s+)|(.)/gy;
+    let m;
+    let prev = '';
+    let prevPal = '';
+    while ((m = re.exec(src)) !== null) {
+      if (m[0] === '') break;
+      let tipo = null;
+      if (m[1]) tipo = 't-com';
+      else if (m[2]) tipo = 't-cad';
+      else if (m[3]) tipo = 't-num';
+      else if (m[4]) {
+        const w = m[4];
+        const llamada = /^\s*\(/.test(src.slice(re.lastIndex, re.lastIndex + 40));
+        if (KW_PY.has(w)) tipo = 't-kw';
+        else if (LIT_PY.has(w)) tipo = 't-lit';
+        else if (prevPal === 'def' || prevPal === 'class') tipo = 't-fn';
+        else if (prev === '.') tipo = llamada ? 't-fn' : 't-prop';
+        else if (llamada) tipo = 't-fn';
+        prevPal = w;
+      } else if (m[5]) tipo = 't-op';
+      else if (m[6]) tipo = 't-punt';
+      out.push([tipo, m[0]]);
+      if (!m[7]) { prev = m[0]; if (!m[4]) prevPal = ''; }
+    }
+    return out;
+  }
+(function () {
+  const cod = document.getElementById('cod');
+  const texto = cod.textContent;
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  try {
+    cod.innerHTML = tokPy(texto).map(([t, s]) => t ? '<span class="' + t + '">' + esc(s) + '</span>' : esc(s)).join('');
+  } catch (e) { cod.textContent = texto; }
+  const boton = document.getElementById('copiar');
+  boton.addEventListener('click', (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    const etiqueta = boton.querySelector('span');
+    const listo = () => { etiqueta.textContent = 'Copiado'; setTimeout(() => { etiqueta.textContent = 'Copiar'; }, 1800); };
+    const respaldo = () => {
+      const area = document.createElement('textarea'); area.value = texto; area.style.position = 'fixed'; area.style.opacity = '0';
+      document.body.appendChild(area); area.select();
+      try { document.execCommand('copy'); listo(); } catch (e) { etiqueta.textContent = 'Selecciona y copia'; }
+      area.remove();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(listo, respaldo); else respaldo();
+  });
+  document.querySelector('.archivo .btn[download]').addEventListener('click', (ev) => ev.stopPropagation());
+})();
+</script>
+</body>
+</html>
