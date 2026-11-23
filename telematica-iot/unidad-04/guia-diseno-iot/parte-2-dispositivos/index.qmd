@@ -1,0 +1,1444 @@
+---
+title: "Parte 2. Sensores, microcontrolador y actuadores"
+author: "Oscar Leonel Sánchez Conde"
+date: last-modified
+date-format: "D [de] MMMM [de] YYYY"
+---
+
+::: {.ficha}
+|        |                                                  |
+|--------|--------------------------------------------------|
+| Unidad | Unidad 4. Aplicaciones con IoT                    |
+| Temas  | Los dispositivos de una solución IoT |
+:::
+
+[Abrir la presentación de la unidad](../../presentacion-interactiva.html){.btn-curso}
+
+[Ir al índice de la guía](../index.qmd){.btn-curso}
+
+## Percepción: los sensores
+
+Un *sensor* es un dispositivo que convierte una *magnitud física* en una señal eléctrica. Una magnitud física es una propiedad del mundo que se puede medir, como la temperatura, la humedad, la luz o la distancia. Una *señal eléctrica* es una tensión o una corriente que cambia según lo que ocurre con esa magnitud, y es lo único que un circuito electrónico sabe leer. La *tensión*, que se mide en voltios (V), es el empuje con el que la energía mueve la carga eléctrica por un cable. La *corriente*, que se mide en amperios (A) o en su milésima parte, el miliamperio (mA), es la cantidad de carga que pasa por ese cable en cada segundo. Estas dos palabras vuelven en las tres secciones de esta parte, porque casi todas las decisiones de diseño de los dispositivos tratan de cuánta tensión y cuánta corriente hay en cada punto.
+
+En el monitor de clima del laboratorio, el sensor es la etapa 1, Percepción. Mide dos magnitudes del aire del aula 1, la temperatura (27,4 grados Celsius, que se escriben `27.4` en el mensaje) y la *humedad relativa*, que es el porcentaje de vapor de agua que contiene el aire respecto del máximo que podría contener a esa misma temperatura (61 %). Más adelante el microcontrolador convertirá esas dos lecturas en los mensajes `lab/aula1/temperatura 27.4` y `lab/aula1/humedad 61`. Un *microcontrolador* es el pequeño circuito que lee los sensores, decide y envía los mensajes, y la segunda sección de esta parte lo explica por dentro. Esta sección se detiene antes, en lo que ocurre entre el aire del aula y el número que llega al microcontrolador.
+
+### Qué hay dentro de un sensor
+
+Un sensor casi nunca entrega la magnitud directamente. Entre el fenómeno y el número hay una cadena corta de piezas, y conocerla sirve para entender de dónde salen los errores. El *elemento sensible* es la pieza que reacciona al fenómeno cambiando una propiedad eléctrica. En un termistor, que es una resistencia que cambia de valor con la temperatura, el elemento sensible es el material mismo, y lo que cambia es cuánta oposición ofrece al paso de la corriente. Ese cambio es pequeño y poco cómodo de leer, así que sigue una etapa de *acondicionamiento*, un circuito que *amplifica* la señal (la hace más grande sin cambiar su forma) y la ajusta a un rango que el microcontrolador pueda medir. Al final queda una señal eléctrica que representa la magnitud.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 252" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cadena de un sensor de izquierda a derecha: la magnitud física, por ejemplo la temperatura del aire, llega a un elemento sensible que cambia una propiedad eléctrica, un circuito de acondicionamiento la convierte en una señal fácil de medir y el microcontrolador la lee. Debajo, el ejemplo de un termistor en el aula 1." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m1c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m1h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m1s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m1m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m1u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m1t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Del fenómeno a la señal: lo que hace un sensor</text>
+<rect x="20" y="44" width="150" height="76" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="95" y="79.05" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Magnitud física</text>
+<text x="95" y="94.525" font-size="11.5" fill="#5b6876" text-anchor="middle">temperatura del aire</text>
+<rect x="200" y="44" width="150" height="76" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="275" y="71.55" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Elemento sensible</text>
+<text x="275" y="87.025" font-size="11.5" fill="#5b6876" text-anchor="middle">cambia una propiedad</text>
+<text x="275" y="102.025" font-size="11.5" fill="#5b6876" text-anchor="middle">eléctrica</text>
+<rect x="380" y="44" width="150" height="76" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="455" y="71.55" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Acondicionamiento</text>
+<text x="455" y="87.025" font-size="11.5" fill="#5b6876" text-anchor="middle">ajusta y amplifica la</text>
+<text x="455" y="102.025" font-size="11.5" fill="#5b6876" text-anchor="middle">señal</text>
+<rect x="580" y="44" width="160" height="76" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="660" y="79.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Microcontrolador</text>
+<text x="660" y="94.525" font-size="11.5" fill="#5b6876" text-anchor="middle">lee la señal</text>
+<path d="M170,82 L200,82" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m1h)"/>
+<path d="M350,82 L380,82" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m1h)"/>
+<path d="M530,82 L580,82" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m1h)"/>
+<text x="555" y="74" font-size="11.5" fill="#5b6876" text-anchor="middle">señal</text>
+<text x="380" y="150" font-size="12" font-weight="700" fill="#5b6876" text-anchor="middle">Ejemplo con un termistor en el aula 1</text>
+<text x="95" y="172" font-size="11.5" fill="#12324f" text-anchor="middle">27,4 °C en el aire</text>
+<text x="95" y="187" font-size="11.5" fill="#12324f" text-anchor="middle">del aula</text>
+<text x="275" y="172" font-size="11.5" fill="#12324f" text-anchor="middle">la resistencia del</text>
+<text x="275" y="187" font-size="11.5" fill="#12324f" text-anchor="middle">termistor baja o sube</text>
+<text x="455" y="172" font-size="11.5" fill="#12324f" text-anchor="middle">la convierte en un</text>
+<text x="455" y="187" font-size="11.5" fill="#12324f" text-anchor="middle">voltaje medible</text>
+<text x="660" y="172" font-size="11.5" fill="#12324f" text-anchor="middle">recibe el voltaje</text>
+<text x="660" y="187" font-size="11.5" fill="#12324f" text-anchor="middle">o ya un número</text>
+<text x="380" y="244" font-size="11.5" fill="#5b6876" text-anchor="middle">En el AM2302 las tres primeras piezas vienen dentro de un mismo encapsulado y su salida ya es un número.</text>
+</svg>
+```
+
+:::
+
+El diagrama muestra la cadena con un termistor, y ese sensor es el caso más sencillo, porque el microcontrolador recibe un voltaje y debe medirlo. El AM2302, que es el sensor que usa el laboratorio, hace más trabajo dentro de su encapsulado: contiene el elemento sensible de temperatura, el de humedad, el acondicionamiento y un circuito que convierte todo en un número, de modo que sale de él un dato ya digital. Esa diferencia entre entregar un voltaje y entregar un número es la siguiente idea que hay que aclarar.
+
+### Señal analógica y señal digital
+
+Una señal *analógica* puede tomar cualquier valor dentro de un rango, y su valor cambia de forma continua. El voltaje que sale de un termistor acondicionado es analógico: si la temperatura sube un poco, el voltaje sube un poco, y entre dos valores cualesquiera hay infinitos valores intermedios. Una señal *digital* solo toma valores definidos de antemano. En electrónica lo más común es que sean dos, un nivel alto que representa el 1 y un nivel bajo que representa el 0. Un *bit* es cada uno de esos dos valores posibles, y una secuencia de bits puede representar un número, una letra o cualquier dato.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos paneles. A la izquierda, una señal analógica dibujada como una curva continua que toma cualquier valor dentro de un rango, como el voltaje de un termistor. A la derecha, una señal digital dibujada como escalones entre dos niveles, 1 y 0, como los bits que envía el AM2302." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m2c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m2h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m2s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m2m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m2u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m2t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Dos formas de entregar una medida</text>
+<rect x="20" y="34" width="340" height="214" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<rect x="400" y="34" width="340" height="214" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="190" y="56" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Señal analógica</text>
+<text x="190" y="73" font-size="11.5" fill="#5b6876" text-anchor="middle">cualquier valor dentro de un rango</text>
+<text x="570" y="56" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Señal digital</text>
+<text x="570" y="73" font-size="11.5" fill="#5b6876" text-anchor="middle">solo dos niveles: 1 o 0</text>
+<path d="M50,92 L50,196 L342,196" fill="none" stroke="#cfd8e3" stroke-width="1.2"/>
+<text x="44" y="100" font-size="11.5" fill="#5b6876" text-anchor="end">V</text>
+<path d="M50,170 C80,110 110,108 140,146 S190,198 220,140 S280,100 340,128" fill="none" stroke="#5CB77F" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M430,92 L430,196 L722,196" fill="none" stroke="#cfd8e3" stroke-width="1.2"/>
+<path d="M430,112 L722,112" fill="none" stroke="#cfd8e3" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="424" y="116" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="end">1</text>
+<text x="424" y="192" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="end">0</text>
+<path d="M430,188 H470 V112 H520 V188 H550 V112 H610 V188 H640 V112 H668 V188 H722" fill="none" stroke="#5CB77F" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="190" y="222" font-size="11.5" fill="#5b6876" text-anchor="middle">ejemplo: el voltaje de un termistor</text>
+<text x="570" y="222" font-size="11.5" fill="#5b6876" text-anchor="middle">ejemplo: los bits que envía el AM2302</text>
+<text x="190" y="238" font-size="11.5" font-weight="700" fill="#1F6B43" text-anchor="middle">se mide con un ADC</text>
+<text x="570" y="238" font-size="11.5" font-weight="700" fill="#1F6B43" text-anchor="middle">se lee directo en un pin digital</text>
+<text x="380" y="292" font-size="11.5" fill="#5b6876" text-anchor="middle">El microcontrolador solo procesa números; por eso una señal analógica pasa antes por un ADC.</text>
+</svg>
+```
+
+:::
+
+La consecuencia práctica es que el microcontrolador solo trabaja con números, por lo que una señal analógica necesita un paso de traducción antes de entrar a su programa. Una señal digital llega ya como bits y se lee directamente en un pin. El AM2302 usa la segunda forma, ya que envía sus datos como una secuencia de bits por un solo cable. Esa secuencia no está presente todo el tiempo: el microcontrolador envía primero una señal de inicio, y solo entonces el sensor responde con 40 bits, que según su hoja de datos son 16 de humedad, 16 de temperatura y 8 de comprobación de errores.
+
+### El conversor analógico digital
+
+El *conversor analógico digital*, que se abrevia *ADC* por su nombre en inglés (*analog to digital converter*), es el circuito que mide un voltaje y entrega un número entero. Casi todos los microcontroladores traen uno dentro. Su calidad se describe con la *resolución*, que es la cantidad de bits que usa para expresar el resultado. Con *n* bits el ADC distingue 2 elevado a *n* niveles, de modo que 8 bits dan 256 niveles, 10 bits dan 1024 y 12 bits dan 4096. El ESP32, que es la placa que usa esta guía como ejemplo, trae ADC de 12 bits según su hoja de datos.
+
+Un ejemplo con tres bits permite ver todo el proceso con números pequeños. Supón un ADC que mide entre 0 y 3,3 V. Con tres bits tiene 8 niveles, así que divide el rango en 8 escalones iguales. Cada escalón mide 3,3 V entre 8, que da 0,4125 V. Cuando entra un voltaje de 1,0 V, el ADC busca en qué escalón cae. El escalón 2 va de 0,825 V a 1,2375 V, así que el resultado es 2, que en binario se escribe 010.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 336" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una columna de ocho escalones numerados de 0 a 7, que cubre de 0 a 3,3 V. Una entrada de 1,0 V cae en el escalón 2, que en binario es 010, entre 0,825 V y 1,2375 V. El ADC entrega el número 2. A la derecha, el cálculo: tres bits dan ocho niveles y cada paso mide 0,4125 V." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m3c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m3h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m3s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m3m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m3u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m3t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Un ADC de 3 bits: ocho escalones entre 0 V y 3,3 V</text>
+<rect x="250" y="264" width="140" height="32" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="320" y="284.2" font-size="12" fill="#12324f" text-anchor="middle">0 (000)</text>
+<rect x="250" y="232" width="140" height="32" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="320" y="252.2" font-size="12" fill="#12324f" text-anchor="middle">1 (001)</text>
+<rect x="250" y="200" width="140" height="32" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="320" y="220.2" font-size="12" fill="#1F6B43" text-anchor="middle">2 (010)</text>
+<rect x="250" y="168" width="140" height="32" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="320" y="188.2" font-size="12" fill="#12324f" text-anchor="middle">3 (011)</text>
+<rect x="250" y="136" width="140" height="32" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="320" y="156.2" font-size="12" fill="#12324f" text-anchor="middle">4 (100)</text>
+<rect x="250" y="104" width="140" height="32" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="320" y="124.2" font-size="12" fill="#12324f" text-anchor="middle">5 (101)</text>
+<rect x="250" y="72" width="140" height="32" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="320" y="92.2" font-size="12" fill="#12324f" text-anchor="middle">6 (110)</text>
+<rect x="250" y="40" width="140" height="32" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="320" y="60.2" font-size="12" fill="#12324f" text-anchor="middle">7 (111)</text>
+<text x="244" y="48" font-size="11.5" fill="#5b6876" text-anchor="end">3,3 V</text>
+<text x="244" y="172" font-size="11.5" fill="#5b6876" text-anchor="end">1,65 V</text>
+<text x="244" y="300" font-size="11.5" fill="#5b6876" text-anchor="end">0 V</text>
+<rect x="20" y="190" width="150" height="56" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="95" y="214.8" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Entrada</text>
+<text x="95" y="230.7" font-size="12" fill="#1F6B43" text-anchor="middle">1,0 V</text>
+<path d="M170,218 L250,218" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m3h)"/>
+<path d="M390,216 L480,216" fill="none" stroke="#3B82C4" stroke-width="1.8" marker-end="url(#g2m3s)"/>
+<rect x="480" y="186" width="260" height="60" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="610" y="213.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">El ADC entrega 2</text>
+<text x="610" y="228.525" font-size="11.5" fill="#5b6876" text-anchor="middle">010 en binario</text>
+<rect x="440" y="44" width="300" height="112" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="590" y="81.3" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">La cuenta</text>
+<text x="590" y="97.2" font-size="12" fill="#12324f" text-anchor="middle">3 bits: 2 elevado a 3 = 8 niveles</text>
+<text x="590" y="112.7" font-size="12" fill="#12324f" text-anchor="middle">paso = 3,3 V entre 8 = 0,4125 V</text>
+<text x="590" y="128.2" font-size="12" fill="#12324f" text-anchor="middle">1,0 V cae entre 0,825 V y 1,2375 V</text>
+<text x="380" y="328" font-size="11.5" fill="#5b6876" text-anchor="middle">Todo valor dentro del mismo escalón produce el mismo número, y ese detalle se pierde.</text>
+</svg>
+```
+
+:::
+
+El dibujo deja ver la limitación principal del ADC. Todos los voltajes entre 0,825 V y 1,2375 V producen el mismo número 2, de modo que el ADC pierde el detalle dentro del escalón. Con 12 bits los escalones son 4096 y cada uno mide 3,3 V entre 4096, es decir, unos 0,8 mV (milivoltios, milésimas de voltio). La pérdida sigue existiendo, pero es mucho más pequeña.
+
+#### Resolución no es precisión
+
+Aquí aparece uno de los casos donde la idea sorprende. Se tiende a pensar que más bits significan mediciones más exactas, y eso no es cierto, porque la exactitud depende del sensor y no del ADC. La *precisión* de un sensor (en las hojas de datos suele aparecer con su nombre en inglés, *accuracy*) indica cuánto puede alejarse una lectura del valor real. El AM2302 declara una precisión de más o menos 0,5 °C en temperatura. En metrología estricta esa magnitud se llama exactitud y la palabra precisión se reserva para la repetibilidad, que es cuánto se parecen entre sí lecturas repetidas de lo mismo (la hoja del AM2302 da aparte una repetibilidad de más o menos 0,2 °C), pero esta guía sigue el uso de las hojas de datos en español. Por su parte, la resolución indica la diferencia más pequeña que el instrumento puede distinguir, y esa diferencia es un dato del ADC o del sensor, no una promesa de exactitud.
+
+Un caso de estudio lo aclara. Se imagina un sensor analógico de temperatura que entrega 10 mV por cada grado, con un rango de entrada de 0 a 3,3 V (son supuestos del ejemplo, no los datos de un sensor real). Con un ADC de 8 bits, cada escalón vale 12,9 mV, o sea 1,29 °C. Con 10 bits vale 3,22 mV, es decir 0,32 °C, y con 12 bits vale 0,806 mV, que equivale a 0,081 °C.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 306" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres filas para un sensor analógico imaginario de 10 mV por grado con rango de entrada de 0 a 3,3 V. Con 8 bits el paso es de 1,29 grados, mayor que la incertidumbre de 1,0 grado de ancho del sensor. Con 10 bits es de 0,32 grados y con 12 bits de 0,081 grados, muy por debajo de la incertidumbre, de modo que esos decimales ya son ruido." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m4c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m4h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m4s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m4m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m4u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m4t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Más bits dan pasos más finos, no un sensor más exacto</text>
+<rect x="170" y="84" width="150" height="158" rx="0" fill="#FDE5DE"/>
+<path d="M170,76 L320,76" fill="none" stroke="#E4572E" stroke-width="1.8"/>
+<path d="M170,70 L170,82" fill="none" stroke="#E4572E" stroke-width="1.8"/>
+<path d="M320,70 L320,82" fill="none" stroke="#E4572E" stroke-width="1.8"/>
+<text x="245" y="62" font-size="11.5" font-weight="700" fill="#A63D33" text-anchor="middle">incertidumbre del sensor: 1,0 °C de ancho</text>
+<rect x="20" y="100" width="130" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="85" y="117.05" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">8 bits</text>
+<text x="85" y="132.525" font-size="11.5" fill="#5b6876" text-anchor="middle">256 niveles</text>
+<rect x="170" y="108" width="193.359" height="24" rx="3" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="375.359" y="124" font-size="12" fill="#12324f" text-anchor="start">paso de 1,29 °C: más grueso que la incertidumbre</text>
+<rect x="20" y="150" width="130" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="85" y="167.05" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">10 bits</text>
+<text x="85" y="182.525" font-size="11.5" fill="#5b6876" text-anchor="middle">1024 niveles</text>
+<rect x="170" y="158" width="48.3398" height="24" rx="3" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="230.34" y="174" font-size="12" fill="#12324f" text-anchor="start">paso de 0,32 °C</text>
+<rect x="20" y="200" width="130" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="85" y="217.05" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">12 bits</text>
+<text x="85" y="232.525" font-size="11.5" fill="#5b6876" text-anchor="middle">4096 niveles</text>
+<rect x="170" y="208" width="12.085" height="24" rx="3" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="194.085" y="224" font-size="12" fill="#12324f" text-anchor="start">paso de 0,081 °C: esos decimales ya son ruido</text>
+<text x="380" y="270" font-size="11.5" fill="#5b6876" text-anchor="middle">Supuestos del ejemplo: sensor lineal de 10 mV por °C y entrada de 0 a 3,3 V.</text>
+<text x="380" y="284" font-size="11.5" fill="#5b6876" text-anchor="middle">La incertidumbre de 1,0 °C de ancho sale de la precisión de más o menos 0,5 °C del AM2302.</text>
+<text x="380" y="298" font-size="11.5" fill="#5b6876" text-anchor="middle">El paso de 12 bits es 3,3 V entre 4096 = 0,806 mV, o 0,081 °C.</text>
+</svg>
+```
+
+:::
+
+El análisis muestra que con 8 bits el paso es más grueso que la incertidumbre del sensor, y el ADC desperdicia información. Con 10 bits el paso ya cabe varias veces dentro de la incertidumbre, de modo que el ADC no limita al sensor. Con 12 bits el paso es de 0,081 °C, pero el sensor sigue pudiendo equivocarse en 0,5 °C. La resolución adicional entrega cifras decimales, y esas cifras son ruido, porque el sensor no las respalda. La resolución se resuelve eligiendo un ADC con pasos más finos que la incertidumbre del sensor, ya que pasos todavía más finos no agregan exactitud. Mostrar `27.43` cuando el sensor solo garantiza `27.4 más o menos 0.5` da una falsa sensación de exactitud.
+
+El ESP32 tiene además un detalle de diseño. Según la documentación de ESP-IDF (el entorno de programación oficial de Espressif, el fabricante del ESP32), el chip integra dos ADC y el Wi-Fi también usa el segundo, por lo que el controlador protege el acceso entre ambos. La misma documentación explica que la tensión de referencia del ADC está pensada para 1100 mV pero varía de un chip a otro entre 1000 y 1200 mV, y que por eso ofrece rutinas de calibración. Como criterio de diseño, conviene preferir los canales del primer ADC cuando el Wi-Fi está activo y calibrar la lectura cuando la exactitud importa.
+
+::: {.callout-tip}
+## Reto 4. Predice antes de leer
+
+Marca las afirmaciones que creas verdaderas.
+
+<label><input type="checkbox"> Un ADC de 12 bits distingue 4096 niveles distintos</label>
+
+<label><input type="checkbox"> Con un ADC de 12 bits, las lecturas de un sensor de más o menos 0,5 °C son exactas hasta la segunda cifra decimal</label>
+
+<label><input type="checkbox"> Pasar de un ADC de 8 bits a uno de 10 bits divide el tamaño del paso entre cuatro</label>
+
+<label><input type="checkbox"> Un ADC de 3 bits que mide entre 0 y 3,3 V entrega el número 2 cuando entra 1,0 V</label>
+
+<label><input type="checkbox"> El AM2302 necesita que el microcontrolador tenga un ADC, porque entrega un voltaje</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 4
+
+Son verdaderas la primera, la tercera y la cuarta. La primera es verdadera porque 2 elevado a 12 es 4096. La segunda es falsa porque la exactitud la fija el sensor: con una precisión de más o menos 0,5 °C, las cifras que el ADC agrega después del primer decimal no tienen respaldo. La tercera es verdadera porque 2 bits más multiplican por cuatro los niveles y por lo tanto el paso se divide entre cuatro (de 1,29 °C a 0,32 °C en el ejemplo). La cuarta es verdadera porque cada escalón mide 0,4125 V y el escalón 2 va de 0,825 V a 1,2375 V. La quinta es falsa porque el AM2302 entrega bits ya codificados por un solo cable digital, y se lee en un pin digital sin pasar por el ADC.
+:::
+
+### Cómo se elige un sensor
+
+Elegir un sensor es filtrar candidatos con cinco criterios, que valen para cualquier magnitud: magnitud y rango, precisión y resolución, tiempo de respuesta, alimentación e interfaz de salida. Los primeros tres dependen del fenómeno y los dos últimos dependen de la placa a la que se conecta. El criterio que se omite es el que después da problemas, así que los cinco se revisan aunque el primero parezca descartar casi todo.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 418" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un embudo. Arriba la necesidad del caso: temperatura y humedad del aire del aula 1, una lectura por minuto. Cinco filtros cada vez más estrechos: magnitud y rango, precisión y resolución, tiempo de respuesta, alimentación e interfaz de salida. Abajo queda un candidato, el AM2302." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m5c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m5h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m5s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m5m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m5u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m5t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Los cinco criterios como filtros sucesivos</text>
+<rect x="30" y="34" width="700" height="30" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="380" y="53.2" font-size="12" fill="#12324f" text-anchor="middle">Necesidad: temperatura y humedad del aire del aula 1, una lectura por minuto</text>
+<path d="M380,64 L380,78" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m5m)"/>
+<rect x="30" y="78" width="700" height="38" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="380" y="101.2" font-size="12" fill="#7A5200" text-anchor="middle">1 Magnitud y rango: deja los que miden temperatura y humedad en los valores del aula</text>
+<path d="M380,116 L380,130" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m5m)"/>
+<rect x="70" y="130" width="620" height="38" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="380" y="153.2" font-size="12" fill="#7A5200" text-anchor="middle">2 Precisión y resolución: deja los que dan menos error que el que tolera el caso</text>
+<path d="M380,168 L380,182" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m5m)"/>
+<rect x="110" y="182" width="540" height="38" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="380" y="205.2" font-size="12" fill="#7A5200" text-anchor="middle">3 Tiempo de respuesta: deja los que leen con la frecuencia que pide el fenómeno</text>
+<path d="M380,220 L380,234" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m5m)"/>
+<rect x="150" y="234" width="460" height="38" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="380" y="257.2" font-size="12" fill="#7A5200" text-anchor="middle">4 Alimentación: deja los compatibles con la tensión de la placa</text>
+<path d="M380,272 L380,286" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m5m)"/>
+<rect x="190" y="286" width="380" height="38" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="380" y="309.2" font-size="12" fill="#7A5200" text-anchor="middle">5 Interfaz de salida: deja los que la placa sabe leer</text>
+<path d="M380,324 L380,338" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m5h)"/>
+<rect x="230" y="338" width="300" height="44" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="380" y="357.05" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Candidato: AM2302</text>
+<text x="380" y="372.525" font-size="11.5" fill="#5b6876" text-anchor="middle">cumple los cinco criterios</text>
+<text x="380" y="410" font-size="11.5" fill="#5b6876" text-anchor="middle">Cada filtro descarta sensores; el orden puede cambiar, pero los cinco criterios se revisan siempre.</text>
+</svg>
+```
+
+:::
+
+#### Magnitud y rango
+
+La magnitud es lo que el sensor mide, y el *rango* es el intervalo de valores en el que mide de forma garantizada. Un sensor puede medir la magnitud correcta y aun así no servir, si el fenómeno sale de su rango. El AM2302 declara de -40 a 80 °C en temperatura, y el aire de un aula cabe de sobra en ese intervalo. Ese mismo sensor no sirve para medir el vapor de una tubería, que supera los 100 °C en el supuesto del ejemplo. Fuera del rango declarado, el fabricante no promete nada: la lectura puede saturarse en un valor fijo, falsearse o dañar el sensor.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 268" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un eje de temperatura de menos 40 a 160 grados Celsius. El AM2302 declara de menos 40 a 80 grados. El aire de un aula, con un supuesto de 15 a 35 grados, queda dentro. Una tubería de vapor, que supera 100 grados en el supuesto del ejemplo, queda fuera del rango del sensor." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m6c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m6h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m6s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m6m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m6u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m6t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">El rango declarado frente a lo que necesita cada situación</text>
+<text x="92" y="58" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="start">AM2302 declarado: de -40 a 80 °C</text>
+<rect x="92" y="66" width="384" height="26" rx="4" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="268" y="112" font-size="12" font-weight="700" fill="#12324f" text-anchor="start">aula (supuesto): 15 a 35 °C</text>
+<rect x="268" y="120" width="64" height="26" rx="4" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="390" y="166" font-size="12" font-weight="700" fill="#A63D33" text-anchor="start">tubería de vapor (supuesto): más de 100 °C</text>
+<rect x="540" y="174" width="192" height="26" rx="4" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<path d="M476,54 L476,206" fill="none" stroke="#E4572E" stroke-width="1.6" stroke-dasharray="5 4"/>
+<text x="482" y="50" font-size="11.5" font-weight="700" fill="#A63D33" text-anchor="start">límite del sensor</text>
+<path d="M60,214 L732,214" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+<path d="M92,210 L92,218" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="92" y="232" font-size="11.5" fill="#5b6876" text-anchor="middle">-40 °C</text>
+<path d="M220,210 L220,218" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="220" y="232" font-size="11.5" fill="#5b6876" text-anchor="middle">0 °C</text>
+<path d="M348,210 L348,218" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="348" y="232" font-size="11.5" fill="#5b6876" text-anchor="middle">40 °C</text>
+<path d="M476,210 L476,218" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="476" y="232" font-size="11.5" fill="#5b6876" text-anchor="middle">80 °C</text>
+<path d="M604,210 L604,218" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="604" y="232" font-size="11.5" fill="#5b6876" text-anchor="middle">120 °C</text>
+<path d="M732,210 L732,218" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="732" y="232" font-size="11.5" fill="#5b6876" text-anchor="middle">160 °C</text>
+<text x="380" y="260" font-size="11.5" fill="#5b6876" text-anchor="middle">Los rangos del aula y de la tubería son supuestos del ejemplo; el rango del AM2302 es el de la hoja de datos de Aosong.</text>
+</svg>
+```
+
+:::
+
+El criterio incluye también el entorno. Un sensor pensado para interiores pierde exactitud o se deteriora con polvo, humedad o salpicaduras, y esas condiciones forman parte de la hoja de datos igual que el rango eléctrico.
+
+#### Precisión y resolución
+
+La precisión y la resolución ya se explicaron arriba. Para el criterio de elección basta una regla de diseño. La precisión del sensor debe ser menor que el error que el caso tolera, y la resolución del ADC debe ser más fina que esa precisión. En el laboratorio, el ventilador se enciende cuando la temperatura supera 28 °C. Una precisión de más o menos 0,5 °C significa que una lectura de 28,2 °C puede corresponder a un aire que en realidad está a 27,7 °C, y el ventilador se encendería sin necesidad. Eso es aceptable para un laboratorio de clase y sería inaceptable si el umbral protegiera algo que se daña con medio grado.
+
+#### Tiempo de respuesta
+
+El *tiempo de respuesta* es cuánto tarda el sensor en reflejar un cambio, y tiene dos partes. La primera es física: el elemento sensible necesita un tiempo para ponerse a la temperatura del aire que lo rodea, porque tiene masa. La segunda es el *periodo de lectura*, que es el tiempo mínimo entre dos lecturas, y en el AM2302 la hoja de datos fija ese periodo en 2 s. El microcontrolador no puede pedir una lectura más seguido, porque el sensor no la tiene lista.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 288" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Línea de tiempo de 0 a 12 segundos. El AM2302 entrega una lectura cada 2 segundos, marcadas con puntos. La temperatura real se mantiene estable salvo un pico de 1 segundo entre las lecturas de los segundos 4 y 6. Ese pico no aparece en ninguna lectura." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m7c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m7h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m7s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m7m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m7u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m7t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Una lectura cada 2 s no ve lo que ocurre entre dos lecturas</text>
+<text x="80" y="52" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="start">Lecturas del AM2302: una cada 2 s</text>
+<circle cx="80" cy="72" r="5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="180" cy="72" r="5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="280" cy="72" r="5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="380" cy="72" r="5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="480" cy="72" r="5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="580" cy="72" r="5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="680" cy="72" r="5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<text x="80" y="106" font-size="12" font-weight="700" fill="#12324f" text-anchor="start">Temperatura real del aire</text>
+<path d="M80,160 H290 Q315,112 340,160 H680" fill="none" stroke="#3B82C4" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="80" cy="160" r="4.5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="180" cy="160" r="4.5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="280" cy="160" r="4.5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="380" cy="160" r="4.5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="480" cy="160" r="4.5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="580" cy="160" r="4.5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<circle cx="680" cy="160" r="4.5" fill="#5CB77F" stroke="#1F6B43" stroke-width="1.4"/>
+<text x="354" y="134" font-size="11.5" font-weight="700" fill="#A63D33" text-anchor="start">pico de 1 s entre dos lecturas:</text>
+<text x="354" y="149" font-size="11.5" font-weight="700" fill="#A63D33" text-anchor="start">ninguna lectura lo registra</text>
+<path d="M80,186 L680,186" fill="none" stroke="#8fb3d1" stroke-width="1.6"/>
+<path d="M80,182 L80,190" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="80" y="205" font-size="11.5" fill="#5b6876" text-anchor="middle">0 s</text>
+<path d="M180,182 L180,190" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="180" y="205" font-size="11.5" fill="#5b6876" text-anchor="middle">2 s</text>
+<path d="M280,182 L280,190" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="280" y="205" font-size="11.5" fill="#5b6876" text-anchor="middle">4 s</text>
+<path d="M380,182 L380,190" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="380" y="205" font-size="11.5" fill="#5b6876" text-anchor="middle">6 s</text>
+<path d="M480,182 L480,190" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="480" y="205" font-size="11.5" fill="#5b6876" text-anchor="middle">8 s</text>
+<path d="M580,182 L580,190" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="580" y="205" font-size="11.5" fill="#5b6876" text-anchor="middle">10 s</text>
+<path d="M680,182 L680,190" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="680" y="205" font-size="11.5" fill="#5b6876" text-anchor="middle">12 s</text>
+<text x="380" y="266" font-size="11.5" fill="#5b6876" text-anchor="middle">El periodo de lectura de 2 s es el de la hoja de datos; el pico de 1 s es un supuesto del ejemplo.</text>
+<text x="380" y="280" font-size="11.5" fill="#5b6876" text-anchor="middle">Un fenómeno más corto que el periodo de lectura puede pasar sin dejar rastro.</text>
+</svg>
+```
+
+:::
+
+El caso donde la idea sorprende es el del fenómeno más corto que el periodo de lectura. Si una ráfaga de aire caliente dura 1 s entre dos lecturas, ninguna la registra y el sistema nunca se entera. Para el aire de un aula, que cambia en minutos, 2 s sobra y el criterio se cumple con holgura. Para medir una vibración o un golpe, el mismo sensor no sirve, aunque mida la magnitud correcta y su rango sea suficiente.
+
+#### Alimentación e interfaz de salida
+
+La *alimentación* es la tensión que el sensor necesita para funcionar. El AM2302 trabaja entre 3,3 y 5,5 V, y una placa ESP32 puede entregarle 3,3 V, por lo que ambos son compatibles. Un sensor que exigiera 5 V fijos no funcionaría bien con una placa que solo entrega 3,3 V sin una pieza adicional que suba la tensión. La alimentación afecta también a la señal de salida, porque una señal de 5 V enviada a un pin pensado para 3,3 V puede dañarlo. Eso es un criterio de diseño que se comprueba siempre en la hoja de datos de la placa y no es una regla universal.
+
+La *interfaz de salida* es la forma en que el sensor entrega su medida. Hay tres frecuentes. En la salida analógica, un cable lleva un voltaje y el microcontrolador necesita un pin con ADC. En la salida digital de un solo cable, que es la del AM2302, el sensor envía bits y se lee en un pin digital. En un *bus*, que es un conjunto de cables que comparten varios dispositivos, varios sensores se conectan a los mismos cables. I2C y SPI son dos formas normalizadas de hacerlo, y no se explican aquí porque esta unidad solo necesita saber que existen y que ahorran pines.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 372" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres filas. Primera, salida analógica: un cable de voltaje entra a un pin con ADC del microcontrolador. Segunda, salida digital de un solo cable, como el AM2302: los bits entran a un pin digital. Tercera, un bus compartido: dos sensores comparten los mismos cables hacia el microcontrolador. Abajo, una restricción: la tensión de alimentación del sensor debe estar dentro de su rango y su señal debe ser compatible con el pin." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m8c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m8h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m8s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m8m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m8u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m8t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Tres formas de que el sensor entregue su medida, y la restricción de alimentación</text>
+<text x="20" y="74" font-size="12.5" font-weight="700" fill="#1F6B43" text-anchor="start">Analógica</text>
+<text x="20" y="90" font-size="11.5" fill="#5b6876" text-anchor="start">un voltaje</text>
+<rect x="170" y="52" width="130" height="44" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="235" y="78.55" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Sensor</text>
+<path d="M300,74 L420,74" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m8h)"/>
+<rect x="420" y="52" width="150" height="44" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="495" y="78.55" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Microcontrolador</text>
+<text x="590" y="72" font-size="12" font-weight="700" fill="#1D5A94" text-anchor="start">un pin con ADC</text>
+<text x="590" y="87" font-size="11.5" fill="#5b6876" text-anchor="start">el número depende de los</text>
+<text x="590" y="101" font-size="11.5" fill="#5b6876" text-anchor="start">bits del ADC</text>
+<text x="20" y="154" font-size="12.5" font-weight="700" fill="#1F6B43" text-anchor="start">Digital, un cable</text>
+<text x="20" y="170" font-size="11.5" fill="#5b6876" text-anchor="start">AM2302</text>
+<rect x="170" y="132" width="130" height="44" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="235" y="158.55" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Sensor</text>
+<path d="M300,154 L420,154" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m8h)"/>
+<rect x="420" y="132" width="150" height="44" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="495" y="158.55" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Microcontrolador</text>
+<text x="590" y="152" font-size="12" font-weight="700" fill="#1D5A94" text-anchor="start">un pin digital</text>
+<text x="590" y="167" font-size="11.5" fill="#5b6876" text-anchor="start">el sensor ya entrega el</text>
+<text x="590" y="181" font-size="11.5" fill="#5b6876" text-anchor="start">número</text>
+<text x="20" y="226" font-size="12.5" font-weight="700" fill="#1F6B43" text-anchor="start">Por bus</text>
+<text x="20" y="242" font-size="11.5" fill="#5b6876" text-anchor="start">varios sensores</text>
+<rect x="170" y="206" width="130" height="34" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="235" y="227.55" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Sensor 1</text>
+<rect x="170" y="258" width="130" height="34" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="235" y="279.55" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Sensor 2</text>
+<path d="M300,223 L360,223 L360,275 L300,275" fill="none" stroke="#5CB77F" stroke-width="1.8"/>
+<path d="M360,249 L420,249" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m8h)"/>
+<rect x="420" y="224" width="150" height="50" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="495" y="253.55" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Microcontrolador</text>
+<text x="590" y="244" font-size="12" font-weight="700" fill="#1D5A94" text-anchor="start">los pines del bus</text>
+<text x="590" y="259" font-size="11.5" fill="#5b6876" text-anchor="start">cables compartidos</text>
+<path d="M20,108 L740,108" fill="none" stroke="#e3e9f0" stroke-width="1"/>
+<path d="M20,190 L740,190" fill="none" stroke="#e3e9f0" stroke-width="1"/>
+<rect x="20" y="308" width="720" height="48" rx="8" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="380" y="328.45" font-size="12" fill="#A63D33" text-anchor="middle">Restricción de alimentación: la tensión del sensor debe caer dentro de su rango (AM2302: de 3,3 a 5,5 V)</text>
+<text x="380" y="343.95" font-size="12" fill="#A63D33" text-anchor="middle">y el nivel de su señal debe ser compatible con el pin que la recibe.</text>
+</svg>
+```
+
+:::
+
+### Clases de sensor por magnitud
+
+La tabla reúne las magnitudes más frecuentes en proyectos de IoT. Para cada una indica qué mide, el tipo de sensor que se usa con más frecuencia y un caso típico. La lista no es exhaustiva, y en todos los casos los cinco criterios anteriores se aplican igual.
+
+::: {.tabla-ancha}
+
+| Magnitud | Qué mide | Tipo de sensor frecuente | Caso típico |
+|---|---|---|---|
+| Temperatura | Qué tan caliente o frío está el aire o un objeto | Termistor o circuito integrado de temperatura | Termostato de un apartamento |
+| Humedad | Humedad relativa del aire | Sensor de humedad relativa, a menudo junto con el de temperatura | El AM2302 del aula 1 |
+| Luz | Cuánta luz llega al sensor | Fotorresistencia, que cambia su resistencia con la luz, o fotodiodo, que genera una corriente con ella | Encender las luces de un pasillo cuando oscurece |
+| Presencia o movimiento | Si hay una persona o algo que se mueve | Sensor infrarrojo pasivo, que detecta el calor que emite un cuerpo | Luz de un baño que se enciende al entrar alguien |
+| Distancia | Cuánto espacio hay hasta un objeto | Ultrasonido, que mide el tiempo que tarda en volver un eco, o infrarrojo | Sensor de reversa de un automóvil |
+| Gas | Presencia de un gas concreto en el aire | Sensor químico de gas | Alarma de fuga de gas en una cocina |
+| Presión | Fuerza por unidad de superficie de un gas o líquido | Sensor de presión | Presión de los neumáticos de un vehículo |
+| Nivel | Altura de un líquido o de un sólido en un recipiente | Flotador o ultrasonido | Nivel de combustible de un vehículo |
+| Peso | Fuerza que ejerce una masa sobre una base | Celda de carga, una pieza que se deforma de forma mínima con el peso y cambia su señal | Báscula de una tienda |
+
+:::
+
+### La ficha del AM2302 leída campo por campo
+
+La *hoja de datos* (en inglés *datasheet*) es el documento en el que el fabricante declara qué hace el componente y en qué condiciones lo garantiza. Leerla es la habilidad que más rinde en el diseño de dispositivos, porque ahí está todo lo que hace falta para aplicar los cinco criterios. La del AM2302, publicada por su fabricante Aosong, trae para el caso del laboratorio cinco campos principales.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 312" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A la izquierda, cinco campos de la hoja de datos del AM2302 con sus valores: rango de temperatura de menos 40 a 80 grados Celsius, precisión de más o menos 0,5 grados, alimentación de 3,3 a 5,5 voltios, periodo de lectura de 2 segundos y salida digital por un cable. A la derecha, la decisión que cada campo informa." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m9c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m9h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m9s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m9m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m9u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m9t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">La ficha del AM2302, campo por campo</text>
+<rect x="20" y="34" width="340" height="244" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="190" y="56" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">AM2302 (DHT22), hoja de datos</text>
+<path d="M20,66 L360,66" fill="none" stroke="#cfd8e3" stroke-width="1"/>
+<text x="34" y="96" font-size="12" fill="#12324f" text-anchor="start">Rango de temperatura</text>
+<text x="346" y="96" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="end">-40 a 80 °C</text>
+<path d="M360,92 L410,92" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m9m)"/>
+<rect x="410" y="72" width="330" height="40" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="575" y="88.45" font-size="12" fill="#7A5200" text-anchor="middle">Cubre el aire del aula; no alcanza cerca de una</text>
+<text x="575" y="103.95" font-size="12" fill="#7A5200" text-anchor="middle">fuente de calor intensa</text>
+<path d="M20,114 L360,114" fill="none" stroke="#e3e9f0" stroke-width="1"/>
+<text x="34" y="140" font-size="12" fill="#12324f" text-anchor="start">Precisión de temperatura</text>
+<text x="346" y="140" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="end">más o menos 0,5 °C</text>
+<path d="M360,136 L410,136" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m9m)"/>
+<rect x="410" y="116" width="330" height="40" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="575" y="140.2" font-size="12" fill="#7A5200" text-anchor="middle">Una lectura puede errar hasta 0,5 °C</text>
+<path d="M20,158 L360,158" fill="none" stroke="#e3e9f0" stroke-width="1"/>
+<text x="34" y="184" font-size="12" fill="#12324f" text-anchor="start">Alimentación</text>
+<text x="346" y="184" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="end">3,3 a 5,5 V</text>
+<path d="M360,180 L410,180" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m9m)"/>
+<rect x="410" y="160" width="330" height="40" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="575" y="184.2" font-size="12" fill="#7A5200" text-anchor="middle">Debe coincidir con la tensión de la placa</text>
+<path d="M20,202 L360,202" fill="none" stroke="#e3e9f0" stroke-width="1"/>
+<text x="34" y="228" font-size="12" fill="#12324f" text-anchor="start">Periodo de lectura</text>
+<text x="346" y="228" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="end">2 s</text>
+<path d="M360,224 L410,224" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m9m)"/>
+<rect x="410" y="204" width="330" height="40" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="575" y="228.2" font-size="12" fill="#7A5200" text-anchor="middle">No se puede leer más seguido que cada 2 s</text>
+<path d="M20,246 L360,246" fill="none" stroke="#e3e9f0" stroke-width="1"/>
+<text x="34" y="272" font-size="12" fill="#12324f" text-anchor="start">Salida</text>
+<text x="346" y="272" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="end">digital, un cable</text>
+<path d="M360,268 L410,268" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m9m)"/>
+<rect x="410" y="248" width="330" height="40" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="575" y="272.2" font-size="12" fill="#7A5200" text-anchor="middle">Entra por un pin digital, sin pasar por el ADC</text>
+<text x="380" y="304" font-size="11.5" fill="#5b6876" text-anchor="middle">Fuente: hoja de datos de Aosong para el AM2302 (DHT22).</text>
+</svg>
+```
+
+:::
+
+El rango de temperatura, de -40 a 80 °C, cubre el aire del aula, como se vio en la sección sobre criterios. La precisión de más o menos 0,5 °C fija el error que hay que asumir en cada lectura. La alimentación, de 3,3 a 5,5 V, es compatible con una placa de 3,3 V. El periodo de lectura de 2 s fija la frecuencia máxima. La salida digital por un solo cable indica que el sensor ocupa un pin digital y no un ADC. La humedad tiene sus propios campos de rango y de precisión en la misma hoja, y se leen igual; esta guía no cita sus cifras.
+
+Un caso de estudio muestra por qué conviene leer la hoja del fabricante del sensor y no solo la que viene con el módulo. Al comparar dos documentos del mismo sensor, la hoja de Aosong declara el rango de -40 a 80 °C que se usa en esta guía, y la hoja de un distribuidor de módulos que se consultó para contrastar declara un rango superior. Ambas pueden ser correctas, porque describen versiones o condiciones distintas, pero un diseño no puede apoyarse en la más favorable. El criterio es aplicar la hoja del fabricante del chip y confirmar con el lote que se compró cuando una decisión depende de ese valor. En el aula 1 la diferencia no importa, y en una aplicación cercana al límite sí.
+
+### Error, ruido y calibración
+
+Una lectura no es la verdad, sino una estimación con error. Hay dos tipos de error que se tratan de forma distinta. El *ruido* es una variación aleatoria: si el aire está quieto y se leen diez valores seguidos, los números saltan un poco alrededor del valor real. Se reduce sacando varias lecturas y promediándolas. El *error sistemático* (o sesgo) desplaza todas las lecturas hacia el mismo lado, por ejemplo siempre medio grado de más, y ningún promedio lo corrige. Para ese error existe la *calibración*, que consiste en comparar el sensor con un instrumento de referencia y anotar la corrección que debe aplicarse, que suele ser una resta o una pequeña fórmula.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 318" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tres paneles con puntos que representan lecturas repetidas y una línea punteada que marca el valor real. En el primero, ruido: las lecturas se dispersan alrededor del valor real. En el segundo, error sistemático: las lecturas son parecidas entre sí pero todas desplazadas del valor real. En el tercero, un sensor calibrado: lecturas cercanas al valor real." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m10c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m10h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m10s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m10m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m10u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m10t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Ruido, error sistemático y calibración</text>
+<rect x="20" y="34" width="220" height="214" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="130" y="56" font-size="13" font-weight="700" fill="#A63D33" text-anchor="middle">Ruido</text>
+<path d="M130,74 L130,184" fill="none" stroke="#3B82C4" stroke-width="1.6" stroke-dasharray="5 4"/>
+<text x="130" y="198" font-size="11.5" fill="#1D5A94" text-anchor="middle">valor real</text>
+<circle cx="78" cy="88" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="108" cy="103" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="138" cy="118" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="164" cy="133" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="124" cy="148" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="176" cy="163" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="94" cy="178" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<text x="130" y="222" font-size="11.5" fill="#5b6876" text-anchor="middle">las lecturas saltan alrededor</text>
+<text x="130" y="237" font-size="11.5" fill="#5b6876" text-anchor="middle">del valor real</text>
+<rect x="270" y="34" width="220" height="214" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="380" y="56" font-size="13" font-weight="700" fill="#A63D33" text-anchor="middle">Error sistemático</text>
+<path d="M380,74 L380,184" fill="none" stroke="#3B82C4" stroke-width="1.6" stroke-dasharray="5 4"/>
+<text x="380" y="198" font-size="11.5" fill="#1D5A94" text-anchor="middle">valor real</text>
+<circle cx="418" cy="88" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="428" cy="103" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="434" cy="118" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="424" cy="133" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="438" cy="148" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="430" cy="163" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<circle cx="422" cy="178" r="4.5" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.6"/>
+<text x="380" y="222" font-size="11.5" fill="#5b6876" text-anchor="middle">todas se desvían igual;</text>
+<text x="380" y="237" font-size="11.5" fill="#5b6876" text-anchor="middle">una resta las corrige</text>
+<rect x="520" y="34" width="220" height="214" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="630" y="56" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Calibrado</text>
+<path d="M630,74 L630,184" fill="none" stroke="#3B82C4" stroke-width="1.6" stroke-dasharray="5 4"/>
+<text x="630" y="198" font-size="11.5" fill="#1D5A94" text-anchor="middle">valor real</text>
+<circle cx="620" cy="88" r="4.5" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.6"/>
+<circle cx="634" cy="103" r="4.5" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.6"/>
+<circle cx="627" cy="118" r="4.5" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.6"/>
+<circle cx="638" cy="133" r="4.5" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.6"/>
+<circle cx="630" cy="148" r="4.5" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.6"/>
+<circle cx="623" cy="163" r="4.5" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.6"/>
+<circle cx="636" cy="178" r="4.5" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.6"/>
+<text x="630" y="222" font-size="11.5" fill="#5b6876" text-anchor="middle">agrupadas sobre el valor real</text>
+<text x="630" y="237" font-size="11.5" fill="#5b6876" text-anchor="middle">tras la corrección</text>
+<path d="M490,140 L520,140" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m10h)"/>
+<text x="380" y="272" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">Una lectura es el valor real más un error que solo se conoce en parte.</text>
+<text x="380" y="310" font-size="11.5" fill="#5b6876" text-anchor="middle">Calibrar es comparar el sensor con un instrumento de referencia y anotar la corrección que hay que aplicar.</text>
+</svg>
+```
+
+:::
+
+La calibración tiene un costo, que es disponer de la referencia, y por eso se hace solo cuando la exactitud lo justifica. Para un monitor de aula, la precisión de fábrica basta. Para una aplicación que dispare una alarma o proteja un producto, se calibra.
+
+### Un caso donde el sensor engaña
+
+El caso más frecuente en la práctica es el sensor que mide algo distinto de lo que se quería. Un termómetro al sol no mide la temperatura del aire: mide la temperatura del propio sensor, que el sol calienta por radiación. En un aula donde el aire está a 27,4 °C, el sensor A, expuesto al sol que entra por la ventana, marca 31,8 °C en el ejemplo, y el sensor B, a la sombra y con aire que circula, marca 27,4 °C.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 332" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos sensores en el aula 1 donde el aire está a 27,4 grados. El sensor A está expuesto al sol que entra por la ventana y marca 31,8, porque la radiación lo calienta por encima del aire. El sensor B está a la sombra, con aire que circula, y marca 27,4." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m11c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m11h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m11s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m11m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m11u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m11t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">El caso del sensor al sol: mide su propia temperatura</text>
+<rect x="20" y="40" width="150" height="70" rx="8" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="95" y="72.05" font-size="13" font-weight="700" fill="#A63D33" text-anchor="middle">Sol por la ventana</text>
+<text x="95" y="87.525" font-size="11.5" fill="#5b6876" text-anchor="middle">radiación directa</text>
+<rect x="20" y="170" width="150" height="70" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="95" y="202.05" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Aire del aula</text>
+<text x="95" y="217.525" font-size="11.5" fill="#5b6876" text-anchor="middle">27,4 °C reales</text>
+<rect x="250" y="40" width="200" height="70" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="350" y="72.05" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Sensor A</text>
+<text x="350" y="87.525" font-size="11.5" fill="#5b6876" text-anchor="middle">expuesto al sol</text>
+<rect x="250" y="170" width="200" height="70" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="350" y="194.55" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Sensor B</text>
+<text x="350" y="210.025" font-size="11.5" fill="#5b6876" text-anchor="middle">a la sombra, con aire que</text>
+<text x="350" y="225.025" font-size="11.5" fill="#5b6876" text-anchor="middle">circula</text>
+<rect x="560" y="40" width="180" height="70" rx="8" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="650" y="72.05" font-size="13" font-weight="700" fill="#A63D33" text-anchor="middle">Lectura: 31.8</text>
+<text x="650" y="87.525" font-size="11.5" fill="#5b6876" text-anchor="middle">mide su propio calor</text>
+<rect x="560" y="170" width="180" height="70" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="650" y="202.05" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Lectura: 27.4</text>
+<text x="650" y="217.525" font-size="11.5" fill="#5b6876" text-anchor="middle">mide el aire</text>
+<path d="M170,75 L250,75" fill="none" stroke="#E4572E" stroke-width="1.8" marker-end="url(#g2m11t)"/>
+<text x="210" y="66" font-size="11.5" fill="#A63D33" text-anchor="middle">calienta</text>
+<path d="M170,205 L250,205" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#g2m11c)"/>
+<text x="210" y="196" font-size="11.5" fill="#5b6876" text-anchor="middle">rodea</text>
+<path d="M450,75 L560,75" fill="none" stroke="#E4572E" stroke-width="1.8" marker-end="url(#g2m11t)"/>
+<path d="M450,205 L560,205" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m11h)"/>
+<rect x="20" y="262" width="720" height="50" rx="8" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="380" y="283.45" font-size="12" fill="#A63D33" text-anchor="middle">El sensor A funciona bien y su problema es la ubicación: mide la temperatura que alcanza él mismo,</text>
+<text x="380" y="298.95" font-size="12" fill="#A63D33" text-anchor="middle">que el sol sube por encima de la del aire, y esa lectura entra al sistema como si fuera la del aula.</text>
+<text x="380" y="324" font-size="11.5" fill="#5b6876" text-anchor="middle">Los valores 31,8 y 27,4 son supuestos del ejemplo.</text>
+</svg>
+```
+
+:::
+
+El análisis es el siguiente. Los dos sensores funcionan bien y la diferencia viene de la ubicación, no del componente. El sensor A absorbe radiación y se calienta hasta una temperatura que depende del sol, del tamaño del sensor y de lo poco que el aire lo enfríe. La resolución es separar el sensor de las fuentes de calor y de la radiación directa, como una pared que recibe sol o un equipo que se calienta, y dejarlo en un lugar ventilado. El mismo error aparece con sensores colocados cerca de la salida de un equipo de aire acondicionado, sobre un computador o junto a una lámpara, y la regla de diseño es que la ubicación del sensor forma parte del diseño tanto como su modelo.
+
+::: {.callout-tip}
+## Reto 5. Lee la ficha antes de confiar
+
+Marca las afirmaciones que creas verdaderas.
+
+<label><input type="checkbox"> Con una precisión de más o menos 0,5 °C, una lectura de 27,4 °C puede corresponder a un aire entre 26,9 °C y 27,9 °C</label>
+
+<label><input type="checkbox"> Calibrar un sensor elimina el ruido de sus lecturas</label>
+
+<label><input type="checkbox"> Un sensor en perfecto estado, colocado al sol, puede dar una lectura más alta que la temperatura del aire</label>
+
+<label><input type="checkbox"> Si el microcontrolador es suficientemente rápido, se puede pedir al AM2302 una lectura cada segundo</label>
+
+<label><input type="checkbox"> Cuando el diseño depende de un valor cercano al límite del rango, conviene aplicar la hoja del fabricante del sensor y no la de un revendedor de módulos</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 5
+
+Son verdaderas la primera, la tercera y la quinta. La primera es verdadera porque la precisión es la distancia máxima declarada entre la lectura y el valor real: 27,4 menos 0,5 es 26,9 y 27,4 más 0,5 es 27,9. La segunda es falsa porque la calibración corrige el error sistemático, y el ruido, que es aleatorio, se reduce promediando varias lecturas. La tercera es verdadera porque el sensor mide su propia temperatura, y el sol puede subirla por encima de la del aire. La cuarta es falsa porque el periodo de lectura del AM2302 es de 2 s según la hoja de datos, y el sensor no tiene una lectura lista antes de ese tiempo, por rápido que sea el microcontrolador. La quinta es verdadera porque el fabricante del chip es la fuente que respalda el valor, y los documentos de terceros pueden describir otras versiones o condiciones.
+:::
+
+Fuentes de esta sección: hoja de datos de Aosong para el AM2302 o DHT22 (rango de temperatura, precisión, repetibilidad, alimentación, periodo de lectura, salida digital por un solo cable y trama de 40 bits tras la señal de inicio); hoja de datos del ESP32 de Espressif, versión 5.3 (ADC de 12 bits); documentación de ESP-IDF de Espressif, secciones de ADC (resolución de 12 bits por defecto, dos ADC, tensión de referencia de 1100 mV con variación entre chips, uso del segundo ADC por el Wi-Fi). Los datos de la hoja de un distribuidor de módulos se usaron solo para contrastar. Los valores del termistor hipotético, del aula y de la tubería son supuestos del ejemplo.
+
+## Control: el microcontrolador
+
+Un *microcontrolador* es un circuito integrado, es decir, un chip, que reúne en una sola pieza un procesador, memoria y conexiones para leer sensores y ordenar actuadores. Ejecuta un único programa, que en la jerga del oficio se llama *firmware* (el programa que vive dentro del dispositivo), y lo ejecuta desde que recibe energía hasta que se la quitan. Es la etapa 2 del flujo, Control, y es una de las dos etapas que deciden: la otra es la aplicación, que se trata en otra parte de la guía. En el caso del laboratorio, el microcontrolador lee el sensor, compara el valor con el umbral 28, arma el mensaje `lab/aula1/temperatura 27.4`, lo envía y, si hace falta, ordena encender el ventilador.
+
+### Anatomía de un microcontrolador
+
+El diagrama muestra los bloques que casi todos los microcontroladores tienen. Se recorren de uno en uno, porque cada bloque define una decisión de diseño.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 362" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un recuadro grande que representa el chip con ocho bloques. Al centro, el procesador. Arriba, la memoria de programa y la memoria de datos. A la izquierda, el convertidor analógico digital y los pines de entrada y salida. A la derecha, los módulos de comunicación. Abajo, el reloj y los modos de bajo consumo. Por fuera, un sensor analógico entra al ADC, un sensor digital entra a un pin, un pin de salida va a un actuador y la comunicación sale hacia la red." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m12c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m12h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m12s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m12m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m12u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m12t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Anatomía de un microcontrolador, en bloques</text>
+<rect x="130" y="32" width="500" height="292" rx="10" fill="none" stroke="#3B82C4" stroke-width="1.8" stroke-dasharray="5 4"/>
+<text x="380" y="50" font-size="12.5" font-weight="700" fill="#1D5A94" text-anchor="middle">Microcontrolador (un solo chip)</text>
+<rect x="300" y="130" width="160" height="70" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="380" y="162.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Procesador</text>
+<text x="380" y="177.525" font-size="11.5" fill="#5b6876" text-anchor="middle">ejecuta el programa</text>
+<rect x="190" y="62" width="170" height="48" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="275" y="83.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Memoria de programa</text>
+<text x="275" y="98.525" font-size="11.5" fill="#5b6876" text-anchor="middle">guarda el programa</text>
+<rect x="400" y="62" width="170" height="48" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="485" y="83.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Memoria de datos</text>
+<text x="485" y="98.525" font-size="11.5" fill="#5b6876" text-anchor="middle">SRAM, las variables</text>
+<rect x="145" y="118" width="125" height="40" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="207.5" y="135.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">ADC</text>
+<text x="207.5" y="150.525" font-size="11.5" fill="#5b6876" text-anchor="middle">voltaje a número</text>
+<rect x="145" y="175" width="125" height="66" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="207.5" y="205.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Pines GPIO</text>
+<text x="207.5" y="220.525" font-size="11.5" fill="#5b6876" text-anchor="middle">entrada y salida</text>
+<rect x="490" y="140" width="125" height="70" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="552.5" y="164.55" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Comunicación</text>
+<text x="552.5" y="180.025" font-size="11.5" fill="#5b6876" text-anchor="middle">Wi-Fi y otros</text>
+<text x="552.5" y="195.025" font-size="11.5" fill="#5b6876" text-anchor="middle">módulos</text>
+<rect x="190" y="250" width="170" height="50" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="275" y="272.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Reloj</text>
+<text x="275" y="287.525" font-size="11.5" fill="#5b6876" text-anchor="middle">marca el ritmo</text>
+<rect x="400" y="250" width="170" height="50" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="485" y="271.7" font-size="12" fill="#1D5A94" text-anchor="middle">Modos de bajo consumo</text>
+<text x="485" y="286.775" font-size="11.5" fill="#5b6876" text-anchor="middle">duermen lo que no se usa</text>
+<path d="M275,110 L275,120 L340,120 L340,130" fill="none" stroke="#3B82C4" stroke-width="1.5"/>
+<path d="M485,110 L485,120 L420,120 L420,130" fill="none" stroke="#3B82C4" stroke-width="1.5"/>
+<path d="M270,138 L300,138" fill="none" stroke="#3B82C4" stroke-width="1.5"/>
+<path d="M270,190 L300,190" fill="none" stroke="#3B82C4" stroke-width="1.5"/>
+<path d="M460,175 L490,175" fill="none" stroke="#3B82C4" stroke-width="1.5"/>
+<path d="M340,200 L340,225 L275,225 L275,250" fill="none" stroke="#3B82C4" stroke-width="1.5"/>
+<path d="M420,200 L420,225 L485,225 L485,250" fill="none" stroke="#3B82C4" stroke-width="1.5"/>
+<rect x="8" y="118" width="104" height="40" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="60" y="135.05" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Sensor</text>
+<text x="60" y="150.525" font-size="11.5" fill="#5b6876" text-anchor="middle">analógico</text>
+<path d="M112,138 L145,138" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m12h)"/>
+<rect x="8" y="164" width="104" height="40" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="60" y="181.05" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Sensor</text>
+<text x="60" y="196.525" font-size="11.5" fill="#5b6876" text-anchor="middle">digital</text>
+<path d="M112,184 L145,184" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m12h)"/>
+<rect x="8" y="214" width="104" height="40" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="60" y="231.05" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Actuador</text>
+<text x="60" y="246.525" font-size="11.5" fill="#5b6876" text-anchor="middle">vía relé</text>
+<path d="M145,230 L112,230" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m12m)"/>
+<rect x="648" y="140" width="104" height="70" rx="8" fill="#ECE6FA" stroke="#7A5BC7" stroke-width="1.4"/>
+<text x="700" y="172.05" font-size="13" font-weight="700" fill="#553A9E" text-anchor="middle">Red</text>
+<text x="700" y="187.525" font-size="11.5" fill="#5b6876" text-anchor="middle">Wi-Fi</text>
+<path d="M615,175 L648,175" fill="none" stroke="#7A5BC7" stroke-width="1.8" marker-end="url(#g2m12u)"/>
+<text x="380" y="354" font-size="11.5" fill="#5b6876" text-anchor="middle">Los bloques se comunican por un conjunto de cables internos que el diagrama simplifica con líneas.</text>
+</svg>
+```
+
+:::
+
+El *procesador* ejecuta las instrucciones del programa una tras otra a un ritmo fijado por el reloj. Es la parte que decide, pero decide siguiendo exactamente lo que el programa dice, sin interpretar nada. La *memoria de programa*, que casi siempre es de tipo *flash*, guarda el programa y no se borra al quitar la energía, así que el dispositivo vuelve a arrancar con el mismo código cada vez. La *memoria de datos*, llamada *SRAM* (memoria de acceso aleatorio estática), guarda las variables mientras el programa corre, por ejemplo la última lectura, y se borra por completo al quitar la energía. Un ESP32 tiene 520 KB de SRAM según su hoja de datos. Un *byte* son 8 bits, y un carácter de texto como los del mensaje `lab/aula1/temperatura 27.4` ocupa un byte, de modo que ese mensaje de 26 caracteres ocupa 26 bytes. Un *kilobyte* (KB) es del orden de mil bytes.
+
+Los *pines de propósito general* (en inglés *GPIO*, *general purpose input output*) son los contactos metálicos por los que el chip se conecta con el mundo, y se explican en la sección siguiente. El *ADC* ya se explicó en la sección de sensores: es el bloque que mide un voltaje y lo entrega como número. Los *módulos de comunicación* son los bloques que saben hablar un protocolo concreto. En el ESP32, uno de ellos es el Wi-Fi, que cumple el estándar 802.11 b/g/n según la hoja de datos, y otros hablan por cable con pocos hilos con otros chips. El *reloj* genera pulsos regulares que marcan el ritmo de todo el chip, como el compás de una orquesta. Los *modos de bajo consumo* permiten dormir las partes que no se usan, y son el bloque que más pesa en un dispositivo a batería.
+
+El caso donde la idea sorprende es el de las variables que desaparecen. Un programador que viene del computador espera que una variable siga viva mientras el dispositivo tenga energía, y eso es cierto mientras el chip esté despierto. En el sueño profundo, la documentación de ESP-IDF explica que el procesador, la mayor parte de la memoria y los periféricos se apagan, y solo siguen alimentados el controlador de bajo consumo, el coprocesador de ultra bajo consumo y las memorias RTC (RTC viene de *real time clock*, reloj de tiempo real, el bloque que sigue funcionando mientras el resto duerme; esas memorias conservan datos si el programa se configura para ello). Todo lo que estaba en la SRAM común se pierde. Si el dispositivo necesita recordar algo entre ciclos, por ejemplo el número de lecturas enviadas o una lectura que aún no salió, debe guardarlo en la memoria RTC o en una memoria permanente, y esa decisión es de diseño, no un detalle del programa.
+
+### El pin de propósito general
+
+Un *pin de propósito general* o GPIO es un contacto que el programa puede configurar como entrada o como salida. Como *entrada*, el pin mide la tensión que le llega y el programa lee 1 si es un nivel alto o 0 si es un nivel bajo. Como *salida*, el programa escribe 1 o 0 y el pin entrega una tensión alta o baja. Un mismo pin sirve para lo uno o para lo otro según cómo se configure, y esa flexibilidad es la que le da el nombre. El AM2302 usa un pin como entrada, y el relé que enciende el ventilador usa otro como salida (un *relé* es un interruptor que una señal pequeña abre o cierra, y se explica en la parte de actuadores).
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 336" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos paneles. A la izquierda, un pin como entrada: una columna de tensión de 0 a 3,3 voltios con una zona baja que se lee como 0, una zona alta que se lee como 1 y una zona intermedia no definida. A la derecha, un pin como salida: entrega una tensión alta o baja con corriente limitada a decenas de miliamperios, suficiente para un LED indicador pero no para un ventilador." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m13c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m13h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m13s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m13m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m13u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m13t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Un pin de propósito general (GPIO) como entrada y como salida</text>
+<rect x="20" y="34" width="350" height="270" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<rect x="390" y="34" width="350" height="270" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="195" y="56" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Pin como entrada</text>
+<text x="195" y="73" font-size="11.5" fill="#5b6876" text-anchor="middle">mide la tensión que le llega</text>
+<rect x="80" y="90" width="70" height="44" rx="4" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<rect x="80" y="134" width="70" height="100" rx="4" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<rect x="80" y="234" width="70" height="44" rx="4" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="72" y="98" font-size="11.5" fill="#5b6876" text-anchor="end">3,3 V</text>
+<text x="72" y="282" font-size="11.5" fill="#5b6876" text-anchor="end">0 V</text>
+<text x="166" y="118" font-size="12" font-weight="700" fill="#1D5A94" text-anchor="start">nivel alto: el pin lee 1</text>
+<text x="166" y="180" font-size="12" font-weight="700" fill="#A63D33" text-anchor="start">zona no definida:</text>
+<text x="166" y="196" font-size="11.5" fill="#A63D33" text-anchor="start">la lectura puede ser</text>
+<text x="166" y="211" font-size="11.5" fill="#A63D33" text-anchor="start">0 o 1 al azar</text>
+<text x="166" y="262" font-size="12" font-weight="700" fill="#1D5A94" text-anchor="start">nivel bajo: el pin lee 0</text>
+<text x="565" y="56" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Pin como salida</text>
+<text x="565" y="73" font-size="11.5" fill="#5b6876" text-anchor="middle">entrega una tensión alta o baja</text>
+<rect x="410" y="92" width="130" height="88" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="475" y="125.55" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Pin de salida</text>
+<text x="475" y="141.025" font-size="11.5" fill="#5b6876" text-anchor="middle">alto: cerca de 3,3 V</text>
+<text x="475" y="156.025" font-size="11.5" fill="#5b6876" text-anchor="middle">bajo: cerca de 0 V</text>
+<rect x="610" y="86" width="120" height="44" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="670" y="112.55" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">LED indicador</text>
+<path d="M540,108 L610,108" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m13m)"/>
+<rect x="610" y="150" width="120" height="44" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="670" y="169.05" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Ventilador</text>
+<text x="670" y="184.525" font-size="11.5" fill="#5b6876" text-anchor="middle">de 12 V</text>
+<path d="M540,166 L610,166" fill="none" stroke="#E4572E" stroke-width="1.8" stroke-dasharray="7 5" marker-end="url(#g2m13t)"/>
+<circle cx="575" cy="166" r="12" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.8"/>
+<path d="M569,160 L581,172" fill="none" stroke="#E4572E" stroke-width="2.6"/>
+<path d="M569,172 L581,160" fill="none" stroke="#E4572E" stroke-width="2.6"/>
+<rect x="410" y="214" width="320" height="76" rx="8" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="570" y="241.05" font-size="13" font-weight="700" fill="#A63D33" text-anchor="middle">Límite de corriente</text>
+<text x="570" y="256.95" font-size="12" fill="#A63D33" text-anchor="middle">Un pin entrega del orden de decenas de mA como</text>
+<text x="570" y="272.45" font-size="12" fill="#A63D33" text-anchor="middle">máximo. Una carga que pida más lo sobrecarga.</text>
+<text x="380" y="328" font-size="11.5" fill="#5b6876" text-anchor="middle">Los umbrales exactos de lectura y la corriente máxima de cada pin salen de la hoja de datos del chip.</text>
+</svg>
+```
+
+:::
+
+Como entrada, la lectura funciona bien cuando la tensión está claramente en la zona alta o en la zona baja. En la zona intermedia el resultado es impredecible. Eso ocurre, por ejemplo, con un pin de entrada que quedó sin conectar a nada, que recoge ruido eléctrico del ambiente y da lecturas al azar. El diseño corrige el problema con una *resistencia de pull-up* o de *pull-down*, una resistencia que lleva el pin a nivel alto o bajo cuando nada más lo maneja. El nivel alto de un pin de salida del ESP32 es cercano a 3,3 V, la tensión con la que trabaja su lógica; los umbrales exactos de lectura figuran en la hoja de datos.
+
+Como salida, la limitación es la corriente. La hoja de datos del ESP32 (Tabla 5-3 y su nota 2) indica que un pin de salida entrega del orden de decenas de mA, con unos 40 mA típicos a la capacidad de entrega máxima y menos cuando muchos pines entregan a la vez. Esa corriente basta para encender un LED indicador y no alcanza para un ventilador, un motor o un relé de gran tamaño. La documentación de ESP-IDF añade que la capacidad de entrega del pin se puede configurar en cuatro niveles, de débil a la más fuerte. En la sección sobre actuadores se ve el diseño que resuelve este límite.
+
+Hay además dos sorpresas habituales en el ESP32, según la documentación de ESP-IDF. Un grupo de pines solo funciona como entrada y no tiene resistencias de pull-up ni de pull-down que el programa pueda activar. Y algunos pines se leen al arrancar para decidir la configuración del chip, de modo que conectarles un componente que fije un nivel puede impedir que el chip arranque como debe. Por eso se elige el pin de cada función revisando la hoja de la placa, y esta guía no fija números de pin.
+
+### El ciclo de trabajo
+
+El programa de un nodo de IoT sigue casi siempre el mismo ciclo, que se repite mientras el dispositivo funcione. Se despierta, *lee* el sensor, *decide* con una regla simple, *arma el mensaje*, *lo envía* por la red y *duerme* hasta el siguiente ciclo. En el caso del laboratorio, con un ciclo de 60 s, el microcontrolador lee `27.4`, compara con el umbral 28 y decide que el ventilador sigue apagado, arma `lab/aula1/temperatura 27.4`, lo envía por Wi-Fi y duerme. En el diagrama aparece la unidad uA, el microamperio, que es una millonésima de amperio y equivale a la milésima parte de un miliamperio.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 368" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Una línea de tiempo de un ciclo de 60 segundos, dibujada sin escala. Cinco tramos: leer el sensor, decidir con la regla del umbral 28, armar el mensaje con el tópico y el valor, enviarlo por Wi-Fi y dormir. Debajo, el consumo: alto durante los cuatro primeros tramos y mínimo mientras duerme." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m14c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m14h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m14s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m14m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m14u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m14t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">El ciclo de trabajo: leer, decidir, armar, enviar y dormir</text>
+<path d="M40,56 L460,56" fill="none" stroke="#E4572E" stroke-width="1.8"/>
+<path d="M40,50 L40,62" fill="none" stroke="#E4572E" stroke-width="1.8"/>
+<path d="M460,50 L460,62" fill="none" stroke="#E4572E" stroke-width="1.8"/>
+<text x="250" y="46" font-size="12" font-weight="700" fill="#A63D33" text-anchor="middle">despierto: unos pocos segundos</text>
+<path d="M460,56 L720,56" fill="none" stroke="#5CB77F" stroke-width="1.8"/>
+<path d="M720,50 L720,62" fill="none" stroke="#5CB77F" stroke-width="1.8"/>
+<text x="590" y="46" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="middle">dormido: casi todo el ciclo</text>
+<rect x="40" y="70" width="100" height="40" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="90" y="94.55" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">1 Leer</text>
+<text x="90" y="128" font-size="11.5" fill="#5b6876" text-anchor="middle">27.4</text>
+<text x="90" y="142" font-size="11.5" fill="#5b6876" text-anchor="middle">del sensor</text>
+<rect x="140" y="70" width="100" height="40" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="190" y="94.55" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">2 Decidir</text>
+<text x="190" y="128" font-size="11.5" fill="#5b6876" text-anchor="middle">27.4 menor</text>
+<text x="190" y="142" font-size="11.5" fill="#5b6876" text-anchor="middle">que 28: apagado</text>
+<rect x="240" y="70" width="110" height="40" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="295" y="94.55" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">3 Armar</text>
+<text x="295" y="128" font-size="11.5" fill="#5b6876" text-anchor="middle">arma el mensaje</text>
+<text x="295" y="142" font-size="11.5" fill="#5b6876" text-anchor="middle">tópico y valor</text>
+<rect x="350" y="70" width="110" height="40" rx="8" fill="#ECE6FA" stroke="#7A5BC7" stroke-width="1.4"/>
+<text x="405" y="94.55" font-size="13" font-weight="700" fill="#553A9E" text-anchor="middle">4 Enviar</text>
+<text x="405" y="128" font-size="11.5" fill="#5b6876" text-anchor="middle">lo manda por</text>
+<text x="405" y="142" font-size="11.5" fill="#5b6876" text-anchor="middle">Wi-Fi</text>
+<rect x="460" y="70" width="260" height="40" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="590" y="94.55" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">5 Dormir</text>
+<text x="590" y="128" font-size="11.5" fill="#5b6876" text-anchor="middle">casi sin consumo hasta el siguiente ciclo</text>
+<rect x="240" y="168" width="220" height="44" rx="8" fill="#ECE6FA" stroke="#7A5BC7" stroke-width="1.4"/>
+<text x="350" y="186.7" font-size="12" fill="#553A9E" text-anchor="middle" font-family="Consolas, Courier New, monospace">lab/aula1/temperatura 27.4</text>
+<text x="350" y="201.775" font-size="11.5" fill="#5b6876" text-anchor="middle">el mensaje armado en el paso 3</text>
+<text x="40" y="238" font-size="12" font-weight="700" fill="#12324f" text-anchor="start">Consumo</text>
+<path d="M40,310 V256 H460 V310" fill="none" stroke="#E4572E" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M460,310 H720" fill="none" stroke="#5CB77F" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="250" y="250" font-size="11.5" font-weight="700" fill="#A63D33" text-anchor="middle">consumo alto, con la radio encendida</text>
+<text x="590" y="298" font-size="11.5" font-weight="700" fill="#1F6B43" text-anchor="middle">consumo mínimo</text>
+<path d="M40,318 L720,318" fill="none" stroke="#8fb3d1" stroke-width="1.2"/>
+<text x="40" y="332" font-size="11.5" fill="#5b6876" text-anchor="start">0 s</text>
+<text x="720" y="332" font-size="11.5" fill="#5b6876" text-anchor="end">60 s</text>
+<text x="380" y="346" font-size="11.5" fill="#5b6876" text-anchor="middle">Los tramos no están a escala.</text>
+<text x="380" y="360" font-size="11.5" fill="#5b6876" text-anchor="middle">Dormido, un ESP32 puede bajar a unos 10 uA con su temporizador y su memoria RTC (hoja de datos de Espressif).</text>
+</svg>
+```
+
+:::
+
+Un *tópico* es la dirección jerárquica del mensaje, escrita con barras, que el intermediario de la red usa para saber a quién entregarlo; la parte de la red lo desarrolla. Aquí basta saber que es una cadena de texto más y que el microcontrolador la arma junto con el valor.
+
+El diagrama revela dónde se gasta la energía. El consumo es alto mientras el chip está despierto, sobre todo cuando la radio está encendida para enviar, y es mínimo mientras duerme. En el ESP32, la hoja de datos da unos 10 uA en sueño profundo con el temporizador RTC y la memoria RTC activos, una cantidad que se mide en millonésimas de amperio. Esa diferencia es lo que hace posible que un nodo con batería dure semanas o meses, y por eso el diseño busca que el chip esté despierto el menor tiempo posible.
+
+Un detalle de coordinación aparece con el AM2302. Su periodo de lectura es de 2 s, así que el sensor no tiene una lectura nueva lista antes de ese tiempo. En un ciclo de 60 s eso no molesta, y en un ciclo corto el programa debe esperar al menos 2 s entre una lectura y la siguiente.
+
+### Microcontrolador, computador de placa única y computador
+
+No todo dispositivo de IoT lleva un microcontrolador. Un *computador de placa única* (en inglés *single board computer*) es un computador completo montado en una sola placa, con un sistema operativo como los de un portátil, mucha más memoria que un microcontrolador y mayor consumo de energía. Las placas Raspberry Pi son el ejemplo más conocido. Un *computador* o servidor es un equipo completo, con sus periféricos y su fuente de alimentación de la red eléctrica. Las tres clases resuelven problemas distintos.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 366" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Árbol de decisión. Primera condición: si funciona con batería o duerme casi todo el tiempo, la respuesta es un microcontrolador. Si no, segunda condición: si necesita sistema operativo completo, varios programas o procesar imágenes. Si no la necesita, también basta un microcontrolador. Si la necesita, tercera condición: si va integrado en campo sin teclado ni pantalla propios, conviene un computador de placa única; si no, un computador o servidor." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m15c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m15h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m15s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m15m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m15u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m15t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Microcontrolador, computador de placa única o computador</text>
+<rect x="250" y="36" width="260" height="56" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="380" y="60.45" font-size="12" fill="#7A5200" text-anchor="middle">Funciona con batería o</text>
+<text x="380" y="75.95" font-size="12" fill="#7A5200" text-anchor="middle">duerme casi todo el tiempo</text>
+<rect x="250" y="126" width="260" height="66" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="380" y="155.45" font-size="12" fill="#7A5200" text-anchor="middle">Necesita sistema operativo completo,</text>
+<text x="380" y="170.95" font-size="12" fill="#7A5200" text-anchor="middle">varios programas o procesar imágenes</text>
+<rect x="250" y="238" width="260" height="56" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="380" y="262.45" font-size="12" fill="#7A5200" text-anchor="middle">Va integrado en campo, sin teclado</text>
+<text x="380" y="277.95" font-size="12" fill="#7A5200" text-anchor="middle">ni pantalla propios</text>
+<rect x="20" y="96" width="190" height="106" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="115" y="131.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Microcontrolador</text>
+<text x="115" y="146.525" font-size="11.5" fill="#5b6876" text-anchor="middle">un programa fijo</text>
+<text x="115" y="161.525" font-size="11.5" fill="#5b6876" text-anchor="middle">memoria en kilobytes</text>
+<text x="115" y="176.525" font-size="11.5" fill="#5b6876" text-anchor="middle">dormido consume muy poco</text>
+<rect x="20" y="226" width="190" height="80" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="115" y="247.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Computador de placa</text>
+<text x="115" y="264.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">única</text>
+<text x="115" y="279.525" font-size="11.5" fill="#5b6876" text-anchor="middle">sistema operativo completo</text>
+<text x="115" y="294.525" font-size="11.5" fill="#5b6876" text-anchor="middle">mucha más memoria</text>
+<rect x="570" y="226" width="170" height="80" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="655" y="255.55" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Computador o servidor</text>
+<text x="655" y="271.025" font-size="11.5" fill="#5b6876" text-anchor="middle">equipo completo</text>
+<text x="655" y="286.025" font-size="11.5" fill="#5b6876" text-anchor="middle">se alimenta de la red</text>
+<path d="M250,64 L115,64 L115,96" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m15m)"/>
+<text x="168" y="56" font-size="12" font-weight="700" fill="#7A5200" text-anchor="middle">sí</text>
+<path d="M250,164 L210,164" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m15m)"/>
+<text x="230" y="156" font-size="12" font-weight="700" fill="#7A5200" text-anchor="middle">no</text>
+<path d="M380,92 L380,126" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m15m)"/>
+<text x="392" y="114" font-size="12" font-weight="700" fill="#7A5200" text-anchor="start">no</text>
+<path d="M380,192 L380,238" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m15m)"/>
+<text x="392" y="220" font-size="12" font-weight="700" fill="#7A5200" text-anchor="start">sí</text>
+<path d="M250,266 L210,266" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m15m)"/>
+<text x="230" y="258" font-size="12" font-weight="700" fill="#7A5200" text-anchor="middle">sí</text>
+<path d="M510,266 L570,266" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m15m)"/>
+<text x="540" y="258" font-size="12" font-weight="700" fill="#7A5200" text-anchor="middle">no</text>
+<rect x="540" y="36" width="200" height="56" rx="8" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="640" y="60.45" font-size="12" fill="#A63D33" text-anchor="middle">El orden de las condiciones</text>
+<text x="640" y="75.95" font-size="12" fill="#A63D33" text-anchor="middle">orienta, no manda</text>
+<text x="380" y="358" font-size="11.5" fill="#5b6876" text-anchor="middle">Es un criterio de diseño para orientar la elección, no una regla de un estándar.</text>
+</svg>
+```
+
+:::
+
+El diagrama ofrece un orden de preguntas, que es un criterio de diseño y no una regla de un estándar. Si el dispositivo funciona con batería o duerme casi todo el tiempo, el microcontrolador casi siempre gana. Si no, depende de que el trabajo necesite un sistema operativo completo, varios programas a la vez o procesamiento pesado, como analizar imágenes. Cuando lo necesita, un computador de placa única sirve si va integrado en campo, sin teclado ni pantalla propios, y un computador o servidor sirve en los demás casos.
+
+::: {.tabla-ancha}
+
+| Criterio | Microcontrolador | Computador de placa única | Computador o servidor |
+|---|---|---|---|
+| Programa | Uno solo, fijo | Sistema operativo y varios programas | Sistema operativo y varios programas |
+| Memoria | Kilobytes (520 KB en un ESP32) | Mucho mayor que la de un microcontrolador | Mucho mayor que la de un microcontrolador |
+| Energía | Puede dormir con muy poco consumo | Consumo mayor | Se alimenta de la red eléctrica |
+| Arranque | Inmediato | Tarda por el sistema operativo | Tarda por el sistema operativo |
+| Papel típico en IoT | Nodo que mide y actúa | Pasarela local, que reúne y reenvía los datos de varios nodos | Servidor de la plataforma |
+
+:::
+
+El caso donde la idea falla es el del dispositivo sobredimensionado. Usar un computador de placa única para leer un sensor cada minuto funciona, pero el sistema operativo gasta energía, tarda en arrancar, puede quedarse en un estado inconsistente si se corta la energía y obliga a mantener actualizaciones de software, y todo eso para una tarea que un microcontrolador resuelve con un programa de pocas decenas de líneas. La falla contraria también existe: un microcontrolador no puede procesar imágenes ni correr varios programas, y pedirle eso lo desborda.
+
+### Cómo elegir una placa para un caso
+
+Una *placa de desarrollo* es el chip montado en una placa pequeña con sus conectores, un *regulador de tensión* (la pieza que baja y estabiliza la tensión que llega) y, casi siempre, una entrada para programarlo. Es lo que se compra y se usa en un prototipo. Para elegir una placa se aplican cuatro criterios, que se ven con los datos del laboratorio.
+
+::: {.tabla-ancha}
+
+| Criterio | Qué pide el laboratorio | Qué debe traer la placa |
+|---|---|---|
+| Pines necesarios | Una entrada digital para el sensor y una salida hacia el relé | Al menos dos pines de propósito general, con margen para crecer |
+| Memoria | Un programa pequeño y un mensaje de 26 bytes | Memoria de sobra, de kilobytes |
+| Energía | Toma de corriente en el aula | No exige bajo consumo, aunque conviene que pueda dormir |
+| Conexión de red integrada | Wi-Fi del laboratorio | Radio Wi-Fi integrada |
+
+:::
+
+La conexión de red integrada es el criterio que más simplifica. Una placa sin radio necesita un módulo Wi-Fi adicional, con su propia alimentación, sus cables y su programa, y cada pieza más es un punto donde algo puede fallar o consumir energía. Una placa con Wi-Fi integrado trae la radio dentro del mismo chip, y la red queda a un paso.
+
+### El ESP32 como ejemplo de placa con Wi-Fi
+
+El ESP32 es un microcontrolador de la empresa Espressif que trae Wi-Fi integrado. La guía lo usa como ejemplo porque es frecuente en proyectos de IoT y porque sus hojas de datos son públicas. Los datos que se usan en esta guía son cinco, y todos salen de la hoja de datos de Espressif: 520 KB de SRAM, Wi-Fi 802.11 b/g/n, ADC de 12 bits, sueño profundo de unos 10 uA con el temporizador RTC y la memoria RTC, y pines de salida que entregan del orden de decenas de mA.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 362" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos paneles. A la izquierda, un microcontrolador sin radio necesita un módulo Wi-Fi externo conectado a él y luego la red: dos piezas y una conexión entre ellas. A la derecha, un ESP32 trae la radio dentro del mismo chip y sale directo a la red. Debajo, cinco datos del ESP32 según la hoja de datos de Espressif: 520 KB de SRAM, Wi-Fi 802.11 b/g/n, ADC de 12 bits, sueño profundo de unos 10 uA y pines de salida con decenas de mA." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m16c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m16h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m16s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m16m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m16u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m16t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Radio externa frente a radio integrada</text>
+<rect x="20" y="34" width="350" height="210" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<rect x="390" y="34" width="350" height="210" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="195" y="56" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Con radio externa</text>
+<text x="565" y="56" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Con radio integrada</text>
+<rect x="40" y="74" width="140" height="56" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="110" y="99.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Microcontrolador</text>
+<text x="110" y="114.525" font-size="11.5" fill="#5b6876" text-anchor="middle">sin radio</text>
+<path d="M180,102 L210,102" fill="none" stroke="#7A5BC7" stroke-width="1.8" marker-end="url(#g2m16u)"/>
+<rect x="210" y="74" width="140" height="56" rx="8" fill="#ECE6FA" stroke="#7A5BC7" stroke-width="1.4"/>
+<text x="280" y="99.05" font-size="13" font-weight="700" fill="#553A9E" text-anchor="middle">Módulo Wi-Fi</text>
+<text x="280" y="114.525" font-size="11.5" fill="#5b6876" text-anchor="middle">otra pieza</text>
+<path d="M280,130 L280,166" fill="none" stroke="#7A5BC7" stroke-width="1.8" marker-end="url(#g2m16u)"/>
+<rect x="210" y="166" width="140" height="38" rx="8" fill="#ECE6FA" stroke="#7A5BC7" stroke-width="1.4"/>
+<text x="280" y="189.55" font-size="13" font-weight="700" fill="#553A9E" text-anchor="middle">Red</text>
+<text x="195" y="228" font-size="11.5" fill="#5b6876" text-anchor="middle">dos piezas que alimentar, conectar y programar</text>
+<rect x="430" y="74" width="200" height="56" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="530" y="99.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">ESP32</text>
+<text x="530" y="114.525" font-size="11.5" fill="#5b6876" text-anchor="middle">microcontrolador con Wi-Fi</text>
+<path d="M530,130 L530,166" fill="none" stroke="#7A5BC7" stroke-width="1.8" marker-end="url(#g2m16u)"/>
+<rect x="460" y="166" width="140" height="38" rx="8" fill="#ECE6FA" stroke="#7A5BC7" stroke-width="1.4"/>
+<text x="530" y="189.55" font-size="13" font-weight="700" fill="#553A9E" text-anchor="middle">Red</text>
+<text x="565" y="228" font-size="11.5" fill="#5b6876" text-anchor="middle">una pieza que ya trae la radio</text>
+<rect x="20" y="258" width="720" height="84" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="380" y="289.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Datos del ESP32 que se usan en esta guía (hoja de datos de Espressif)</text>
+<text x="380" y="304.95" font-size="12" fill="#1D5A94" text-anchor="middle">520 KB de SRAM | Wi-Fi 802.11 b/g/n | ADC de 12 bits</text>
+<text x="380" y="320.45" font-size="12" fill="#1D5A94" text-anchor="middle">sueño profundo de unos 10 uA (con temporizador y memoria RTC) | pines de salida del orden de decenas de mA</text>
+</svg>
+```
+
+:::
+
+### Un caso donde el microcontrolador se queda corto
+
+Los microcontroladores tienen dos límites, la energía y la memoria, y los dos suelen aparecer en el mismo diseño. El diagrama los muestra con números de un ejemplo, que usa la unidad *mAh* (miliamperio hora), con la que se mide cuánta carga guarda una batería.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos paneles. A la izquierda, la energía de una batería de 2000 mAh con supuestos del ejemplo: despierto todo el tiempo dura 20 horas, despierto 3 segundos de cada 60 dura 16,6 días y despierto 1 segundo de cada 60 dura 49,7 días. A la derecha, la memoria: guardar lecturas de 12 bytes cada 60 segundos durante un día ocupa 17 KB, cada 5 segundos ocupa 207 KB, y cada segundo ocupa 1037 KB, que supera los 520 KB de SRAM." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m17c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m17h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m17s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m17m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m17u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m17t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Dos casos donde un microcontrolador se queda corto</text>
+<rect x="20" y="34" width="350" height="250" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<rect x="390" y="34" width="350" height="250" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="195" y="56" font-size="13" font-weight="700" fill="#A63D33" text-anchor="middle">Energía: duración de la batería</text>
+<text x="40" y="84" font-size="12" fill="#12324f" text-anchor="start">siempre despierto</text>
+<rect x="40" y="92" width="4.16667" height="22" rx="3" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="52.1667" y="108" font-size="12" font-weight="700" fill="#A63D33" text-anchor="start">20 horas</text>
+<text x="40" y="146" font-size="12" fill="#12324f" text-anchor="start">despierto 3 s de cada 60 s</text>
+<rect x="40" y="154" width="83" height="22" rx="3" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="131" y="170" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="start">16,6 días</text>
+<text x="40" y="208" font-size="12" fill="#12324f" text-anchor="start">despierto 1 s de cada 60 s</text>
+<rect x="40" y="216" width="248.5" height="22" rx="3" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="296.5" y="232" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="start">49,7 días</text>
+<text x="195" y="270" font-size="11.5" font-weight="700" fill="#12324f" text-anchor="middle">dormir casi todo el tiempo multiplica la duración</text>
+<text x="565" y="56" font-size="13" font-weight="700" fill="#A63D33" text-anchor="middle">Memoria: lecturas guardadas en un día</text>
+<text x="410" y="96" font-size="12" fill="#12324f" text-anchor="start">1 lectura cada 60 s</text>
+<rect x="410" y="104" width="4.98462" height="22" rx="3" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="422.985" y="120" font-size="12" font-weight="700" fill="#1D5A94" text-anchor="start">17 KB</text>
+<text x="410" y="150" font-size="12" fill="#12324f" text-anchor="start">1 lectura cada 5 s</text>
+<rect x="410" y="158" width="59.8154" height="22" rx="3" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="477.815" y="174" font-size="12" font-weight="700" fill="#1D5A94" text-anchor="start">207 KB</text>
+<text x="410" y="204" font-size="12" fill="#12324f" text-anchor="start">1 lectura cada 1 s</text>
+<rect x="410" y="212" width="299.077" height="22" rx="3" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="701.077" y="228" font-size="12" font-weight="700" fill="#A63D33" text-anchor="end">1.037 KB (no cabe)</text>
+<path d="M560,90 L560,262" fill="none" stroke="#E4572E" stroke-width="1.8" stroke-dasharray="5 4"/>
+<text x="564" y="84" font-size="11.5" font-weight="700" fill="#A63D33" text-anchor="start">tope: 520 KB de SRAM</text>
+<text x="565" y="270" font-size="11.5" fill="#5b6876" text-anchor="middle">la SRAM también guarda el programa en ejecución</text>
+<text x="380" y="330" font-size="11.5" fill="#5b6876" text-anchor="middle">Supuestos: batería de 2000 mAh, 100 mA despierto, 10 uA dormido, lecturas de 12 bytes.</text>
+<text x="380" y="344" font-size="11.5" fill="#5b6876" text-anchor="middle">Solo la SRAM de 520 KB y los 10 uA son de la hoja de datos.</text>
+</svg>
+```
+
+:::
+
+El panel de energía parte de supuestos: una batería de 2000 mAh (miliamperios hora, la cantidad de corriente que puede entregar durante una hora), un consumo de 100 mA despierto y de 10 uA dormido. Si el nodo nunca duerme, la batería dura 2000 dividido entre 100, que son 20 horas. Si despierta 3 s de cada 60, está despierto el 5 % del tiempo y el consumo medio es 0,05 por 100 mA más 0,95 por 0,01 mA, que da unos 5,01 mA, de modo que la batería dura unos 16,6 días. Si despierta solo 1 s de cada 60, el consumo medio baja a unos 1,68 mA y la batería dura unos 49,7 días. El tiempo despierto domina el resultado: aun con un 5 % de actividad, ese tramo aporta el 99,8 % del consumo medio en este ejemplo. Una consecuencia práctica es que acortar el envío, por ejemplo manteniendo la conexión Wi-Fi lista de un ciclo al siguiente o enviando en menos tiempo, rinde más que bajar el consumo del sueño.
+
+Hay otro detalle sobre ese consumo. Los 10 uA son una cifra del chip en sueño profundo. Una placa de desarrollo completa suele incluir otros componentes, como el regulador de tensión y el circuito de programación, que también consumen y que pueden subir el consumo de la placa dormida muy por encima de los 10 uA del chip. Es un criterio de diseño, y por eso el consumo se mide en la placa y no se calcula con la cifra del chip.
+
+El panel de memoria usa lecturas de 12 bytes (supuesto del ejemplo). Guardar un día de lecturas cada 60 s son 1440 lecturas y ocupan unos 17 KB, una fracción pequeña de los 520 KB. Cada 5 s son 17 280 lecturas y 207 KB, cerca del 40 % de la SRAM. Cada segundo son 86 400 lecturas y 1037 KB, que ya no caben. Aun el caso intermedio es riesgoso, porque la SRAM también guarda las variables del programa en ejecución y la *pila de red*, que es el conjunto de programas que manejan el Wi-Fi y los protocolos, y que ocupa una parte que esta guía no cuantifica. Y hay un segundo problema: si el nodo duerme entre ciclos, esos datos de la SRAM común se pierden al dormir, como se explicó en la anatomía. El diseño decide entonces qué se guarda, cuánto tiempo, y en qué memoria sobrevive.
+
+::: {.callout-tip}
+## Reto 6. Control y consumo
+
+Marca las afirmaciones que creas verdaderas.
+
+<label><input type="checkbox"> La SRAM común del ESP32 conserva sus datos durante el sueño profundo</label>
+
+<label><input type="checkbox"> Un mismo pin de propósito general puede configurarse como entrada o como salida</label>
+
+<label><input type="checkbox"> Para un nodo con batería que envía una lectura por minuto, conviene un computador de placa única porque tiene más memoria</label>
+
+<label><input type="checkbox"> Una placa con Wi-Fi integrado reduce las piezas que hay que alimentar, conectar y programar</label>
+
+<label><input type="checkbox"> En un ciclo de 60 s, la mayor parte del consumo medio viene del tiempo despierto aunque sea corto</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 6
+
+Son verdaderas la segunda, la cuarta y la quinta. La primera es falsa porque en el sueño profundo el procesador y la mayor parte de la memoria se apagan, y solo la memoria RTC sigue alimentada, según la documentación de ESP-IDF. La segunda es verdadera porque eso es lo que significa que el pin sea de propósito general. La tercera es falsa porque un computador de placa única consume más y su memoria sobra para una lectura por minuto, de modo que la ventaja no compensa el costo en energía, y un microcontrolador resuelve la tarea. La cuarta es verdadera porque la radio ya viene dentro del chip. La quinta es verdadera porque, en el ejemplo, el 5 % de tiempo despierto aporta casi todo el consumo medio frente a los microamperios del sueño.
+:::
+
+Fuentes de esta sección: hoja de datos del ESP32 de Espressif, versión 5.3 (520 KB de SRAM, Wi-Fi 802.11 b/g/n, ADC de 12 bits, sueño profundo de unos 10 uA, Tabla 5-3 y su nota 2, sobre la corriente de los pines de salida); documentación de ESP-IDF de Espressif, secciones de modos de sueño (definición de sueño profundo y de la memoria RTC) y de GPIO (pines solo de entrada, pines de arranque y capacidad de entrega configurable). Las cifras de batería y de memoria son supuestos del ejemplo, salvo los 520 KB y los 10 uA.
+
+## Actuación: los actuadores
+
+Un *actuador* es un dispositivo que convierte una orden eléctrica en una acción física, como girar, abrir un paso, encender una luz o mostrar un texto. Es la etapa 6 del flujo, Actuación, y es la que cierra el recorrido: el sensor mide, el microcontrolador y la aplicación deciden y el actuador ejecuta. Por sí mismo no decide nada, solo hace lo que se le ordena. En el caso del laboratorio, cuando la temperatura supera 28 °C se publica la orden `lab/aula1/ventilador` con el valor `encender`, y el actuador es el que lleva esa orden hasta el aire.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 262" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cadena de cinco cajas. Una orden llega por la red como el mensaje lab/aula1/ventilador encender. El microcontrolador activa un pin. La etapa de potencia, un relé o un transistor, conmuta la energía de la carga. El actuador, el ventilador, convierte esa energía en movimiento del aire. El efecto físico es aire que circula y baja la temperatura." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m18c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m18h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m18s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m18m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m18u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m18t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">De la orden a la acción: la cadena de actuación</text>
+<rect x="16" y="70" width="128" height="66" rx="8" fill="#ECE6FA" stroke="#7A5BC7" stroke-width="1.4"/>
+<text x="80" y="100.05" font-size="13" font-weight="700" fill="#553A9E" text-anchor="middle">Orden</text>
+<text x="80" y="115.525" font-size="11.5" fill="#5b6876" text-anchor="middle">por la red</text>
+<rect x="164" y="70" width="128" height="66" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="228" y="100.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Microcontrolador</text>
+<text x="228" y="115.525" font-size="11.5" fill="#5b6876" text-anchor="middle">activa un pin</text>
+<rect x="312" y="70" width="128" height="66" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="376" y="91.55" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Etapa de</text>
+<text x="376" y="108.55" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">potencia</text>
+<text x="376" y="124.025" font-size="11.5" fill="#5b6876" text-anchor="middle">relé o transistor</text>
+<rect x="460" y="70" width="128" height="66" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="524" y="100.05" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Actuador</text>
+<text x="524" y="115.525" font-size="11.5" fill="#5b6876" text-anchor="middle">el ventilador</text>
+<rect x="608" y="70" width="128" height="66" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="672" y="100.05" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Efecto físico</text>
+<text x="672" y="115.525" font-size="11.5" fill="#5b6876" text-anchor="middle">aire en movimiento</text>
+<path d="M144,103 L164,103" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#g2m18c)"/>
+<path d="M292,103 L312,103" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#g2m18c)"/>
+<path d="M440,103 L460,103" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#g2m18c)"/>
+<path d="M588,103 L608,103" fill="none" stroke="#8fb3d1" stroke-width="1.8" marker-end="url(#g2m18c)"/>
+<text x="80" y="164" font-size="11.5" fill="#553A9E" text-anchor="middle" font-family="Consolas, Courier New, monospace">lab/aula1/ventilador</text>
+<text x="80" y="180" font-size="11.5" fill="#553A9E" text-anchor="middle" font-family="Consolas, Courier New, monospace">encender</text>
+<text x="228" y="164" font-size="11.5" fill="#5b6876" text-anchor="middle">cambia el nivel</text>
+<text x="228" y="180" font-size="11.5" fill="#5b6876" text-anchor="middle">de tensión del pin</text>
+<text x="376" y="164" font-size="11.5" fill="#5b6876" text-anchor="middle">cierra el circuito</text>
+<text x="376" y="180" font-size="11.5" fill="#5b6876" text-anchor="middle">de la carga</text>
+<text x="524" y="164" font-size="11.5" fill="#5b6876" text-anchor="middle">convierte energía</text>
+<text x="524" y="180" font-size="11.5" fill="#5b6876" text-anchor="middle">eléctrica en giro</text>
+<text x="672" y="164" font-size="11.5" fill="#5b6876" text-anchor="middle">baja la temperatura</text>
+<text x="672" y="180" font-size="11.5" fill="#5b6876" text-anchor="middle">del aula</text>
+<text x="380" y="224" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">La orden viaja como información y se convierte en energía en la etapa de potencia.</text>
+<text x="380" y="254" font-size="11.5" fill="#5b6876" text-anchor="middle">Cada caja cumple una sola función; la orden es información y el efecto es energía.</text>
+</svg>
+```
+
+:::
+
+El diagrama muestra que entre la orden y el efecto hay tres traducciones. La orden llega como información, el microcontrolador la convierte en un cambio de tensión en un pin, la etapa de potencia convierte ese cambio pequeño en la energía que mueve la carga y el actuador convierte esa energía en movimiento. Cada traducción es una decisión de diseño con sus propios errores posibles, y las siguientes secciones las recorren.
+
+### Clases de actuador
+
+Los actuadores se agrupan por el efecto que producen. La elección parte de ese efecto: luz, giro, posición, paso de un fluido o información para una persona.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 424" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Siete tarjetas. Relé, que conmuta una carga. Motor de corriente continua, que gira de forma continua. Motor paso a paso, que gira en pasos medidos. Servomotor, que llega a un ángulo ordenado. Electroválvula, que abre o cierra el paso de un fluido. LED y zumbador, que avisan con luz o sonido. Pantalla, que muestra información. Cada una con un caso de uso." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m19c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m19h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m19s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m19m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m19u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m19t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Siete clases de actuador y para qué sirve cada una</text>
+<rect x="20" y="38" width="170" height="172" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="105" y="60" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Relé</text>
+<text x="105" y="86" font-size="11.5" fill="#12324f" text-anchor="middle">conmuta una carga: abre o</text>
+<text x="105" y="100" font-size="11.5" fill="#12324f" text-anchor="middle">cierra un circuito</text>
+<text x="105" y="126" font-size="11.5" font-weight="700" fill="#7A5200" text-anchor="middle">caso:</text>
+<text x="105" y="140" font-size="11.5" fill="#5b6876" text-anchor="middle">enciende el ventilador</text>
+<text x="105" y="154" font-size="11.5" fill="#5b6876" text-anchor="middle">del laboratorio</text>
+<rect x="205" y="38" width="170" height="172" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="290" y="60" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Motor de corriente</text>
+<text x="290" y="76" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">continua</text>
+<text x="290" y="102" font-size="11.5" fill="#12324f" text-anchor="middle">gira de forma continua;</text>
+<text x="290" y="116" font-size="11.5" fill="#12324f" text-anchor="middle">la tensión fija la</text>
+<text x="290" y="130" font-size="11.5" fill="#12324f" text-anchor="middle">velocidad</text>
+<text x="290" y="156" font-size="11.5" font-weight="700" fill="#7A5200" text-anchor="middle">caso:</text>
+<text x="290" y="170" font-size="11.5" fill="#5b6876" text-anchor="middle">las aspas de un</text>
+<text x="290" y="184" font-size="11.5" fill="#5b6876" text-anchor="middle">ventilador de computador</text>
+<rect x="390" y="38" width="170" height="172" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="475" y="60" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Motor paso a paso</text>
+<text x="475" y="86" font-size="11.5" fill="#12324f" text-anchor="middle">gira en pasos de ángulo</text>
+<text x="475" y="100" font-size="11.5" fill="#12324f" text-anchor="middle">fijo que se pueden contar</text>
+<text x="475" y="126" font-size="11.5" font-weight="700" fill="#7A5200" text-anchor="middle">caso:</text>
+<text x="475" y="140" font-size="11.5" fill="#5b6876" text-anchor="middle">el avance del papel en</text>
+<text x="475" y="154" font-size="11.5" fill="#5b6876" text-anchor="middle">una impresora</text>
+<rect x="575" y="38" width="170" height="172" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="660" y="60" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Servomotor</text>
+<text x="660" y="86" font-size="11.5" fill="#12324f" text-anchor="middle">llega a un ángulo</text>
+<text x="660" y="100" font-size="11.5" fill="#12324f" text-anchor="middle">ordenado y se queda ahí</text>
+<text x="660" y="126" font-size="11.5" font-weight="700" fill="#7A5200" text-anchor="middle">caso:</text>
+<text x="660" y="140" font-size="11.5" fill="#5b6876" text-anchor="middle">orienta una persiana o un</text>
+<text x="660" y="154" font-size="11.5" fill="#5b6876" text-anchor="middle">deflector de aire</text>
+<rect x="20" y="226" width="170" height="172" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="105" y="248" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Electroválvula</text>
+<text x="105" y="274" font-size="11.5" fill="#12324f" text-anchor="middle">abre o cierra el paso de</text>
+<text x="105" y="288" font-size="11.5" fill="#12324f" text-anchor="middle">un líquido o un gas con</text>
+<text x="105" y="302" font-size="11.5" fill="#12324f" text-anchor="middle">una bobina</text>
+<text x="105" y="328" font-size="11.5" font-weight="700" fill="#7A5200" text-anchor="middle">caso:</text>
+<text x="105" y="342" font-size="11.5" fill="#5b6876" text-anchor="middle">la entrada de agua de una</text>
+<text x="105" y="356" font-size="11.5" fill="#5b6876" text-anchor="middle">lavadora</text>
+<rect x="205" y="226" width="170" height="172" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="290" y="248" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">LED y zumbador</text>
+<text x="290" y="274" font-size="11.5" fill="#12324f" text-anchor="middle">avisan con luz o con</text>
+<text x="290" y="288" font-size="11.5" fill="#12324f" text-anchor="middle">sonido</text>
+<text x="290" y="314" font-size="11.5" font-weight="700" fill="#7A5200" text-anchor="middle">caso:</text>
+<text x="290" y="328" font-size="11.5" fill="#5b6876" text-anchor="middle">la luz roja de alarma de</text>
+<text x="290" y="342" font-size="11.5" fill="#5b6876" text-anchor="middle">un tablero</text>
+<rect x="390" y="226" width="170" height="172" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="475" y="248" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Pantalla</text>
+<text x="475" y="274" font-size="11.5" fill="#12324f" text-anchor="middle">muestra texto o gráficos</text>
+<text x="475" y="288" font-size="11.5" fill="#12324f" text-anchor="middle">a quien la mira</text>
+<text x="475" y="314" font-size="11.5" font-weight="700" fill="#7A5200" text-anchor="middle">caso:</text>
+<text x="475" y="328" font-size="11.5" fill="#5b6876" text-anchor="middle">la pantalla de un</text>
+<text x="475" y="342" font-size="11.5" fill="#5b6876" text-anchor="middle">termostato de pasillo</text>
+<rect x="575" y="226" width="165" height="172" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="657.5" y="264.05" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Cómo elegir</text>
+<text x="657.5" y="279.525" font-size="11.5" fill="#5b6876" text-anchor="middle">primero el efecto que se</text>
+<text x="657.5" y="294.525" font-size="11.5" fill="#5b6876" text-anchor="middle">necesita: luz, giro,</text>
+<text x="657.5" y="309.525" font-size="11.5" fill="#5b6876" text-anchor="middle">posición, paso de un</text>
+<text x="657.5" y="324.525" font-size="11.5" fill="#5b6876" text-anchor="middle">fluido o información</text>
+<text x="657.5" y="339.525" font-size="11.5" fill="#5b6876" text-anchor="middle"></text>
+<text x="657.5" y="354.525" font-size="11.5" fill="#5b6876" text-anchor="middle">después, la carga y su</text>
+<text x="657.5" y="369.525" font-size="11.5" fill="#5b6876" text-anchor="middle">energía</text>
+<text x="380" y="416" font-size="11.5" fill="#5b6876" text-anchor="middle">La clase se elige por el movimiento o el efecto que se necesita, no por el microcontrolador que la ordena.</text>
+</svg>
+```
+
+:::
+
+Un *relé* es un interruptor que una señal pequeña abre o cierra, y se explica más abajo. Un *motor de corriente continua* gira mientras recibe energía, y su velocidad depende de la tensión. Un *motor paso a paso* gira en pasos de ángulo fijo, y el programa cuenta los pasos para saber cuánto giró. Un *servomotor* recibe un ángulo y se mueve hasta él, y se queda ahí. Una *electroválvula* es una válvula que una bobina abre o cierra. Un *LED* (diodo emisor de luz) y un *zumbador* avisan con luz o con sonido, y una *pantalla* muestra texto o gráficos. La mayoría de estas piezas, salvo el LED indicador y la pantalla pequeña, necesitan más energía de la que entrega un pin, y eso lleva al criterio central de la sección.
+
+### Por qué el pin del microcontrolador nunca maneja la carga
+
+Una *carga* es el dispositivo que consume la energía: el ventilador, el motor, la válvula. Dos magnitudes distinguen una señal de una carga. La señal de control es información y viaja con poca tensión y muy poca corriente. La carga necesita energía, y esa energía se mide en tensión y en corriente mucho mayores. Un pin de un ESP32 entrega una tensión cercana a 3,3 V y del orden de decenas de mA. Un ventilador de 12 V que consume 200 mA (valores del ejemplo) pide casi cuatro veces la tensión y varias veces la corriente.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 372" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos grupos de barras. En tensión, un pin entrega cerca de 3,3 voltios y la carga del ejemplo, un ventilador, pide 12 voltios. En corriente, un pin entrega del orden de decenas de miliamperios y la carga del ejemplo pide 200 miliamperios, varias veces más. Conclusión: el pin no puede alimentar esa carga." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m20c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m20h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m20s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m20m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m20u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m20t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Lo que da un pin frente a lo que pide la carga</text>
+<text x="20" y="52" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="start">Tensión</text>
+<text x="20" y="172" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="start">Corriente</text>
+<text x="210" y="84" font-size="12" fill="#12324f" text-anchor="end">Pin del microcontrolador</text>
+<rect x="220" y="70" width="92.4" height="22" rx="3" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="320.4" y="86" font-size="12" font-weight="700" fill="#1D5A94" text-anchor="start">cerca de 3,3 V</text>
+<text x="210" y="124" font-size="12" fill="#12324f" text-anchor="end">Carga (ventilador)</text>
+<rect x="220" y="110" width="336" height="22" rx="3" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="564" y="126" font-size="12" font-weight="700" fill="#7A5200" text-anchor="start">12 V</text>
+<text x="210" y="204" font-size="12" fill="#12324f" text-anchor="end">Pin del microcontrolador</text>
+<rect x="240" y="190" width="178" height="22" rx="3" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="426" y="206" font-size="12" font-weight="700" fill="#1D5A94" text-anchor="start">decenas de mA</text>
+<text x="210" y="244" font-size="12" fill="#12324f" text-anchor="end">Carga (ventilador)</text>
+<rect x="220" y="230" width="400" height="22" rx="3" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="628" y="246" font-size="12" font-weight="700" fill="#7A5200" text-anchor="start">200 mA</text>
+<path d="M220,186 L220,256" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<path d="M220,66 L220,136" fill="none" stroke="#8fb3d1" stroke-width="1.4"/>
+<text x="230" y="274" font-size="11.5" fill="#5b6876" text-anchor="middle">0</text>
+<rect x="20" y="282" width="720" height="38" rx="8" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="380" y="305.2" font-size="12" fill="#A63D33" text-anchor="middle">La carga pide más tensión y varias veces más corriente de la que un pin puede entregar.</text>
+<text x="380" y="350" font-size="11.5" fill="#5b6876" text-anchor="middle">La carga de 12 V y 200 mA es un supuesto del ejemplo.</text>
+<text x="380" y="364" font-size="11.5" fill="#5b6876" text-anchor="middle">El orden de decenas de mA por pin es de la hoja de datos del ESP32.</text>
+</svg>
+```
+
+:::
+
+La *potencia* es la tensión multiplicada por la corriente y se mide en vatios (W). El ventilador del ejemplo consume 12 V por 0,2 A, que son 2,4 W. El pin no puede entregarla, y el intento tiene tres consecuencias posibles: el pin se sobrecarga y puede dañarse, la tensión cae y el ventilador gira con poca fuerza, o el chip entero se reinicia por la caída de tensión. Ninguna de las tres es una falla del programa.
+
+La regla de diseño es que el pin da señales y nunca potencia. Entre el pin y la carga va una etapa que recibe la señal pequeña y maneja la energía grande, que tiene que ser un relé o un transistor. Un *transistor* es un interruptor electrónico, sin partes que se muevan, que una señal pequeña abre o cierra.
+
+### El relé y cómo aísla
+
+El esquema conceptual de bloques incluye cuatro piezas: la señal de control, el aislamiento (relé o transistor), la fuente de la carga y la carga. La *fuente de la carga* es la alimentación que entrega la energía que la carga consume, y es distinta de la del microcontrolador. Mantenerla aparte evita que los picos de la carga afecten al chip.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Esquema conceptual. En el circuito de control, el microcontrolador envía una señal de poca corriente a la bobina de un relé. En el circuito de potencia, una fuente de la carga aparte alimenta los contactos del relé, que dejan pasar o cortan la energía hacia la carga, el ventilador del laboratorio. El relé separa eléctricamente la bobina de los contactos." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m21c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m21h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m21s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m21m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m21u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m21t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Esquema de bloques: control, aislamiento, fuente y carga</text>
+<text x="30" y="74" font-size="12" font-weight="700" fill="#1D5A94" text-anchor="start">Circuito de control: poca corriente</text>
+<rect x="30" y="84" width="170" height="56" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="115" y="109.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Microcontrolador</text>
+<text x="115" y="124.525" font-size="11.5" fill="#5b6876" text-anchor="middle">pin de salida</text>
+<path d="M200,112 L300,112" fill="none" stroke="#3B82C4" stroke-width="1.8" marker-end="url(#g2m21s)"/>
+<text x="250" y="104" font-size="11.5" fill="#1D5A94" text-anchor="middle">señal</text>
+<text x="30" y="168" font-size="12" font-weight="700" fill="#7A5200" text-anchor="start">Circuito de potencia: la corriente de la carga</text>
+<rect x="30" y="178" width="170" height="56" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="115" y="203.05" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Fuente de la carga</text>
+<text x="115" y="218.525" font-size="11.5" fill="#5b6876" text-anchor="middle">aparte del micro</text>
+<path d="M200,206 L300,206" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m21m)"/>
+<text x="250" y="198" font-size="11.5" fill="#7A5200" text-anchor="middle">energía</text>
+<rect x="300" y="68" width="150" height="184" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.6"/>
+<path d="M300,160 L450,160" fill="none" stroke="#E5A93A" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text x="375" y="100" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Relé</text>
+<text x="375" y="120" font-size="12" font-weight="700" fill="#7A5200" text-anchor="middle">bobina</text>
+<text x="375" y="136" font-size="11.5" fill="#5b6876" text-anchor="middle">recibe la señal</text>
+<text x="375" y="192" font-size="12" font-weight="700" fill="#7A5200" text-anchor="middle">contactos</text>
+<text x="375" y="208" font-size="11.5" fill="#5b6876" text-anchor="middle">dejan pasar o cortan</text>
+<text x="375" y="224" font-size="11.5" fill="#5b6876" text-anchor="middle">la energía</text>
+<path d="M450,206 L550,206" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m21m)"/>
+<text x="500" y="198" font-size="11.5" fill="#7A5200" text-anchor="middle">conmutada</text>
+<rect x="550" y="176" width="190" height="60" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="645" y="203.05" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Carga</text>
+<text x="645" y="218.525" font-size="11.5" fill="#5b6876" text-anchor="middle">ventilador del laboratorio</text>
+<rect x="30" y="276" width="720" height="52" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="390" y="298.45" font-size="12" fill="#12324f" text-anchor="middle">El relé aísla: entre la bobina y los contactos no hay conexión eléctrica directa.</text>
+<text x="390" y="313.95" font-size="12" fill="#12324f" text-anchor="middle">Con un transistor el principio es el mismo, pero ambos circuitos comparten una referencia común.</text>
+<text x="380" y="344" font-size="11.5" fill="#5b6876" text-anchor="middle">La señal pequeña mueve un interruptor; la energía grande de la carga nunca pasa por el pin.</text>
+</svg>
+```
+
+:::
+
+El *relé* funciona con dos partes sin conexión eléctrica entre sí. La *bobina* es un enrollamiento de cable que, cuando la recorre una corriente pequeña, crea un campo magnético. Los *contactos* son dos piezas metálicas que, al unirse, cierran el circuito de la carga. El campo de la bobina atrae una palanca que mueve los contactos, y así la señal pequeña mueve un interruptor sin conectar eléctricamente los dos circuitos. Esa separación es el *aislamiento*.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 318" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos paneles. En reposo, la bobina no recibe señal, la palanca de los contactos queda levantada, el circuito de la carga está abierto y el ventilador está apagado. Activo, la bobina recibe la señal y atrae la palanca, los contactos se cierran, la energía pasa y el ventilador se enciende." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m22c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m22h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m22s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m22m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m22u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m22t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Cómo aísla un relé: bobina y contactos</text>
+<rect x="20" y="34" width="350" height="232" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="195" y="56" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">En reposo: sin señal</text>
+<rect x="44" y="100" width="100" height="70" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="94" y="130" font-size="12.5" font-weight="700" fill="#7A5200" text-anchor="middle">Bobina</text>
+<text x="94" y="147" font-size="11" fill="#5b6876" text-anchor="middle">sin señal</text>
+<path d="M44,200 L94,200 L94,170" fill="none" stroke="#3B82C4" stroke-width="2"/>
+<text x="44" y="218" font-size="11" fill="#1D5A94" text-anchor="start">entrada de la señal</text>
+<circle cx="225" cy="140" r="5" fill="#ffffff" stroke="#12324f" stroke-width="1.8"/>
+<circle cx="325" cy="140" r="5" fill="#ffffff" stroke="#12324f" stroke-width="1.8"/>
+<path d="M225,140 L316,110" fill="none" stroke="#12324f" stroke-width="4"/>
+<text x="272" y="98" font-size="11" fill="#5b6876" text-anchor="middle">palanca levantada</text>
+<path d="M225,140 L195,140 L195,200 L350,200 L350,140 L330,140" fill="none" stroke="#cfd8e3" stroke-width="2.2"/>
+<text x="197" y="218" font-size="11" fill="#5b6876" text-anchor="start">circuito de la carga</text>
+<text x="195" y="248" font-size="11.5" font-weight="700" fill="#5b6876" text-anchor="middle">contactos abiertos: el ventilador no gira</text>
+<rect x="390" y="34" width="350" height="232" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="565" y="56" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Activo: hay señal</text>
+<rect x="414" y="100" width="100" height="70" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="464" y="130" font-size="12.5" font-weight="700" fill="#7A5200" text-anchor="middle">Bobina</text>
+<text x="464" y="147" font-size="11" fill="#5b6876" text-anchor="middle">la señal la recorre</text>
+<path d="M414,200 L464,200 L464,170" fill="none" stroke="#3B82C4" stroke-width="2"/>
+<text x="414" y="218" font-size="11" fill="#1D5A94" text-anchor="start">entrada de la señal</text>
+<circle cx="595" cy="140" r="5" fill="#ffffff" stroke="#12324f" stroke-width="1.8"/>
+<circle cx="695" cy="140" r="5" fill="#ffffff" stroke="#12324f" stroke-width="1.8"/>
+<path d="M595,140 L690,140" fill="none" stroke="#E5A93A" stroke-width="4"/>
+<path d="M514,128 L589,128" fill="none" stroke="#E5A93A" stroke-width="1.6" stroke-dasharray="5 4"/>
+<text x="555" y="120" font-size="11" fill="#7A5200" text-anchor="middle">atrae</text>
+<path d="M595,140 L565,140 L565,200 L720,200 L720,140 L700,140" fill="none" stroke="#E5A93A" stroke-width="2.2"/>
+<text x="567" y="218" font-size="11" fill="#5b6876" text-anchor="start">circuito de la carga</text>
+<text x="565" y="248" font-size="11.5" font-weight="700" fill="#7A5200" text-anchor="middle">contactos cerrados: el ventilador gira</text>
+<path d="M370,150 L390,150" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m22m)"/>
+<text x="380" y="310" font-size="11.5" fill="#5b6876" text-anchor="middle">Bobina y contactos están separados: el campo magnético mueve la palanca sin conectar los dos circuitos.</text>
+</svg>
+```
+
+:::
+
+Los contactos se clasifican por su estado en reposo. Con contactos *normalmente abiertos* el circuito de la carga está cortado cuando la bobina no recibe señal, y se cierra al activarse. Con contactos *normalmente cerrados* ocurre lo contrario. La elección es de seguridad, y se vuelve sobre ella en el último caso de la sección.
+
+Un detalle práctico es que los módulos de relé que se venden para proyectos suelen incluir el circuito que protege el pin de los picos de tensión que produce la bobina al apagarse, de modo que el diseño usa el módulo completo y no el relé suelto. Es un criterio de diseño, y no una regla de un estándar.
+
+::: {.callout-warning}
+## Seguridad con cargas de red
+
+El ventilador de 12 V de los ejemplos es una carga de baja tensión. Una carga de la red eléctrica del edificio puede causar quemaduras, incendios o la muerte. Conectarla es trabajo de una persona calificada, con módulos certificados y protecciones, y esta guía no da esquemas para cargas de red. Cualquier diseño del curso que incluya una carga de red se resuelve con una carga de baja tensión equivalente.
+:::
+
+### Estado y retroalimentación
+
+Una orden ejecutada no es una orden cumplida. En un *lazo abierto*, el microcontrolador ordena y supone que la orden se cumplió: ordena encender el ventilador y da por hecho que gira. En un *lazo cerrado*, un sensor mide el estado real y lo devuelve al microcontrolador, que lo compara con la orden. Esa información de vuelta se llama *retroalimentación*. La palabra *estado* designa en qué condición está el actuador en un momento dado, por ejemplo encendido o apagado.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 396" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos cadenas. Arriba, lazo abierto: el microcontrolador ordena, el relé conmuta y el ventilador actúa, pero nadie comprueba que giró. Abajo, lazo cerrado: la misma cadena y un sensor de estado que mide si el ventilador está encendido y devuelve esa información al microcontrolador, que la compara con la orden." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m23c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m23h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m23s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m23m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m23u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m23t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Lazo abierto frente a lazo cerrado</text>
+<text x="20" y="48" font-size="13" font-weight="700" fill="#A63D33" text-anchor="start">Lazo abierto: se ordena y se supone</text>
+<rect x="20" y="62" width="150" height="58" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="95" y="88.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Microcontrolador</text>
+<text x="95" y="103.525" font-size="11.5" fill="#5b6876" text-anchor="middle">da la orden</text>
+<rect x="240" y="62" width="130" height="58" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="305" y="88.05" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Relé</text>
+<text x="305" y="103.525" font-size="11.5" fill="#5b6876" text-anchor="middle">conmuta</text>
+<rect x="440" y="62" width="150" height="58" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="515" y="88.05" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Ventilador</text>
+<text x="515" y="103.525" font-size="11.5" fill="#5b6876" text-anchor="middle">actúa</text>
+<path d="M170,91 L240,91" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m23m)"/>
+<path d="M370,91 L440,91" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m23m)"/>
+<text x="205" y="83" font-size="11.5" fill="#7A5200" text-anchor="middle">orden</text>
+<rect x="20" y="212" width="150" height="58" rx="8" fill="#DCEBF9" stroke="#3B82C4" stroke-width="1.4"/>
+<text x="95" y="238.05" font-size="13" font-weight="700" fill="#1D5A94" text-anchor="middle">Microcontrolador</text>
+<text x="95" y="253.525" font-size="11.5" fill="#5b6876" text-anchor="middle">da la orden</text>
+<rect x="240" y="212" width="130" height="58" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="305" y="238.05" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Relé</text>
+<text x="305" y="253.525" font-size="11.5" fill="#5b6876" text-anchor="middle">conmuta</text>
+<rect x="440" y="212" width="150" height="58" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="515" y="238.05" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Ventilador</text>
+<text x="515" y="253.525" font-size="11.5" fill="#5b6876" text-anchor="middle">actúa</text>
+<path d="M170,241 L240,241" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m23m)"/>
+<path d="M370,241 L440,241" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m23m)"/>
+<text x="205" y="233" font-size="11.5" fill="#7A5200" text-anchor="middle">orden</text>
+<rect x="620" y="62" width="120" height="58" rx="8" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="680" y="87.45" font-size="12" fill="#A63D33" text-anchor="middle">no se sabe si</text>
+<text x="680" y="102.95" font-size="12" fill="#A63D33" text-anchor="middle">giró</text>
+<path d="M590,91 L620,91" fill="none" stroke="#E4572E" stroke-width="1.8" stroke-dasharray="7 5" marker-end="url(#g2m23t)"/>
+<text x="20" y="198" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="start">Lazo cerrado: se ordena y se comprueba</text>
+<path d="M515,270 L515,302" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m23h)"/>
+<text x="523" y="290" font-size="11.5" fill="#1F6B43" text-anchor="start">estado real</text>
+<rect x="440" y="302" width="150" height="44" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="515" y="321.05" font-size="13" font-weight="700" fill="#1F6B43" text-anchor="middle">Sensor de estado</text>
+<text x="515" y="336.525" font-size="11.5" fill="#5b6876" text-anchor="middle">mide si gira</text>
+<path d="M440,324 L95,324 L95,270" fill="none" stroke="#5CB77F" stroke-width="1.8" marker-end="url(#g2m23h)"/>
+<text x="268" y="316" font-size="11.5" font-weight="700" fill="#1F6B43" text-anchor="middle">retroalimentación: el estado vuelve al micro</text>
+<rect x="620" y="212" width="120" height="58" rx="8" fill="#DDF1E4" stroke="#5CB77F" stroke-width="1.4"/>
+<text x="680" y="237.45" font-size="12" fill="#1F6B43" text-anchor="middle">compara orden y</text>
+<text x="680" y="252.95" font-size="12" fill="#1F6B43" text-anchor="middle">estado</text>
+<text x="380" y="374" font-size="11.5" fill="#5b6876" text-anchor="middle">En el laboratorio, el estado del ventilador viaja en lab/aula1/ventilador.</text>
+<text x="380" y="388" font-size="11.5" fill="#5b6876" text-anchor="middle">Con lazo cerrado, el micro detecta cuando la orden y el estado no coinciden y puede avisar.</text>
+</svg>
+```
+
+:::
+
+En el laboratorio, el ventilador tiene un sensor de estado, que puede ser una medición de corriente o un contacto auxiliar, y el sistema publica el resultado en `lab/aula1/ventilador` con el valor `encender` o `apagar`. Así el panel muestra lo que el ventilador hace y no lo que se le ordenó. La temperatura que baja es otra retroalimentación, de más largo plazo, y confirma que el efecto buscado ocurrió. La diferencia importa cuando algo falla, y la última sección de este tema trata un caso.
+
+### Un caso donde el actuador sorprende: el umbral que castiga al relé
+
+El umbral del laboratorio es 28. Una regla ingenua dice que se enciende el ventilador cuando la temperatura supera 28 y se apaga cuando no. El aire no se comporta como una regla. Cuando el ventilador arranca, la temperatura baja un poco, y si baja de 28, la regla lo apaga; el aire vuelve a subir y la regla lo enciende otra vez. La lectura, además, tiene ruido de unas décimas de grado, y alrededor del umbral el relé cambia de estado una y otra vez.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dos paneles con las mismas lecturas de temperatura que oscilan alrededor de 28 grados. A la izquierda, con un umbral único de 28, el relé cambia de estado 6 veces. A la derecha, con encendido en 28 y apagado en 26,5, el relé cambia solo 2 veces. Cada cambio de un relé desgasta sus contactos." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m24c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m24h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m24s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m24m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m24u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m24t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Umbral único frente a umbral con banda: 6 cambios frente a 2</text>
+<rect x="20" y="34" width="350" height="270" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="195" y="54" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Un solo umbral: 28</text>
+<path d="M38,136 L360,136" fill="none" stroke="#E4572E" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text x="44" y="132" font-size="11.5" font-weight="700" fill="#A63D33" text-anchor="start">28</text>
+<path d="M45,160 L61.5,148 L78,139 L94.5,130 L111,139 L127.5,133 L144,142 L160.5,130 L177,124 L193.5,133 L210,139 L226.5,136 L243,151 L259.5,166 L276,184 L292.5,196" fill="none" stroke="#3B82C4" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="42" y="76" font-size="11.5" fill="#1D5A94" text-anchor="start">temperatura</text>
+<text x="42" y="226" font-size="11.5" fill="#5b6876" text-anchor="start">relé</text>
+<text x="350" y="236" font-size="11" fill="#5b6876" text-anchor="end">encendido</text>
+<text x="350" y="266" font-size="11" fill="#5b6876" text-anchor="end">apagado</text>
+<path d="M45,262 H94.5 V232 H111 V262 H127.5 V232 H144 V262 H160.5 V232 H210 V262 H292.5" fill="none" stroke="#7A5200" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="195" y="292" font-size="12" font-weight="700" fill="#A63D33" text-anchor="middle">6 cambios de estado</text>
+<rect x="390" y="34" width="350" height="270" rx="8" fill="#f5f7fa" stroke="#cfd8e3" stroke-width="1.4"/>
+<text x="565" y="54" font-size="12.5" font-weight="700" fill="#12324f" text-anchor="middle">Banda: enciende en 28, apaga en 26,5</text>
+<path d="M408,136 L730,136" fill="none" stroke="#E4572E" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text x="414" y="132" font-size="11.5" font-weight="700" fill="#A63D33" text-anchor="start">28</text>
+<path d="M408,181 L730,181" fill="none" stroke="#5CB77F" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text x="414" y="194" font-size="11.5" font-weight="700" fill="#1F6B43" text-anchor="start">26,5</text>
+<path d="M415,160 L431.5,148 L448,139 L464.5,130 L481,139 L497.5,133 L514,142 L530.5,130 L547,124 L563.5,133 L580,139 L596.5,136 L613,151 L629.5,166 L646,184 L662.5,196" fill="none" stroke="#3B82C4" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="412" y="76" font-size="11.5" fill="#1D5A94" text-anchor="start">temperatura</text>
+<text x="412" y="226" font-size="11.5" fill="#5b6876" text-anchor="start">relé</text>
+<text x="720" y="236" font-size="11" fill="#5b6876" text-anchor="end">encendido</text>
+<text x="720" y="266" font-size="11" fill="#5b6876" text-anchor="end">apagado</text>
+<path d="M415,262 H464.5 V232 H646 V262 H662.5" fill="none" stroke="#7A5200" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="565" y="292" font-size="12" font-weight="700" fill="#1F6B43" text-anchor="middle">2 cambios de estado</text>
+<text x="380" y="330" font-size="11.5" fill="#5b6876" text-anchor="middle">Las lecturas y el valor 26,5 son supuestos del ejemplo; el umbral 28 es el del caso.</text>
+<text x="380" y="344" font-size="11.5" fill="#5b6876" text-anchor="middle">La parte de la aplicación desarrolla las reglas.</text>
+</svg>
+```
+
+:::
+
+Con las lecturas del ejemplo, que oscilan alrededor de 28, el umbral único produce 6 cambios de estado y la banda produce 2. Cada cambio gasta los contactos del relé, produce un chasquido, estresa la carga y, si el relé se cierra y abre varias veces por minuto, acorta su vida. La resolución es una *histéresis*, que consiste en usar dos umbrales distintos: enciende en 28 y apaga en un valor más bajo, 26,5 en el ejemplo. Entre ambos valores el relé conserva el estado que tenía. La parte de la aplicación desarrolla el diseño de las reglas, y aquí importa ver que el actuador impone condiciones a la regla.
+
+### Un caso donde el actuador falla o queda en estado inseguro
+
+Los actuadores son piezas físicas y fallan. Un relé puede quedar con los contactos pegados, porque al cerrarse bajo carga se calientan y se sueldan entre sí. La bobina suelta la palanca, pero los contactos siguen unidos y el ventilador sigue encendido aunque la orden diga apagar. Un ventilador encendido de más es un defecto menor, pero la misma falla en un calefactor o en una válvula de un fluido es un riesgo. El principio de diseño es el mismo: suponer que el actuador va a fallar y decidir de antemano cómo termina esa falla.
+
+::: {.diagrama}
+
+```{=html}
+<svg viewBox="0 0 760 392" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Arriba, una cadena de falla: la orden de apagar llega, el relé tiene los contactos pegados y el ventilador sigue encendido. Abajo, cuatro capas de prevención: estado seguro por defecto, realimentación, protección independiente del programa y temporizador guardián, cada una con lo que cubre." font-family="Segoe UI, Inter, system-ui, sans-serif"><defs><marker id="g2m25c" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fb3d1"/></marker><marker id="g2m25h" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5CB77F"/></marker><marker id="g2m25s" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3B82C4"/></marker><marker id="g2m25m" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E5A93A"/></marker><marker id="g2m25u" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7A5BC7"/></marker><marker id="g2m25t" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E4572E"/></marker></defs>
+<text x="380" y="20" font-size="14" font-weight="700" fill="#12324f" text-anchor="middle">Cuando el actuador falla: cómo se llega a un estado seguro</text>
+<rect x="20" y="36" width="170" height="58" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="105" y="62.05" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Orden: apagar</text>
+<text x="105" y="77.525" font-size="11.5" fill="#5b6876" text-anchor="middle">llega al microcontrolador</text>
+<rect x="270" y="36" width="210" height="58" rx="8" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="375" y="62.05" font-size="13" font-weight="700" fill="#A63D33" text-anchor="middle">Relé con contactos pegados</text>
+<text x="375" y="77.525" font-size="11.5" fill="#5b6876" text-anchor="middle">contactos soldados entre sí</text>
+<rect x="560" y="36" width="180" height="58" rx="8" fill="#FDE5DE" stroke="#E4572E" stroke-width="1.4"/>
+<text x="650" y="53.55" font-size="13" font-weight="700" fill="#A63D33" text-anchor="middle">El ventilador sigue</text>
+<text x="650" y="70.55" font-size="13" font-weight="700" fill="#A63D33" text-anchor="middle">encendido</text>
+<text x="650" y="86.025" font-size="11.5" fill="#5b6876" text-anchor="middle">contra lo ordenado</text>
+<path d="M190,65 L270,65" fill="none" stroke="#E5A93A" stroke-width="1.8" marker-end="url(#g2m25m)"/>
+<path d="M480,65 L560,65" fill="none" stroke="#E4572E" stroke-width="1.8" marker-end="url(#g2m25t)"/>
+<text x="380" y="128" font-size="13" font-weight="700" fill="#12324f" text-anchor="middle">Capas de prevención</text>
+<rect x="20" y="142" width="170" height="188" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="105" y="193.3" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Estado seguro por</text>
+<text x="105" y="210.3" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">defecto</text>
+<text x="105" y="226.2" font-size="12" fill="#7A5200" text-anchor="middle">si falta la señal o el</text>
+<text x="105" y="241.7" font-size="12" fill="#7A5200" text-anchor="middle">micro se reinicia, la</text>
+<text x="105" y="257.2" font-size="12" fill="#7A5200" text-anchor="middle">carga queda apagada:</text>
+<text x="105" y="272.7" font-size="12" fill="#7A5200" text-anchor="middle">contactos normalmente</text>
+<text x="105" y="288.2" font-size="12" fill="#7A5200" text-anchor="middle">abiertos</text>
+<rect x="202" y="142" width="170" height="188" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="287" y="217.3" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Realimentación</text>
+<text x="287" y="233.2" font-size="12" fill="#7A5200" text-anchor="middle">el estado medido se</text>
+<text x="287" y="248.7" font-size="12" fill="#7A5200" text-anchor="middle">compara con la orden y se</text>
+<text x="287" y="264.2" font-size="12" fill="#7A5200" text-anchor="middle">avisa cuando difieren</text>
+<rect x="384" y="142" width="170" height="188" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="469" y="208.8" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Protección</text>
+<text x="469" y="225.8" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">independiente</text>
+<text x="469" y="241.7" font-size="12" fill="#7A5200" text-anchor="middle">fusible, interruptor</text>
+<text x="469" y="257.2" font-size="12" fill="#7A5200" text-anchor="middle">térmico o paro manual que</text>
+<text x="469" y="272.7" font-size="12" fill="#7A5200" text-anchor="middle">no dependen del programa</text>
+<rect x="566" y="142" width="170" height="188" rx="8" fill="#FDF0CC" stroke="#E5A93A" stroke-width="1.4"/>
+<text x="651" y="217.3" font-size="13" font-weight="700" fill="#7A5200" text-anchor="middle">Temporizador guardián</text>
+<text x="651" y="233.2" font-size="12" fill="#7A5200" text-anchor="middle">reinicia el micro si el</text>
+<text x="651" y="248.7" font-size="12" fill="#7A5200" text-anchor="middle">programa se cuelga y deja</text>
+<text x="651" y="264.2" font-size="12" fill="#7A5200" text-anchor="middle">de dar órdenes</text>
+<text x="380" y="352" font-size="12" font-weight="700" fill="#12324f" text-anchor="middle">Cada capa cubre un fallo distinto; juntas reducen la probabilidad de un estado inseguro.</text>
+<text x="380" y="384" font-size="11.5" fill="#5b6876" text-anchor="middle">Ninguna capa sola basta: un relé pegado solo lo detecta la realimentación y solo lo corta la protección independiente.</text>
+</svg>
+```
+
+:::
+
+El diagrama muestra cuatro capas de prevención. La primera es el *estado seguro por defecto*: se elige la clase de contacto de modo que, si falta la señal o el microcontrolador se reinicia, la carga quede en la condición menos peligrosa. Para el ventilador es apagado, y por eso se usan contactos normalmente abiertos. La segunda es la realimentación, que detecta que el estado medido no coincide con la orden y avisa. La tercera es una *protección independiente* del programa, como un fusible, un interruptor térmico o un botón de paro manual, que corta la carga aunque el microcontrolador falle. Un fusible solo actúa ante una sobrecorriente, así que a un relé pegado con una carga normal lo corta el paro manual y no el fusible. La cuarta es el *temporizador guardián* (en inglés *watchdog*), un circuito que reinicia el microcontrolador si el programa deja de responder, para que no quede dando órdenes basadas en un estado viejo.
+
+Ninguna capa basta sola. Un relé pegado lo detecta la realimentación, pero solo lo corta la protección independiente, porque la bobina ya no controla los contactos. Y el estado seguro por defecto no sirve si los contactos ya están pegados. El diseño combina las capas según el daño que cada falla puede causar.
+
+::: {.callout-tip}
+## Reto 7. Del pin a la carga
+
+Marca las afirmaciones que creas verdaderas.
+
+<label><input type="checkbox"> Un pin de salida puede alimentar directamente un ventilador de 12 V si el programa es correcto</label>
+
+<label><input type="checkbox"> En un relé, la bobina y los contactos no tienen conexión eléctrica entre sí</label>
+
+<label><input type="checkbox"> En un lazo abierto, el microcontrolador sabe si el ventilador giró</label>
+
+<label><input type="checkbox"> Con un umbral único de 28 y lecturas que oscilan cerca de 28, el relé puede cambiar de estado muchas veces</label>
+
+<label><input type="checkbox"> Un relé con contactos pegados lo corrige el microcontrolador desde el programa</label>
+:::
+
+::: {.callout-note collapse="true"}
+## Solución del Reto 7
+
+Son verdaderas la segunda y la cuarta. La primera es falsa porque el pin entrega unos 3,3 V y del orden de decenas de mA, y el ventilador del ejemplo pide 12 V y 200 mA; ningún programa cambia eso. La segunda es verdadera porque el campo magnético de la bobina mueve la palanca de los contactos sin unir los dos circuitos, y esa es la razón por la que se dice que el relé aísla. La tercera es falsa porque en el lazo abierto no hay ninguna medida del estado, y el microcontrolador solo supone que la orden se cumplió. La cuarta es verdadera, y con las lecturas del ejemplo el relé cambia 6 veces con un umbral único y 2 con una banda de 28 a 26,5. La quinta es falsa porque, con los contactos pegados, la bobina ya no gobierna la carga; el programa puede detectar la falla si hay realimentación, pero solo una protección independiente puede cortar la energía.
+:::
+
+Fuentes de esta sección: hoja de datos del ESP32 de Espressif, versión 5.3 (Tabla 5-3 y su nota 2, corriente del orden de decenas de mA en un pin de salida) y documentación de ESP-IDF de Espressif sobre GPIO. Las cargas, los valores de tensión y de corriente del ventilador y las lecturas de la histéresis son supuestos del ejemplo. Las descripciones del relé, de los transistores, de los contactos normalmente abiertos o cerrados y del temporizador guardián son conceptos generales de electrónica y se presentan como criterios de diseño, no como especificaciones de un estándar.
+
+## Sigue con la guía
+
+[Parte anterior. Qué es un sistema IoT y sus seis etapas](../parte-1-que-es-iot/index.qmd){.btn-curso}
+
+[Parte siguiente. El enlace de red y la mensajería](../parte-3-red-y-mensajeria/index.qmd){.btn-curso}
+
+[Volver al índice de la guía](../index.qmd){.btn-curso}
+
+::: {.pie-doc}
+Telemática para IoT (TPI01). Fundación Universitaria María Cano. Facultad de Ingeniería. Semestre 2026-02.
+
+**Transparencia.** La redacción de esta guía contó con el apoyo de inteligencia artificial, con el modelo Claude de Anthropic. Los datos técnicos se contrastaron con documentos primarios, y lo que no se pudo verificar se presenta como criterio de diseño o como dato ficticio del caso.
+:::
+
